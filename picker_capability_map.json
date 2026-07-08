@@ -1,0 +1,202 @@
+{
+  "_meta": {
+    "title": "PistonCore Picker Capability Map",
+    "purpose": "Lookup table for the picker. Given a device's HA entity signals (domain, device_class, supported_color_modes, supported_features, declaration attributes), returns the WebCoRE attribute keys to offer in the capability menu.",
+    "direction": "HA signal → WebCoRE attribute key. REVERSE of pistoncore_attribute_translation.json.",
+    "usage": "Picker loads this at build time. For each entity linked to a selected device: (1) look up by domain, (2) apply sub-rules in order (always → by_device_class → by_supported_color_modes → by_supported_features → by_declaration_attr), (3) collect all matching keys. Union keys within a single device (across its entities), then intersect across multiple selected devices. The resulting key list drives the menu built from webcore_vocab.json.",
+    "runtime_location": "wizard build files/ (spec). Copy to frontend/ at implementation — same pattern as webcore_vocab.json.",
+    "source": "Derived from PistonCore_HA_to_WebCoRE_Attribute_Map.md v2.0. See CAPABILITY_DETECTION_TABLE.md for algorithm spec.",
+    "version": "1.0",
+    "status_legend": {
+      "verified": "mapping confirmed against HA behavior",
+      "assumed": "mapping inferred — reconcile on deploy"
+    },
+    "special_keys": {
+      "speak_gate": "Not a WebCoRE attribute. Signals this device is eligible for the Speak author-time gate (media_player with PLAY_MEDIA bit). Checked separately in §7.5 logic; not offered as a picker menu item."
+    }
+  },
+  "domains": {
+
+    "switch": {
+      "_note": "All switches offer on/off only.",
+      "always": { "attributes": ["switch"], "status": "verified" }
+    },
+
+    "light": {
+      "_note": "Use supported_color_modes (HA 2022.5+) as primary detection. Fall back to supported_features integer bits for older HA. A light may support multiple color modes — union all matching entries.",
+      "always": { "attributes": ["switch"], "status": "verified" },
+      "by_supported_color_modes": {
+        "onoff":       { "attributes": [], "status": "verified", "_note": "on/off only — no brightness or color" },
+        "brightness":  { "attributes": ["level"], "status": "verified" },
+        "color_temp":  { "attributes": ["level","colorTemperature"], "status": "verified" },
+        "hs":          { "attributes": ["level","color","hue","saturation","hex"], "status": "verified" },
+        "rgb":         { "attributes": ["level","color","hex"], "status": "verified" },
+        "rgbw":        { "attributes": ["level","color","hex"], "status": "verified" },
+        "rgbww":       { "attributes": ["level","color","hex"], "status": "verified" },
+        "xy":          { "attributes": ["level","color","hex"], "status": "assumed" },
+        "white":       { "attributes": ["level"], "status": "verified" }
+      },
+      "legacy_by_supported_features": {
+        "_note": "Use ONLY if supported_color_modes is absent. These are the old integer flag bits.",
+        "SUPPORT_BRIGHTNESS":   { "bit": 1,  "attributes": ["level"], "status": "assumed" },
+        "SUPPORT_COLOR_TEMP":   { "bit": 2,  "attributes": ["colorTemperature"], "status": "assumed" },
+        "SUPPORT_COLOR":        { "bit": 16, "attributes": ["color","hue","saturation","hex"], "status": "assumed" }
+      }
+    },
+
+    "fan": {
+      "_note": "All fans offer on/off. Speed (level) requires set_speed support.",
+      "always": { "attributes": ["switch"], "status": "verified" },
+      "by_supported_features": {
+        "SUPPORT_SET_SPEED": { "bit": 1, "attributes": ["level"], "status": "verified" }
+      }
+    },
+
+    "cover": {
+      "_note": "device_class determines which attribute. Position (level) requires set_position support.",
+      "by_device_class": {
+        "garage":  { "attributes": ["door"], "status": "verified" },
+        "gate":    { "attributes": ["door"], "status": "assumed" },
+        "door":    { "attributes": ["door"], "status": "assumed" },
+        "shade":   { "attributes": ["windowShade"], "status": "verified" },
+        "blind":   { "attributes": ["windowShade"], "status": "verified" },
+        "curtain": { "attributes": ["windowShade"], "status": "verified" },
+        "awning":  { "attributes": ["windowShade"], "status": "assumed" },
+        "shutter": { "attributes": ["windowShade"], "status": "assumed" }
+      },
+      "by_supported_features": {
+        "SUPPORT_SET_POSITION": { "bit": 4, "attributes": ["level"], "status": "verified" }
+      }
+    },
+
+    "valve": {
+      "_note": "HA 2023.6+ native valve domain.",
+      "always": { "attributes": ["valve"], "status": "verified" }
+    },
+
+    "lock": {
+      "always": { "attributes": ["lock"], "status": "verified" }
+    },
+
+    "climate": {
+      "_note": "Always offers mode + operating state. Additional attributes depend on what the entity declares.",
+      "always": { "attributes": ["thermostatMode","thermostatOperatingState"], "status": "verified" },
+      "by_declaration_attr": {
+        "current_temperature": { "attributes": ["temperature"], "status": "verified" },
+        "fan_mode":            { "attributes": ["thermostatFanMode"], "status": "verified" },
+        "target_temp_high":    { "attributes": ["coolingSetpoint"], "status": "verified" },
+        "target_temp_low":     { "attributes": ["heatingSetpoint"], "status": "verified" },
+        "temperature":         { "attributes": ["thermostatSetpoint"], "status": "verified", "_note": "target temperature, not current" },
+        "current_humidity":    { "attributes": ["humidity"], "status": "verified" }
+      }
+    },
+
+    "media_player": {
+      "_note": "Status always offered. Volume and mute require supported_features bits. PLAY_MEDIA signals Speak eligibility (not a menu item).",
+      "always": { "attributes": ["status"], "status": "verified" },
+      "by_supported_features": {
+        "SUPPORT_VOLUME_SET":  { "bit": 4,   "attributes": ["level"], "status": "verified" },
+        "SUPPORT_VOLUME_MUTE": { "bit": 8,   "attributes": ["mute"], "status": "verified" },
+        "SUPPORT_PLAY_MEDIA":  { "bit": 512, "attributes": ["speak_gate"], "status": "verified", "_note": "speak_gate is not a menu item — used only by §7.5 Speak author-time gate check" }
+      },
+      "by_declaration_attr": {
+        "media_title": { "attributes": ["trackDescription","trackData"], "status": "verified" }
+      }
+    },
+
+    "binary_sensor": {
+      "_note": "No 'always' — all binary sensor attributes are device_class-specific.",
+      "by_device_class": {
+        "motion":          { "attributes": ["motion"], "status": "verified" },
+        "door":            { "attributes": ["contact"], "status": "verified" },
+        "window":          { "attributes": ["contact"], "status": "verified" },
+        "opening":         { "attributes": ["contact"], "status": "verified" },
+        "garage_door":     { "attributes": ["contact"], "status": "verified" },
+        "moving":          { "attributes": ["acceleration"], "status": "verified" },
+        "vibration":       { "attributes": ["acceleration","shock"], "status": "assumed", "_note": "vibration maps to both acceleration (verified) and shock (assumed)" },
+        "tamper":          { "attributes": ["tamper","shock"], "status": "verified", "_note": "tamper verified; shock assumed" },
+        "sound":           { "attributes": ["sound"], "status": "assumed" },
+        "moisture":        { "attributes": ["water"], "status": "verified" },
+        "smoke":           { "attributes": ["smoke"], "status": "verified" },
+        "carbon_monoxide": { "attributes": ["carbonMonoxide"], "status": "verified" },
+        "gas":             { "attributes": ["carbonMonoxide"], "status": "verified" },
+        "touch":           { "attributes": ["touch"], "status": "assumed" },
+        "sleep":           { "attributes": ["sleeping"], "status": "assumed" },
+        "battery":         { "attributes": ["battery"], "status": "verified" }
+      }
+    },
+
+    "sensor": {
+      "_note": "All sensor attributes are device_class-specific except lqi (no standard class).",
+      "by_device_class": {
+        "humidity":       { "attributes": ["humidity"], "status": "verified" },
+        "temperature":    { "attributes": ["temperature"], "status": "verified" },
+        "illuminance":    { "attributes": ["illuminance"], "status": "verified" },
+        "battery":        { "attributes": ["battery"], "status": "verified" },
+        "carbon_dioxide": { "attributes": ["carbonDioxide"], "status": "verified" },
+        "energy":         { "attributes": ["energy"], "status": "verified" },
+        "power":          { "attributes": ["power"], "status": "verified" },
+        "voltage":        { "attributes": ["voltage"], "status": "verified" },
+        "sound_pressure": { "attributes": ["soundPressureLevel"], "status": "assumed" },
+        "uv_index":       { "attributes": ["ultravioletIndex"], "status": "verified" },
+        "ph":             { "attributes": ["pH"], "status": "assumed" },
+        "signal_strength":{ "attributes": ["rssi"], "status": "assumed" },
+        "distance":       { "attributes": ["distance","distanceMetric"], "status": "assumed" },
+        "speed":          { "attributes": ["speedMetric","speed"], "status": "assumed" },
+        "orientation":    { "attributes": ["orientation"], "status": "assumed" }
+      },
+      "by_unit_fallback": {
+        "_note": "No standard device_class. Match by unit when device_class is null.",
+        "lqi_unit": { "unit_match": "lqi", "attributes": ["lqi"], "status": "assumed" }
+      }
+    },
+
+    "device_tracker": {
+      "always": { "attributes": ["presence"], "status": "verified" },
+      "by_declaration_attr": {
+        "latitude":  { "attributes": ["latitude","longitude","horizontalAccuracyMetric","horizontalAccuracy","altitudeMetric","altitude","speedMetric","speed","bearing"], "status": "assumed", "_note": "offer GPS group only if latitude present in state attributes" },
+        "zone_id":   { "attributes": ["currentPlace"], "status": "assumed" }
+      }
+    },
+
+    "person": {
+      "always": { "attributes": ["presence"], "status": "verified" },
+      "by_declaration_attr": {
+        "latitude": { "attributes": ["latitude","longitude","horizontalAccuracyMetric","horizontalAccuracy"], "status": "assumed" },
+        "zone_id":  { "attributes": ["currentPlace"], "status": "assumed" }
+      }
+    },
+
+    "alarm_control_panel": {
+      "always": { "attributes": ["alarm"], "status": "assumed" }
+    },
+
+    "siren": {
+      "always": { "attributes": ["alarm"], "status": "assumed" }
+    },
+
+    "timer": {
+      "always": { "attributes": ["sessionStatus","timeRemaining"], "status": "assumed" }
+    },
+
+    "event": {
+      "_note": "HA 2023.8+ event domain replaces sensor 'action' for button presses.",
+      "by_device_class": {
+        "button":   { "attributes": ["button"], "status": "verified" },
+        "doorbell": { "attributes": ["button"], "status": "assumed" }
+      }
+    },
+
+    "camera": {
+      "always": { "attributes": ["image"], "status": "assumed" }
+    },
+
+    "input_boolean": {
+      "always": { "attributes": ["switch"], "status": "assumed" }
+    },
+
+    "input_number": {
+      "always": { "attributes": ["level"], "status": "assumed" }
+    }
+  }
+}
