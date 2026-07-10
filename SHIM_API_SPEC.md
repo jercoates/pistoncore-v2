@@ -71,10 +71,27 @@ Returns `{ "dbVersion": <string>, "db": { "capabilities": {...}, ... } }`.
 The `db` is the webCoRE vocabulary — capabilities/attributes/commands/virtualCommands definitions that drive every wizard menu. `webcore_vocab.json` in PistonCore v1 was derived from this structure and is the seed content. Dashboard caches db locally keyed by `dbVersion` (VERIFIED piston/get handler app.js:1087–1124; `$scope.db.capabilities[...]` piston.module.js:2606).
 **TO VERIFY:** exact top-level keys of `db` (expected: `capabilities`, `attributes`, `commands`, `virtualCommands`, possibly `functions`/`comparisons`) — confirm against Session 14 Groovy source or by diffing with webcore_vocab.json.
 
-### 4.5 `intf/dashboard/piston/get` (VERIFIED)
+### 4.5 `intf/dashboard/piston/get` (VERIFIED — envelope corrected against source during spike)
 Params: `id`, `db` (client's cached dbVersion), `dev` (deviceVersion).
-Response: `{ "piston": {piston JSON}, "dbVersion": <string, if client's db is stale>, "db": {..., optional}, "instance": {optional}, "location": {optional}, "now": ... }`
-If `dbVersion` present without `db`, client calls `getDb`. If `instance` absent when needed, client calls `load`. Simplest v1: include `dbVersion` + `db` when stale, omit otherwise.
+Response:
+```
+{
+  "dbVersion": <string, if client's db is stale>,
+  "db": {..., optional},
+  "location": {optional},
+  "instance": {optional},
+  "now": ...,
+  "data": {
+    "piston": {piston JSON},
+    "meta": {...},
+    "subscriptions": {}, "logs": [], "stats": {}, "state": "", "trace": {},
+    "logging": 0, "memory": 0, "lastExecuted":, "nextSchedule":, "schedules":,
+    "localVars": {}, "systemVars": {}
+  }
+}
+```
+`piston`/`meta` and the rest of the piston-specific fields are nested one level under a literal `data` key — **not top-level**. This is distinct from (and inside) the `$http` response's own `.data` wrapper: `dataService.getPiston` (app.js:1076–1128) resolves its promise to the raw JSONP payload unwrapped exactly once, and `piston.module.js:239–290` reads `response.data.piston`, `response.data.meta`, `response.data.logs`, etc. — confirmed by tracing both call sites during the spike (2026-07-09). An earlier draft of this doc had `piston` top-level; that was wrong.
+If `dbVersion` present without `db`, client calls `getDb`. If `instance` absent when needed, client calls `load`. Simplest v1: include `dbVersion` + `db` when stale, omit `instance`/`location` (client re-fetches via `load`).
 
 ### 4.6 Piston lifecycle (VERIFIED call sites; response shapes ASSUMED minimal `{error?}` unless noted)
 | Endpoint | Params | Notes |

@@ -1,0 +1,10 @@
+# Local dev data — holds ha_url/ha_token (secrets). Never commit.
+/data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node (playwright test scratchpad, if ever run from repo root)
+node_modules/

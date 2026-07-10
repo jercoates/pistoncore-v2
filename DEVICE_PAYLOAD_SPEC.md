@@ -71,14 +71,53 @@ Run each member entity through `picker_capability_map.json` → its attribute ke
 group's attribute key set = the UNION across members. Record, for every attribute key,
 **which member entity contributed it** — this binding is the resolution data (Stage 8).
 
-**Duplicate-attribute rule (DECISION needed, recommendation below):** if two members of
-one group map to the SAME attribute key (e.g. a device exposing two temperature sensors),
-a single webCoRE device cannot carry `temperature` twice. To satisfy hard requirement (1)
-— never drop info — the recommended rule: keep the first contributor (deterministic:
-lowest entity_id sort) in the group, and **split each additional contributor out as its
-own singleton picker device**, named "<Group Name> <entity friendly name>". Nothing is
-lost; the user sees two name-only picker items, which matches how Hubitat handles
-composite devices (parent + child devices). Confirm or overrule.
+**Duplicate-attribute rule (DECISION, Jeremy, 2026-07-09): never split a device.** A
+webCoRE device is device + capabilities, full stop — one HA device_id is always exactly
+one picker device, no matter how many members collide on the same attribute or command
+key. Splitting a group into multiple picker devices (an earlier draft of this section)
+was tried and explicitly rejected: it doesn't generalize ("has to work for all devices
+found this way, not just mine") and produces a confusing, chopped-up picker for devices
+like a ReSpeaker satellite (one HA device_id, 5+ independent switch entities).
+Deterministic resolution instead: lowest entity_id sort wins each attribute/command key;
+later contributors' *other*, non-colliding attributes/commands still merge in normally.
+Known, accepted limitation: two entities offering the exact same generic command name
+(e.g. two "switch" entities each with on/off) can't both be independently invoked from
+one device today — webCoRE's `c[].n` must be a real `vocab.commands` key for the editor
+to render it, and there's no sub-device mechanism for `switch` the way there is for
+`button`/`lock` (Stage 3.1). A future fix would need either a vocab addition or webCoRE's
+custom-command mechanism (PISTON_JSON_REFERENCE.md §5 `"cm"`) — not attempted yet.
+
+### Stage 3.1 — Sub-device attributes (button, lock) are the one built-in exception
+`vocab.attributes[key].s` names a companion count attribute (e.g. `button`'s
+`"numberOfButtons,numButtons"`), and `.i` names a companion "which one fired" attribute
+(e.g. `"buttonNumber"`). This is webCoRE's real, existing mechanism for one device with N
+indexed sub-things (piston.module.js:3703-3739 reads the count to offer N indexed
+sub-devices via an operand's `i` array — PISTON_JSON_REFERENCE.md §4 `"p"` operand's `i`
+field). Verified against source, 2026-07-09. For these attribute keys only: never drop a
+duplicate contributor — keep every contributing entity, **numerically** ordered (not
+lexicographic — `button_10` must sort after `button_2`, not before), and emit the
+companion count attribute (`{"n": "numberOfButtons", "t": "integer", "v": <count>}`) so
+the editor offers the right number of indexes instead of its 32-slot fallback.
+
+### Stage 3.2 — Custom-attribute fallback (no picker_capability_map rule needed)
+**DECISION, Jeremy, 2026-07-09.** An entity that matches *zero* `picker_capability_map.json`
+rules (no domain/device_class/unit match — e.g. a generic Hubitat-driver passthrough sensor
+with no HA `device_class`) is **not** dropped. It falls through as a device-local custom
+attribute: `{"n": <key>, "t": "string"|"decimal"}`, no vocab entry required. This works in
+the real editor because `piston.module.js:3688-3701` already falls back to searching a
+device's own `a[]` array by name when a key isn't found in the central `db.attributes`
+vocab (VERIFIED against source) — this is exactly how custom Hubitat-driver attributes
+(e.g. a UniFi Protect camera's `smartDetectType`, typed/compared as free text in the real
+editor, never a vocab enum) worked in Jeremy's actual production webCoRE.
+**Key derivation:** for Hubitat-platform entities, HA's entity registry `unique_id` embeds
+the original Hubitat attribute name literally — format `<hub>::<device>::sensor::<attrName>`
+(confirmed: `sensor.doorbell_pro_motion_smart_detect_type`'s unique_id is
+`3c8e8863::927::sensor::smartDetectType`, byte-for-byte the old Hubitat attribute name).
+Parse that 4th segment when the platform is `hubitat` and the pattern matches; otherwise
+fall back to the entity's own object_id. **Why this matters:** it means coverage grows
+automatically — enabling a currently-disabled HA entity (most custom Hubitat passthrough
+sensors are disabled by default) makes it appear on next `devices` fetch with zero shim
+code changes, rather than needing a hand-written rule per attribute.
 
 ### Stage 4 — Attribute → capability bridge
 Unchanged: invert `vocab.capabilities[*].a` once at startup; group's attribute keys →
