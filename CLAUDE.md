@@ -89,6 +89,8 @@ never treat it as gospel.
 - `frontend/` translation files: webcore_vocab.json, picker_capability_map.json,
   pistoncore_attribute_translation.json (seed data for the db and device payloads)
 - Spec docs at repo root
+- `archive/session-briefs/` — one-time SESSION_BRIEF_*.md files, moved here once executed
+  (living specs stay at repo root; briefs are session instructions, not specs)
 - Shim/backend code: (structure decided at first coding session — plan first)
 
 ## Retired v1 concepts — do not resurrect
