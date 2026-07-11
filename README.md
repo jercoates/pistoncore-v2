@@ -9,6 +9,15 @@ or PyScript for complex logic. There is no webCoRE engine running anywhere: the 
 authors standard webCoRE piston JSON, and PistonCore's compiler turns it into things Home
 Assistant executes natively.
 
+**PistonCore is not a home automation platform. It is a tool for building automations on
+top of one.** It reads what HA already has, gives you the best visual editor ever made
+for writing logic against it, and compiles that logic to native HA files.
+
+**Your automations are yours.** Compiled pistons are standard HA files. Uninstall
+PistonCore tomorrow and every simple piston keeps running natively; complex pistons keep
+running as long as PyScript remains installed. No lock-in, no cloud, no account, nothing
+phoning home.
+
 > **Status: early development — not ready for users.** The editor works against live HA
 > devices and pistons save, but the compiler does not exist yet. Nothing here runs your
 > automations today. Watch/star if you're interested; don't install expecting a product.
@@ -27,7 +36,19 @@ Assistant executes natively.
   format for AI-generated and shared pistons (import/export is plain copy/paste JSON; no
   cloud, no accounts).
 - The **compiler** (in progress) translates piston JSON into native HA automations where
-  possible and PyScript where webCoRE semantics demand it.
+  possible and PyScript where webCoRE semantics demand it. Simple pistons — the large
+  majority — become a standard YAML automation/script pair with zero external
+  dependencies. Complex pistons (loop-breaking, in-flight task cancellation, and similar
+  webCoRE semantics HA YAML can't express) become a PyScript file. The compiler detects
+  which target each piston needs automatically; you never choose. Compiler behavior is
+  driven by editable Jinja2 templates and data files, not hardcoded Python.
+
+## Planned install paths
+
+An **HA add-on** (HAOS/Supervised — sidebar entry, automatic supervisor auth) and a
+**plain Docker container** (Unraid, NAS, any Docker host, and Docker-based HA installs —
+long-lived token auth). Same image, same features, same piston format on both. Neither is
+published yet — see the status note above.
 
 ## Project documents
 
