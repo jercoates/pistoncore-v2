@@ -121,6 +121,20 @@ async def fetch_registries() -> dict:
     }
 
 
+async def check_connection() -> tuple[bool, str]:
+    """
+    Lightweight HA reachability check for the PistonCore front door's
+    HA-health badge (CLAUDE.md UI split). Reuses get_config (already used
+    elsewhere) rather than a separate ping-style call -- cheapest real round
+    trip that proves auth + connectivity both work.
+    """
+    try:
+        await _ws_call([{"id": 1, "type": "get_config"}])
+        return True, "Connected"
+    except HAClientError as e:
+        return False, str(e)
+
+
 async def create_input_select(name: str, options: list[str]) -> dict:
     """
     Auto-creates a storage-backed input_select helper (SHIM_API_SPEC.md

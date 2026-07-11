@@ -16,7 +16,7 @@ reading code or diffs. Explain in behavior terms, not code terms.
 
 ## Authority chain (highest wins)
 
-1. **The webCoRE sources.** `vendor/webcore-dashboard/` (especially js/app.js and
+1. **The webCoRE sources.** `dashboard/` (especially js/app.js and
    js/modules/piston.module.js) and `reference/webcore_source_reference.groovy` are ground
    truth for the API contract and the piston JSON format.
 2. **The spec docs:** SHIM_API_SPEC.md, DEVICE_PAYLOAD_SPEC.md, PISTON_JSON_REFERENCE.md,
@@ -41,15 +41,16 @@ never treat it as gospel.
   the shim's resolution map. Users see ONLY friendly names — no IDs in any UI. entity_ids
   never appear in piston JSON. (The v1 friendly-names-in-JSON rule is retired.)
 - **The vendored dashboard is SEALED.** Never modify anything under
-  `vendor/webcore-dashboard/` except the enumerated neutralizations in SHIM_API_SPEC.md §9
+  `dashboard/` except the enumerated neutralizations in SHIM_API_SPEC.md §9
   (analytics removal, FontAwesome localization, maps stub, backup-bin UI, optional
   back-link). Any other proposed edit there requires Jeremy's explicit approval first.
 - **UI split (Jeremy, 2026-07-10 — supersedes earlier one-liner):**
   - **webCoRE dashboard owns:** the piston editor, the piston view (status/trace screen),
     the global-variables editor, and the dashboard's own settings dialog. Everything
     piston-shaped that already works.
-  - **PistonCore pages own:** the FRONT DOOR (landing page: piston tiles with compile
-    status + deploy status + HA health — the questions webCoRE structurally can't answer,
+  - **PistonCore pages own:** the FRONT DOOR (landing page: a piston list — grouped rows,
+    never tiles/cards, Jeremy 2026-07-12 — with compile status + deploy status + HA health —
+    the questions webCoRE structurally can't answer,
     since a saved-but-failed-compile piston looks healthy on webCoRE's list), the
     compile/debug output page (A2 compiler errors, PyScript-routing notices), ALL
     import/export (paste-JSON in, pretty-print + copy out — this page is also the
@@ -84,7 +85,7 @@ never treat it as gospel.
 
 ## Repo map
 
-- `vendor/webcore-dashboard/` — sealed upstream dashboard (see rules above)
+- `dashboard/` — sealed upstream dashboard (see rules above)
 - `reference/` — webcore_source_reference.groovy and other read-only upstream references
 - `frontend/` translation files: webcore_vocab.json, picker_capability_map.json,
   pistoncore_attribute_translation.json (seed data for the db and device payloads)

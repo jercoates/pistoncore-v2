@@ -49,6 +49,11 @@
 		<script type="text/javascript" src="js/modules/dashboard.module.js" charset="utf-8"></script><!--dev-->
 		<script type="text/javascript" src="js/modules/piston.module.js" charset="utf-8"></script><!--dev-->
 		<script type="text/javascript" src="js/modules/fuel.module.js" charset="utf-8"></script><!--dev-->
+		<!--PistonCore navigation hook — neutralization per SHIM_API_SPEC.md §9. Does not
+		     modify any Angular module/controller file; registers an additional run-block
+		     on the existing webCoRE module so the front door can jump straight into a
+		     piston without landing on this app's own list page first.-->
+		<script type="text/javascript" src="js/pistoncore-nav.js" charset="utf-8"></script>
 		<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 		<script defer src="https://kit.fontawesome.com/a00a53f405.js" crossorigin="anonymous" onerror="loadFontAwesomeFallback()"></script>
 		<script defer src="https://pro.fontawesome.com/releases/v5.11.1/js/v4-shims.js" crossorigin="anonymous"></script>

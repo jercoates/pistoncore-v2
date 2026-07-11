@@ -19,6 +19,17 @@ logger = logging.getLogger("fixtures")
 # (SHIM_API_SPEC.md §5.2).
 CORE_VERSION = "v0.3.114.20220203"
 
+# Bump only when webcore_vocab.json actually changes. piston/get (dashboard.py)
+# compares this against the client's own cached "db" query param and omits
+# dbVersion/db entirely when they match -- app.js:1116-1119 shows the
+# "Database updated to version X" status banner unconditionally whenever
+# dbVersion is present in the response, with no old-vs-new comparison of its
+# own; the comparison is the SERVER's job (real webCoRE never resends an
+# unchanged db either). Sending it unconditionally made that banner fire on
+# every single piston load (Jeremy, 2026-07-12) -- confirmed the shim's bug,
+# not webCoRE's.
+DB_VERSION = "pistoncore-spike-1"
+
 # Zero-setup default Location Mode source (SHIM_API_SPEC.md §5.3 decision,
 # item 1). A PistonCore-designated override lives in storage.settings under
 # "location_mode_entity" — hand-edited in settings.json until a real

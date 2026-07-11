@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from .routes.dashboard import router as dashboard_router
+from .routes.pages import router as pages_router
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DASHBOARD_DIR = REPO_ROOT / "dashboard"
@@ -20,8 +21,15 @@ INDEX_HTML = DASHBOARD_DIR / "index.html"
 
 app = FastAPI(title="PistonCore v2 shim")
 
-# intf/dashboard/* routes first so they aren't shadowed by the SPA fallback.
+# intf/dashboard/* and PistonCore's own pages (CLAUDE.md UI split) first so
+# they aren't shadowed by the dashboard's SPA fallback below. "/" now serves
+# the PistonCore front door, not the dashboard directly (CLAUDE.md: "Users
+# live in PistonCore pages and visit the dashboard to author and inspect
+# pistons") -- /connect remains the dashboard's own entry sequence.
 app.include_router(dashboard_router)
+app.include_router(pages_router)
+
+app.mount("/static/pistoncore", StaticFiles(directory=str(REPO_ROOT / "static" / "pistoncore")), name="pistoncore-static")
 
 
 @app.get("/connect")

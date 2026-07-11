@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}PistonCore — Pistons{% endblock %}
+
+{% block header_status %}
+<div class="header-status {{ 'connected' if ha_ok else 'disconnected' }}" title="{{ ha_message }}">
+  HA {{ "Connected" if ha_ok else "Unreachable" }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page active">
+  <div class="list-header">
+    <h1>Pistons</h1>
+    <div class="list-header-actions">
+      <button class="btn btn-primary btn-sm" id="new-piston">+ New Piston</button>
+    </div>
+  </div>
+
+  {% if tiles %}
+  <div class="folder-section">
+    <div class="folder-header">
+      <span class="folder-name">Uncategorized</span>
+      <span class="folder-count">({{ tiles|length }})</span>
+      <div class="folder-divider"></div>
+    </div>
+    {% for tile in tiles %}
+    <div class="piston-row" data-piston-id="{{ tile.id }}">
+      <span class="piston-enabled-dot {{ 'enabled' if tile.active else 'disabled' }}" title="{{ 'Active' if tile.active else 'Paused' }}"></span>
+      <span class="piston-name">{{ tile.name }}</span>
+      <span class="piston-result" title="{{ tile.compile_status }} / {{ tile.deploy_status }}">—</span>
+      <span class="piston-time">{{ tile.modified }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="mode-notice">No pistons yet — create one to get started.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/pistoncore/front_door.js"></script>
+{% endblock %}

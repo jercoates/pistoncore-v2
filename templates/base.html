@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}PistonCore{% endblock %}</title>
+  <link rel="stylesheet" href="/static/pistoncore/style.css">
+  <script src="/static/pistoncore/theme.js"></script>
+</head>
+<body>
+  <div id="global-header">
+    <a class="header-logo" href="/">Piston<span>Core</span></a>
+    <div class="header-spacer"></div>
+    <a class="header-icon-btn" href="/help" title="Help">?</a>
+    <a class="header-icon-btn" href="/settings" title="Settings">&#9881;</a>
+    <a class="header-icon-btn" href="/test-devices" title="Test Devices">&#128295;</a>
+    <button class="header-icon-btn" id="theme-toggle" title="Toggle dark/light mode">&#9789;</button>
+    {% block header_status %}{% endblock %}
+  </div>
+  <div id="page-container">
+    {% block content %}{% endblock %}
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

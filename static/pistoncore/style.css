@@ -1,0 +1,264 @@
+/* PistonCore pages — design tokens and header/list patterns adapted from
+   reference/v1-frontend/style.css (Jeremy's own prior design, praised as
+   "way closer" to the intended look), rebuilt fresh for v2's actual pages
+   and data — no code copied verbatim, no build step, vanilla CSS. */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg-base:         #1a1d23;
+  --bg-surface:      #21252d;
+  --bg-raised:       #282c35;
+  --bg-hover:        #2e3340;
+
+  --border-subtle:   #2e3340;
+  --border-strong:   #3d4454;
+
+  --text-primary:    #d4dae8;
+  --text-secondary:  #8896b0;
+  --text-muted:      #5a6478;
+
+  --teal:            #38c8c8;
+  --teal-dim:        #27908e;
+  --teal-bg:         rgba(56, 200, 200, 0.08);
+
+  --green:           #4caf50;
+  --red:             #ef5350;
+  --yellow:          #ffca28;
+
+  --btn-primary-bg:  #1a6e8a;
+  --btn-primary-hover: #1d8aaa;
+
+  --font-ui:    'IBM Plex Sans', system-ui, sans-serif;
+  --font-code:  'JetBrains Mono', 'Courier New', monospace;
+
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  --header-height: 52px;
+}
+
+/* Light theme override (v1-frontend/style.css's html.light-mode palette).
+   Dark is the default (bare :root above); [data-theme="light"] is set by
+   static/pistoncore/theme.js on <html> when the user toggles it. */
+:root[data-theme="light"] {
+  --bg-base:       #f0efea;
+  --bg-surface:    #ffffff;
+  --bg-raised:     #f8f7f2;
+  --bg-hover:      #e8e6e0;
+
+  --border-subtle: #d0cdc5;
+  --border-strong: #b0ada5;
+
+  --text-primary:  #1a1d23;
+  --text-secondary:#3a3d45;
+  --text-muted:    #787570;
+
+  --teal:          #006868;
+  --teal-dim:      #008888;
+  --teal-bg:       rgba(0, 104, 104, 0.07);
+
+  --btn-primary-bg:#1a6e8a;
+  --btn-primary-hover:#1d8aaa;
+}
+
+* , *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--teal); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+/* ── Global header — logo + status only, nothing else lives here ── */
+#global-header {
+  height: var(--header-height);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-5);
+  gap: var(--space-4);
+}
+
+.header-logo {
+  font-family: var(--font-code);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--teal);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+.header-logo span { color: var(--text-muted); font-weight: 400; }
+.header-logo:hover { text-decoration: none; }
+
+.header-spacer { flex: 1; }
+
+.header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.header-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); text-decoration: none; }
+
+.header-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.header-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.header-status.connected::before { background: var(--green); }
+.header-status.disconnected::before { background: var(--red); }
+
+#page-container { padding: var(--space-5); max-width: 900px; margin: 0 auto; }
+
+/* ── Buttons ── */
+.btn {
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+.btn:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+
+.btn-primary { background: var(--btn-primary-bg); color: #fff; border: 1px solid transparent; }
+.btn-primary:hover { background: var(--btn-primary-hover); }
+
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid transparent; }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* ── Page header — title + page-specific actions (list.js pattern) ── */
+.list-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.list-header h1 {
+  font-family: var(--font-code);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--teal);
+}
+.list-header-actions { margin-left: auto; display: flex; gap: var(--space-2); }
+
+.mode-notice {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+
+/* ── Piston list (v1 pattern: folder-grouped rows, not tiles) ── */
+.folder-section { margin-bottom: var(--space-6); }
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.folder-name {
+  font-family: var(--font-code);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.folder-count { font-size: 11px; color: var(--text-muted); }
+.folder-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+  margin-left: var(--space-2);
+}
+
+.piston-row {
+  display: flex;
+  align-items: center;
+  padding: 9px var(--space-3);
+  border-radius: 4px;
+  cursor: pointer;
+  gap: var(--space-3);
+  border: 1px solid transparent;
+  transition: background 0.1s, border-color 0.1s;
+}
+.piston-row:hover { background: var(--bg-hover); border-color: var(--border-subtle); }
+
+.piston-enabled-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.piston-enabled-dot.enabled  { background: var(--green); }
+.piston-enabled-dot.disabled { background: transparent; border: 1px solid var(--text-muted); }
+
+.piston-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.piston-result {
+  font-size: 13px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.piston-time {
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 140px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Stub pages ── */
+.pc-stub { text-align: center; padding: var(--space-6) var(--space-4); color: var(--text-muted); }
+.pc-stub h1 { font-family: var(--font-code); color: var(--text-primary); margin-bottom: var(--space-3); }

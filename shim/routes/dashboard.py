@@ -95,7 +95,7 @@ async def devices(request: Request):
 @router.get("/piston/getDb")
 def get_db(request: Request):
     return jsonp(request, {
-        "dbVersion": "pistoncore-spike-1",
+        "dbVersion": fixtures.DB_VERSION,
         "db": fixtures.get_db(),
     })
 
@@ -126,14 +126,17 @@ def piston_get(request: Request):
         piston, meta = {"o": {"cto": 0, "ced": 0}, "r": [], "s": [], "v": [], "z": ""}, {}
     else:
         piston, meta = entry["piston"], storage.meta_for_get(entry)
-    return jsonp(request, {
-        "dbVersion": "pistoncore-spike-1",
-        "db": fixtures.get_db(),
-        "data": {
-            "piston": piston,
-            "meta": meta,
-        },
-    })
+
+    # Client sends its cached db version (app.js:1083, "&db=" + dbVersion).
+    # Only include dbVersion/db when it's actually stale/missing -- sending
+    # it unconditionally makes the dashboard show "Database updated" on
+    # every single load (app.js:1116-1119 has no comparison of its own).
+    client_db_version = request.query_params.get("db", "")
+    response: dict = {"data": {"piston": piston, "meta": meta}}
+    if client_db_version != fixtures.DB_VERSION:
+        response["dbVersion"] = fixtures.DB_VERSION
+        response["db"] = fixtures.get_db()
+    return jsonp(request, response)
 
 
 def _save_response(entry: dict) -> dict:

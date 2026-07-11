@@ -286,10 +286,40 @@ Behaviorally verified live (Jeremy's real HA, 2026-07-11): helper auto-created, 
 | index.html | Google Analytics | Delete |
 | index.html | FontAwesome kit (kit.fontawesome.com) + v4-shims (pro.fontawesome.com) | Vendor locally or icons break offline |
 | index.html | maps.google.com JS | Stub/remove; only location-map UI uses it |
-| app.js:1162–1211 | `api.webcore.co/bins/...` backup bins | Disable/hide UI or point at shim; superseded by §8 |
+| app.js:1162–1211 | `api.webcore.co/bins/...` backup bins | **DONE 2026-07-12.** Both "Backup Piston(s)" sidebar links (`dashboard.module.html:45,114`, both `ng-click="backup();"`) redirect to PistonCore's own `/backup` stub via `pistoncore-nav.js`'s document-level click intercept (capture phase, before Angular's own handler fires) — `backup()` itself never runs. Superseded by §8 once real import/export exists. |
 | app.js:1507 | `api.webcore.co/dashboard/register/` | Unused via `/init/` path; leave |
 | app.js | `cdn.jsdelivr.net/gh/imnotbob/webCoRE` reference | **TO VERIFY** what loads from it; localize if active |
 | app.js:2 | `cdn = ''` | Already relative — no action (VERIFIED) |
+
+**Non-neutralization addition (DECISION, Jeremy 2026-07-12):** `dashboard/js/pistoncore-nav.js`
+(new file) + one added `<script>` tag in `index.html` referencing it. Registers an additional
+run-block on the existing `webCoRE` Angular module (`angular.module('webCoRE').run(...)` — a
+standard Angular API for extending an app from outside its own source), handling navigation
+**both directions** between PistonCore's front door and the sealed dashboard. Does not modify
+app.js, dashboard.module.js, or piston.module.js.
+
+- **IN (front door → piston):** the list page's own controller is not just a view — it
+  performs the session bootstrap (`intf/dashboard/load`) the piston page depends on (session
+  token/instance state). An earlier version of this hook redirected instantly on
+  `$routeChangeStart`, before that bootstrap call ran, and crashed piston.module.js with "data
+  is not defined" (empty token/db) — the same bug flagged (and misdiagnosed as a testing
+  artifact) earlier this session, now root-caused. There is no way to skip that bootstrap
+  without touching the sealed controller or reimplementing its logic outside it, both ruled
+  out. So the hook waits for `$routeChangeSuccess` on the list route, then polls (via the
+  Performance API, watching for the `intf/dashboard/load` resource entry to complete — not a
+  blind timeout) until that bootstrap genuinely finishes, then redirects to `/piston/<id>`.
+  The list page is genuinely present in the DOM for that window — a full-screen overlay
+  (this file's own DOM element, no vendor markup) covers it the whole time so the user never
+  sees it, lifting only once the piston route lands. Piston mode selection (edit vs. view) is
+  unaffected — `piston.module.js`'s own `build == 0` check already picks edit for new pistons
+  and view for existing ones.
+- **OUT (piston → front door):** `piston.module.js` navigates to `/` via `$location.path('/')`
+  on several exit paths (Home breadcrumb, delete, etc.) — a client-side Angular route change,
+  invisible to the server and to PistonCore's front door. The hook listens for `$routeChangeStart`
+  targeting `/`; if it's arriving from an open piston (not this hook's own IN pass-through,
+  distinguished by whether a bootstrap redirect is still pending), it cancels the in-app route
+  change and does a real `window.location.href = '/'` instead, exiting the SPA entirely and
+  landing on the real front door.
 
 ---
 
