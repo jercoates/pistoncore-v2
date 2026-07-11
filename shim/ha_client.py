@@ -38,6 +38,43 @@ def _load_auth() -> tuple[str, str]:
     return config.get("ha_url", ""), config.get("ha_token", "")
 
 
+def is_configured() -> bool:
+    """
+    True once there's SOMETHING to connect with -- supervisor mode, or both
+    ha_url/ha_token present in config.json. Deliberately not a live check
+    (that's check_connection()) -- this only gates the settings-page
+    first-run redirect (pages.py), which cares about "has anyone entered
+    credentials yet", not "are they currently correct/reachable".
+    """
+    if os.environ.get("SUPERVISOR_TOKEN"):
+        return True
+    config = _load_config()
+    return bool(config.get("ha_url")) and bool(config.get("ha_token"))
+
+
+def get_config_for_display() -> dict:
+    """ha_url plus whether a token is already set -- never the token itself
+    (shim/routes/pages.py's settings form uses this to avoid re-rendering
+    the secret on every page load)."""
+    config = _load_config()
+    return {"ha_url": config.get("ha_url", ""), "has_token": bool(config.get("ha_token"))}
+
+
+def save_config(ha_url: str, ha_token: str | None) -> None:
+    """
+    Settings-page save (shim/routes/pages.py). ha_token is None/empty when
+    the user left the token field blank to keep the existing one -- only
+    overwrite it when a real new value was actually typed in.
+    """
+    config = _load_config()
+    config["ha_url"] = ha_url
+    if ha_token:
+        config["ha_token"] = ha_token
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=2)
+
+
 async def _ws_call(messages: list[dict]) -> dict[int, dict]:
     """
     Open a WebSocket connection to HA, authenticate, send all messages,

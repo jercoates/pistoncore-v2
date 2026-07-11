@@ -262,3 +262,36 @@ button {
 /* ── Stub pages ── */
 .pc-stub { text-align: center; padding: var(--space-6) var(--space-4); color: var(--text-muted); }
 .pc-stub h1 { font-family: var(--font-code); color: var(--text-primary); margin-bottom: var(--space-3); }
+
+/* ── Forms (Settings) ── */
+.form-group { margin-bottom: var(--space-4); max-width: 480px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.form-group input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--font-code);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+.form-group input:focus { outline: none; border-color: var(--teal-dim); }
+.field-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+/* ── Banners ── */
+.banner {
+  border-radius: 4px;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: 13px;
+  max-width: 480px;
+}
+.banner-info { background: var(--teal-bg); border: 1px solid var(--teal-dim); color: var(--teal); }
+.banner-success { background: rgba(76, 175, 80, 0.1); border: 1px solid var(--green); color: var(--green); }

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}PistonCore — Settings{% endblock %}
+
+{% block content %}
+<div class="page active">
+  <div class="list-header">
+    <h1>Settings</h1>
+  </div>
+
+  {% if first_run %}
+  <div class="banner banner-info">Welcome — connect PistonCore to Home Assistant to get started.</div>
+  {% endif %}
+  {% if saved %}
+  <div class="banner banner-success">Saved.</div>
+  {% endif %}
+
+  <form id="settings-form">
+    <div class="form-group">
+      <label for="ha_url">Home Assistant URL</label>
+      <input type="text" id="ha_url" name="ha_url" value="{{ ha_url }}" placeholder="http://192.168.1.65:8123/" required>
+    </div>
+    <div class="form-group">
+      <label for="ha_token">Long-lived access token</label>
+      <input type="password" id="ha_token" name="ha_token" placeholder="{{ 'Already set — leave blank to keep it' if has_token else 'Paste a long-lived access token' }}">
+      <p class="field-hint">Create one in Home Assistant: your profile → Security → Long-Lived Access Tokens.</p>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+
+  <div class="mode-notice">
+    Default TTS engine, Location Mode source entity, dark/light default,
+    import/export, and backups aren't built into this page yet.
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/pistoncore/settings.js"></script>
+{% endblock %}

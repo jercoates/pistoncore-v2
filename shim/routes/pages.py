@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from .. import ha_client, storage
@@ -40,6 +41,13 @@ def _tile_view(entry: dict) -> dict:
 
 @router.get("/")
 async def front_door(request: Request):
+    # First-run: nobody's entered HA credentials yet at all -- send them to
+    # Settings instead of a front door stuck permanently on "HA Unreachable"
+    # with no obvious next step. Once configured (even if currently wrong/
+    # unreachable), this never fires again -- that's what the badge is for.
+    if not ha_client.is_configured():
+        return RedirectResponse(url="/settings?first_run=1")
+
     tiles = [_tile_view(entry) for entry in storage.list_pistons()]
     ha_ok, ha_message = await ha_client.check_connection()
     return templates.TemplateResponse(request, "front_door.html", {
@@ -76,13 +84,20 @@ async def test_devices_stub(request: Request):
 
 
 @router.get("/settings")
-async def settings_stub(request: Request):
-    return _stub(request, "Settings", (
-        "PistonCore settings (HA connection, default TTS engine, Location Mode "
-        "source entity, dark/light default, import/export, backups) — not "
-        "built yet. Currently hand-edited in data/config.json and "
-        "data/settings.json."
-    ))
+async def settings_page(request: Request):
+    config = ha_client.get_config_for_display()
+    return templates.TemplateResponse(request, "settings.html", {
+        "ha_url": config["ha_url"],
+        "has_token": config["has_token"],
+        "first_run": request.query_params.get("first_run") == "1",
+        "saved": request.query_params.get("saved") == "1",
+    })
+
+
+@router.post("/api/settings")
+async def save_settings(ha_url: str = "", ha_token: str = ""):
+    ha_client.save_config(ha_url.strip(), ha_token.strip() or None)
+    return {"ok": True}
 
 
 @router.get("/help")
