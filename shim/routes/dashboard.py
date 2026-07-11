@@ -20,7 +20,19 @@ router = APIRouter(prefix="/intf/dashboard")
 # repeating it on every /load + /devices pair. Cleared only by server
 # restart for now (matches the "simplest v1" level of the rest of this
 # milestone); a manual refresh/TTL can come later if it's needed.
+# Split from the device payload cache (SHIM_API_SPEC.md §5.3) since location
+# building needs the raw states/config too, and may need to bust this cache
+# once (see _get_registries) right after auto-creating the Location Mode
+# helper, without touching the (unrelated) device payload cache.
+_registries_cache: dict | None = None
 _device_payload_cache: dict | None = None
+
+
+async def _get_registries() -> dict:
+    global _registries_cache
+    if _registries_cache is None:
+        _registries_cache = await ha_client.fetch_registries()
+    return _registries_cache
 
 # Chunked piston save, in progress (SHIM_API_SPEC.md §4.7). set.chunk/set.end
 # carry no piston id or session id at all (VERIFIED app.js:1278-1292) — the
@@ -34,7 +46,7 @@ _pending_save: dict | None = None
 async def _get_device_payload() -> dict:
     global _device_payload_cache
     if _device_payload_cache is None:
-        registries = await ha_client.fetch_registries()
+        registries = await _get_registries()
         _device_payload_cache = device_pipeline.build_device_payload(registries)
     return _device_payload_cache
 
@@ -49,13 +61,23 @@ def _device_version(devices: dict) -> str:
 
 @router.get("/load")
 async def load(request: Request):
+    global _registries_cache
     payload = await _get_device_payload()
-    instance = fixtures.fake_instance(str(request.base_url))
+    registries = await _get_registries()
+    location, helper_created = await fixtures.build_location(registries)
+    if helper_created:
+        # Next fetch picks up the newly-created helper for free; this
+        # response is already correct without waiting (built from the
+        # create call's own result) — see fixtures.build_location.
+        _registries_cache = None
+
+    virtual_devices = fixtures.build_virtual_devices([m["name"] for m in location["modes"]])
+    instance = fixtures.fake_instance(str(request.base_url), virtual_devices)
     instance["deviceVersion"] = _device_version(payload["devices"])
     instance["pistons"] = storage.list_pistons()
     instance["globalVars"] = storage.globals_for_wire()
     return jsonp(request, {
-        "location": fixtures.FAKE_LOCATION,
+        "location": location,
         "instance": instance,
     })
 

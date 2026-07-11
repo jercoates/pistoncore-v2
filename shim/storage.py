@@ -26,6 +26,7 @@ from pathlib import Path
 DATA_DIR = Path(os.environ.get("PISTONCORE_DATA_DIR", "/pistoncore-userdata"))
 PISTONS_DIR = DATA_DIR / "pistons"
 GLOBALS_FILE = DATA_DIR / "globals.json"
+SETTINGS_FILE = DATA_DIR / "settings.json"
 
 _EMOJI_RE = re.compile(r":(%[0-9A-Fa-f]{2}%[0-9A-Fa-f]{2}%[0-9A-Fa-f]{2}%[0-9A-Fa-f]{2}):")
 
@@ -89,6 +90,83 @@ def find_global_references(piston: dict) -> set[str]:
 
     walk(piston)
     return found
+
+
+# ---------------------------------------------------------------------------
+# Node ID assignment (PISTON_JSON_REFERENCE.md §8, VERIFIED-HE-GROOVY
+# webcore-piston.groovy:1412-1475 msetIds()) — the engine, not the editor,
+# assigns "$" ids, so the shim must do it on save. A node keeps its existing
+# "$" id if it has one AND that id hasn't already been claimed elsewhere in
+# the tree; otherwise (missing OR a duplicate of one already seen) it's
+# queued and gets max(seen)+1, incrementing per node, in traversal order.
+# Only statement/condition/restriction/group/task nodes get ids — operands
+# never do, so this walks the tree's known shape (PISTON_JSON_REFERENCE.md
+# §2-§7) rather than tagging every dict with a "t" field.
+# ---------------------------------------------------------------------------
+
+def assign_node_ids(piston: dict) -> None:
+    seen_ids: set[int] = set()
+    to_assign: list[dict] = []
+
+    def claim(node: dict):
+        existing = node.get("$")
+        if isinstance(existing, int) and existing not in seen_ids:
+            seen_ids.add(existing)
+        else:
+            to_assign.append(node)
+
+    def visit_task(task: dict):
+        claim(task)
+
+    def visit_condition(cond: dict):
+        claim(cond)
+        if cond.get("t") == "group":
+            for child in cond.get("c", []):
+                visit_condition(child)
+        else:
+            for task in cond.get("ts", []):
+                visit_task(task)
+            for task in cond.get("fs", []):
+                visit_task(task)
+
+    def visit_restriction(restr: dict):
+        claim(restr)
+        if restr.get("t") == "group":
+            for child in restr.get("r", []):
+                visit_restriction(child)
+
+    def visit_statement(stmt: dict):
+        claim(stmt)
+        for restr in stmt.get("r", []):
+            visit_restriction(restr)
+        for cond in stmt.get("c", []):
+            visit_condition(cond)
+        for task in stmt.get("k", []):
+            visit_task(task)
+        for child in stmt.get("s", []):
+            visit_statement(child)
+        for child in stmt.get("e", []):
+            visit_statement(child)
+        for ei in stmt.get("ei", []):
+            claim(ei)
+            for cond in ei.get("c", []):
+                visit_condition(cond)
+            for child in ei.get("s", []):
+                visit_statement(child)
+        for case in stmt.get("cs", []):
+            claim(case)
+            for child in case.get("s", []):
+                visit_statement(child)
+
+    for restr in piston.get("r", []):
+        visit_restriction(restr)
+    for stmt in piston.get("s", []):
+        visit_statement(stmt)
+
+    next_id = (max(seen_ids) if seen_ids else 0) + 1
+    for node in to_assign:
+        node["$"] = next_id
+        next_id += 1
 
 
 # ---------------------------------------------------------------------------
@@ -201,6 +279,8 @@ def save_piston(piston_id: str, piston_json: dict) -> dict:
 
     name = piston_json.get("n") or (existing["name"] if existing else "New Piston")
 
+    assign_node_ids(piston_json)
+
     entry = {
         "id": piston_id,
         "name": name,
@@ -286,3 +366,22 @@ def update_used_by(piston_id: str, piston_name: str, referenced_globals: set[str
             changed = True
     if changed:
         save_globals(globals_store)
+
+
+# ---------------------------------------------------------------------------
+# PistonCore settings (SHIM_API_SPEC.md §5.3) — no Settings UI yet
+# (memory: PistonCore needs a real settings page, incl. HA creds); until
+# then this file is hand-edited like data/config.json was before it existed.
+# ---------------------------------------------------------------------------
+
+def load_settings() -> dict:
+    if not SETTINGS_FILE.exists():
+        return {}
+    with open(SETTINGS_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_settings(settings: dict):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=2)

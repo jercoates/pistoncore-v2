@@ -246,6 +246,52 @@ def attribute_keys_for_entity(signals: dict, capability_map: dict) -> set[str]:
 
 
 # ---------------------------------------------------------------------------
+# Stage 3.3 — command-only capability lane (DEVICE_PAYLOAD_SPEC.md Stage 3.3)
+# ---------------------------------------------------------------------------
+
+def capability_keys_for_entity(signals: dict, capability_map: dict) -> set[str]:
+    """
+    Mirrors attribute_keys_for_entity's rule dispatch but reads a domain's
+    optional "capabilities" branch and returns capability keys directly —
+    for capabilities with commands but no primary attribute (speechSynthesis
+    and similar), which the attribute->capability bridge (Stage 4) can never
+    reach since there is no attribute to bridge from. Data-driven per house
+    style; only by_supported_features exists as a seed rule today, but this
+    walks whatever rule types are present so new ones need no code change.
+    """
+    domain_rules = capability_map["domains"].get(signals["domain"], {})
+    cap_rules = domain_rules.get("capabilities")
+    if not cap_rules:
+        return set()
+
+    keys: set[str] = set()
+
+    if "always" in cap_rules:
+        keys.update(cap_rules["always"]["capabilities"])
+
+    if signals["device_class"] and "by_device_class" in cap_rules:
+        rule = cap_rules["by_device_class"].get(signals["device_class"])
+        if rule:
+            keys.update(rule["capabilities"])
+
+    if signals["supported_features"] is not None and "by_supported_features" in cap_rules:
+        for key, rule in cap_rules["by_supported_features"].items():
+            if key.startswith("_"):
+                continue
+            if signals["supported_features"] & rule["bit"]:
+                keys.update(rule["capabilities"])
+
+    if "by_declaration_attr" in cap_rules:
+        for attr_name, rule in cap_rules["by_declaration_attr"].items():
+            if attr_name.startswith("_"):
+                continue
+            if attr_name in signals["declaration_attrs"]:
+                keys.update(rule["capabilities"])
+
+    return keys
+
+
+# ---------------------------------------------------------------------------
 # Stage 4 — attribute -> capability bridge (VERIFIED-FILES, overlaps expected)
 # ---------------------------------------------------------------------------
 
@@ -270,12 +316,22 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
     sub_device_members: dict[str, list[str]] = {}
     cmd_bindings: dict[str, str] = {}
     capability_keys: set[str] = set()
+    direct_cap_contributors: dict[str, str] = {}
     custom_attrs: list[dict] = []
 
     for entity_id in member_ids_sorted:
         state = state_map.get(entity_id)
         signals = _entity_signals(entity_id, state)
         entity_attr_keys = attribute_keys_for_entity(signals, picker_map)
+
+        # Stage 3.3 — command-only capabilities, evaluated independently of
+        # the attribute lane above (a capability here has no attribute to
+        # bridge from). First entity to offer a given capability wins its
+        # command bindings, same first-contributor-wins rule as attributes.
+        for cap_key in capability_keys_for_entity(signals, picker_map):
+            if cap_key not in capability_keys:
+                capability_keys.add(cap_key)
+                direct_cap_contributors[cap_key] = entity_id
 
         if not entity_attr_keys:
             # No picker_capability_map rule matched this entity at all —
@@ -318,7 +374,7 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
     # capability's attribute (commands route to that member).
     for cap_key in capability_keys:
         cap = vocab["capabilities"].get(cap_key, {})
-        contributing_entity = attr_bindings.get(cap.get("a"))
+        contributing_entity = attr_bindings.get(cap.get("a")) or direct_cap_contributors.get(cap_key)
         for command_key in cap.get("c", []):
             if command_key not in cmd_bindings and contributing_entity:
                 cmd_bindings[command_key] = contributing_entity
@@ -383,12 +439,82 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
 # Full pipeline
 # ---------------------------------------------------------------------------
 
+def extract_tts_engines(registries: dict) -> list[dict]:
+    """
+    tts.* entities (SESSION_BRIEF_SPEAK_VIRTUALS.md item 1b). VERIFIED live
+    (HA 2026.7.2): modern HA exposes TTS engines as entities in the same
+    get_states call already fetched for devices — no second HA round trip
+    needed. These are NOT devices (never merged into the devices payload);
+    they feed a future default-TTS-engine setting the compiler will read.
+    entity state ("unknown"/"unavailable"/etc.) is the engine's own status,
+    not a webCoRE-shaped value — left out here, this is enumeration only.
+    """
+    return [
+        {"entity_id": s["entity_id"], "name": s["attributes"].get("friendly_name", s["entity_id"])}
+        for s in registries["states"]
+        if s["entity_id"].startswith("tts.")
+    ]
+
+
+def extract_notify_target_services(registries: dict) -> list[str]:
+    """
+    notify.mobile_app_* service keys (VERIFIED live get_services, HA 2026.7.2)
+    -- the legacy per-target services real webCoRE-style device notification
+    tasks resolve to (COMPILER_DECISIONS_HOLDING.md C2, corrected 2026-07-12:
+    Jeremy's real pistons use a plain device-type variable + deviceNotification
+    command for this, e.g. "@Notifications_Push" -- not a separate picker
+    section or a Contact-Book-style target). Generic/non-target notify
+    services (notify.notify, persistent_notification, send_message) are
+    excluded -- they broadcast or aren't a single destination.
+    """
+    notify_services = registries.get("services", {}).get("notify", {})
+    return sorted(key for key in notify_services if key.startswith("mobile_app_"))
+
+
+def _build_notify_device(service_key: str, vocab: dict) -> tuple[str, dict, dict]:
+    """
+    One synthetic picker device per notify target service -- same shape as
+    any other device (n/cn/a/c), just sourced from the service registry
+    instead of an HA entity. Hashed from the service name itself, same as
+    every other device hash; if the underlying service name ever changes
+    (phone replaced/re-registered), the old hash simply stops resolving and
+    the piston shows broken in the editor -- the same "honest breakage,
+    re-pick in the UI" rule as any other device (DEVICE_PAYLOAD_SPEC Stage 7),
+    not a special case needing its own rebind mechanism.
+
+    Display name is a de-slugified guess (mobile_app_jeremy_s_s25 -> "Jeremy
+    S S25") -- TO VERIFY once a real mobile_app device exists to cross-
+    reference against its device-registry name (name_by_user), which would
+    give a truer display name than de-slugifying the service key.
+    """
+    entity_id_like = f"notify.{service_key}"
+    hashed_id = hash_id(entity_id_like)
+    display_name = service_key.removeprefix("mobile_app_").replace("_", " ").title()
+
+    cap = vocab["capabilities"].get("notification", {})
+    command_keys = cap.get("c", [])
+    cn = [cap["n"]] if cap else []
+    c = [{"n": ck, "p": vocab["commands"].get(ck, {}).get("p", [])} for ck in command_keys]
+
+    device_obj = {"n": display_name, "cn": cn, "a": [], "c": c}
+    resolution_entry = {
+        "registry_device_id": entity_id_like,
+        "name": display_name,
+        "members": [entity_id_like],
+        "attr_bindings": {},
+        "sub_device_bindings": {},
+        "cmd_bindings": {ck: entity_id_like for ck in command_keys},
+    }
+    return hashed_id, device_obj, resolution_entry
+
+
 def build_device_payload(registries: dict) -> dict:
     """
     Run Stages 1, 3, 4, 6, 7, 8. One device per HA device_id, always.
     Returns:
       { "devices": {hashedId: device_object, ...},
-        "resolution_map": {hashedId: {...}, ...} }
+        "resolution_map": {hashedId: {...}, ...},
+        "tts_engines": [ {entity_id, name}, ... ] }
     """
     picker_map = _load_json("picker_capability_map.json")
     vocab = _load_json("webcore_vocab.json")
@@ -408,7 +534,13 @@ def build_device_payload(registries: dict) -> dict:
         devices[hashed_id] = device_obj
         resolution_map[hashed_id] = resolution_entry
 
+    for service_key in extract_notify_target_services(registries):
+        hashed_id, device_obj, resolution_entry = _build_notify_device(service_key, vocab)
+        devices[hashed_id] = device_obj
+        resolution_map[hashed_id] = resolution_entry
+
     return {
         "devices": devices,
         "resolution_map": resolution_map,
+        "tts_engines": extract_tts_engines(registries),
     }

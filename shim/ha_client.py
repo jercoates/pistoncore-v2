@@ -91,15 +91,20 @@ async def _ws_call(messages: list[dict]) -> dict[int, dict]:
 
 async def fetch_registries() -> dict:
     """
-    Fetch device registry, entity registry, area registry, and current
-    states from HA. Raw HA API results, no PistonCore-specific shaping —
-    DEVICE_PAYLOAD_SPEC.md Stage 1 grouping happens in device_pipeline.py.
+    Fetch device registry, entity registry, area registry, core config, and
+    current states from HA. Raw HA API results, no PistonCore-specific
+    shaping — DEVICE_PAYLOAD_SPEC.md Stage 1 grouping happens in
+    device_pipeline.py; location building (SHIM_API_SPEC.md §5.3) happens
+    in fixtures.py. Shared here (one round trip) since both consumers need
+    the same states/config snapshot.
     """
     results = await _ws_call([
         {"id": 1, "type": "config/device_registry/list"},
         {"id": 2, "type": "config/entity_registry/list"},
         {"id": 3, "type": "config/area_registry/list"},
         {"id": 4, "type": "get_states"},
+        {"id": 5, "type": "get_config"},
+        {"id": 6, "type": "get_services"},
     ])
 
     for msg_id, result in results.items():
@@ -111,4 +116,25 @@ async def fetch_registries() -> dict:
         "entities": results[2]["result"],
         "areas": results[3]["result"],
         "states": results[4]["result"],
+        "config": results[5]["result"],
+        "services": results[6]["result"],
     }
+
+
+async def create_input_select(name: str, options: list[str]) -> dict:
+    """
+    Auto-creates a storage-backed input_select helper (SHIM_API_SPEC.md
+    §5.3 location-mode decision, Jeremy 2026-07-11). VERIFIED live against
+    real HA (2026.7.2): "input_select/create" (name, options) -> HA assigns
+    the entity_id as input_select.<slugified name>, defaults state to the
+    first option. No "config/" prefix — unlike the registry list calls
+    above, helper CRUD is its own top-level command namespace per domain
+    (confirmed by testing "config/input_select/list", which does not exist).
+    """
+    results = await _ws_call([
+        {"id": 1, "type": "input_select/create", "name": name, "options": options},
+    ])
+    result = results[1]
+    if not result.get("success"):
+        raise HAClientError(f"Could not create input_select helper {name!r}: {result.get('error')}")
+    return result["result"]

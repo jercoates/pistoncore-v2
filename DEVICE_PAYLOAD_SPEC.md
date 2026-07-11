@@ -232,8 +232,15 @@ entity-as-device — grouping is a no-op for singles.
    reach structurally — still open.
 6. Spike order note: fake devices first (grouping irrelevant), then Stage 1–9 against
    live HA as milestone 2 (CLAUDE.md ladder).
-7. Stage 3.3 rule inventory: enumerate the command-only capabilities in
-   webcore_vocab.json (capabilities lacking `a`), define an HA-signal rule for each that
-   PistonCore supports; verify behaviorally (speak-capable player offers Speak in the
-   task dialog; non-capable one doesn't). Notify-device rule waits on the C2/C2b target
-   decision.
+7. ~~Stage 3.3 rule inventory~~ — Speak RESOLVED 2026-07-11: `media_player` + PLAY_MEDIA
+   bit (512) -> `speechSynthesis` capability, implemented as a `capabilities` branch on
+   `picker_capability_map.json`'s `media_player` domain (`_meta.command_only_lane`) and
+   consumed by `device_pipeline.py`'s `capability_keys_for_entity()`, merged into the
+   group's capability set independent of the attribute bridge. Verified live against
+   Jeremy's real HA: all 6 real media_player devices (SHIELD, Family Room, Kitchen,
+   Garage, Basement, room2) now correctly show `Speech Synthesis` in `cn` and `speak` in
+   `c`; non-media_player devices are unaffected. `tts.*` enumeration also live-verified
+   (`tts.google_translate_en_com`, `tts.piper` found via the existing `get_states` call,
+   no second HA round trip needed) — served as `tts_engines` alongside `devices`, feeding
+   a future default-TTS-engine setting once a Settings page exists. Notify-device rule
+   still waits on the C2/C2b target decision, untouched this session.

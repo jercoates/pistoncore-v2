@@ -11,8 +11,8 @@
       "verified": "mapping confirmed against HA behavior",
       "assumed": "mapping inferred — reconcile on deploy"
     },
-    "special_keys": {
-      "speak_gate": "Not a WebCoRE attribute. Signals this device is eligible for the Speak author-time gate (media_player with PLAY_MEDIA bit). Checked separately in §7.5 logic; not offered as a picker menu item."
+    "command_only_lane": {
+      "purpose": "DEVICE_PAYLOAD_SPEC.md Stage 3.3 — capabilities with commands but no primary attribute (e.g. speechSynthesis) can never be reached through the attributes lane above, because there is no vocab attribute to bridge from. A domain's optional 'capabilities' branch (same rule-type shapes as the attributes lane: always/by_device_class/by_supported_features/etc., but each rule's payload key is 'capabilities' not 'attributes', naming webcore_vocab.json capability keys directly) is evaluated the same way and merged straight into the group's capability set, bypassing the attribute array and the Stage 4 bridge entirely."
     }
   },
   "domains": {
@@ -92,15 +92,20 @@
     },
 
     "media_player": {
-      "_note": "Status always offered. Volume and mute require supported_features bits. PLAY_MEDIA signals Speak eligibility (not a menu item).",
+      "_note": "Status always offered. Volume and mute require supported_features bits. PLAY_MEDIA gates Speak eligibility via the command_only_lane below, not this attributes lane.",
       "always": { "attributes": ["status"], "status": "verified" },
       "by_supported_features": {
         "SUPPORT_VOLUME_SET":  { "bit": 4,   "attributes": ["level"], "status": "verified" },
-        "SUPPORT_VOLUME_MUTE": { "bit": 8,   "attributes": ["mute"], "status": "verified" },
-        "SUPPORT_PLAY_MEDIA":  { "bit": 512, "attributes": ["speak_gate"], "status": "verified", "_note": "speak_gate is not a menu item — used only by §7.5 Speak author-time gate check" }
+        "SUPPORT_VOLUME_MUTE": { "bit": 8,   "attributes": ["mute"], "status": "verified" }
       },
       "by_declaration_attr": {
         "media_title": { "attributes": ["trackDescription","trackData"], "status": "verified" }
+      },
+      "capabilities": {
+        "_note": "Stage 3.3 command-only lane — see _meta.command_only_lane.",
+        "by_supported_features": {
+          "SUPPORT_PLAY_MEDIA": { "bit": 512, "capabilities": ["speechSynthesis"], "status": "verified", "_note": "B6 author-time Speak gate (COMPILER_DECISIONS_HOLDING.md) — a media_player advertising PLAY_MEDIA is speech-capable" }
+        }
       }
     },
 

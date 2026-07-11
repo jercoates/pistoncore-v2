@@ -139,7 +139,49 @@ the same HA state fetch the shim already performs for DEVICE_PAYLOAD_SPEC.md:
 
 ## C. NOTIFY / PUSH — behavioral + structural decisions the compiler must honor
 
-Authoritative source: NOTIFY_ACTION_SPEC.md. Pulled here: the decisions, not the field names.
+**CORRECTED 2026-07-12 (Jeremy, real piston screenshots).** `NOTIFY_ACTION_SPEC.md`'s
+central premise — "a notify target is NOT a device, it needs its own picker section and a
+new `target_ref`/`kind` JSON field" — was reasoned from HA architecture alone and is
+**WRONG**. Jeremy's real, working pistons (e.g. the Water Leak piston) show the actual
+mechanism: `@Notifications_Push` is an ordinary **device-type variable**, populated with
+real "Notification"-capability devices, used in a completely normal
+`with {@Notifications_Push} do Send device notification "..."` block — the stock
+`deviceNotification` command (capability `notification`, `c: ["deviceNotification"]`,
+already in `webcore_vocab.json`), same mechanism as any other device command. No Contact
+Book, no per-task target field, no custom JSON shape. `sendNotificationToContacts`
+(SmartThings Contact Book) and `sendSMSNotification` (literal phone-number param) are real
+stock commands too but are NOT what Jeremy's Hubitat setup uses — do not build toward them.
+
+**Implemented (`shim/device_pipeline.py`, 2026-07-12):** each `notify.mobile_app_*` service
+(VERIFIED live `get_services`, HA 2026.7.2 — legacy per-target services; generic
+`notify.notify`/`persistent_notification`/`send_message` excluded, they're not a single
+destination) becomes a synthetic picker device — same `n/cn/a/c` shape as any real device,
+capability `Notification`, command `deviceNotification`, no attributes — hashed from the
+service name exactly like every other device. **No rebind/override mechanism**: if the
+service name ever changes (phone replaced/re-registered), the old hash simply stops
+resolving and the piston shows broken in the editor, same "honest breakage, re-pick in the
+UI" rule as any other device (DEVICE_PAYLOAD_SPEC Stage 7) — Jeremy confirmed this is
+correct and expected, not a gap to design around. Zero mobile_app services exist on the
+test HA today (no phone set up yet), so this is verified as dead-code-safe (returns zero
+synthetic devices, no errors) but not yet behaviorally verified end-to-end in the dashboard.
+
+**C1's original "stable target reference" concern is now moot, not unsolved:** since a
+notify target is just a hashed device id like any other, the churn-insurance C1 wanted
+(never a hard-coded HA service string baked into the piston) already exists for free — the
+piston stores `<hashedId>` in the `with` block's device list exactly like any other device,
+and the resolution map (Stage 8) is what holds the real `notify.<service>` string, looked up
+at compile time. **Future compiler note:** resolving a `deviceNotification` task means
+reading the resolution map's `registry_device_id` for that hashed id (already the full
+`notify.<service_name>` string), splitting it into an HA service call `action: notify.<name>`
+with `data: {message: <compiled message>}` — a single, direct call, no `kind`-branched
+Jinja2 template needed (that branching was for the old, wrong design). `sendPushNotification`/
+`sendNotificationToContacts`'s stock params (message + optional store-in-messages boolean)
+should map onto this the same way if Jeremy ever uses those commands too — same target
+resolution, just a different source command key.
+
+Authoritative source: NOTIFY_ACTION_SPEC.md for HA-side facts (tts.speak-adjacent research,
+Companion App payload docs) — its picker/JSON-shape design (Section 1, Section 4.4) is
+superseded by the correction above; do not implement `target_ref`/`kind`.
 
 ### C1. The node stores a STABLE TARGET REFERENCE, never a hard-coded HA service string (LOAD-BEARING)
 
@@ -354,6 +396,46 @@ emit a cron that fires on the correct days of the month (via `dom`), then add an
 exit `if` check inside the function body to guard against wrong weeks. The exact Python
 expression for "Nth week of month" must be confirmed at the v2 compiler spec against real
 HA behavior.
+
+---
+
+## EE. WebCoRE statement/operator → HA behavioral pairing (VERIFIED reference, folded in 2026-07-12)
+
+Folded in from `reference/WEBCORE_HA_BEHAVIOR_MAP.md` (verified against live HA docs,
+2026.6.3) before that file was deleted as reference-folder cleanup — this is the durable
+content, kept here so it isn't lost. Complements G below: this is *behavioral pairing*
+(what HA construct matches WebCoRE's behavior), G is *illustrative output shape*. Full
+per-operator tables lived in the source file; the load-bearing gotchas that aren't obvious
+from HA's docs alone are:
+
+- **`numeric_state` trigger only fires on crossing**, not on any change that lands past the
+  threshold — if a value is already above 30 and goes 31→32, it does NOT re-fire. WebCoRE's
+  "changes to above" fires on any change landing above threshold regardless of prior value.
+  Needs a `state` trigger + template filter for exact parity if that distinction matters.
+- **`for:` (duration) on triggers/conditions does NOT survive an HA restart or automation
+  reload** — resets and re-times from scratch. WebCoRE pistons reset on restart too, so this
+  is equivalent behavior, not a gap.
+- **`choose` never falls through** — WebCoRE's switch fall-through mode has no HA
+  equivalent; `choose` always exits after the first matching branch (PyScript-routed per §E
+  if fallthrough is actually used).
+- **No native XOR** — HA conditions are AND/OR/NOT only; XOR requires a template
+  (`{{ (cond1|int) + (cond2|int) == 1 }}`), same for the "exactly one" comparison operator
+  family.
+- **No nested/per-condition triggers** — WebCoRE's `on` statement (nested trigger inside an
+  action sequence) and per-condition event subscription have no HA equivalent; HA triggers
+  are automation-level only. Closest approximation for a one-shot wait is `wait_for_trigger`,
+  which is NOT a persistent subscription loop.
+- **"Followed by" (sequential condition chaining within a time window)** has no HA
+  equivalent — would need `wait_for_trigger` chains with timeout tracking.
+- **No explicit `break`** in any HA loop (`repeat: count/for_each/while/until`) — HA loops
+  exit via a condition evaluating false/true; the workaround is a boolean flag variable
+  checked by the loop's own condition.
+- **`repeat.index` is 1-based** with no start/end/step concept (WebCoRE's `for` loop has
+  all three) — variable step needs a `variables` action inside the loop.
+- Confirmed cut, no HA equivalent at all: AskAlexa/EchoSistant virtual devices, LIFX cloud
+  virtual device (HA's LIFX integration uses local entity commands directly instead),
+  Contacts/SMS (HA has no equivalent — real `notify` service call instead, see §C),
+  SmartThings-specific Routines (HA uses scripts/scenes).
 
 ---
 

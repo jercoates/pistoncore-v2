@@ -207,9 +207,18 @@ required.
   "settings": {},
   "lifx": {},                   // legacy LIFX integration; empty object
   "contacts": [],               // legacy ST contact book; empty
-  "virtualDevices": {}          // defaults to {} client-side
+  "virtualDevices": { "date":{...}, "time":{...}, "mode":{"n":,"t":"enum","o":[...]}, ... }
 }
 ```
+**virtualDevices — RESOLVED (VERIFIED-HE-GROOVY, 2026-07-10/11, `webcore.groovy:1840` &
+6032-6063 `virtualDevices()`).** Served on the **instance**, not the db payload (settles the
+prior "db vs instance vs both" open item). Real shape is a flat map keyed by short virtual-
+device id (`date`, `datetime`, `time`, `mode`, `alarmSystemStatus`, `powerSource`, `routine`,
+`rule`, `webhook`, ...), each entry `{n: <display name>, t: <type>, o?: <enum options>,
+m?: <momentary flag>}`. `webcore_vocab.json`'s `virtualDevices` section is this seed;
+`shim/fixtures.py`'s `build_virtual_devices()` serves it as-is except `mode.o`, which is
+replaced with the live Location Mode source entity's current options (§5.3) instead of a
+placeholder — no other entry needs live data (Time/Date&Time render from the client clock).
 **Piston `meta` — RESOLVED (VERIFIED-HE-GROOVY, 2026-07-10). Two genuinely different real
 shapes exist, for two different call sites — not one shape reused:**
 1. **List view** (`instance.pistons[].meta`, this section) — short keys, built by `gtMeta()`
@@ -233,8 +242,20 @@ combined, and serves whichever fields each endpoint needs from it — functional
 (behaviorally verified, milestone 3) but structurally simpler than real webCoRE's two
 separate derived views. Not a bug; worth knowing if a future session wants exact parity.
 
-### 5.3 Location object (VERIFIED field usage)
-Fields read: `id`, `name`, `mode` (current), `modes` (list), `shm` (Smart Home Monitor / HSM state — PistonCore maps to HA `alarm_control_panel`), `temperatureScale` (`"F"`/`"C"`), `timeZone`, plus zip/lat-long for sunrise/sunset — **TO VERIFY** exact time/sun field names against Groovy (`getLocationData`). Source in HA: core config API + `sun.sun` + a designated alarm entity + an `input_select` (or HA native) for modes.
+### 5.3 Location object (VERIFIED field usage; real pipeline as of 2026-07-11, `shim/fixtures.py`)
+Fields read: `id`, `name`, `mode` (current), `modes` (list), `shm` (Smart Home Monitor / HSM state), `temperatureScale` (`"F"`/`"C"`), `timeZone`, `latitude`/`longitude` (VERIFIED live `get_config`, resolves the prior TO VERIFY — HA's core config exposes these directly, no separate sunrise/sunset field lookup needed).
+
+**location.shm (HSM/alarm) — DECISION, unchanged from draft.** Maps to a designated HA `alarm_control_panel` entity: `disarmed`→`off`, `armed_home`→`stay`, `armed_away`→`away`, `armed_night`→`night`. Zero `alarm_control_panel` entities → serve `"off"`, log it, never error. Multiple → first alphabetically by entity_id, logged (TO VERIFY: revisit if this ever applies to a real multi-panel install — Jeremy's has exactly one, `alarm_control_panel.keypad`). HSM and Location Mode are **independent states**; never derive one from the other.
+
+**location.mode / location.modes (Location Mode) — DECISION, Jeremy 2026-07-11.** HA has no native location-mode concept, so PistonCore owns one generically:
+1. **Default (zero-setup):** the shim ensures `input_select.pistoncore_location_mode` exists (auto-created via the live-verified `input_select/create` WS command — no `config/` prefix, its own top-level command namespace, distinct from the registry-list calls — options seeded `["Day","Evening","Night","Away"]`) if no source is yet designated.
+2. **Override (power users):** `storage.load_settings()["location_mode_entity"]` — any `input_select` (or other enumerable) entity, hand-set in `data/settings.json` until a real Settings page exists (memory: pistoncore_settings_page_ha_creds). Once the default auto-creates, its entity_id is written into this same setting — self-healing, never creates a second helper on a later load. A designated entity that no longer exists in HA is a clear error, never a silent fallback.
+3. **Serving:** `location.modes` = the source entity's `options` list, each `{id: hashId("locationMode." + option), name: option}`; `location.mode` = the hash of the current state (omitted/`None` if the current state isn't one of the known options — same "(unknown)" tolerance the dashboard already has for unmatched mode ids).
+4. **Writes:** webCoRE's "Set location mode" virtual command → `input_select.select_option` on the source entity, at compile time (not yet built — compiler is future work).
+5. **Why a real HA entity, not shim-internal state:** so the user's other HA automations can read/set it, and so compiled pistons trigger on mode changes natively — HA stays the automation controller.
+6. Mode option renames/additions flow through on next load; hashIds are deterministic from option names.
+
+Behaviorally verified live (Jeremy's real HA, 2026-07-11): helper auto-created, `location.shm` correctly reads `alarm_control_panel.keypad` (disarmed→off), lat/long/timezone/temp-scale populated from `get_config`. Second load reuses the same helper via `settings.json` — confirmed no duplicate created.
 
 ---
 
