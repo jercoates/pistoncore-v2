@@ -24,9 +24,8 @@ phoning home.
 
 ## How it works
 
-- The **stock webCoRE dashboard** (vendored under `vendor/webcore-dashboard/`, unmodified
-  except for a short, documented list of neutralizations) is served locally by a Python
-  **FastAPI shim**.
+- The **stock webCoRE dashboard** (vendored under `dashboard/`, unmodified except for a
+  short, documented list of neutralizations) is served locally by a Python **FastAPI shim**.
 - The shim **impersonates the webCoRE SmartApp API** (~25 endpoints), fabricating
   webCoRE-shaped data from Home Assistant: your HA devices appear in the editor grouped
   the way physical devices are (one picker item per device, like Hubitat), with their
