@@ -357,13 +357,14 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
 
     hashed_id = hash_id(group["group_key"])
 
+    # Real Hubitat-fork getDevDetails() returns exactly n/cn/a/c — no o/an on a
+    # physical device (o is only real on virtualDevices entries; an was never
+    # real at all) — verified against source, 2026-07-10.
     device_obj = {
         "n": group["display_name"],
         "cn": cn,
         "a": a,
         "c": c,
-        "o": {},
-        "an": group["display_name"],
     }
 
     resolution_entry = {

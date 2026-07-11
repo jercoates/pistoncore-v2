@@ -124,8 +124,28 @@ Polled while a piston is open; feeds the console/trace. v1 (degraded status page
 ### 4.9 `intf/dashboard/piston/backup` (VERIFIED)
 Params: `ids` (comma-separated piston ids). Returns piston JSONs for backup/export. Worth implementing properly — it's the export path for the copy/paste share mechanism (IMPORT_EXPORT_SPEC.md).
 
-### 4.10 `intf/dashboard/variable/set` (VERIFIED)
-Params: `name`, `value` (URL-encoded JSON), `id` (piston id, optional — absent = global variable). Backs the global variable editor. Maps to PistonCore's external global-variable list.
+### 4.10 `intf/dashboard/variable/set` (VERIFIED against `webcore_source_reference.groovy:1495-1528`, 2026-07-10)
+Params: `name`, `value`, `id` (piston id, optional — absent = global variable).
+`value` is `utoa(angular.toJson({t, v}))` — base64 of JSON, **no emoji-encode step** (unlike
+piston save, §4.7) — then URL-encoded for transport. Decode: base64-decode → UTF-8 → JSON.parse.
+The decoded object may also carry `n` (a rename: if present and differs from the `name`
+param, the variable is stored under `value.n` instead, removing any entry under the old
+`name`). Falsy `value` with a `name` present = delete.
+**Global case (no `id`):** read/write the central global-variable store, keyed by `name`
+(always `@`-prefixed — VERIFIED `piston.module.js:2278`), value `{t, v}`. Backs the
+dashboard's global variable editor.
+**Response (VERIFIED):** `{"status": "ST_SUCCESS", "globalVars": {...entire updated map...}}`
+— the full map, not just the changed variable.
+**Piston-local case (`id` present):** sets the piston's *current runtime value* for that
+local variable (separate from the variable's definition/initial value, which lives in the
+piston JSON's own `v` array and saves through the normal piston save flow, §4.7). Response:
+`{"status": "ST_SUCCESS", "id": <pid>, "localVars": {...}}`. No execution engine exists yet
+to give this runtime state meaning — accept and store, but it's inert until the compiler/
+runtime exists.
+**Device-type globals (VERIFIED, 2026-07-10):** stored exactly like every other type —
+`v` is just the device-id array. Never embedded in piston JSON; pistons reference the
+global by name only. Confirms COMPILER_DECISIONS_HOLDING.md §H1: editing a device global's
+member list never requires a piston JSON patch, only a deployed-automation patch.
 
 ### 4.11 `intf/dashboard/settings/set` (VERIFIED)
 Params: `settings` (URL-encoded JSON). Instance-level dashboard settings; store as an opaque blob and echo back in `load`.
@@ -137,15 +157,40 @@ Params: `id`, `expression`, `dataType`, `v`. The dashboard asks the **backend** 
 
 ## 5. Data shapes
 
-### 5.1 Device object (VERIFIED field usage; exact serialization ASSUMED — confirm against Groovy `listAvailableDevices`)
-Keyed by device id in the `devices` map. Fields the dashboard reads:
-- `n` — display name (string). HA friendly_name.
-- `cn` — array of **capability display names** (e.g. `"Contact Sensor"`, `"Switch Level"`, `"Color Control"`) (VERIFIED `determineDeviceType` app.js:1664). Produced from picker_capability_map → vocab display names.
-- `a` — array of attribute objects, each at minimum `{ "n": <attrName>, "t": <dataType> }` (VERIFIED piston.module.js:2652, 2405, 3740 — `.t` feeds operand dataType). Likely also current value — **TO VERIFY** field name (`v`?) against Groovy.
-- `c` — array of command names/objects (VERIFIED piston.module.js:2759–2817 feeds command menus). **TO VERIFY** whether strings or `{n: ...}` objects.
-- `o` — map of custom/overridden command display names (VERIFIED piston.module.js:2664).
-- `an` — referenced in piston.module.js — **TO VERIFY** meaning (likely attribute names shortcut).
-- Device **id key**: webCoRE hashes hub device ids (MD5-style strings like `:abcdef...:`). PistonCore uses a deterministic hash of `entity_id` as the key and keeps a shim-side map hash → entity_id. Raw entity_ids as keys would probably work but hashed ids match every existing shared piston's format — **DECISION: hash, keep bidirectional map in storage.**
+### 5.1 Device object (VERIFIED against `webcore.groovy:3541-3729`, `listAvailableDevices`/`getDevDetails`, 2026-07-10)
+Keyed by device id in the `devices` map. Real Hubitat-fork shape (`getDevDetails()`) is
+exactly 4 keys — **no more, no less**:
+```
+{
+  "n":  <dnm — dev.getDisplayName()>,
+  "cn": <dev.getCapabilities()*.name — the device's OWN declared capability list,
+         NOT derived from its attributes (see DEVICE_PAYLOAD_SPEC.md Stage 3.3 —
+         HA has no equivalent capability list, so PistonCore must derive cn from
+         attributes instead; this is exactly why command-only capabilities like
+         Speech Synthesis need their own lane)>,
+  "a":  [ {"n": <attr.name>, "t": <attr.getDataType()>, "o": <attr.getValues()>}, ... ],
+        // built straight from dev.getSupportedAttributes() — driver-reported, NOT
+        // filtered through any central vocab (confirms DEVICE_PAYLOAD_SPEC.md
+        // Stage 3.2's custom-attribute fallback matches real behavior). PLUS 3
+        // synthetic attributes appended to every device, never from the driver:
+        // lastActivityWC (datetime), roomIdWC (integer), roomNameWC (string).
+  "c":  [ {"n": <command name, or overridden name if custom>, "p": [...]}, ... ]
+        // p elements are objects {n, t, h?, c?} (name/type/hint/constraints,
+        // types UPPERCASE e.g. "STRING"/"NUMBER") when the driver provides
+        // structured parameter metadata, else a bare list of UPPERCASE type-name
+        // strings as fallback. Commands not recognized by the vocab get cm:true
+        // (custom) and their own param types uppercased the same way.
+}
+```
+**Correction:** an earlier draft of this doc listed `o` (custom command display-name
+overrides) and `an` as physical-device fields. VERIFIED WRONG — `getDevDetails()`'s return
+has no `o`/`an` key at all. `piston.module.js:2664`'s `device.o` read is on
+`instance.virtualDevices[id]` entries (routines/rules/location-modes — synthetic pseudo-
+devices), never on a regular physical device. PistonCore's shim currently emits an empty
+`"o": {}` and an `"an"` (anonymize-name) field on every device; harmless (nothing reads
+either on a physical device) but not part of the real wire shape — safe to leave, not
+required.
+- Device **id key**: webCoRE hashes hub device ids (MD5-style strings like `:abcdef...:`, formula VERIFIED `:` + md5(`core.` + id) + `:`, `webcore.groovy:6368-6381`, matches PistonCore's `hash_id()` exactly). PistonCore uses a deterministic hash of the HA device-registry id (or entity_id for singletons) as the key and keeps a shim-side map hash → entity_id. Raw entity_ids as keys would probably work but hashed ids match every existing shared piston's format — **DECISION: hash, keep bidirectional map in storage.**
 
 ### 5.2 Instance object (VERIFIED `setInstance` app.js:672–740)
 ```
@@ -165,7 +210,28 @@ Keyed by device id in the `devices` map. Fields the dashboard reads:
   "virtualDevices": {}          // defaults to {} client-side
 }
 ```
-Piston `meta` — **TO VERIFY** keys (active/paused state, category, last executed) from dashboard.module.js tile rendering.
+**Piston `meta` — RESOLVED (VERIFIED-HE-GROOVY, 2026-07-10). Two genuinely different real
+shapes exist, for two different call sites — not one shape reused:**
+1. **List view** (`instance.pistons[].meta`, this section) — short keys, built by `gtMeta()`
+   via `presult()`/`pitem()` (`webcore.groovy:1718-1740`), same shape `curPState()` returns:
+   ```
+   { "a": <active bool>, "c": <category>, "t": <lastExecuted ms>, "m": <modified ms>,
+     "b": <bin id>, "n": <nextSchedule ms>, "z": <description>, "s": <state map>,
+     "heCached": <bool> }
+   ```
+   Matches `dashboard.module.js`'s `piston.meta.a` active/paused-bucket filtering exactly.
+2. **`piston/get` response meta** (§4.5) — long keys, built by the piston's own `get()`
+   (`webcore-piston.groovy:1148-1166`):
+   ```
+   { "id":, "author":, "name":, "created":, "modified":, "build":, "bin":, "active":,
+     "category": }
+   ```
+   Matches `piston.module.js:599-606`'s save-success gate (`response.data.build` truthy →
+   applies `.active`/`.modified`/`.build`).
+PistonCore's shim currently stores one hybrid dict per piston with fields from both shapes
+combined, and serves whichever fields each endpoint needs from it — functionally correct
+(behaviorally verified, milestone 3) but structurally simpler than real webCoRE's two
+separate derived views. Not a bug; worth knowing if a future session wants exact parity.
 
 ### 5.3 Location object (VERIFIED field usage)
 Fields read: `id`, `name`, `mode` (current), `modes` (list), `shm` (Smart Home Monitor / HSM state — PistonCore maps to HA `alarm_control_panel`), `temperatureScale` (`"F"`/`"C"`), `timeZone`, plus zip/lat-long for sunrise/sunset — **TO VERIFY** exact time/sun field names against Groovy (`getLocationData`). Source in HA: core config API + `sun.sun` + a designated alarm entity + an `input_select` (or HA native) for modes.
@@ -208,8 +274,19 @@ Fields read: `id`, `name`, `mode` (current), `modes` (list), `shm` (Smart Home M
 
 ## 10. Open items (next spec sessions)
 
-1. Confirm ASSUMED/TO VERIFY items against Session 14 Groovy source (do in a session with that chat in context): db envelope, device serialization (`a[].v`, `c` element type, `an`), piston meta keys, location time/sun fields, `new`/`create`/`set.end` response shapes, `evaluate` degradation.
-2. Check `openWebSocket` (app.js:761) — dashboard attempts a websocket for live updates; determine if optional (likely — Hubitat local feature) and whether shim should stub or implement.
-3. PISTON_JSON_REFERENCE.md — extract full piston JSON format from Session 14 sources.
-4. DEVICE_PAYLOAD_SPEC.md — entity_id → device object pipeline using picker_capability_map + vocab + attribute translation.
-5. Spike milestone: static serving + `/connect` + hardcoded `load`/`devices`/`getDb` with 3 fake devices → dashboard renders piston list and device picker.
+1. Most items below RESOLVED 2026-07-10 against the real ady624 Hubitat-fork source
+   (`reference/webCoRE-hubitat-patches-extracted/`, "Last update July 5, 2026 for
+   Hubitat" — see SESSION_BRIEF_HUBITAT_MINING.md): db envelope (§4.4/§6), device
+   serialization (§5.1 — `c` elements are objects with UPPERCASE types, `an` was never
+   real, `o` was mis-attributed to the wrong object), piston meta keys (§5.2, two real
+   shapes). Location time/sun fields and `evaluate` degradation remain open — not reached
+   this pass.
+2. ~~Check `openWebSocket`~~ — RESOLVED (2026-07-10): the Hubitat-fork backend has **zero**
+   websocket code. It's purely a cloud feature (`api-us-*.webcore.co:9297`, the commercial
+   webcore.co relay) — never served by a self-hosted install. The dashboard already has to
+   tolerate its absence (retry-with-backoff on connect failure, app.js's onclose/onerror
+   handlers). Shim: ignore, no stub needed.
+3. PISTON_JSON_REFERENCE.md — extract full piston JSON format from Session 14 sources. **Status:** §8 ($ id assignment) and §10.5's comparison trigger/condition split resolved 2026-07-10; rest still open.
+4. DEVICE_PAYLOAD_SPEC.md — entity_id → device object pipeline using picker_capability_map + vocab + attribute translation. **Status:** built (milestone 2), Stage 3.1/3.2/3.3 added since.
+5. Spike milestone: static serving + `/connect` + hardcoded `load`/`devices`/`getDb` with 3 fake devices → dashboard renders piston list and device picker. **Status: DONE (milestone 1).**
+6. TRACE_ACTIVITY_CONTRACT.md (new, 2026-07-10) — `piston/activity` response shape and log-entry shape resolved; the `state`/`trace` blobs' write sites (not just where they're read/served from) still need a dedicated trace before the compiler can commit to a trace strategy.

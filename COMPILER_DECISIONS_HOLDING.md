@@ -638,20 +638,49 @@ or removed from the group), updating the referencing pistons is a **targeted pat
 operation**, not a full recompile. The piston logic does not change — only which devices
 are targeted changes.
 
+**Why this problem doesn't exist in stock webCoRE (VERIFIED, 2026-07-10):** stock webCoRE
+is an *interpreter*, not a compiler — `executePiston()` → `piston.execute()` reads the
+piston's stored JSON (which only ever holds `@Name`, never a resolved device list, per H1)
+and resolves it against the live `atomicState.vars` **fresh on every execution**
+(`reference/webcore_source_reference.groovy:2173-2184` — `sendVariableEvent` even fires a
+platform event on global change, for pistons that trigger on it). There is no compiled
+artifact to go stale, so stock webCoRE has nothing to patch. This problem is entirely a
+consequence of PistonCore choosing to compile ahead-of-time into static HA automation
+YAML/PyScript. **Nothing to adapt from webCoRE here — this is PistonCore's own design.**
+
 ### H1. What the patch does
 
 (Rewritten for v2.) For each piston in the global's `used_by` list:
-1. **JSON patch — likely unnecessary in v2 (TO VERIFY at PISTON_JSON_REFERENCE.md):** stock
-   webCoRE pistons reference a device global **by variable name** in operands; the device
-   list lives only in the global itself. If that holds, the piston JSON never changes when
-   the global's device list changes — the v1 role_tokens JSON-walk is dead. If some webCoRE
-   node type inlines device lists, patch only those nodes.
-2. **HA automation patch:** update just the device/entity references in the deployed
-   automation/PyScript file — not the logic, triggers, or conditions. The structure stays
-   identical; only entity targets change (resolved through the hash ↔ entity_id map, A6).
+1. **JSON patch — CONFIRMED unnecessary in v2 (VERIFIED, 2026-07-10, against
+   `reference/webcore_source_reference.groovy:1495-1528` `api_intf_variable_set`).** The
+   real Hubitat/SmartThings backend stores every global (device-type included) in ONE
+   central map, `atomicState.vars`, keyed by `@Name`, holding `{t, v}` — `v` for a device
+   global is just the device-id array. Pistons reference the global **only by name** in
+   operands; the device list is never embedded in piston JSON, for any global type. The
+   piston JSON genuinely never changes when a global's device list changes — the v1
+   role_tokens JSON-walk is confirmed dead, not just assumed dead.
+2. **HA update — via an HA `group` entity, not YAML/PyScript text patching (DECISION,
+   2026-07-10):** every device-type global compiles to one dedicated HA `group` entity
+   (e.g. `group.pistoncore_<slug(@Name)>`), and every compiled automation/PyScript that
+   references that global targets **the group entity**, never raw resolved entity_ids
+   directly. Updating the global then means calling HA's `group.set` service
+   (`entity_id: group.pistoncore_<slug>`, `entities: [<resolved entity_ids>]`) —
+   confirmed a real, current HA service that creates-or-updates a group's membership live,
+   no YAML edit, no restart, immediate effect on every automation that targets it. The
+   deployed automation/PyScript file is **never touched** on a device-global edit — only
+   the group's membership changes. This sidesteps fragile text-patching entirely.
+   **Caveat (verified):** `group.set`-created groups are **not persisted** across an HA
+   restart — they're not backed by `configuration.yaml`, so a restart drops membership
+   back to nothing. Mitigation: the shim (which owns the authoritative globals store)
+   re-issues `group.set` for every device-type global whenever it detects HA has restarted
+   — cheapest hook is the shim's own HA WebSocket client subscribing to HA's
+   `homeassistant_started` event (same connection already used for `ha_client.py`) and
+   replaying every device-global's current membership at that point. No separate polling
+   job needed.
 
 This is distinct from the full compile path. The compiler is NOT called for a
-device-global patch.
+device-global patch — it only runs once, at first-compile, to decide that a device-type
+global operand compiles to a `group.<slug>` target instead of literal entity_ids.
 
 ### H2. Update flow
 
@@ -659,22 +688,29 @@ The "Update all now" path routes through the shim (which owns globals storage in
 
 ```
 Globals change (variable/set, SHIM_API_SPEC.md §4.10) or "Update all now"
-  → shim: for each piston in used_by:
-      patch deployed automation/PyScript entity targets
-      (JSON untouched per H1, unless the TO-VERIFY exception applies)
+  → shim: call HA service group.set(entity_id=group.pistoncore_<slug>, entities=[...])
+    (one call, regardless of how many pistons are in the global's used_by list —
+     they all already target the same group entity)
+
+HA restarts (shim's HA WebSocket client sees homeassistant_started)
+  → shim: replay group.set for every device-type global from its own storage
 ```
+
+`used_by` (H4) is still tracked — not for the patch itself (a single `group.set` call
+updates every referencing piston at once, no per-piston iteration needed), but so the UI
+can show "used by N pistons" and so a future full recompile knows which pistons to
+revisit if the *group-vs-inline* compile strategy itself ever changes.
 
 The shim owns this operation. The compiler is not involved.
 
 ### H3. Editor-open guard
 
-(Adapted for v2.) The stock dashboard does not tell the shim a piston is open, and if H1's
-TO-VERIFY holds, the JSON never changes — so there is nothing an open editor could clobber
-and the deployed-file patch can proceed regardless. If the JSON-patch exception applies to
-some node type, the v1 guard concept returns: skip pistons with recent unsaved editor
-activity and notify the user. Resolve alongside H1's TO-VERIFY.
+Not needed. Since H1 confirms the piston JSON never changes on a device-global edit, and
+the HA-side update (H1.2) is a `group.set` service call that never touches a deployed
+file, there is nothing an open editor or a mid-save piston could ever clobber. The v1
+editor-open guard concept does not apply in v2 and can stay retired.
 
-### H4. Tracking mechanism
+### H4. Tracking mechanism — BUILT (2026-07-10, part of the save flow, shim/storage.py)
 
 (Rewritten for v2 — the v1 wizard maintained `used_by`; the stock dashboard cannot.) The
 **shim** maintains `used_by`, and it is better placed to do so than the v1 wizard was:
@@ -684,16 +720,23 @@ variables and any other global usage), adds this piston `{id, name}` to each ref
 global's `used_by`, and removes it from globals it no longer references. Event-driven at
 the point of save. No background scan. No scheduled job. No frontend involvement.
 
-`used_by` is stored on the global object in the shim's globals storage and travels with
-the globals-export JSON that feeds the compilers.
+`used_by` is stored on the global object in the shim's globals storage
+(`shim/storage.py:update_used_by`, `{name: {t, v, used_by: [{id, name}, ...]}}`) and
+travels with the globals-export JSON that feeds the compilers. Scanner
+(`shim/storage.py:find_global_references`) does a generic tree walk for
+`{"t": "x", "x": <name-or-list>}` operand nodes rather than enumerating every named field
+(lo/ro/ro2/to/to2/wd/p/x/...) — operands can appear in many places and are always shaped
+`{"t": ..., ...}`, so the generic walk is more robust than hardcoding field names.
 
 ### H5. Status at time of writing
 
-The patch operation (H1–H2) is a **future build item**. In v2 the tracking mechanism (H4)
-is part of the shim's save flow and gets built with it; the patch call is stubbed until the
-compiler exists and deploys artifacts worth patching. The `used_by` data will be accurate
-and ready when the patch is built. The v1 globals UI is retired; v2 globals are edited in
-the stock dashboard's variable editor (served by SHIM_API_SPEC.md §4.10).
+Tracking (H4) is **built** — part of the milestone 3 save flow. The `group.set`-based
+patch mechanism (H1.2, H2) is **designed and verified** (HA capability confirmed via web
+search, 2026-07-10) but not yet built — there's no compiler yet to decide the
+group-vs-inline compile strategy, and nothing deployed yet worth patching. The `used_by`
+data is accurate and ready for when the compiler is built. The v1 globals UI is retired;
+v2 globals are edited in the stock dashboard's variable editor (served by
+SHIM_API_SPEC.md §4.10).
 
 ---
 

@@ -1,0 +1,59 @@
+<status ng-if="status" ng-animate ng-bind-html="status" ng-click="setStatus()"></status>
+
+<div class="container">
+	<div class="loginbox">
+		<img class="loginbox-logo" src="img/webCoRE-text-{{ theme }}.svg">
+	  <div id="instance">
+			<form ng-submit="register()">
+				<p>Enter your registration code from the webCoRE SmartApp to get started.</p>
+				<p><a target="_blank" href="https://wiki.webcore.co/#Opening_the_new_dashboard_from_your_phone">Need help finding your registration code?</a></p>
+				<div class="input-group input-group-lg">
+					<input name="code" class="form-control " type="text" maxlength="4" ng-model="code" />
+					<span class="input-group-btn">
+						<button type="submit" ng-disabled="code.length != 4" class="btn btn-primary"><span class="fa fa-chevron-right"></span></button>
+					</span>
+				</div><br />
+				<p class="text-center"><a ng-if="hasRegistered" ng-click="cancel()" class="btn btn-secondary">Cancel</a></p>
+			</form>
+		</div>
+	  <div class="help-row">
+	      <a href="https://www.paypal.me/ady624" class="btn btn-primary"><i class="fab fa-paypal"></i>
+	        Donate</a>
+	      <a href="https://wiki.webcore.co/" class="btn btn-primary"><i class="fa fa-book"></i>
+	        Wiki</a>
+	      <a href="https://community.webcore.co/" class="btn btn-primary"><i class="fa fa-comments"></i>
+	        Forum</a>
+	    </div>
+		</div>
+</div>
+
+
+
+<!-- ACCOUNTS NOT CURRENTLY ACTIVE
+<ul  class="nav nav-pills">
+	<div login>
+			<li class="active"><a data-target="#instance" data-toggle="tab">Register Instance</a>
+	    </li>
+	    <li><a data-target="#account" data-toggle="tab">Login</a>
+	    </li>
+</ul>
+<div class="tab-pane" id="account">
+  <panel>
+	  <div class="form-group">
+		  <p>Accounts are not currently enabled.</p>
+		  <p>You do not need an account to use webCoRE. Please register an instance.</p>
+	  </div>
+	  <div class="form-group">
+		  <label>Username</label>
+		  <input login class="form-control" type="text" ng-model="username" disabled/>
+	  </div>
+	  <div class="form-group">
+		  <label>Password</label>
+		    <input login class="form-control" type="password" ng-model="password" disabled/>
+	  </div>
+	  <div class="form-group">
+		  <button class="btn btn-info" ng-disabled="(username.length < 4) || (password.length < 8)" ng-click="setStatus('Sorry, account log in is not yet available');">Log in</button>
+	  </div>
+  </panel>
+</div>
+-->

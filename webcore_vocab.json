@@ -617,7 +617,7 @@
         1000,
         30000
       ],
-      "u": "°K"
+      "u": "\u00b0K"
     },
     "consumableStatus": {
       "n": "consumable status",
@@ -645,7 +645,7 @@
         -127,
         127
       ],
-      "u": "°?"
+      "u": "\u00b0?"
     },
     "currentActivity": {
       "n": "current activity",
@@ -691,7 +691,7 @@
         -127,
         127
       ],
-      "u": "°?"
+      "u": "\u00b0?"
     },
     "hex": {
       "n": "hexadecimal code",
@@ -714,7 +714,7 @@
         0,
         360
       ],
-      "u": "°"
+      "u": "\u00b0"
     },
     "humidity": {
       "n": "relative humidity",
@@ -814,33 +814,6 @@
         "up side up",
         "right side up"
       ]
-    },
-    "axisX": {
-      "n": "X axis",
-      "t": "integer",
-      "r": [
-        -1024,
-        1024
-      ],
-      "s": "threeAxis"
-    },
-    "axisY": {
-      "n": "Y axis",
-      "t": "integer",
-      "r": [
-        -1024,
-        1024
-      ],
-      "s": "threeAxis"
-    },
-    "axisZ": {
-      "n": "Z axis",
-      "t": "integer",
-      "r": [
-        -1024,
-        1024
-      ],
-      "s": "threeAxis"
     },
     "pH": {
       "n": "pH level",
@@ -987,7 +960,7 @@
         -460,
         10000
       ],
-      "u": "°?"
+      "u": "\u00b0?"
     },
     "thermostatFanMode": {
       "n": "fan mode",
@@ -1029,7 +1002,7 @@
         -127,
         127
       ],
-      "u": "°?"
+      "u": "\u00b0?"
     },
     "threeAxis": {
       "n": "vector",
@@ -1215,7 +1188,7 @@
         null,
         null
       ],
-      "u": "°"
+      "u": "\u00b0"
     },
     "longitude": {
       "n": "longitude",
@@ -1224,7 +1197,7 @@
         null,
         null
       ],
-      "u": "°"
+      "u": "\u00b0"
     },
     "closestPlaceDistance": {
       "n": "distance to closest place",
@@ -1269,7 +1242,7 @@
         0,
         360
       ],
-      "u": "°"
+      "u": "\u00b0"
     }
   },
   "commands": {
@@ -1547,7 +1520,7 @@
     },
     "setColorTemperature": {
       "n": "Set color temperature...",
-      "d": "Set color temperature to {0}°K{1}",
+      "d": "Set color temperature to {0}\u00b0K{1}",
       "a": "colorTemperature",
       "p": [
         {
@@ -1601,7 +1574,7 @@
       "n": "Set hue...",
       "i": "palette",
       "is": "l",
-      "d": "Set hue to {0}°{1}",
+      "d": "Set hue to {0}\u00b0{1}",
       "a": "hue",
       "p": [
         {
@@ -1872,7 +1845,7 @@
     },
     "setAdjustedHSLColor": {
       "n": "Transition to HSL color...",
-      "d": "Transition to color H:{0}° / S:{1}% / L:{2}% in {3}{4}",
+      "d": "Transition to color H:{0}\u00b0 / S:{1}% / L:{2}% in {3}{4}",
       "p": [
         {
           "n": "Hue",
@@ -2062,7 +2035,7 @@
       "n": "Set color... (hsl)",
       "i": "palette",
       "is": "l",
-      "d": "Set color to H:{0}° / S:{1}% / L%:{2}{3}",
+      "d": "Set color to H:{0}\u00b0 / S:{1}% / L%:{2}{3}",
       "r": [
         "setColor"
       ],
@@ -2685,7 +2658,7 @@
         "setHue"
       ],
       "i": "toggle-on",
-      "d": "Adjust hue by {0}°{1}",
+      "d": "Adjust hue by {0}\u00b0{1}",
       "p": [
         {
           "n": "Adjustment",
@@ -2712,7 +2685,7 @@
         "setColorTemperature"
       ],
       "i": "toggle-on",
-      "d": "Adjust color temperature by {0}°K%{1}",
+      "d": "Adjust color temperature by {0}\u00b0K%{1}",
       "p": [
         {
           "n": "Adjustment",
@@ -2835,12 +2808,12 @@
         "setHue"
       ],
       "i": "toggle-on",
-      "d": "Fade hue{0} to {1}° in {2}{3}",
+      "d": "Fade hue{0} to {1}\u00b0 in {2}{3}",
       "p": [
         {
           "n": "Starting hue",
           "t": "hue",
-          "d": " from {v}°"
+          "d": " from {v}\u00b0"
         },
         {
           "n": "Final hue",
@@ -2867,12 +2840,12 @@
         "setColorTemperature"
       ],
       "i": "toggle-on",
-      "d": "Fade color temperature{0} to {1}°K in {2}{3}",
+      "d": "Fade color temperature{0} to {1}\u00b0K in {2}{3}",
       "p": [
         {
           "n": "Starting color temperature",
           "t": "colorTemperature",
-          "d": " from {v}°K"
+          "d": " from {v}\u00b0K"
         },
         {
           "n": "Final color temperature",
@@ -3838,36 +3811,91 @@
     "presence": "e",
     "piston": "v"
   },
-
   "variableTypes": {
     "basic": [
-      { "key": "dynamic",  "label": "Dynamic" },
-      { "key": "string",   "label": "String (text)" },
-      { "key": "boolean",  "label": "Boolean (true/false)" },
-      { "key": "integer",  "label": "Number (integer)" },
-      { "key": "decimal",  "label": "Number (decimal)" },
-      { "key": "long",     "label": "Large number (long)" },
-      { "key": "datetime", "label": "Date and Time" },
-      { "key": "date",     "label": "Date (date only)" },
-      { "key": "time",     "label": "Time (time only)" },
-      { "key": "device",   "label": "Device" }
+      {
+        "key": "dynamic",
+        "label": "Dynamic"
+      },
+      {
+        "key": "string",
+        "label": "String (text)"
+      },
+      {
+        "key": "boolean",
+        "label": "Boolean (true/false)"
+      },
+      {
+        "key": "integer",
+        "label": "Number (integer)"
+      },
+      {
+        "key": "decimal",
+        "label": "Number (decimal)"
+      },
+      {
+        "key": "long",
+        "label": "Large number (long)"
+      },
+      {
+        "key": "datetime",
+        "label": "Date and Time"
+      },
+      {
+        "key": "date",
+        "label": "Date (date only)"
+      },
+      {
+        "key": "time",
+        "label": "Time (time only)"
+      },
+      {
+        "key": "device",
+        "label": "Device"
+      }
     ],
     "lists": [
-      { "key": "dynamic[]",  "label": "Dynamic list" },
-      { "key": "string[]",   "label": "String list (text)" },
-      { "key": "boolean[]",  "label": "Boolean list (true/false)" },
-      { "key": "integer[]",  "label": "Number list (integer)" },
-      { "key": "decimal[]",  "label": "Number list (decimal)" },
-      { "key": "long[]",     "label": "Large number list (long)" },
-      { "key": "datetime[]", "label": "Date and Time list" },
-      { "key": "date[]",     "label": "Date list (date only)" },
-      { "key": "time[]",     "label": "Time list (time only)" }
+      {
+        "key": "dynamic[]",
+        "label": "Dynamic list"
+      },
+      {
+        "key": "string[]",
+        "label": "String list (text)"
+      },
+      {
+        "key": "boolean[]",
+        "label": "Boolean list (true/false)"
+      },
+      {
+        "key": "integer[]",
+        "label": "Number list (integer)"
+      },
+      {
+        "key": "decimal[]",
+        "label": "Number list (decimal)"
+      },
+      {
+        "key": "long[]",
+        "label": "Large number list (long)"
+      },
+      {
+        "key": "datetime[]",
+        "label": "Date and Time list"
+      },
+      {
+        "key": "date[]",
+        "label": "Date list (date only)"
+      },
+      {
+        "key": "time[]",
+        "label": "Time list (time only)"
+      }
     ]
   },
-
   "operandSources": {
     "_labels": {
-      "":  "Nothing selected",
+      "": "Nothing selected",
       "d": "Physical device(s)",
       "v": "Virtual device",
       "s": "Preset",
@@ -3876,33 +3904,1524 @@
       "e": "Expression",
       "u": "Argument"
     },
-    "dynamic":  ["", "d", "v", "c", "x", "e", "u"],
-    "string":   ["", "d", "v", "c", "x", "e", "u"],
-    "boolean":  ["", "d", "c", "x", "e", "u"],
-    "integer":  ["", "d", "c", "x", "e", "u"],
-    "decimal":  ["", "d", "c", "x", "e", "u"],
-    "long":     ["", "d", "v", "c", "x", "e", "u"],
-    "datetime": ["", "s", "c", "x", "e", "u"],
-    "date":     ["", "c", "x", "e", "u"],
-    "time":     ["", "s", "c", "x", "e", "u"],
-    "device":   ["", "d", "e"]
+    "dynamic": [
+      "",
+      "d",
+      "v",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "string": [
+      "",
+      "d",
+      "v",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "boolean": [
+      "",
+      "d",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "integer": [
+      "",
+      "d",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "decimal": [
+      "",
+      "d",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "long": [
+      "",
+      "d",
+      "v",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "datetime": [
+      "",
+      "s",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "date": [
+      "",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "time": [
+      "",
+      "s",
+      "c",
+      "x",
+      "e",
+      "u"
+    ],
+    "device": [
+      "",
+      "d",
+      "e"
+    ]
   },
-
   "virtualDevices": {
-    "date":              { "n": "Date",                 "t": "date" },
-    "datetime":          { "n": "Date & Time",          "t": "datetime" },
-    "time":              { "n": "Time",                 "t": "time" },
-    "mode":              { "n": "Location mode",        "t": "enum", "o": [] },
-    "alarmSystemStatus": { "n": "Alarm system status",  "t": "enum", "o": ["disarmed", "armed_home", "armed_away", "armed_night", "triggered"] },
-    "powerSource":       { "n": "Hub power source",     "t": "enum", "o": ["battery", "mains"] },
-    "routine":           { "n": "Routine",              "t": "enum", "o": [] },
-    "rule":              { "n": "Rule",                 "t": "enum", "o": [] },
-    "webhook":           { "n": "Webhook",              "t": "string" }
+    "date": {
+      "n": "Date",
+      "t": "date"
+    },
+    "datetime": {
+      "n": "Date & Time",
+      "t": "datetime"
+    },
+    "time": {
+      "n": "Time",
+      "t": "time"
+    },
+    "mode": {
+      "n": "Location mode",
+      "t": "enum",
+      "o": []
+    },
+    "alarmSystemStatus": {
+      "n": "Alarm system status",
+      "t": "enum",
+      "o": [
+        "disarmed",
+        "armed_home",
+        "armed_away",
+        "armed_night",
+        "triggered"
+      ]
+    },
+    "powerSource": {
+      "n": "Hub power source",
+      "t": "enum",
+      "o": [
+        "battery",
+        "mains"
+      ]
+    },
+    "routine": {
+      "n": "Routine",
+      "t": "enum",
+      "o": []
+    },
+    "rule": {
+      "n": "Rule",
+      "t": "enum",
+      "o": []
+    },
+    "webhook": {
+      "n": "Webhook",
+      "t": "string"
+    }
   },
-
   "presets": {
-    "time":     ["sunrise", "noon", "sunset", "midnight"],
-    "datetime": ["sunrise", "noon", "sunset", "midnight"],
-    "color":    ["random", "red", "orange", "yellow", "green", "blue", "purple", "pink", "white", "warm white", "daylight"]
+    "time": [
+      "sunrise",
+      "noon",
+      "sunset",
+      "midnight"
+    ],
+    "datetime": [
+      "sunrise",
+      "noon",
+      "sunset",
+      "midnight"
+    ],
+    "color": [
+      "random",
+      "red",
+      "orange",
+      "yellow",
+      "green",
+      "blue",
+      "purple",
+      "pink",
+      "white",
+      "warm white",
+      "daylight"
+    ]
+  },
+  "functions": {
+    "age": {
+      "t": "integer"
+    },
+    "previousage": {
+      "t": "integer",
+      "d": "previousAge"
+    },
+    "previousvalue": {
+      "t": "dynamic",
+      "d": "previousValue"
+    },
+    "newer": {
+      "t": "integer"
+    },
+    "older": {
+      "t": "integer"
+    },
+    "least": {
+      "t": "dynamic"
+    },
+    "most": {
+      "t": "dynamic"
+    },
+    "avg": {
+      "t": "decimal"
+    },
+    "variance": {
+      "t": "decimal"
+    },
+    "median": {
+      "t": "decimal"
+    },
+    "stdev": {
+      "t": "decimal"
+    },
+    "round": {
+      "t": "decimal"
+    },
+    "ceil": {
+      "t": "decimal"
+    },
+    "ceiling": {
+      "t": "decimal"
+    },
+    "floor": {
+      "t": "decimal"
+    },
+    "sort": {
+      "t": "dynamic[]"
+    },
+    "min": {
+      "t": "decimal"
+    },
+    "max": {
+      "t": "decimal"
+    },
+    "sum": {
+      "t": "decimal"
+    },
+    "count": {
+      "t": "integer"
+    },
+    "size": {
+      "t": "integer"
+    },
+    "left": {
+      "t": "string"
+    },
+    "right": {
+      "t": "string"
+    },
+    "mid": {
+      "t": "string"
+    },
+    "substring": {
+      "t": "string"
+    },
+    "sprintf": {
+      "t": "string"
+    },
+    "format": {
+      "t": "string"
+    },
+    "string": {
+      "t": "string"
+    },
+    "replace": {
+      "t": "string"
+    },
+    "indexof": {
+      "t": "integer",
+      "d": "indexOf"
+    },
+    "lastindexof": {
+      "t": "integer",
+      "d": "lastIndexOf"
+    },
+    "concat": {
+      "t": "string"
+    },
+    "text": {
+      "t": "string"
+    },
+    "lower": {
+      "t": "string"
+    },
+    "upper": {
+      "t": "string"
+    },
+    "title": {
+      "t": "string"
+    },
+    "int": {
+      "t": "integer"
+    },
+    "integer": {
+      "t": "integer"
+    },
+    "float": {
+      "t": "decimal"
+    },
+    "decimal": {
+      "t": "decimal"
+    },
+    "number": {
+      "t": "decimal"
+    },
+    "bool": {
+      "t": "boolean"
+    },
+    "boolean": {
+      "t": "boolean"
+    },
+    "ispistonpaused": {
+      "t": "boolean"
+    },
+    "power": {
+      "t": "decimal"
+    },
+    "pow": {
+      "t": "decimal"
+    },
+    "sin": {
+      "t": "decimal"
+    },
+    "asin": {
+      "t": "decimal"
+    },
+    "cos": {
+      "t": "decimal"
+    },
+    "tan": {
+      "t": "decimal"
+    },
+    "atan2": {
+      "t": "decimal"
+    },
+    "log": {
+      "t": "decimal"
+    },
+    "toradians": {
+      "t": "decimal",
+      "d": "toRadians"
+    },
+    "todegrees": {
+      "t": "decimal",
+      "d": "toDegrees"
+    },
+    "sqr": {
+      "t": "decimal"
+    },
+    "sqrt": {
+      "t": "decimal"
+    },
+    "setvariable": {
+      "t": "boolean",
+      "d": "setVariable"
+    },
+    "dewpoint": {
+      "t": "decimal",
+      "d": "dewPoint"
+    },
+    "fahrenheit": {
+      "t": "decimal"
+    },
+    "celsius": {
+      "t": "decimal"
+    },
+    "converttemperatureifneeded": {
+      "t": "decimal",
+      "d": "convertTemperatureIfNeeded"
+    },
+    "dateAdd": {
+      "t": "time",
+      "d": "dateAdd"
+    },
+    "startswith": {
+      "t": "boolean",
+      "d": "startsWith"
+    },
+    "endswith": {
+      "t": "boolean",
+      "d": "endsWith"
+    },
+    "contains": {
+      "t": "boolean"
+    },
+    "matches": {
+      "t": "boolean"
+    },
+    "exists": {
+      "t": "boolean"
+    },
+    "eq": {
+      "t": "boolean"
+    },
+    "lt": {
+      "t": "boolean"
+    },
+    "le": {
+      "t": "boolean"
+    },
+    "gt": {
+      "t": "boolean"
+    },
+    "ge": {
+      "t": "boolean"
+    },
+    "not": {
+      "t": "boolean"
+    },
+    "isempty": {
+      "t": "boolean",
+      "d": "isEmpty"
+    },
+    "if": {
+      "t": "dynamic"
+    },
+    "datetime": {
+      "t": "datetime"
+    },
+    "date": {
+      "t": "date"
+    },
+    "time": {
+      "t": "time"
+    },
+    "addseconds": {
+      "t": "datetime",
+      "d": "addSeconds"
+    },
+    "addminutes": {
+      "t": "datetime",
+      "d": "addMinutes"
+    },
+    "addhours": {
+      "t": "datetime",
+      "d": "addHours"
+    },
+    "adddays": {
+      "t": "datetime",
+      "d": "addDays"
+    },
+    "addweeks": {
+      "t": "datetime",
+      "d": "addWeeks"
+    },
+    "parsedatetime": {
+      "t": "datetime",
+      "d": "parseDateTime"
+    },
+    "isbetween": {
+      "t": "boolean",
+      "d": "isBetween"
+    },
+    "formatduration": {
+      "t": "string",
+      "d": "formatDuration"
+    },
+    "formatdatetime": {
+      "t": "string",
+      "d": "formatDateTime"
+    },
+    "roundtimetominutes": {
+      "t": "datetime",
+      "d": "roundTimeToMinutes"
+    },
+    "settzid": {
+      "t": "string",
+      "d": "setTzid"
+    },
+    "random": {
+      "t": "dynamic"
+    },
+    "strlen": {
+      "t": "integer"
+    },
+    "length": {
+      "t": "integer"
+    },
+    "coalesce": {
+      "t": "dynamic"
+    },
+    "weekdayname": {
+      "t": "string",
+      "d": "weekDayName"
+    },
+    "monthname": {
+      "t": "string",
+      "d": "monthName"
+    },
+    "arrayitem": {
+      "t": "dynamic",
+      "d": "arrayItem"
+    },
+    "trim": {
+      "t": "string"
+    },
+    "trimleft": {
+      "t": "string",
+      "d": "trimLeft"
+    },
+    "ltrim": {
+      "t": "string"
+    },
+    "trimright": {
+      "t": "string",
+      "d": "trimRight"
+    },
+    "rtrim": {
+      "t": "string"
+    },
+    "hsltohex": {
+      "t": "string",
+      "d": "hslToHex"
+    },
+    "abs": {
+      "t": "dynamic"
+    },
+    "rangevalue": {
+      "t": "dynamic",
+      "d": "rangeValue"
+    },
+    "rainbowvalue": {
+      "t": "string",
+      "d": "rainbowValue"
+    },
+    "distance": {
+      "t": "decimal"
+    },
+    "json": {
+      "t": "dynamic"
+    },
+    "urlencode": {
+      "t": "string",
+      "d": "urlEncode"
+    },
+    "encodeuricomponent": {
+      "t": "string",
+      "d": "encodeURIComponent"
+    }
+  },
+  "colors": {
+    "standard": [
+      {
+        "n": "Alice Blue",
+        "rgb": "#F0F8FF",
+        "h": 208,
+        "s": 100,
+        "l": 97
+      },
+      {
+        "n": "Antique White",
+        "rgb": "#FAEBD7",
+        "h": 34,
+        "s": 78,
+        "l": 91
+      },
+      {
+        "n": "Aqua",
+        "rgb": "#00FFFF",
+        "h": 180,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Aquamarine",
+        "rgb": "#7FFFD4",
+        "h": 160,
+        "s": 100,
+        "l": 75
+      },
+      {
+        "n": "Azure",
+        "rgb": "#F0FFFF",
+        "h": 180,
+        "s": 100,
+        "l": 97
+      },
+      {
+        "n": "Beige",
+        "rgb": "#F5F5DC",
+        "h": 60,
+        "s": 56,
+        "l": 91
+      },
+      {
+        "n": "Bisque",
+        "rgb": "#FFE4C4",
+        "h": 33,
+        "s": 100,
+        "l": 88
+      },
+      {
+        "n": "Blanched Almond",
+        "rgb": "#FFEBCD",
+        "h": 36,
+        "s": 100,
+        "l": 90
+      },
+      {
+        "n": "Blue",
+        "rgb": "#0000FF",
+        "h": 240,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Blue Violet",
+        "rgb": "#8A2BE2",
+        "h": 271,
+        "s": 76,
+        "l": 53
+      },
+      {
+        "n": "Brown",
+        "rgb": "#A52A2A",
+        "h": 0,
+        "s": 59,
+        "l": 41
+      },
+      {
+        "n": "Burly Wood",
+        "rgb": "#DEB887",
+        "h": 34,
+        "s": 57,
+        "l": 70
+      },
+      {
+        "n": "Cadet Blue",
+        "rgb": "#5F9EA0",
+        "h": 182,
+        "s": 25,
+        "l": 50
+      },
+      {
+        "n": "Chartreuse",
+        "rgb": "#7FFF00",
+        "h": 90,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Chocolate",
+        "rgb": "#D2691E",
+        "h": 25,
+        "s": 75,
+        "l": 47
+      },
+      {
+        "n": "Cool White",
+        "rgb": "#F3F6F7",
+        "h": 187,
+        "s": 19,
+        "l": 96
+      },
+      {
+        "n": "Coral",
+        "rgb": "#FF7F50",
+        "h": 16,
+        "s": 100,
+        "l": 66
+      },
+      {
+        "n": "Corn Flower Blue",
+        "rgb": "#6495ED",
+        "h": 219,
+        "s": 79,
+        "l": 66
+      },
+      {
+        "n": "Corn Silk",
+        "rgb": "#FFF8DC",
+        "h": 48,
+        "s": 100,
+        "l": 93
+      },
+      {
+        "n": "Crimson",
+        "rgb": "#DC143C",
+        "h": 348,
+        "s": 83,
+        "l": 58
+      },
+      {
+        "n": "Cyan",
+        "rgb": "#00FFFF",
+        "h": 180,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Dark Blue",
+        "rgb": "#00008B",
+        "h": 240,
+        "s": 100,
+        "l": 27
+      },
+      {
+        "n": "Dark Cyan",
+        "rgb": "#008B8B",
+        "h": 180,
+        "s": 100,
+        "l": 27
+      },
+      {
+        "n": "Dark Golden Rod",
+        "rgb": "#B8860B",
+        "h": 43,
+        "s": 89,
+        "l": 38
+      },
+      {
+        "n": "Dark Gray",
+        "rgb": "#A9A9A9",
+        "h": 0,
+        "s": 0,
+        "l": 66
+      },
+      {
+        "n": "Dark Green",
+        "rgb": "#006400",
+        "h": 120,
+        "s": 100,
+        "l": 20
+      },
+      {
+        "n": "Dark Khaki",
+        "rgb": "#BDB76B",
+        "h": 56,
+        "s": 38,
+        "l": 58
+      },
+      {
+        "n": "Dark Magenta",
+        "rgb": "#8B008B",
+        "h": 300,
+        "s": 100,
+        "l": 27
+      },
+      {
+        "n": "Dark Olive Green",
+        "rgb": "#556B2F",
+        "h": 82,
+        "s": 39,
+        "l": 30
+      },
+      {
+        "n": "Dark Orange",
+        "rgb": "#FF8C00",
+        "h": 33,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Dark Orchid",
+        "rgb": "#9932CC",
+        "h": 280,
+        "s": 61,
+        "l": 50
+      },
+      {
+        "n": "Dark Red",
+        "rgb": "#8B0000",
+        "h": 0,
+        "s": 100,
+        "l": 27
+      },
+      {
+        "n": "Dark Salmon",
+        "rgb": "#E9967A",
+        "h": 15,
+        "s": 72,
+        "l": 70
+      },
+      {
+        "n": "Dark Sea Green",
+        "rgb": "#8FBC8F",
+        "h": 120,
+        "s": 25,
+        "l": 65
+      },
+      {
+        "n": "Dark Slate Blue",
+        "rgb": "#483D8B",
+        "h": 248,
+        "s": 39,
+        "l": 39
+      },
+      {
+        "n": "Dark Slate Gray",
+        "rgb": "#2F4F4F",
+        "h": 180,
+        "s": 25,
+        "l": 25
+      },
+      {
+        "n": "Dark Turquoise",
+        "rgb": "#00CED1",
+        "h": 181,
+        "s": 100,
+        "l": 41
+      },
+      {
+        "n": "Dark Violet",
+        "rgb": "#9400D3",
+        "h": 282,
+        "s": 100,
+        "l": 41
+      },
+      {
+        "n": "Daylight White",
+        "rgb": "#CEF4FD",
+        "h": 191,
+        "s": 9,
+        "l": 90
+      },
+      {
+        "n": "Deep Pink",
+        "rgb": "#FF1493",
+        "h": 328,
+        "s": 100,
+        "l": 54
+      },
+      {
+        "n": "Deep Sky Blue",
+        "rgb": "#00BFFF",
+        "h": 195,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Dim Gray",
+        "rgb": "#696969",
+        "h": 0,
+        "s": 0,
+        "l": 41
+      },
+      {
+        "n": "Dodger Blue",
+        "rgb": "#1E90FF",
+        "h": 210,
+        "s": 100,
+        "l": 56
+      },
+      {
+        "n": "Fire Brick",
+        "rgb": "#B22222",
+        "h": 0,
+        "s": 68,
+        "l": 42
+      },
+      {
+        "n": "Floral White",
+        "rgb": "#FFFAF0",
+        "h": 40,
+        "s": 100,
+        "l": 97
+      },
+      {
+        "n": "Forest Green",
+        "rgb": "#228B22",
+        "h": 120,
+        "s": 61,
+        "l": 34
+      },
+      {
+        "n": "Fuchsia",
+        "rgb": "#FF00FF",
+        "h": 300,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Gainsboro",
+        "rgb": "#DCDCDC",
+        "h": 0,
+        "s": 0,
+        "l": 86
+      },
+      {
+        "n": "Ghost White",
+        "rgb": "#F8F8FF",
+        "h": 240,
+        "s": 100,
+        "l": 99
+      },
+      {
+        "n": "Gold",
+        "rgb": "#FFD700",
+        "h": 51,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Golden Rod",
+        "rgb": "#DAA520",
+        "h": 43,
+        "s": 74,
+        "l": 49
+      },
+      {
+        "n": "Gray",
+        "rgb": "#808080",
+        "h": 0,
+        "s": 0,
+        "l": 50
+      },
+      {
+        "n": "Green",
+        "rgb": "#008000",
+        "h": 120,
+        "s": 100,
+        "l": 25
+      },
+      {
+        "n": "Green Yellow",
+        "rgb": "#ADFF2F",
+        "h": 84,
+        "s": 100,
+        "l": 59
+      },
+      {
+        "n": "Honeydew",
+        "rgb": "#F0FFF0",
+        "h": 120,
+        "s": 100,
+        "l": 97
+      },
+      {
+        "n": "Hot Pink",
+        "rgb": "#FF69B4",
+        "h": 330,
+        "s": 100,
+        "l": 71
+      },
+      {
+        "n": "Indian Red",
+        "rgb": "#CD5C5C",
+        "h": 0,
+        "s": 53,
+        "l": 58
+      },
+      {
+        "n": "Indigo",
+        "rgb": "#4B0082",
+        "h": 275,
+        "s": 100,
+        "l": 25
+      },
+      {
+        "n": "Ivory",
+        "rgb": "#FFFFF0",
+        "h": 60,
+        "s": 100,
+        "l": 97
+      },
+      {
+        "n": "Khaki",
+        "rgb": "#F0E68C",
+        "h": 54,
+        "s": 77,
+        "l": 75
+      },
+      {
+        "n": "Lavender",
+        "rgb": "#E6E6FA",
+        "h": 240,
+        "s": 67,
+        "l": 94
+      },
+      {
+        "n": "Lavender Blush",
+        "rgb": "#FFF0F5",
+        "h": 340,
+        "s": 100,
+        "l": 97
+      },
+      {
+        "n": "Lawn Green",
+        "rgb": "#7CFC00",
+        "h": 90,
+        "s": 100,
+        "l": 49
+      },
+      {
+        "n": "Lemon Chiffon",
+        "rgb": "#FFFACD",
+        "h": 54,
+        "s": 100,
+        "l": 90
+      },
+      {
+        "n": "Light Blue",
+        "rgb": "#ADD8E6",
+        "h": 195,
+        "s": 53,
+        "l": 79
+      },
+      {
+        "n": "Light Coral",
+        "rgb": "#F08080",
+        "h": 0,
+        "s": 79,
+        "l": 72
+      },
+      {
+        "n": "Light Cyan",
+        "rgb": "#E0FFFF",
+        "h": 180,
+        "s": 100,
+        "l": 94
+      },
+      {
+        "n": "Light Golden Rod Yellow",
+        "rgb": "#FAFAD2",
+        "h": 60,
+        "s": 80,
+        "l": 90
+      },
+      {
+        "n": "Light Gray",
+        "rgb": "#D3D3D3",
+        "h": 0,
+        "s": 0,
+        "l": 83
+      },
+      {
+        "n": "Light Green",
+        "rgb": "#90EE90",
+        "h": 120,
+        "s": 73,
+        "l": 75
+      },
+      {
+        "n": "Light Pink",
+        "rgb": "#FFB6C1",
+        "h": 351,
+        "s": 100,
+        "l": 86
+      },
+      {
+        "n": "Light Salmon",
+        "rgb": "#FFA07A",
+        "h": 17,
+        "s": 100,
+        "l": 74
+      },
+      {
+        "n": "Light Sea Green",
+        "rgb": "#20B2AA",
+        "h": 177,
+        "s": 70,
+        "l": 41
+      },
+      {
+        "n": "Light Sky Blue",
+        "rgb": "#87CEFA",
+        "h": 203,
+        "s": 92,
+        "l": 75
+      },
+      {
+        "n": "Light Slate Gray",
+        "rgb": "#778899",
+        "h": 210,
+        "s": 14,
+        "l": 53
+      },
+      {
+        "n": "Light Steel Blue",
+        "rgb": "#B0C4DE",
+        "h": 214,
+        "s": 41,
+        "l": 78
+      },
+      {
+        "n": "Light Yellow",
+        "rgb": "#FFFFE0",
+        "h": 60,
+        "s": 100,
+        "l": 94
+      },
+      {
+        "n": "Lime",
+        "rgb": "#00FF00",
+        "h": 120,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Lime Green",
+        "rgb": "#32CD32",
+        "h": 120,
+        "s": 61,
+        "l": 50
+      },
+      {
+        "n": "Linen",
+        "rgb": "#FAF0E6",
+        "h": 30,
+        "s": 67,
+        "l": 94
+      },
+      {
+        "n": "Maroon",
+        "rgb": "#800000",
+        "h": 0,
+        "s": 100,
+        "l": 25
+      },
+      {
+        "n": "Medium Aquamarine",
+        "rgb": "#66CDAA",
+        "h": 160,
+        "s": 51,
+        "l": 60
+      },
+      {
+        "n": "Medium Blue",
+        "rgb": "#0000CD",
+        "h": 240,
+        "s": 100,
+        "l": 40
+      },
+      {
+        "n": "Medium Orchid",
+        "rgb": "#BA55D3",
+        "h": 288,
+        "s": 59,
+        "l": 58
+      },
+      {
+        "n": "Medium Purple",
+        "rgb": "#9370DB",
+        "h": 260,
+        "s": 60,
+        "l": 65
+      },
+      {
+        "n": "Medium Sea Green",
+        "rgb": "#3CB371",
+        "h": 147,
+        "s": 50,
+        "l": 47
+      },
+      {
+        "n": "Medium Slate Blue",
+        "rgb": "#7B68EE",
+        "h": 249,
+        "s": 80,
+        "l": 67
+      },
+      {
+        "n": "Medium Spring Green",
+        "rgb": "#00FA9A",
+        "h": 157,
+        "s": 100,
+        "l": 49
+      },
+      {
+        "n": "Medium Turquoise",
+        "rgb": "#48D1CC",
+        "h": 178,
+        "s": 60,
+        "l": 55
+      },
+      {
+        "n": "Medium Violet Red",
+        "rgb": "#C71585",
+        "h": 322,
+        "s": 81,
+        "l": 43
+      },
+      {
+        "n": "Midnight Blue",
+        "rgb": "#191970",
+        "h": 240,
+        "s": 64,
+        "l": 27
+      },
+      {
+        "n": "Mint Cream",
+        "rgb": "#F5FFFA",
+        "h": 150,
+        "s": 100,
+        "l": 98
+      },
+      {
+        "n": "Misty Rose",
+        "rgb": "#FFE4E1",
+        "h": 6,
+        "s": 100,
+        "l": 94
+      },
+      {
+        "n": "Moccasin",
+        "rgb": "#FFE4B5",
+        "h": 38,
+        "s": 100,
+        "l": 85
+      },
+      {
+        "n": "Navajo White",
+        "rgb": "#FFDEAD",
+        "h": 36,
+        "s": 100,
+        "l": 84
+      },
+      {
+        "n": "Navy",
+        "rgb": "#000080",
+        "h": 240,
+        "s": 100,
+        "l": 25
+      },
+      {
+        "n": "Old Lace",
+        "rgb": "#FDF5E6",
+        "h": 39,
+        "s": 85,
+        "l": 95
+      },
+      {
+        "n": "Olive",
+        "rgb": "#808000",
+        "h": 60,
+        "s": 100,
+        "l": 25
+      },
+      {
+        "n": "Olive Drab",
+        "rgb": "#6B8E23",
+        "h": 80,
+        "s": 60,
+        "l": 35
+      },
+      {
+        "n": "Orange",
+        "rgb": "#FFA500",
+        "h": 39,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Orange Red",
+        "rgb": "#FF4500",
+        "h": 16,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Orchid",
+        "rgb": "#DA70D6",
+        "h": 302,
+        "s": 59,
+        "l": 65
+      },
+      {
+        "n": "Pale Golden Rod",
+        "rgb": "#EEE8AA",
+        "h": 55,
+        "s": 67,
+        "l": 80
+      },
+      {
+        "n": "Pale Green",
+        "rgb": "#98FB98",
+        "h": 120,
+        "s": 93,
+        "l": 79
+      },
+      {
+        "n": "Pale Turquoise",
+        "rgb": "#AFEEEE",
+        "h": 180,
+        "s": 65,
+        "l": 81
+      },
+      {
+        "n": "Pale Violet Red",
+        "rgb": "#DB7093",
+        "h": 340,
+        "s": 60,
+        "l": 65
+      },
+      {
+        "n": "Papaya Whip",
+        "rgb": "#FFEFD5",
+        "h": 37,
+        "s": 100,
+        "l": 92
+      },
+      {
+        "n": "Peach Puff",
+        "rgb": "#FFDAB9",
+        "h": 28,
+        "s": 100,
+        "l": 86
+      },
+      {
+        "n": "Peru",
+        "rgb": "#CD853F",
+        "h": 30,
+        "s": 59,
+        "l": 53
+      },
+      {
+        "n": "Pink",
+        "rgb": "#FFC0CB",
+        "h": 350,
+        "s": 100,
+        "l": 88
+      },
+      {
+        "n": "Plum",
+        "rgb": "#DDA0DD",
+        "h": 300,
+        "s": 47,
+        "l": 75
+      },
+      {
+        "n": "Powder Blue",
+        "rgb": "#B0E0E6",
+        "h": 187,
+        "s": 52,
+        "l": 80
+      },
+      {
+        "n": "Purple",
+        "rgb": "#800080",
+        "h": 300,
+        "s": 100,
+        "l": 25
+      },
+      {
+        "n": "Red",
+        "rgb": "#FF0000",
+        "h": 0,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Rosy Brown",
+        "rgb": "#BC8F8F",
+        "h": 0,
+        "s": 25,
+        "l": 65
+      },
+      {
+        "n": "Royal Blue",
+        "rgb": "#4169E1",
+        "h": 225,
+        "s": 73,
+        "l": 57
+      },
+      {
+        "n": "Saddle Brown",
+        "rgb": "#8B4513",
+        "h": 25,
+        "s": 76,
+        "l": 31
+      },
+      {
+        "n": "Salmon",
+        "rgb": "#FA8072",
+        "h": 6,
+        "s": 93,
+        "l": 71
+      },
+      {
+        "n": "Sandy Brown",
+        "rgb": "#F4A460",
+        "h": 28,
+        "s": 87,
+        "l": 67
+      },
+      {
+        "n": "Sea Green",
+        "rgb": "#2E8B57",
+        "h": 146,
+        "s": 50,
+        "l": 36
+      },
+      {
+        "n": "Sea Shell",
+        "rgb": "#FFF5EE",
+        "h": 25,
+        "s": 100,
+        "l": 97
+      },
+      {
+        "n": "Sienna",
+        "rgb": "#A0522D",
+        "h": 19,
+        "s": 56,
+        "l": 40
+      },
+      {
+        "n": "Silver",
+        "rgb": "#C0C0C0",
+        "h": 0,
+        "s": 0,
+        "l": 75
+      },
+      {
+        "n": "Sky Blue",
+        "rgb": "#87CEEB",
+        "h": 197,
+        "s": 71,
+        "l": 73
+      },
+      {
+        "n": "Slate Blue",
+        "rgb": "#6A5ACD",
+        "h": 248,
+        "s": 53,
+        "l": 58
+      },
+      {
+        "n": "Slate Gray",
+        "rgb": "#708090",
+        "h": 210,
+        "s": 13,
+        "l": 50
+      },
+      {
+        "n": "Snow",
+        "rgb": "#FFFAFA",
+        "h": 0,
+        "s": 100,
+        "l": 99
+      },
+      {
+        "n": "Soft White",
+        "rgb": "#B6DA7C",
+        "h": 83,
+        "s": 44,
+        "l": 67
+      },
+      {
+        "n": "Spring Green",
+        "rgb": "#00FF7F",
+        "h": 150,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Steel Blue",
+        "rgb": "#4682B4",
+        "h": 207,
+        "s": 44,
+        "l": 49
+      },
+      {
+        "n": "Tan",
+        "rgb": "#D2B48C",
+        "h": 34,
+        "s": 44,
+        "l": 69
+      },
+      {
+        "n": "Teal",
+        "rgb": "#008080",
+        "h": 180,
+        "s": 100,
+        "l": 25
+      },
+      {
+        "n": "Thistle",
+        "rgb": "#D8BFD8",
+        "h": 300,
+        "s": 24,
+        "l": 80
+      },
+      {
+        "n": "Tomato",
+        "rgb": "#FF6347",
+        "h": 9,
+        "s": 100,
+        "l": 64
+      },
+      {
+        "n": "Turquoise",
+        "rgb": "#40E0D0",
+        "h": 174,
+        "s": 72,
+        "l": 56
+      },
+      {
+        "n": "Violet",
+        "rgb": "#EE82EE",
+        "h": 300,
+        "s": 76,
+        "l": 72
+      },
+      {
+        "n": "Warm White",
+        "rgb": "#DAF17E",
+        "h": 72,
+        "s": 20,
+        "l": 72
+      },
+      {
+        "n": "Wheat",
+        "rgb": "#F5DEB3",
+        "h": 39,
+        "s": 77,
+        "l": 83
+      },
+      {
+        "n": "White",
+        "rgb": "#FFFFFF",
+        "h": 0,
+        "s": 0,
+        "l": 100
+      },
+      {
+        "n": "White Smoke",
+        "rgb": "#F5F5F5",
+        "h": 0,
+        "s": 0,
+        "l": 96
+      },
+      {
+        "n": "Yellow",
+        "rgb": "#FFFF00",
+        "h": 60,
+        "s": 100,
+        "l": 50
+      },
+      {
+        "n": "Yellow Green",
+        "rgb": "#9ACD32",
+        "h": 80,
+        "s": 61,
+        "l": 50
+      }
+    ]
   }
 }

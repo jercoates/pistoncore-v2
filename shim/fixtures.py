@@ -1,13 +1,11 @@
-"""Hardcoded fixture data for the spike milestone (SHIM_API_SPEC.md §10.5).
+"""Fixture data still standing in for real HA integration.
 
-Fake devices/instance/location so the dashboard renders a piston list and
-device picker without a real Home Assistant connection. Replaced by the
-real DEVICE_PAYLOAD_SPEC.md pipeline in milestone 2.
+Devices (milestone 2) and pistons/globals (milestone 3, shim/storage.py)
+are real now. Location is still fake — no HA location/mode/HSM pipeline
+built yet.
 """
 
-import itertools
 import json
-import time
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -16,33 +14,6 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 # instance.coreVersion silences the "newer version available" nag banner
 # (SHIM_API_SPEC.md §5.2).
 CORE_VERSION = "v0.3.114.20220203"
-
-FAKE_DEVICES = {
-    ":fakeswitch1:": {
-        "n": "Fake Switch",
-        "cn": ["Switch"],
-        "a": [{"n": "switch", "t": "enum"}],
-        "c": ["on", "off"],
-        "o": {},
-        "an": "Fake Switch",
-    },
-    ":fakecontact1:": {
-        "n": "Fake Contact Sensor",
-        "cn": ["Contact Sensor"],
-        "a": [{"n": "contact", "t": "enum"}],
-        "c": [],
-        "o": {},
-        "an": "Fake Contact Sensor",
-    },
-    ":fakedimmer1:": {
-        "n": "Fake Dimmer",
-        "cn": ["Switch", "Switch Level"],
-        "a": [{"n": "switch", "t": "enum"}, {"n": "level", "t": "integer"}],
-        "c": ["on", "off", "setLevel"],
-        "o": {},
-        "an": "Fake Dimmer",
-    },
-}
 
 FAKE_LOCATION = {
     "id": "fake-location",
@@ -70,14 +41,14 @@ def fake_instance(base_uri: str) -> dict:
     # because it can't recover the session. Must be present.
     # deviceVersion=1 vs. the client's initial dev=0 forces the dashboard to
     # call intf/dashboard/devices on first load (SHIM_API_SPEC.md §4.1).
+    # pistons/globalVars are populated by the /load route from shim/storage.py
+    # (real persistence, milestone 3) — left out here, not fixture data.
     return {
         "id": "fake-instance",
         "name": "PistonCore Spike",
         "uri": base_uri,
         "token": "pistoncore-spike",
         "deviceVersion": 1,
-        "pistons": piston_list(),
-        "globalVars": {},
         "coreVersion": CORE_VERSION,
         "settings": {},
         "lifx": {},
@@ -86,63 +57,32 @@ def fake_instance(base_uri: str) -> dict:
     }
 
 
-_vocab_cache: dict | None = None
+_db_cache: dict | None = None
 
 
 def get_db() -> dict:
-    """webCoRE vocabulary (capabilities/attributes/commands/...) — seed for piston/getDb."""
-    global _vocab_cache
-    if _vocab_cache is None:
+    """
+    webCoRE vocabulary — seed for piston/getDb. webcore_vocab.json has
+    "commands" and "virtualCommands" as two separate flat top-level keys,
+    but piston.module.js reads db.commands as a NESTED {physical, virtual}
+    object everywhere it looks up a command (VERIFIED — 10+ call sites,
+    e.g. piston.module.js:2394,2619,2840,2865 all read db.commands.physical/
+    db.commands.virtual; found via the "add a new task" crash,
+    TypeError on db.commands.physical being undefined, 2026-07-10).
+    db.capabilities/db.attributes ARE read flat (piston.module.js:2606,2637)
+    — this reshape is scoped to commands only, not applied blindly.
+    """
+    global _db_cache
+    if _db_cache is None:
         with open(_REPO_ROOT / "webcore_vocab.json", encoding="utf-8") as f:
-            _vocab_cache = json.load(f)
-    return _vocab_cache
-
-
-# In-memory piston store for the spike (piston.new/create/get — SHIM_API_SPEC.md
-# §4.5/§4.6). Resets on server restart; the real chunked save flow that persists
-# pistons to disk is milestone 3.
-_pistons: dict[str, dict] = {}
-_piston_id_counter = itertools.count(1)
-
-BLANK_PISTON = {"o": {"cto": 0, "ced": 0}, "r": [], "s": [], "v": [], "z": ""}
+            vocab = json.load(f)
+        _db_cache = dict(vocab)
+        _db_cache["commands"] = {
+            "physical": vocab["commands"],
+            "virtual": vocab["virtualCommands"],
+        }
+    return _db_cache
 
 
 def new_piston_name() -> dict:
     return {"name": "New Piston"}
-
-
-def create_piston(name: str, author: str) -> dict:
-    piston_id = f"pistoncore-spike-{next(_piston_id_counter)}"
-    now_ms = int(time.time() * 1000)
-    _pistons[piston_id] = {
-        "name": name or "New Piston",
-        "piston": dict(BLANK_PISTON),
-        "meta": {
-            # meta.a (active) keeps a piston out of dashboard.module.js's
-            # paused-pistons bucket (dashboard.module.js:78-100).
-            "a": True,
-            "c": "0",
-            "m": now_ms,
-            # piston.module.html:416-417 reads meta.created/meta.modified
-            # (full names) for the editor header comment, separate from the
-            # abbreviated "m" the list view reads.
-            "created": now_ms,
-            "modified": now_ms,
-            "author": author,
-        },
-    }
-    return {"id": piston_id}
-
-
-def get_piston_entry(piston_id: str) -> dict:
-    entry = _pistons.get(piston_id)
-    if entry is None:
-        return {"piston": dict(BLANK_PISTON), "meta": {}}
-    return entry
-
-
-def piston_list() -> list:
-    return [
-        {"id": pid, "name": entry["name"], "meta": entry["meta"]}
-        for pid, entry in _pistons.items()
-    ]

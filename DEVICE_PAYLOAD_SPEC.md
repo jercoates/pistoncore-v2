@@ -119,9 +119,34 @@ automatically — enabling a currently-disabled HA entity (most custom Hubitat p
 sensors are disabled by default) makes it appear on next `devices` fetch with zero shim
 code changes, rather than needing a hand-written rule per attribute.
 
+### Stage 3.3 — Command-only capability lane (added 2026-07-10)
+The attribute bridge (Stage 4) can NEVER reach **command-only capabilities** — ones with
+commands but no primary attribute (Speech Synthesis, Notification/deviceNotification,
+Tone, and similar). Without this lane, speak- and notify-capable devices silently lose
+those features: no attribute → picker map emits nothing → bridge never finds the
+capability → the device can't be picked for it in the editor. So the pipeline carries a
+second, direct mapping: HA signals → **capability keys**, no attribute involved. Seed
+rules:
+- `media_player` with the PLAY_MEDIA `supported_features` bit → the speech-capable
+  capability set (speechSynthesis and whichever companions the vocab defines) — this IS
+  the B6 author-time speak gate from COMPILER_DECISIONS_HOLDING.md, implemented here.
+- Device-level notification (Hubitat `Notification` capability / `deviceNotification`) →
+  rule TBD alongside the notify-target work (COMPILER_DECISIONS_HOLDING.md C2/C2b).
+  NOTE: push notifications are NOT this — they're virtual commands (db `commands.virtual`)
+  and need no device capability; this lane is only for notify-capable *devices*.
+- Extend the same way for other command-only capabilities as devices demand (siren/alarm,
+  tone, etc.).
+Where these rules live: either a `capabilities` branch added to
+`picker_capability_map.json` entries (preferred — keeps one map) or a small companion
+map; DECISION at implementation, but the rules must be data, not code, per house style.
+Capabilities from this lane merge into the group's capability set before Stage 4 runs,
+and their member-entity binding is recorded exactly like attribute contributions
+(Stage 8 `cmd_bindings`).
+
 ### Stage 4 — Attribute → capability bridge
-Unchanged: invert `vocab.capabilities[*].a` once at startup; group's attribute keys →
-capability keys → `cn` display names (VERIFIED-FILES). Overlapping capabilities are fine —
+Invert `vocab.capabilities[*].a` once at startup; group's attribute keys →
+capability keys, merged with Stage 3.3's direct capabilities → `cn` display names
+(VERIFIED-FILES). Overlapping capabilities are fine —
 webCoRE devices routinely advertise overlaps and the dashboard tolerates it (VERIFIED-JS).
 
 ### Stage 5 — Attribute array `a`
@@ -191,12 +216,24 @@ A dimmable light whose registry device has one entity behaves identically to Dra
 entity-as-device — grouping is a no-op for singles.
 
 ## 5. Open items
-1. Duplicate-attribute split rule (Stage 3) — confirm or overrule the recommendation.
+1. ~~Duplicate-attribute split rule~~ — RESOLVED (Jeremy, 2026-07-09): never split; see
+   Stage 3 decision text.
 2. `entity_category` filter (Stage 1) — validate against Jeremy's real device set; log
    exclusions so hard requirement (1) is auditable.
-3. Stage 6 `c[].p` element type (names vs types) — confirm during spike from dashboard
-   behavior (VERIFIED-JS shows menus key on `c[].n`; risk low).
+3. ~~Stage 6 `c[].p` element type~~ — RESOLVED (VERIFIED-HE-GROOVY, 2026-07-10,
+   `webcore.groovy:3604-3696` `getDevDetails()`): objects `{n, t, h?, c?}` (name/type/hint/
+   constraints) when the driver provides structured parameter metadata (`cmd.getParameters()`),
+   types UPPERCASE (`"STRING"`, `"NUMBER"`); falls back to a bare list of UPPERCASE type-name
+   strings when the driver only provides `cmd.getArguments()`. See SHIM_API_SPEC.md §5.1.
 4. Translation-table `assumed` entries (30 of 90) promote as exercised.
-5. Domains without picker-map coverage (19 mapped today) are excluded and logged.
+5. Domains without picker-map coverage (19 mapped today) are excluded and logged. Note
+   (2026-07-10): Stage 3.2's custom-attribute fallback now covers uncovered *entities*
+   generically; this item is specifically about uncovered *domains* the fallback doesn't
+   reach structurally — still open.
 6. Spike order note: fake devices first (grouping irrelevant), then Stage 1–9 against
    live HA as milestone 2 (CLAUDE.md ladder).
+7. Stage 3.3 rule inventory: enumerate the command-only capabilities in
+   webcore_vocab.json (capabilities lacking `a`), define an HA-signal rule for each that
+   PistonCore supports; verify behaviorally (speak-capable player offers Speak in the
+   task dialog; non-capable one doesn't). Notify-device rule waits on the C2/C2b target
+   decision.

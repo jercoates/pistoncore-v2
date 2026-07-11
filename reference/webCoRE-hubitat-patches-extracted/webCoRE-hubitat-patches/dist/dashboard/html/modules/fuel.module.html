@@ -1,0 +1,56 @@
+<status ng-if="status" ng-animate ng-bind-html="status" ng-click="setStatus()"></status>
+<logo ng-if="view != 'dashboard'"><img src="/img/webCoRE-text-{{ theme }}.svg"></logo>
+	<div id="preloader"></div>
+<viewer class="dashboard animated noPreventDefault" ng-if="initialized">
+	<div class="main">
+		<ul canisters>
+			<div class="form-group">
+				<button class="btn btn-default" ng-click="home()">Exit</button>
+			</div>
+			<li canister ng-repeat="canister in canisters" ng-class="'canister-' + canister | uniqueDashify:$index">
+				<label ng-click="selectCanister(canister);">
+					<span class="fas fa-caret-down collapse-control rotate-on-collapse pull-right" data-toggle="collapse" collapse-control data-target="#{{'collapse-' + canister | uniqueDashify:$index}}" aria-expanded="true" title="Hide/Show"></span>
+					{{canister ? canister : 'Uncategorized'}}
+				</label>
+				<div collapse-target ng-attr-id="{{'collapse' + canister | uniqueDashify:$index}}" class="collapse in">
+					<ul fuelStreams>
+						<li ng-repeat="fuelStream in fuelStreams" ng-if="fuelStream.c == canister" ng-selected="!!fuelStream.selected" ng-class="'fuel-stream-' + (fuelStream.n | dashify)">
+							<label ng-click="selectFuelStream(fuelStream);"><span ng-click="toggleFuelStream(fuelStream); $event.stopPropagation();"><i class="fas fa-check-square no-ng-animate" ng-if="fuelStream.selected"></i> <i class="far fa-square no-ng-animate" ng-if="!fuelStream.selected"></i></span> {{fuelStream.n}}<created>{{utcToString(fuelStream.t)}}</created></label>
+						</li>
+					</ul>
+				</div>
+			</li>
+		</ul>
+		<graph>
+			<label ng-if="fuelStreams.length == 0">Sorry, you have no fuel streams yet. Please create one by using the "Write to fuel stream" task.</label>
+			<!--<canvas id="line" class="chart chart-line" chart-data="chart.data" chart-labels="chart.labels" chart-series="chart.series" chart-options="chart.options"chart-dataset-override="chart.datasetOverride"></canvas>-->
+			<div google-chart class="chart" chart="chart" ng-if="!!chart.data" agc-on-select="hideSeries(selectedItem)"></div>
+		</graph>
+		<data>
+			<div class="row">
+				<div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" ng-repeat="name in chart.series">
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th colspan="2">{{name}}</th>
+							</tr>
+							<tr>
+								<th>Date</th>
+								<th>Value</th>
+							</tr>
+						</thead>
+						<tbody ng-init="data = chart.data[$index]">
+							<tr ng-repeat="point in data">
+								<td>{{utcToString(point.x)}}</td>
+								<td>{{point.y}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</data>
+	</div>
+</viewer>
+
+
+

@@ -1,0 +1,92 @@
+{
+  "packageName": "webCoRE",
+  "author": "imnot_bob",
+  "version": "1.0.99",
+  "minimumHEVersion": "2.3.2",
+  "licenseFile": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/LICENSE",
+  "releaseNotes": "SHOULD REBOOT HUB, wait few mins, then update webCoRE.  If on older HE releases, HPM has had problems hanging during update...may need to update files manually\n\n1.0.99 - change for integration with homebridgeV2 and echo-speaks due to sendLocation changes\n1.0.98 - fill null pointer on http request missing its URI\n1.0.97 - Cleanup for momentary devices and command optimizations, http requests with null responses log messages\n1.0.96 - update timer event handling\n1.0.95 - fix for not found method\n1.0.94 - update for cloud gzip responses, updates to json logging, IDE improvement for timers, optimizations \n1.0.93 - another time handling fix, and optimization, bug fixes\n1.0.92 - update time handling for compiler issue\n1.0.91 - update time handling with sunrise/sunset\n1.0.90 - update IDE operations during edit with variables\n1.0.89 - Fix for hsmAlert events, cleanup azimuth and altitude sun calculations\n1.0.88 - Fix for graph current value, fix for graph setting for http vs https, new location events lowMemory and cloudBackup, fixed marking of global variables in use, added altitude and azimuth to weather data, UI modules updates\n1.0.87 - DST updates, graph tile fixes\n1.0.86 - fix roundtominutes\n1.0.85 - update sunrise, sunset\n1.0.84 - update switch statement subscription display\n1.0.83 - add asin, sin, cos function, update to allow piston setting custom timezone for sunrise/sunset",
+  "documentationLink": "https://wiki.webcore.co",
+  "communityLink": "https://community.hubitat.com/t/webcore-for-hubitat-updates/11967",
+  "dateReleased": "2025-09-19",
+  "apps": [
+    {
+      "id": "cb649f7b-d33d-42b8-82c3-79d1d2101fea",
+      "name": "webCoRE",
+      "namespace": "ady624",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/smartapps/ady624/webcore.src/webcore.groovy",
+      "required": true,
+      "oauth": true,
+      "primary": true
+    },
+    {
+      "id": "3f309b36-4e36-4caf-9b1c-efdf7fc707ac",
+      "name": "webCoRE Piston",
+      "namespace": "ady624",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/smartapps/ady624/webcore-piston.src/webcore-piston.groovy",
+      "required": true,
+      "oauth": false
+    },
+    {
+      "id": "4fa112a8-c9fb-4376-ba19-97c55fd5787c",
+      "name": "webCoRE Storage",
+      "namespace": "ady624",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/smartapps/ady624/webcore-storage.src/webcore-storage.groovy",
+      "required": false,
+      "oauth": false
+    },
+    {
+      "id": "f7733131-3a5d-49c9-941f-79f12e9d47e4",
+      "name": "webCoRE Fuel Stream",
+      "namespace": "ady624",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/smartapps/ady624/webcore-fuel-stream.src/webcore-fuel-stream.groovy",
+      "required": false,
+      "oauth": true
+    }
+  ],
+  "drivers": [
+    {
+      "id": "665948da-1ed9-4b25-8b5b-53872afb3b4f",
+      "name": "webCoRE Presence Sensor",
+      "namespace": "ady624",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/devicetypes/ady624/webcore-presence-sensor.src/webcore-presence-sensor.groovy",
+      "required": false
+    },
+    {
+      "id": "66ab48da-1ed9-4b25-8b5b-53872afb3b4f",
+      "name": "webCoRE Weather",
+      "namespace": "ady624",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/devicetypes/ady624/webcore-weather.src/webcore-weather.groovy",
+      "required": false
+    },
+    {
+      "id": "0e1a298f-b61e-409d-9a70-a866036693fa",
+      "name": "webCoRE Graphs Tile Device",
+      "namespace": "ady624",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/devicetypes/ady624/webcore-graph.src/webcore-graph.groovy",
+      "required": false
+    }
+
+  ],
+  "files" : [
+    {
+      "id":"a930f16d-d5f4-4f37-b874-6b0dcfd47ace",
+      "name": "HubiGraph.js",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/resources/files/HubiGraph.js"
+    },
+    {
+      "id":"a7af9806-4b0e-4032-a78e-a41e27e4d685",
+      "name": "WeatherTile.js",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/resources/files/WeatherTile.js"
+    },
+    {
+      "id":"ba8d5ae0-1fbd-430a-bae0-bb5c0bd17ebd",
+      "name": "WeatherTile2.js",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/resources/files/WeatherTile2.js"
+    },
+    {
+      "id":"f06ea400-fe7a-49ef-8c50-6418f0a78dc6",
+      "name": "WeatherTile2.css",
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/resources/files/WeatherTile2.css"
+    }
+  ]
+}

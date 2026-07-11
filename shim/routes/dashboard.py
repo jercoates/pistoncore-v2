@@ -1,9 +1,9 @@
 """intf/dashboard/* endpoints (SHIM_API_SPEC.md §4).
 
 load/devices are backed by the real DEVICE_PAYLOAD_SPEC.md pipeline against
-live HA data (milestone 2). piston/getDb + enough of the new/create/get
-lifecycle to reach the editor still run on fixture data — the chunked save
-flow (piston/set*) isn't implemented yet; that's milestone 3.
+live HA data (milestone 2). Pistons and global variables persist for real
+via shim/storage.py (milestone 3, SHIM_API_SPEC.md §4.7/§4.10). Location is
+still fixture data — no HA location/mode/HSM pipeline built yet.
 """
 
 import hashlib
@@ -11,7 +11,7 @@ import json
 
 from fastapi import APIRouter, Request
 
-from .. import device_pipeline, fixtures, ha_client
+from .. import device_pipeline, fixtures, ha_client, storage
 from ..jsonp import jsonp
 
 router = APIRouter(prefix="/intf/dashboard")
@@ -21,6 +21,14 @@ router = APIRouter(prefix="/intf/dashboard")
 # restart for now (matches the "simplest v1" level of the rest of this
 # milestone); a manual refresh/TTL can come later if it's needed.
 _device_payload_cache: dict | None = None
+
+# Chunked piston save, in progress (SHIM_API_SPEC.md §4.7). set.chunk/set.end
+# carry no piston id or session id at all (VERIFIED app.js:1278-1292) — the
+# dashboard sends set.start -> n x set.chunk -> set.end strictly sequentially
+# per save (recursive promise chain, never interleaved), and this is a
+# single-user local shim, so one module-level buffer for "the save currently
+# in progress" is correct, not a shortcut.
+_pending_save: dict | None = None
 
 
 async def _get_device_payload() -> dict:
@@ -44,6 +52,8 @@ async def load(request: Request):
     payload = await _get_device_payload()
     instance = fixtures.fake_instance(str(request.base_url))
     instance["deviceVersion"] = _device_version(payload["devices"])
+    instance["pistons"] = storage.list_pistons()
+    instance["globalVars"] = storage.globals_for_wire()
     return jsonp(request, {
         "location": fixtures.FAKE_LOCATION,
         "instance": instance,
@@ -77,7 +87,8 @@ def piston_new(request: Request):
 def piston_create(request: Request):
     name = request.query_params.get("name", "")
     author = request.query_params.get("author", "")
-    return jsonp(request, fixtures.create_piston(name, author))
+    entry = storage.create_piston(name, author)
+    return jsonp(request, {"id": entry["id"]})
 
 
 @router.get("/piston/get")
@@ -88,12 +99,81 @@ def piston_get(request: Request):
     # resolves to the raw payload unwrapped once, not twice. Verified against
     # source; SHIM_API_SPEC.md §4.5 said "piston" was top-level — that was wrong.
     piston_id = request.query_params.get("id", "")
-    entry = fixtures.get_piston_entry(piston_id)
+    entry = storage.load_piston(piston_id)
+    if entry is None:
+        piston, meta = {"o": {"cto": 0, "ced": 0}, "r": [], "s": [], "v": [], "z": ""}, {}
+    else:
+        piston, meta = entry["piston"], storage.meta_for_get(entry)
     return jsonp(request, {
         "dbVersion": "pistoncore-spike-1",
         "db": fixtures.get_db(),
         "data": {
-            "piston": entry["piston"],
-            "meta": entry["meta"],
+            "piston": piston,
+            "meta": meta,
         },
     })
+
+
+def _save_response(entry: dict) -> dict:
+    # piston.module.js:599-606 — only treats a save as successful if
+    # response.data.build is truthy, then applies these three fields
+    # (long names — different from the "a"/"c"/"m" short names the piston
+    # LIST view reads elsewhere; both are real, verified webCoRE shapes,
+    # storage.py's meta_for_get/meta_for_list build them separately).
+    meta = storage.meta_for_get(entry)
+    return {"active": meta["active"], "modified": meta["modified"], "build": meta["build"]}
+
+
+@router.get("/piston/set")
+def piston_set(request: Request):
+    piston_id = request.query_params.get("id", "")
+    data = request.query_params.get("data", "")
+    piston_json = storage.decode_piston_data(data)
+    entry = storage.save_piston(piston_id, piston_json)
+    return jsonp(request, _save_response(entry))
+
+
+@router.get("/piston/set.start")
+def piston_set_start(request: Request):
+    global _pending_save
+    piston_id = request.query_params.get("id", "")
+    chunks = int(request.query_params.get("chunks", "0"))
+    _pending_save = {"piston_id": piston_id, "chunks": [None] * chunks}
+    return jsonp(request, {"status": "ST_READY"})
+
+
+@router.get("/piston/set.chunk")
+def piston_set_chunk(request: Request):
+    chunk_index = int(request.query_params.get("chunk", "0"))
+    data = request.query_params.get("data", "")
+    if _pending_save is not None and 0 <= chunk_index < len(_pending_save["chunks"]):
+        _pending_save["chunks"][chunk_index] = data
+    return jsonp(request, {"status": "ST_SUCCESS"})
+
+
+@router.get("/piston/set.end")
+def piston_set_end(request: Request):
+    global _pending_save
+    if _pending_save is None:
+        return jsonp(request, {"error": "ERR_NO_PENDING_SAVE"})
+    reassembled = "".join(_pending_save["chunks"])
+    piston_json = storage.decode_piston_data(reassembled)
+    entry = storage.save_piston(_pending_save["piston_id"], piston_json)
+    _pending_save = None
+    return jsonp(request, _save_response(entry))
+
+
+@router.get("/variable/set")
+def variable_set(request: Request):
+    name = request.query_params.get("name", "")
+    data = request.query_params.get("value", "")
+    pid = request.query_params.get("id")
+    value = storage.decode_base64_json(data) if data else None
+
+    if pid:
+        # Piston-local runtime value — inert until a compiler/execution
+        # engine exists to give it meaning (SHIM_API_SPEC.md §4.10).
+        return jsonp(request, {"status": "ST_SUCCESS", "id": pid, "localVars": {}})
+
+    updated = storage.set_global_variable(name, value)
+    return jsonp(request, {"status": "ST_SUCCESS", "globalVars": updated})

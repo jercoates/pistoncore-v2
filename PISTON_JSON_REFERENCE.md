@@ -149,7 +149,7 @@ Appear in piston root `r` and statement-level `r`.
 
 ## 8. Node IDs and trace
 
-Stock webCoRE nodes carry a small integer `$` id used by the trace/status view to key highlights and by logs. The editor source does not assign them — the **engine** normalizes/assigns at save (`piston.setup()`). TO VERIFY the exact assignment rule. **V2 NOTE:** the shim takes over this job — on save, walk the piston and assign incremental `$` ids to nodes missing one (never renumber existing ones, or trace keys and saved references drift). Until the trace feature exists this is low-stakes, but assign from day one so pistons don't churn ids later.
+Stock webCoRE nodes carry a small integer `$` id used by the trace/status view to key highlights and by logs. The editor source does not assign them — the **engine** normalizes/assigns at save. **VERIFIED-HE-GROOVY** (2026-07-10, `webcore-piston.groovy:1412-1475`, `msetIds()`): recursively walks the piston tree; for every statement/condition/restriction/group/event node (and, specially, `if`'s `ei` else-if entries, `switch`'s `cs` case entries, and `action`'s `k` task entries), a node **keeps its existing `$` id** if it has one AND that id doesn't collide with an id already seen elsewhere in the tree; otherwise it's queued for a new id. After the full walk, every queued node gets `$` = `(max id seen) + 1`, incrementing per node, assigned in tree-traversal order. Confirms the V2 NOTE's assumption exactly, plus one nuance not previously documented: a **duplicate** `$` id (two nodes sharing one value, e.g. from a bad copy/paste) is NOT left alone — the second occurrence gets reassigned same as a missing id, so ids stay unique even if the input wasn't. A companion `clearMsetIds()` recursively nulls every `$` in a subtree (used when duplicating a piston, so the clone gets fresh ids rather than colliding with the original's). **V2 NOTE:** the shim implements this same rule on save (assign incremental `$` ids to nodes missing one or colliding with another, never renumber a valid existing one).
 
 ## 9. AI-authoring guidance (the point of this doc)
 
@@ -161,8 +161,13 @@ To generate a valid piston: produce the root object (§1) with statements from �
 
 ## 10. Open items
 1. `o` (piston options) key meanings — enumerate from dashboard settings dialog / Groovy when a consumer needs them.
-2. Comparison vocab: which field marks trigger-type comparisons (compiler's trigger extraction depends on it).
+2. ~~Comparison vocab: which field marks trigger-type comparisons~~ — RESOLVED (2026-07-10,
+   VERIFIED-HE-GROOVY `webcore.groovy:5645-5690`): not a field at all — `comparisonsFLD` is
+   split into two top-level buckets, `comparisons.conditions{}` and `comparisons.triggers{}`.
+   A comparison key's trigger-vs-condition status is which bucket it lives in, not a marker
+   on the entry. `webcore_vocab.json` already has this structure correctly (confirmed
+   matching, no fix needed).
 3. tcp/tep/tsp/ctp/sm value sets — enumerate from piston.module.html dialogs at compiler time.
-4. `$` id assignment rule (engine-side) — define shim's rule per §8.
+4. ~~`$` id assignment rule~~ — RESOLVED, see §8.
 5. Preset operand (`t:"s"`) field name; task `m` value set; whether `exp` caches are stripped server-side.
 6. Validate this doc end-to-end during the spike: build one piston of each statement type in the running dashboard, save through the shim, diff the captured JSON against this reference, and promote/correct accordingly. **This is the doc's acceptance test.**

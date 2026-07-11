@@ -44,8 +44,21 @@ never treat it as gospel.
   `vendor/webcore-dashboard/` except the enumerated neutralizations in SHIM_API_SPEC.md §9
   (analytics removal, FontAwesome localization, maps stub, backup-bin UI, optional
   back-link). Any other proposed edit there requires Jeremy's explicit approval first.
-- UI split: authoring piston logic = the dashboard's job; everything else (piston list,
-  status page, debug/compile screen, import/export, settings) = PistonCore's own pages.
+- **UI split (Jeremy, 2026-07-10 — supersedes earlier one-liner):**
+  - **webCoRE dashboard owns:** the piston editor, the piston view (status/trace screen),
+    the global-variables editor, and the dashboard's own settings dialog. Everything
+    piston-shaped that already works.
+  - **PistonCore pages own:** the FRONT DOOR (landing page: piston tiles with compile
+    status + deploy status + HA health — the questions webCoRE structurally can't answer,
+    since a saved-but-failed-compile piston looks healthy on webCoRE's list), the
+    compile/debug output page (A2 compiler errors, PyScript-routing notices), ALL
+    import/export (paste-JSON in, pretty-print + copy out — this page is also the
+    AI-authoring door), and PistonCore settings.
+  - **webCoRE's own main/list page and its share features (cloud bins, backup/restore
+    UI) are INCOMPATIBLE with PistonCore and are neutralized, not used** — the list page
+    is a pass-through on the way to the editor, never the primary surface; bin/backup UI
+    is hidden per the SHIM_API_SPEC.md §9 table. Users live in PistonCore pages and visit
+    the dashboard to author and inspect pistons.
 - PistonCore pages: vanilla JS/HTML/CSS + Jinja2. No frontend framework, no build step,
   ever. Backend: Python/FastAPI, JSON file storage, Docker.
 - Compiler policy lives in COMPILER_DECISIONS_HOLDING.md §A and is non-negotiable:

@@ -1,0 +1,18 @@
+{
+  "author": "imnotbob",
+  "payPalUrl": "https://www.paypal.me/ady624",
+  "gitHubUrl": "https://github.com/imnotbob",
+  "packages": [
+    {
+      "name": "webCoRE",
+      "category": "Utility",
+      "tags": [
+		"Automations & Groups",
+		"Tools & Utilities",
+		"Dashboards"
+       ],
+      "location": "https://raw.githubusercontent.com/imnotbob/webCoRE/hubitat-patches/HE/packageManager.json",
+      "description": "webCoRE for Hubitat - run webCoRE pistons (automations) locally on your Hubitat system"
+    }
+  ]
+}
