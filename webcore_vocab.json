@@ -32,6 +32,18 @@
         "playTrackAndRestore"
       ]
     },
+    "audioVolume": {
+      "n": "Audio Volume",
+      "d": "audio volume devices",
+      "a": "volume",
+      "c": [
+        "mute",
+        "setVolume",
+        "unmute",
+        "volumeDown",
+        "volumeUp"
+      ]
+    },
     "battery": {
       "n": "Battery",
       "d": "battery powered devices",
@@ -1057,6 +1069,15 @@
       ],
       "u": "V"
     },
+    "volume": {
+      "n": "volume",
+      "t": "integer",
+      "r": [
+        0,
+        100
+      ],
+      "u": "%"
+    },
     "water": {
       "n": "water",
       "t": "enum",
@@ -1653,6 +1674,23 @@
           "d": " if already {v}"
         }
       ]
+    },
+    "setVolume": {
+      "n": "Set Volume...",
+      "d": "Set Volume to {0}",
+      "a": "volume",
+      "p": [
+        {
+          "n": "Level",
+          "t": "volume"
+        }
+      ]
+    },
+    "volumeDown": {
+      "n": "Lower volume"
+    },
+    "volumeUp": {
+      "n": "Raise volume"
     },
     "setSchedule": {
       "n": "Set thermostat schedule...",

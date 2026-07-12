@@ -95,7 +95,7 @@
       "_note": "Status always offered. Volume and mute require supported_features bits. PLAY_MEDIA gates Speak eligibility via the command_only_lane below, not this attributes lane.",
       "always": { "attributes": ["status"], "status": "verified" },
       "by_supported_features": {
-        "SUPPORT_VOLUME_SET":  { "bit": 4,   "attributes": ["level"], "status": "verified" },
+        "SUPPORT_VOLUME_SET":  { "bit": 4,   "attributes": ["volume"], "status": "verified", "_note": "was wrongly mapped to 'level' (bridges to switchLevel/setLevel, the dimmer command) until 2026-07-12 -- real webCoRE has a distinct audioVolume capability (attribute 'volume', commands setVolume/volumeUp/volumeDown/mute/unmute), confirmed by inspecting the real dashboard's own cached vocab live." },
         "SUPPORT_VOLUME_MUTE": { "bit": 8,   "attributes": ["mute"], "status": "verified" }
       },
       "by_declaration_attr": {
@@ -104,7 +104,7 @@
       "capabilities": {
         "_note": "Stage 3.3 command-only lane — see _meta.command_only_lane.",
         "by_supported_features": {
-          "SUPPORT_PLAY_MEDIA": { "bit": 512, "capabilities": ["speechSynthesis"], "status": "verified", "_note": "B6 author-time Speak gate (COMPILER_DECISIONS_HOLDING.md) — a media_player advertising PLAY_MEDIA is speech-capable" }
+          "SUPPORT_PLAY_MEDIA": { "bit": 512, "capabilities": ["speechSynthesis", "audioNotification"], "status": "verified", "_note": "B6 author-time Speak gate (COMPILER_DECISIONS_HOLDING.md) — a media_player advertising PLAY_MEDIA is speech-capable. audioNotification added 2026-07-12: real webCoRE offers 'Speak text...'/'Speak text and restore...'/'Speak text and resume...' (playText/playTextAndRestore/playTextAndResume) from this capability too, missed in the original Stage 3.3 wiring." }
         }
       }
     },
