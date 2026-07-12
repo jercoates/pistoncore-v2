@@ -1,7 +1,7 @@
 # PistonCore — HA Limitations & Gotchas Reference
 
 **Status:** Living document — add to this whenever a new HA limitation is discovered.
-**Last Updated:** June 2026 (Research session — PyScript routing table expanded: XOR, followed_by, switch fallthrough, monthly/yearly scheduling all confirmed PyScript-capable and routed there, not cut. Section 1 table and Section 6 updated with full verified routing table and user notification requirement. Prior: Session 73 — live-researched WebCoRE non-device command set against current HA docs; added Section 10; current stable is **2026.6**.)
+**Last Updated:** July 2026 (Research session — re-verified full PyScript routing table and Section 1 loop-control table against live HA 2026.7 docs; no changes required, all prior routing decisions confirmed still correct. Current stable is **2026.7** (released July 1, 2026 — purpose-specific triggers/conditions graduated from Labs to default, Matter backend rewritten in TypeScript (matter.js), Activity/Logbook rebuilt as timeline; none of this affects PistonCore's core scripting/routing decisions). Added two re-test flags to Section 2 from 2026.7 changelog. PyScript confirmed still at 2.0.1 — no release since last research. Prior: June 2026 — PyScript routing table expanded: XOR, followed_by, switch fallthrough, monthly/yearly scheduling all confirmed PyScript-capable and routed there, not cut. Prior: Session 73 — live-researched WebCoRE non-device command set against current HA docs; added Section 10.)
 
 This document captures Home Assistant limitations that affect PistonCore design and
 implementation. It exists because the gap between Hubitat/WebCoRE and HA is significant
@@ -20,6 +20,7 @@ For wizard-specific handling, see WIZARD_SPEC.md.
 | HA 2026.4 (current stable) | May 2026 | Variable scoping fixed in 2025.3. `continue_on_error` added to UI editor in 2026.3. `break`/`on_event`/`cancel_pending_tasks` still PyScript-only. No other limitations resolved. |
 | HA 2026.6 (current stable) | June 2026 (Session 73) | Stable is now **2026.6** (prior log said 2026.4 — stale). Re-verified loop control against live 2026.6 script-syntax docs: HA's native `stop` action only ends the current sequence block / current repeat iteration / current choose — it is **not** a true WebCoRE `break` (exit loop, continue after it). So `break` stays PyScript **for now**. Live-researched the WebCoRE non-device (location/emulated) command set for reproducibility — results recorded in new Section 10. NOTE: this is the line as of 2026.6 — HA gains native capability over time, so Section 10 must be re-reviewed periodically, not treated as permanent. |
 | PyScript 2.0.1 + HA 2026.6 | June 2026 (Research session) | Full PyScript routing table researched and verified. XOR, followed_by, switch fall-through, monthly/yearly scheduling all confirmed PyScript-capable — moved from "unknown/cut" to routed-to-PyScript. Full routing table now in Section 6. User notification requirement established. `on_event` timeout fields added to JSON schema. `every` restriction fields (`only_on_hours`, `only_on_minutes`, `only_on_wom`) added to JSON schema. |
+| HA 2026.7 (current stable) | July 2026 (Research session) | Stable is now **2026.7** (released July 1, 2026 — prior log said 2026.6, stale). Re-verified `stop:` action against live 2026.7.2 script-syntax docs: still only ends current sequence block / current repeat iteration / current choose — confirms `break` stays PyScript, no change. PyScript confirmed still at 2.0.1 (no release since June) — full Section 6 routing table re-verified accurate, no items move off PyScript. `choose` fall-through behavior unchanged (still exits on first match). Headline 2026.7 changes (purpose-specific triggers/conditions graduating from Labs to default, Matter backend rewrite to matter.js, Activity/Logbook timeline rebuild) are UI/UX and integration-layer — do not affect PistonCore's compiler routing decisions. Two changelog items flagged for re-test in Section 2: numeric_state trigger error reporting (PR #175093) and sun condition event-time handling (PR #175240) — neither confirmed to resolve the existing edge cases, just flagged as changed underlying behavior worth testing against. |
 
 ---
 
@@ -89,6 +90,20 @@ The `was` / `stays` distinction is critical and has real edge cases:
 - Entity in unknown/unavailable state — trigger may not fire as expected
 - Rapid state changes — trigger may miss transitions
 - **Test with real sensors before shipping numeric trigger compilation.**
+
+> **⚠ Re-test flag (HA 2026.7):** PR #175093 ("Report errors in numerical entity
+> triggers") changed how numeric_state triggers surface errors — previously silent
+> failures (e.g. unknown/unavailable entity) may now be reported instead of failing
+> silently. This is a behavior change to verify, not a confirmed fix — it could mean
+> PistonCore's compiler/deploy flow can now catch and surface something it couldn't
+> before, or it could just mean HA's own log gets noisier. **Test against a real
+> HA 2026.7+ instance before assuming either way.**
+
+> **⚠ Re-test flag (HA 2026.7):** PR #175240 ("Use event time for sun is_up and
+> is_set conditions") changed sun *condition* timing precision. This is a condition-level
+> change, not the sunrise/sunset trigger-offset math the negative-offset edge case above
+> is about — likely not directly relevant, but flagged since it touches sun timing.
+> Do not treat as resolving the negative-offset edge case without testing.
 
 ---
 
