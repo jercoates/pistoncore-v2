@@ -734,13 +734,21 @@ YAML/PyScript. **Nothing to adapt from webCoRE here — this is PistonCore's own
 
 (Rewritten for v2.) For each piston in the global's `used_by` list:
 1. **JSON patch — CONFIRMED unnecessary in v2 (VERIFIED, 2026-07-10, against
-   `reference/webcore_source_reference.groovy:1495-1528` `api_intf_variable_set`).** The
-   real Hubitat/SmartThings backend stores every global (device-type included) in ONE
+   `reference/webcore_source_reference.groovy:1495-1528` `api_intf_variable_set`;
+   RE-CONFIRMED 2026-07-12 against a real v2 capture, not just the Hubitat source).**
+   The real Hubitat/SmartThings backend stores every global (device-type included) in ONE
    central map, `atomicState.vars`, keyed by `@Name`, holding `{t, v}` — `v` for a device
    global is just the device-id array. Pistons reference the global **only by name** in
    operands; the device list is never embedded in piston JSON, for any global type. The
    piston JSON genuinely never changes when a global's device list changes — the v1
    role_tokens JSON-walk is confirmed dead, not just assumed dead.
+   **Live v2 evidence (real saved piston "Test 1", 2026-07-12):** the condition's device
+   reference is `lo.d: ["Light"]` and the action's is `d: ["@Announce"]` — bare **names**,
+   not hashed ids, in both the local-variable and global cases. The actual hashed device
+   ids (`:40b2c5e6...:`, `:1aa3b5eb...:`, `:0599c506...:`) appear ONLY inside the variable/
+   global definitions themselves (`piston.v[].v.d`, `globals.json`'s `@Announce.v`) — never
+   inline in a statement or condition. This is PistonCore's own real dashboard+shim save
+   pipeline confirming the pattern, not an inference from reading someone else's source.
 2. **HA update — via an HA `group` entity, not YAML/PyScript text patching (DECISION,
    2026-07-10):** every device-type global compiles to one dedicated HA `group` entity
    (e.g. `group.pistoncore_<slug(@Name)>`), and every compiled automation/PyScript that
@@ -805,10 +813,16 @@ the point of save. No background scan. No scheduled job. No frontend involvement
 `used_by` is stored on the global object in the shim's globals storage
 (`shim/storage.py:update_used_by`, `{name: {t, v, used_by: [{id, name}, ...]}}`) and
 travels with the globals-export JSON that feeds the compilers. Scanner
-(`shim/storage.py:find_global_references`) does a generic tree walk for
-`{"t": "x", "x": <name-or-list>}` operand nodes rather than enumerating every named field
-(lo/ro/ro2/to/to2/wd/p/x/...) — operands can appear in many places and are always shaped
-`{"t": ..., ...}`, so the generic walk is more robust than hardcoding field names.
+(`shim/storage.py:find_global_references`) regex-scans every string value in the piston
+tree for `@Name`/`@@SuperGlobal` tokens, rather than checking only `{"t": "x", "x": ...}`
+operand nodes (the original approach). **Bug found and fixed 2026-07-12** against a real
+capture: a device-type global used as a with-block's target is a bare `@Announce` string
+sitting directly in the statement's `d` list, no operand wrapper at all — the
+operand-only scanner missed this real, common case entirely and silently left `used_by`
+empty. The regex-over-every-string approach also catches globals embedded inside
+expression source strings (`e`/`str` fields, where `@Name` can be part of a larger
+sentence) and inside local variables' own `v.d` arrays, uniformly, with no need to
+special-case where in the structure a reference appears.
 
 ### H5. Status at time of writing
 

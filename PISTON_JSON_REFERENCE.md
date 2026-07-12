@@ -108,16 +108,33 @@ Trigger vs. condition is NOT a structural flag on the node — it is a property 
 
 The universal value holder. Shape: `{ "t": "<kind>", ...kind fields }`. Editor-initialized empty operand carries all keys (`{t,d:[],a,g,v,c,x,e}` — VERIFIED :1577); only the kind's fields are meaningful.
 
+**`f` field (VERIFIED-CAPTURE, real saved piston, 2026-07-12):** operands also carry an
+`f` field (observed value `"l"`) not previously documented here — present on `"p"`/`"c"`
+operands in a live capture. Purpose TO VERIFY (possibly a formatting/locale flag — `"l"`
+suggests "literal" or "local"), but its presence is confirmed real, not a shim artifact —
+pass it through verbatim regardless of what it turns out to mean.
+
+**Device references can be a bare name, not just hashed ids (VERIFIED-CAPTURE, 2026-07-12):**
+a `d` array (on a `"p"` operand or a statement's own `d`) can hold a **local variable name**
+or **global name** (`@Name`) as a bare string instead of a hashed device id — e.g.
+`lo.d: ["Light"]` (a local device-type variable named "Light") or an action's
+`d: ["@Announce"]` (a device-type global). The actual hashed ids live only inside that
+variable's/global's own definition (`piston.v[].v.d`, or `globals.json`'s `@Name.v`) — see
+COMPILER_DECISIONS_HOLDING.md §H1 for why this matters (device-global edits never touch
+piston JSON). PISTON_JSON_REFERENCE.md's compiler/importer consumers must resolve a `d`
+array entry as "hashed id, or else a variable/global name to look up" — never assume it's
+always already a hash.
+
 | `t` | Kind | Fields |
 |---|---|---|
-| `"p"` | physical device attribute | `d`: [device ids], `a`: attribute key, `i`: [sub-device indexes] (buttons etc., when attribute has sub-devices), `g`: aggregation `"any"/"all"/"least"/"most"/avg/min/max/sum/...` (required when `d.length > 1`), `p`: interaction `"a"|"p"|"s"` (any/physically/programmatically — VERIFIED :4248) |
-| `"d"` | device list (for device-type contexts) | `d`: [device ids] |
+| `"p"` | physical device attribute | `d`: [device ids **or bare variable/global names**, see above], `a`: attribute key, `i`: [sub-device indexes] (buttons etc., when attribute has sub-devices), `g`: aggregation `"any"/"all"/"least"/"most"/avg/min/max/sum/...` (required when `d.length > 1`), `p`: interaction `"a"|"p"|"s"` (any/physically/programmatically — VERIFIED :4248) |
+| `"d"` | device list (for device-type contexts) | `d`: [device ids **or bare variable/global names**, see above] |
 | `"v"` | virtual/system device | `v`: virtual device key (from instance.virtualDevices) |
 | `"s"` | preset value | preset key (TO VERIFY exact field — dialog case :4128) |
 | `"x"` | variable | `x`: variable name (string, `@Name` for globals, `$name` for system vars) or array of names (dynamic multi) |
 | `"u"` | argument/dynamic | (used in expression argument contexts) |
-| `"c"` | constant | `c`: the value, `vt`: value type. Encodings: time → **minutes since midnight** (int); date/datetime → **epoch ms** (VERIFIED fixOperand :1636–1647) |
-| `"e"` | expression | `e`: expression source string (editor caches parse as `exp` — treated as derived, TO VERIFY whether engine strips it) |
+| `"c"` | constant | `c`: the value, `vt`: value type. Encodings: time → **minutes since midnight** (int); date/datetime → **epoch ms** (VERIFIED fixOperand :1636–1647); `vt` confirmed present in live capture. |
+| `"e"` | expression | `e`: expression source string. `exp` (the editor's cached parse) is **RESOLVED, VERIFIED-CAPTURE 2026-07-12: NOT stripped** — a real saved piston has `exp` present verbatim inside stored conditions/tasks. The shim's storage policy (store the piston JSON exactly as sent) means this was already effectively decided, and the capture confirms it holds in practice, not just by policy. |
 
 ## 5. Tasks (VERIFIED updateTask :2018–2045)
 
@@ -155,7 +172,7 @@ Stock webCoRE nodes carry a small integer `$` id used by the trace/status view t
 
 To generate a valid piston: produce the root object (§1) with statements from §2.2, conditions §3, operands §4, tasks §5. Rules of thumb:
 - Every capability/attribute/command/comparison key must exist in the served db (webcore_vocab-derived — SHIM_API_SPEC §4.4). Invalid keys render as broken nodes, not errors.
-- Device references must be hashed IDs from the target install's device payload; for portable/shareable pistons prefer device-type **variables** referenced via `x` operands, letting the importer bind devices once.
+- Device references must be hashed IDs from the target install's device payload, OR a bare local-variable/global name (§4) whose own definition holds the hashed ids; for portable/shareable pistons prefer device-type **variables**, letting the importer bind devices once.
 - Include the empty-but-expected arrays (`s`, `c`, `ei`, `e`, `ts`, `fs` per type) — the editor initializes them and TO VERIFY how it tolerates their absence; safest is to emit them.
 - Times are minutes-since-midnight; dates are epoch ms; booleans in variables are `"false"`/`"true"` strings in option lists.
 
@@ -169,5 +186,7 @@ To generate a valid piston: produce the root object (§1) with statements from �
    matching, no fix needed).
 3. tcp/tep/tsp/ctp/sm value sets — enumerate from piston.module.html dialogs at compiler time.
 4. ~~`$` id assignment rule~~ — RESOLVED, see §8.
-5. Preset operand (`t:"s"`) field name; task `m` value set; whether `exp` caches are stripped server-side.
+5. Preset operand (`t:"s"`) field name; task `m` value set. ~~Whether `exp` caches are
+   stripped server-side~~ — RESOLVED, see §4 ("e" row): confirmed NOT stripped, stored
+   verbatim (VERIFIED-CAPTURE 2026-07-12).
 6. Validate this doc end-to-end during the spike: build one piston of each statement type in the running dashboard, save through the shim, diff the captured JSON against this reference, and promote/correct accordingly. **This is the doc's acceptance test.**

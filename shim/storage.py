@@ -61,32 +61,38 @@ def decode_piston_data(data: str) -> dict:
 # Global-reference scanner (COMPILER_DECISIONS_HOLDING.md §H4)
 # ---------------------------------------------------------------------------
 
+_GLOBAL_REF_RE = re.compile(r"@@?[A-Za-z0-9_]+")
+
+
 def find_global_references(piston: dict) -> set[str]:
     """
-    Walk a piston JSON tree for operand nodes {"t": "x", "x": <name-or-list>}
-    and collect every referenced name that starts with "@" (a global — stock
-    webCoRE's own prefix convention, VERIFIED piston.module.js:2278; local/
-    system-var references don't start with "@" and are not globals).
-    Generic tree walk rather than enumerating every named field (lo/ro/ro2/
-    to/to2/wd/p/x/...) per PISTON_JSON_REFERENCE.md §4 — operands can appear
-    in many places and are always shaped {"t": ..., ...}, so this is more
-    robust than hardcoding each field name.
+    Walk the entire piston JSON tree and regex-scan every string value for
+    @Name / @@SuperGlobal tokens (stock webCoRE's own prefix convention,
+    VERIFIED piston.module.js:2278). A real capture (2026-07-12) showed the
+    original "{t:'x', x:...} operands only" approach missing a genuinely
+    common case: a device-type global used as a with-block's target is a
+    bare "@Announce" string sitting directly in the statement's "d" list, no
+    operand wrapper at all -- action.d = ["@Announce"]. Globals can also
+    appear embedded inside expression source strings ("e"/"str" fields,
+    e.g. "...@Name..." as part of a larger sentence, not the whole value)
+    and inside local variables' own v.d arrays (a local device variable
+    initialized from a global). A single regex pass over every string in the
+    tree catches all of these uniformly, including the bare-string case (a
+    bare "@Announce" string is just a whole-string match of the same
+    pattern) -- no need to special-case where in the structure it appears.
+    Also matches "@@" superglobals, tracked the same way.
     """
     found: set[str] = set()
 
     def walk(node):
         if isinstance(node, dict):
-            if node.get("t") == "x":
-                x = node.get("x")
-                names = x if isinstance(x, list) else [x] if x else []
-                for name in names:
-                    if isinstance(name, str) and name.startswith("@"):
-                        found.add(name)
             for value in node.values():
                 walk(value)
         elif isinstance(node, list):
             for item in node:
                 walk(item)
+        elif isinstance(node, str):
+            found.update(_GLOBAL_REF_RE.findall(node))
 
     walk(piston)
     return found
