@@ -1,6 +1,10 @@
 # Local dev data — holds ha_url/ha_token (secrets). Never commit.
 /data/
 
+# Temporary test-corpus staging artifact — real (scrubbed) piston exports,
+# not meant to persist past the hard-testing session that generated it.
+/static/pistoncore/_test_corpus_staged.json
+
 # Python
 .venv/
 __pycache__/

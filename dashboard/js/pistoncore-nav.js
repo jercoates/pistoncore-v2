@@ -23,6 +23,12 @@
  *    hook's own bootstrap pass-through), this cancels that in-app route
  *    change and does a real browser navigation to "/" instead, which exits
  *    the SPA entirely and lands on the real PistonCore front door.
+ *    EXCEPTION: piston.module.js's resumeImport() also routes to "/" from
+ *    an open piston, but to open the list page's own native "+New" import
+ *    dialog (webCoRE's real import-review UI, confirmed 2026-07-12 --
+ *    only exists on that native screen, nowhere else). When
+ *    $rootScope.dashboardResumeImport is set, this hook steps aside and
+ *    lets that in-app route change proceed instead of hijacking it.
  *
  * 3. BACKUP: three webCoRE UI entry points embed the same cloud-bin-style
  *    import code, which PistonCore doesn't back with a real bins service --
@@ -57,7 +63,13 @@
     style.textContent =
         '.' + MASK_CLASS + '-overlay { position: fixed; inset: 0; z-index: 999999; ' +
         'background: #1a1d23; color: #d4dae8; display: flex; align-items: center; ' +
-        'justify-content: center; font: 14px system-ui, sans-serif; }';
+        'justify-content: center; font: 14px system-ui, sans-serif; }' +
+        // LOGO: PistonCore is the product identity users see; webCoRE's own
+        // branding (top-of-content <logo> element, dashboard.module.html:2,
+        // and the sidebar's <li class="logo"> mark+wordmark, :104) is hidden
+        // everywhere in the sealed app, not just during the import detour --
+        // additive CSS only, no sealed file touched (Jeremy, 2026-07-12).
+        'logo, li.logo { display: none !important; }';
     document.documentElement.appendChild(style);
 
     var overlay = null;
@@ -118,6 +130,12 @@
 
             var bootstrapPending = window.sessionStorage.getItem('pistoncore_open_piston');
             if (bootstrapPending) return; // this hook's own IN flow, let it proceed
+
+            // resumeImport() (piston.module.js) sets this then routes to "/"
+            // itself to open the list page's own "+New" import dialog --
+            // that dialog only exists on webCoRE's native list screen, so
+            // this exit hook must not hijack it to the PistonCore front door.
+            if ($rootScope.dashboardResumeImport) return;
 
             var cameFromPiston = current && current.$$route && current.$$route.originalPath === '/piston/:pistonId';
             if (cameFromPiston) {
