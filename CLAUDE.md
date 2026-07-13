@@ -87,8 +87,10 @@ never treat it as gospel.
 
 - `dashboard/` — sealed upstream dashboard (see rules above)
 - `reference/` — webcore_source_reference.groovy and other read-only upstream references
-- `frontend/` translation files: webcore_vocab.json, picker_capability_map.json,
-  pistoncore_attribute_translation.json (seed data for the db and device payloads)
+- Repo-root translation files: webcore_vocab.json, picker_capability_map.json
+  (seed data for the db and device payloads; webcore_vocab.json's "ha" arrays +
+  `_ha_translation` block are the HA read/write rules the shim strips before
+  serving to the dashboard)
 - Spec docs at repo root
 - `archive/session-briefs/` — one-time SESSION_BRIEF_*.md files, moved here once executed
   (living specs stay at repo root; briefs are session instructions, not specs)

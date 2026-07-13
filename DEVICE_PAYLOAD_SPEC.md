@@ -41,8 +41,7 @@ menus are computed client-side from `a`/`c` per device, VERIFIED-JS piston.modul
 | HA **entity registry** | entity → device_id membership; `entity_category` (for filtering diagnostics); disabled flags |
 | HA state API | live values, domain, device_class, supported_features, supported_color_modes |
 | `picker_capability_map.json` | HA signals → attribute keys (VERIFIED-FILES) |
-| `webcore_vocab.json` | attribute keys → capabilities/attributes/commands definitions (VERIFIED-FILES) |
-| `pistoncore_attribute_translation.json` | attribute key → `ha_source` (where the value lives / where commands route) (VERIFIED-FILES) |
+| `webcore_vocab.json` | attribute keys → capabilities/attributes/commands definitions, plus per-attribute/command `"ha"` arrays (where the value lives / where commands route — structured, machine-executable read/write rules, retired `pistoncore_attribute_translation.json`'s free-text `ha_source`) (VERIFIED-FILES, merged 2026-07-12) |
 
 ## 3. Pipeline
 

@@ -16,7 +16,6 @@ COPY templates/ templates/
 COPY static/ static/
 COPY webcore_vocab.json .
 COPY picker_capability_map.json .
-COPY pistoncore_attribute_translation.json .
 
 ENV PISTONCORE_DATA_DIR=/data
 VOLUME ["/data"]

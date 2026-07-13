@@ -190,11 +190,20 @@ def get_db() -> dict:
     TypeError on db.commands.physical being undefined, 2026-07-10).
     db.capabilities/db.attributes ARE read flat (piston.module.js:2606,2637)
     — this reshape is scoped to commands only, not applied blindly.
+
+    webcore_vocab.json also carries a shim-internal "ha" array per attribute/
+    command plus a top-level "_ha_translation" block (HA read/write rules for
+    the device payload builder and future compiler) — stripped here since the
+    sealed dashboard client has no use for it and must never see it.
     """
     global _db_cache
     if _db_cache is None:
         with open(_REPO_ROOT / "webcore_vocab.json", encoding="utf-8") as f:
             vocab = json.load(f)
+        vocab.pop("_ha_translation", None)
+        for section in ("attributes", "commands", "virtualCommands"):
+            for entry in vocab[section].values():
+                entry.pop("ha", None)
         _db_cache = dict(vocab)
         _db_cache["commands"] = {
             "physical": vocab["commands"],

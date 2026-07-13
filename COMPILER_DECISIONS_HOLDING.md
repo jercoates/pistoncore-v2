@@ -836,6 +836,45 @@ SHIM_API_SPEC.md §4.10).
 
 ---
 
+## I. Vocab `ha` translation layer — multi-mapping resolution (recorded 2026-07-12, not built)
+
+`webcore_vocab.json` carries a per-attribute/per-command `"ha"` array (merged in from the
+Fable5/Grok candidate vocab, 2026-07-12) plus a top-level `_ha_translation` metadata block.
+Each array entry is one candidate HA mapping (`domain`, optional `device_class`, `read` or
+`map`/`scale`, a `tag` of verified/assumed, optional `note`). Multiple entries on one
+attribute/command are deliberate — HA has no hard capability definitions the way
+SmartThings/Hubitat did, so one webCoRE name legitimately maps to more than one real HA
+mechanism (e.g. `level`/`setLevel` cover `light.brightness_pct`, `fan.percentage`,
+`cover.position`, AND `media_player.volume_set` — confirmed via live device comparison,
+not a research error). `"ha": "n/a"` means confirmed no HA equivalent.
+
+Both `"ha"` and `_ha_translation` are shim/compiler-internal — `fixtures.get_db()` strips
+both before the vocab reaches the sealed dashboard client (shim/fixtures.py).
+
+Compiler-side decisions from this analysis (SESSION_BRIEF_VOCAB_PICKER.md Part 3,
+Jeremy 2026-07-12) — recorded now, not built, since there is no compiler yet:
+
+- **Multi-mapping resolution is PER-DEVICE, decided by live HA data at compile time.**
+  Each resolved member entity is matched against the command/attribute's `ha` array by
+  domain/device_class/features; when several mappings match the SAME entity, array order
+  is the tiebreaker — first match wins. Array order is therefore MEANINGFUL and must never
+  be re-sorted (by hand or by tooling) when this file is edited.
+- **Command fan-out with grouping:** one webCoRE command over a mixed-device group compiles
+  to multiple HA service calls, one per winning mapping, each targeting the combined entity
+  list of the devices that resolved to it (all devices that matched mapping X in one call,
+  all that matched mapping Y in another).
+- **Mixed-outcome rule:** if any device in the group resolves to `n/a` or no match, that is
+  an A6 debug-page error naming the device + command — never a silent drop of just that
+  device from the group.
+
+Not yet done (SESSION_BRIEF_VOCAB_PICKER.md Part 2): a permanent comparison-harness debug
+endpoint that dumps the full per-device grouping/capability funnel (raw HA entities → Stage
+1 survivors + exclusion reasons → picker-map hits → Stage 4 bridge capabilities → final
+served a/c/cn) to diff against real webCoRE device-by-device. Intended as permanent support
+tooling ("why isn't X in the picker"), not scratch — still to be built.
+
+---
+
 ## F. Retirement
 
 When the v2 compiler spec is written (after PISTON_JSON_REFERENCE.md locks the webCoRE

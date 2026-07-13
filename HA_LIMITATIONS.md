@@ -7,9 +7,10 @@ This document captures Home Assistant limitations that affect PistonCore design 
 implementation. It exists because the gap between Hubitat/WebCoRE and HA is significant
 and keeps being rediscovered from different angles.
 
-For decisions already made in response to these limitations, see DESIGN.md.
-For compiler-specific handling, see COMPILER_SPEC.md.
-For wizard-specific handling, see WIZARD_SPEC.md.
+For decisions already made in response to these limitations, see
+COMPILER_DECISIONS_HOLDING.md (and the v2 compiler spec when it exists).
+For the piston JSON these limitations apply to, see PISTON_JSON_REFERENCE.md.
+(v1 pointers to DESIGN.md / COMPILER_SPEC.md / WIZARD_SPEC.md are retired with v1.)
 
 ---
 
@@ -43,7 +44,7 @@ with significant restrictions:
 | Followed-by sequential events | Yes | No | Yes — chained `task.wait_until()` | PyScript only — `operator: "followed_by"` on condition group forces PyScript (verified June 2026) |
 | Switch fall-through | Yes | No — `choose` always exits first match | Yes — real Python if/elif | PyScript only — `case_traversal_policy: "fallthrough"` forces PyScript (verified June 2026) |
 | Monthly/yearly scheduling | Yes | No — `time_pattern` has no dom/month fields | Yes — cron syntax | PyScript only for `interval_unit: "n"/"y"` or non-empty `only_on_dom`/`only_on_wom`/`only_on_months` (verified June 2026) |
-| Exit with value (piston state) | Yes | No — `stop:` drops value | Partial — can write to helper entity | Design decision required at D-S6 |
+| Exit with value (piston state) | Yes | No — `stop:` drops value | Partial — can write to helper entity | Design decision required at the v2 compiler spec |
 
 > **PyScript routing re-verified June 2026 (HA 2026.6 + PyScript 2.0.1):** The features
 > now confirmed PyScript-capable (and the conditions that force routing) are documented in
@@ -78,7 +79,7 @@ The `was` / `stays` distinction is critical and has real edge cases:
 
 - `wait_for_trigger` at a specific time — if the piston reaches this step AFTER the
   target time has already passed today, it waits until tomorrow. Compiler always
-  emits a warning for this. See WIZARD_SPEC.md was vs stays section.
+  emits a warning for this. (was WIZARD_SPEC.md; the was/stays semantics now live with the comparison docs in the v2 compiler spec.)
 - Negative sunrise/sunset offsets that cross midnight (e.g., "$sunrise - 2 hours"
   when sunrise is at 6am = 4am, but what if piston runs at 11pm?). **Test specifically.**
 - `for:` duration on state triggers has edge cases with unknown/unavailable states.
@@ -117,7 +118,7 @@ that no longer exists.
 
 **Current status (logic_version 2):** Entity IDs are stored directly on condition,
 action, and for_each nodes. There is no device_map. The scheduled entity validation
-(DESIGN.md Section 9.2) checks all deployed pistons every 30 minutes against the live
+(the v2 deploy design (was DESIGN.md §9.2)) checks all deployed pistons every 30 minutes against the live
 HA entity registry. If any entity_id is not present in the registry, the piston is
 flagged `entity_missing: true` in the piston index and ⚠ appears on the piston list.
 
@@ -222,8 +223,7 @@ Route the compiler's output target logic to accommodate this from the start.
 ### PyScript Routing — Full Verified Feature Table
 
 The following features are confirmed PyScript-capable as of June 2026 (PyScript 2.0.1,
-HA 2026.6). This table is the authoritative routing reference until D-S6 locks the
-compiler spec. Re-verify on major HA releases — native is always preferred.
+HA 2026.6). This table is the authoritative routing reference until the v2 compiler spec locks. Re-verify on major HA releases — native is always preferred.
 
 | Feature | JSON field(s) that trigger routing | PyScript mechanism |
 |---|---|---|
@@ -277,7 +277,7 @@ but behave differently in edge cases. Users migrating from Hubitat may be surpri
 These limitations were discovered and designed around. Listed here so they are
 not re-litigated:
 
-- **PyScript routing** — Full verified feature table now in Section 6. Routing mechanism (`target-boundary.json`) referenced in specs but UNVERIFIED in backend code — confirm or create at D-S6. ⚠
+- **PyScript routing** — Full verified feature table now in Section 6. Routing mechanism (`target-boundary.json`) referenced in specs but UNVERIFIED in backend code — confirm or create at the v2 compiler spec (v2 note: the scan lives in the shim save flow per COMPILER_DECISIONS_HOLDING §E). ⚠
 - **Binary sensors always report on/off** → Friendly label system in wizard,
   compiled_value always "on"/"off" ✅
 - **Entity IDs are compile-time** → entity_ids baked at wizard commit time, static in JSON ✅
@@ -299,8 +299,8 @@ These are known gaps without a defined solution yet:
 
 - **State value quoting not enforced at compiler level** — `_compile_single_condition` passes `compiled_value` to templates without normalization. HA silently parses unquoted `on`/`off` as booleans, causing state checks to never match. Spec says handled — code does not enforce it. Fix required in S1-7. (Moved from Section 8 — was incorrectly listed as handled.)
 - **`wait_for_trigger` timeout not emitted** — Compiler passes `stmt_id` and `at_time` to the wait_until template but does not emit `timeout:` or `continue_on_timeout:`. Pistons will hang forever if the time is missed. Spec says handled — code does not emit it. Fix required in S1-7. (Moved from Section 8 — was incorrectly listed as handled.)
-- **Parallel branch `continue_on_error` not emitted at sequence level** — Compiler emits `continue_on_error` per-action only. One offline device kills the whole parallel block. COMPILER_SPEC Section 10.2 explicitly requires it at the branch sequence level. Fix required in S1-7. (Moved from Section 8 — was incorrectly listed as handled.)
-- Entity ID changes flagged by scheduled validation (DESIGN.md Section 9.2) — UX needs work
+- **Parallel branch `continue_on_error` at the SEQUENCE level (v2 compiler REQUIREMENT):** per-action only is not enough — one offline device kills the whole parallel block. The v1 compiler failed this; bake into the v2 parallel template.
+- Entity ID changes flagged by scheduled validation (the v2 deploy design (was DESIGN.md §9.2)) — UX needs work
 - Long-running piston timeouts — not yet handled
 - Global variable helper race conditions on simultaneous deploy — not yet handled
 - Sunrise/sunset negative offset edge cases — needs explicit testing
@@ -309,7 +309,7 @@ These are known gaps without a defined solution yet:
 
 ### ⚠️ Validation Required — Missing Single-Device Entity Behavior
 
-**Must test before implementing the single-device hard flag in Section 15.6 of DESIGN.md.**
+**Must test before implementing the single-device hard flag in the (future) v2 deploy spec (was DESIGN.md §15.6).**
 
 Unknown: what does HA actually do when an automation references a missing entity?
 

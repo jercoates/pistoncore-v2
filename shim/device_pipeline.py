@@ -3,10 +3,11 @@
 Implements Stages 1, 3, 4, 6, 7, 8 literally from the documented source
 files (picker_capability_map.json, webcore_vocab.json) and HA's own
 registry fields. Stage 5 (live attribute values) is deliberately deferred —
-ha_source in pistoncore_attribute_translation.json is prose, not a
-machine-executable rule, so attributes are emitted with their static
-{n,t,o} definition from vocab.attributes and no "v" (SHIM_API_SPEC.md
-§5.1 / DEVICE_PAYLOAD_SPEC.md Stage 5: dashboard tolerates missing v).
+not blocked on data anymore (webcore_vocab.json's "ha" arrays are now a
+structured, machine-executable read rule per attribute), just not yet
+built — so attributes are emitted with their static {n,t,o} definition
+from vocab.attributes and no "v" (SHIM_API_SPEC.md §5.1 /
+DEVICE_PAYLOAD_SPEC.md Stage 5: dashboard tolerates missing v).
 
 Stage 1 groups by HA's device-registry device_id (confirmed against
 Jeremy's real data, 2026-07-09 — HA's own "Device" column in the states
