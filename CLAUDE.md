@@ -48,13 +48,32 @@ never treat it as gospel.
   - **webCoRE dashboard owns:** the piston editor, the piston view (status/trace screen),
     the global-variables editor, and the dashboard's own settings dialog. Everything
     piston-shaped that already works.
+  - **Compile/debug errors are ANNOUNCED on exactly TWO surfaces, never a third (Jeremy,
+    2026-07-12 — firm: "adding another level would irritate the hell out of me and any
+    future user"):** (1) a status indicator on the front door's piston list (compile/
+    deploy/HA-health flag per row), and (2) a banner injected onto the piston's own
+    status/view screen (the SAME screen already showing Status/Quick Facts/Automatic
+    Backup). That screen already natively shows its own banners this way (VERIFIED —
+    piston.module.html:129-133, e.g. the "does not subscribe to any events" alert, each
+    one a hardcoded `<div warning ng-if="...">` in the sealed template, no generic slot to
+    feed data into) — a PistonCore banner gets added via unsealed JS (same non-invasive
+    approach as the Backup-button redirect), styled to match the existing
+    `.alert.alert-warning`/`.alert.alert-info` pattern already on that page, never a
+    sealed-file edit. A saved-but-failed-compile piston is just another fact about that
+    piston, shown where its other facts already live.
+  - **A compiler help/debug screen MAY exist, reached only by drilling in — never a place
+    errors surface on their own (Jeremy, 2026-07-12).** Same pattern as the existing
+    PyScript-notice `[Learn more →]` link (§H below): clicking either of the two
+    announcement surfaces above can open it for detailed help fixing that specific issue,
+    and it's also reachable directly from PistonCore settings for a general compiler-health
+    check. It is NOT a third place an error first appears, and nothing routes you there
+    automatically.
   - **PistonCore pages own:** the FRONT DOOR (landing page: a piston list — grouped rows,
     never tiles/cards, Jeremy 2026-07-12 — with compile status + deploy status + HA health —
     the questions webCoRE structurally can't answer,
-    since a saved-but-failed-compile piston looks healthy on webCoRE's list), the
-    compile/debug output page (A2 compiler errors, PyScript-routing notices), ALL
-    import/export (paste-JSON in, pretty-print + copy out — this page is also the
-    AI-authoring door), and PistonCore settings.
+    since a saved-but-failed-compile piston looks healthy on webCoRE's list), the compiler
+    help/debug screen described above, ALL import/export (paste-JSON in, pretty-print +
+    copy out — this page is also the AI-authoring door), and PistonCore settings.
   - **webCoRE's own main/list page and its share features (cloud bins, backup/restore
     UI) are INCOMPATIBLE with PistonCore and are neutralized, not used** — the list page
     is a pass-through on the way to the editor, never the primary surface; bin/backup UI
@@ -63,8 +82,10 @@ never treat it as gospel.
 - PistonCore pages: vanilla JS/HTML/CSS + Jinja2. No frontend framework, no build step,
   ever. Backend: Python/FastAPI, JSON file storage, Docker.
 - Compiler policy lives in COMPILER_DECISIONS_HOLDING.md §A and is non-negotiable:
-  read-only compiler, errors to the debug page (never mutation), Jinja2 everywhere, one
-  canonical variable-substitution function.
+  read-only compiler, errors announced on the front-door indicator + piston status-screen
+  banner (never mutation, never a third announcement surface — see UI split above; a
+  drill-in compiler help/debug screen is fine, reached only from those two or Settings),
+  Jinja2 everywhere, one canonical variable-substitution function.
 - Claims in specs carry tags: VERIFIED (with source/line), ASSUMED, TO VERIFY, DECISION
   (with who/when). Keep tagging new claims the same way.
 

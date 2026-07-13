@@ -29,7 +29,9 @@ If it is not in the ASSUMED list, it is either a verified fact or a Jeremy decis
 
 ### DECIDED (Jeremy's calls)
 - Engine is resolved at compile time from a global setting, not stored in the node.
-- Compiler is read-only; incompatibility goes to the debug page, never mutates JSON.
+- Compiler is read-only; incompatibility is surfaced (front-door indicator + piston
+  status-screen banner, per CLAUDE.md's UI split — no separate debug page), never mutates
+  JSON.
 - SSML passed verbatim; compiler does NOT inject `text_type` or strip SSML; rate control
   is an engine/voice concern (`length_scale` for Piper), out of scope for the node.
 - Build queues behind GAP-S72-1 (multi-task with-block).
@@ -240,14 +242,15 @@ correct. These lookups inform the OUTPUT only — never the source JSON:
 - **Device compatibility** — verify each resolved `media_player` in the with-block can
   actually accept TTS (live `supported_features` / PLAY_MEDIA bit at compile time).
 
-### 5.3 Error handling — debug page, never mutation
+### 5.3 Error handling — surfaced, never mutation
 
 If the compiler finds an incompatible device (cannot speak) or no available TTS engine:
 
 - It does **not** edit the JSON.
 - It does **not** silently drop the Speak task.
-- It writes a clear, specific error to the **debug page** identifying the offending
-  device/engine and why it failed.
+- It writes a clear, specific error identifying the offending device/engine and why it
+  failed, shown on the two surfaces CLAUDE.md's UI split defines (front-door indicator +
+  the piston's own status-screen banner) — there is no separate debug page.
 
 The piston source stays untouched regardless of compile outcome.
 
@@ -363,7 +366,8 @@ These are not free choices — they are reconciliations against existing rigid s
   by WebCoRE, reconciled to existing schema.
 - **Compiler:** read-only; pulls live HA at compile time for engine + compatibility;
   emits volume_set + tts.speak (with `cache: true`); SSML passed verbatim, never opted-in
-  or stripped; on incompatibility writes to the debug page; never touches the JSON.
+  or stripped; on incompatibility surfaces the error (front-door + status-screen banner,
+  no separate debug page); never touches the JSON.
 
 ---
 

@@ -328,14 +328,15 @@ notify. (Same rule as Speak.)
 PyScript target: same service call via the PyScript service-call mechanism. (Detail
 confirmed during compiler work.)
 
-### 5.3 Error handling — debug page, never mutation
+### 5.3 Error handling — surfaced, never mutation
 
 If the compiler finds the target reference unresolvable (service no longer registered,
 entity missing, kind not recognized):
 - it does **not** edit the JSON,
 - it does **not** silently drop the task,
-- it writes a clear, specific error to the **debug page** naming the offending target and
-  why it failed.
+- it writes a clear, specific error naming the offending target and why it failed, shown
+  on the two surfaces CLAUDE.md's UI split defines (front-door indicator + the piston's
+  own status-screen banner) — there is no separate debug page.
 
 The piston source stays untouched regardless of compile outcome.
 
@@ -401,7 +402,8 @@ complexity is real and not worth blocking v1):
   rich payload.
 - **Compiler:** read-only; resolves the target ref to HA via a **Jinja2 template selected
   by `kind`**, so all HA notify churn is absorbed in the template and stored pistons never
-  break; reuses the canonical variable substitution; errors go to the debug page.
+  break; reuses the canonical variable substitution; errors are surfaced (front-door +
+  status-screen banner, no separate debug page).
 - **New plumbing:** a SECOND HA fetch (service registry) beyond `get_states`.
 - **v2:** phone-as-unit cross-referencing of notify target to its sensors, and full
   companion-app `data` coverage.

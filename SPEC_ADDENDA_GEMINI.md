@@ -23,10 +23,11 @@ File as the leading candidate mechanism for TCP, not a decision.
 → COMPILER_DECISIONS_HOLDING.md §A, one line.
 Gemini suggested: on unmapped commands, keep compiling and emit
 `# PISTONCORE_TODO: not mapped` comments in the deployed YAML. This CONFLICTS with locked
-policy A6 (no silent drop, no placeholder, no partial output — unresolvable = debug-page
-error naming the piston/statement). A deployed automation that silently skips one action
-is worse than one that visibly failed to compile. Record as considered-and-rejected so it
-doesn't get re-proposed; the debug page is the TODO list.
+policy A6 (no silent drop, no placeholder, no partial output — unresolvable = a surfaced
+error naming the piston/statement, shown on the front-door indicator + that piston's own
+status-screen banner — no separate debug page, Jeremy 2026-07-12). A deployed automation
+that silently skips one action is worse than one that visibly failed to compile. Record as
+considered-and-rejected so it doesn't get re-proposed; those two surfaces ARE the TODO list.
 
 ## 3. "Recompile All" as breaking-change insurance (DECISION-adjacent, cheap, real)
 → COMPILER_DECISIONS_HOLDING.md new item + one line in README's compiler section later.
@@ -35,7 +36,8 @@ Python), an HA breaking change (service/schema rename) is absorbed by updating t
 template/map and RECOMPILING ALL pistons — zero manual automation edits, for every user.
 Consequences to spec: (a) a "Recompile all" action must exist (front door or settings);
 (b) compiled artifacts should record the template-set version they were built with, so
-"built with outdated templates" is detectable and the debug page can suggest recompiling;
+"built with outdated templates" is detectable and the front-door indicator / piston
+status-screen banner can suggest recompiling;
 (c) this is a headline README selling point once the compiler exists.
 
 ## 4. Shipped piston library (DECISION, Jeremy): curated pistons via IMPORT, never auto-fill

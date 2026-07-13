@@ -25,7 +25,8 @@ The governing rule for everything below (Jeremy, Session 73; restated for v2): *
 user sees in the editor is the contract — and in v2 the editor is the stock webCoRE
 dashboard, so the piston JSON as webCoRE emits it is law; PistonCore adapts to it, never
 the reverse.** The decisions worth preserving are the *behavioral* ones (what HA must end
-up doing) and the *policy* ones (read-only compiler, debug-page errors, Jinja2-everywhere).
+up doing) and the *policy* ones (read-only compiler, surfaced-not-mutated errors,
+Jinja2-everywhere).
 v1 field names appearing below are NOT contracts — they re-key against
 PISTON_JSON_REFERENCE.md (webCoRE format) at coding time.
 
@@ -36,20 +37,48 @@ PISTON_JSON_REFERENCE.md (webCoRE format) at coding time.
 1. **Compiler is read-only.** It reads the JSON and NEVER writes, reshapes, or mutates it.
    The editor/wizard authors the JSON; it is the source of truth; the compiler is
    input-only. (This is the rule whose violation has bitten the project before.)
-2. **Errors go to the debug page, never to mutation.** On any incompatibility (device can't
-   speak, no TTS engine, notify target unresolvable, kind unrecognized), the compiler does
-   NOT edit the JSON and does NOT silently drop the task — it writes a clear, specific
-   debug-page error naming the offending device/engine/target and why. Source stays
-   untouched regardless of compile outcome.
-3. **All HA YAML values go through Jinja2.** Standing project rule, no exceptions.
-4. **One canonical variable→Jinja substitution function.** The variable-token → Jinja
+2. **Errors are surfaced, never silently mutated or dropped.** On any incompatibility
+   (device can't speak, no TTS engine, notify target unresolvable, kind unrecognized), the
+   compiler does NOT edit the JSON and does NOT silently drop the task — it raises a clear,
+   specific error naming the offending device/engine/target and why, shown on the two
+   surfaces CLAUDE.md's UI split defines (front-door piston-list indicator + a banner on
+   that piston's own status/view screen) — no error ever ANNOUNCES itself anywhere else
+   (Jeremy, 2026-07-12: "adding another level would irritate the hell out of me and any
+   future user"). A drill-in compiler help/debug screen may exist for detailed fixing help,
+   but only reached from those two surfaces or Settings — never a place an error shows up
+   on its own. Source stays untouched regardless of compile outcome.
+3. **One canonical error-record shape, designed alongside the debug screen, not bolted on
+   after (DECISION, Jeremy 2026-07-12).** Every check the compiler runs (device resolution,
+   capability mapping, engine availability, PyScript routing, HA service-call failures)
+   raises through ONE structured error record — not each check inventing its own ad hoc
+   failure shape that then has to be reconciled later. Fields the record needs at minimum:
+   which piston, which statement/device/command, a plain-language explanation, and a
+   **"check HA updates" pointer** — the HA domain/service/component implicated, so whoever
+   (or whatever) investigates knows exactly where to look in HA's own release notes/
+   breaking-changes list for what changed, rather than PistonCore trying to pre-populate a
+   link to every possible future HA changelog entry (unmaintainable at scale — HA changes
+   constantly, PistonCore can't know in advance what each future break will be).
+   Two consumers: (a) the human-facing surfaces (front-door indicator, piston status-
+   banner, the drill-in help screen), and (b) a future AI-assisted session reading the same
+   feed to diagnose the break and propose the template fix. The drill-in help screen's link
+   goes to a PistonCore-authored doc ("how to have an AI update the templates" — a generic
+   walkthrough of the fix workflow, NOT written per-error) — the "check HA updates" pointer
+   is what lets that AI session go find the SPECIFIC fix for THIS break. Ties to the
+   "Recompile All" item (SPEC_ADDENDA_GEMINI.md §3) — the error feed tells you WHICH
+   template needs updating, the HA-updates pointer tells the AI WHERE to look for how,
+   Recompile All pushes the fixed template to every piston once it's done. Design this
+   record's shape when the compiler spec is written; do not let ad hoc per-check error
+   handling accrete first. The "how to have an AI update the templates" doc itself is not
+   yet written — TO DO when the compiler spec exists.
+4. **All HA YAML values go through Jinja2.** Standing project rule, no exceptions.
+5. **One canonical variable→Jinja substitution function.** The variable-token → Jinja
    substitution MUST reuse the single canonical substitution function used elsewhere in the
    compiler. Do NOT introduce a second variable-substitution path for Speak or Notify.
-5. **Compile-time live-HA lookups inform the OUTPUT only, never the source JSON.** The
+6. **Compile-time live-HA lookups inform the OUTPUT only, never the source JSON.** The
    compiler may pull live HA at compile time (engine selection, device compatibility,
    target resolution) to make its hidden translation correct, but those lookups only shape
    what it emits.
-6. **Entity resolution happens at COMPILE via the hash ↔ entity_id map.** (Rewritten for
+7. **Entity resolution happens at COMPILE via the hash ↔ entity_id map.** (Rewritten for
    v2 — the v1 name+capability/`role_tokens` model is retired with the wizard.) Stock
    webCoRE piston JSON stores **hashed device IDs** (`:` + md5("core." + entity_id) + `:`,
    VERIFIED from webcore.groovy). Because the hash is a deterministic function of the
@@ -62,7 +91,8 @@ PISTON_JSON_REFERENCE.md (webCoRE format) at coding time.
      existed only because friendly names could not durably resolve.
    - **No silent drop, no placeholder, no partial output.** A hash with no map entry
      (foreign piston import referencing a device this install has never seen) is a real
-     unresolvable error → A2 debug-page error naming the hash and any name hints available.
+     unresolvable error → A2 error naming the hash and any name hints available, surfaced
+     per the two-surface rule above (no separate debug page).
    - Editor side: the stock dashboard keeps device IDs in the JSON regardless of live
      availability — nothing prunes an offline device except explicit user removal. The v1
      edit-side token-persistence rule is satisfied by webCoRE's own behavior for free.
@@ -340,7 +370,7 @@ the editor as an editable field. It is shown read-only in the Quick Facts panel 
 status page and as a label in the Test Compile panel header.
 
 **The help system (`pyscript.md`)** is the user-facing companion to the routing table.
-When a user sees the PyScript notice on the debug screen, the `[Learn more →]` link opens
+When a user sees the PyScript notice on the status page, the `[Learn more →]` link opens
 the help file that explains what PyScript is, why their piston needs it, and how to install
 it. This file is also backend-served markdown — editable without a coding session.
 See FRONTEND_SPEC.md Help System section for the full spec.
@@ -864,7 +894,8 @@ Jeremy 2026-07-12) — recorded now, not built, since there is no compiler yet:
   list of the devices that resolved to it (all devices that matched mapping X in one call,
   all that matched mapping Y in another).
 - **Mixed-outcome rule:** if any device in the group resolves to `n/a` or no match, that is
-  an A6 debug-page error naming the device + command — never a silent drop of just that
+  an A6 error naming the device + command, surfaced per the two-surface rule (no separate
+  debug page) — never a silent drop of just that
   device from the group.
 
 Not yet done (SESSION_BRIEF_VOCAB_PICKER.md Part 2): a permanent comparison-harness debug
