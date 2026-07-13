@@ -306,6 +306,14 @@ These are known gaps without a defined solution yet:
 - Sunrise/sunset negative offset edge cases — needs explicit testing
 - Numeric trigger unknown state behavior — needs explicit testing
 - HA reload failure UX — partial, needs more robustness
+- **Hubitat room assignment (`roomId`/`roomName`) not reachable via HA** — real webCoRE
+  shows these because it runs inside Hubitat with direct device-object access; HA's
+  Hubitat integration doesn't bridge Hubitat's room concept to any entity/state (confirmed
+  2026-07-12: HA Developer Tools > States shows an empty Area column and no room_id/
+  room_name entity for a fully-enabled device that DOES expose other custom attributes,
+  e.g. `smartDetectType`, fine via Stage 3.2's fallback). Would need HA's own Area registry
+  as a substitute data source (different API, not currently part of the device pipeline) —
+  not pursued yet, Jeremy: "not hunting it down for now."
 
 ### ⚠️ Validation Required — Missing Single-Device Entity Behavior
 

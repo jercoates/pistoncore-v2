@@ -128,10 +128,12 @@ def group_entities(registries: dict) -> list[dict]:
     Returns a list of:
       { "group_key": <registry device_id or entity_id>,
         "display_name": <name_by_user, else name, else entity friendly_name>,
-        "member_entity_ids": [entity_id, ...] }
+        "member_entity_ids": [entity_id, ...],
+        "area_name": <HA Area name, or None if unassigned> }
     """
     device_map = {d["id"]: d for d in registries["devices"]}
     state_map = {s["entity_id"]: s for s in registries["states"]}
+    area_map = {a["area_id"]: a["name"] for a in registries["areas"]}
 
     groups: dict[str, dict] = {}
     excluded = []
@@ -151,16 +153,26 @@ def group_entities(registries: dict) -> list[dict]:
             group_key = device_id
             device = device_map[device_id]
             display_name = device.get("name_by_user") or device.get("name") or device_id
+            # Entity-level area_id overrides the device's own, same precedence
+            # HA itself uses (Settings > Areas resolves entity override first).
+            area_id = entity.get("area_id") or device.get("area_id")
         else:
             group_key = entity_id
             display_name = _friendly_name(entity_id, state_map)
+            area_id = entity.get("area_id")
 
         group = groups.setdefault(group_key, {
             "group_key": group_key,
             "display_name": display_name,
             "member_entity_ids": [],
+            "area_name": None,
         })
         group["member_entity_ids"].append(entity_id)
+        # First contributing member's area wins, same rule as attribute/
+        # capability binding below — a group's members rarely disagree on
+        # area in practice, but don't let a later member silently override.
+        if group["area_name"] is None and area_id:
+            group["area_name"] = area_map.get(area_id)
 
     logger.info("Stage 1 grouping: %d groups from %d entities, %d excluded",
                 len(groups), len(registries["entities"]), len(excluded))
@@ -400,6 +412,15 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
         if attr_key in sub_device_members:
             count_attr_name = vocab_attr["s"].split(",")[0]
             a.append({"n": count_attr_name, "t": "integer", "v": len(sub_device_members[attr_key])})
+
+    # HA Area name, standing in for Hubitat's roomNameWC (no roomIdWC — HA
+    # Areas have no numeric id, Jeremy 2026-07-12: skip rather than fabricate
+    # one). Always known at grouping time (registry data, not a live HA
+    # state), so v is populated immediately unlike the Stage-5-deferred
+    # attributes above. Omitted entirely when the device has no HA Area
+    # assigned — never emit an attribute with no real value.
+    if group.get("area_name"):
+        a.append({"n": "roomNameWC", "t": "string", "v": group["area_name"]})
 
     # Custom attributes (no vocab entry — piston.module.js's device.a[]
     # fallback lookup handles these fine without one) appended last, sorted

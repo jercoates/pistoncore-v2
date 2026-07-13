@@ -99,7 +99,24 @@ never treat it as gospel.
   spelunking.
 - **Behavioral verification.** Every change ends with "here is what to click and what you
   should see" for the dev instance.
-- **Deploy block.** Claude never deploys. Jeremy pulls and rebuilds on Unraid himself.
+- **Deploy block.** Claude never deploys. Jeremy pulls and rebuilds on Unraid himself,
+  using the exact command below — the data path is the one real fact worth memorizing
+  here, since a wrong/placeholder path silently mounts an empty folder instead of the
+  real one (happened once, 2026-07-12 — looked like "deleted everything," wasn't, just
+  mounted wrong). Recreate the container, never `docker restart` — a rebuilt image has no
+  effect on an already-running container until it's recreated.
+  ```bash
+  cd /mnt/user/appdata/pistoncore-v2   # wherever the repo is actually cloned
+  git pull
+  docker build -t pistoncore-v2 .
+  docker rm -f pistoncore-v2
+  docker run -d --name pistoncore-v2 \
+    -p 7778:7777 \
+    -v /mnt/user/appdata/pistoncore-data:/data \
+    --restart unless-stopped \
+    pistoncore-v2
+  ```
+  Port stays `7778` on the host side — an old v1 `pistoncore` container still holds `7777`.
 - **Commits:** Jeremy pushes via GitHub Desktop, single combined commit per session.
 - License: this repo is GPL-3.0 (required by the vendored dashboard). Keep upstream
   copyright headers intact.
