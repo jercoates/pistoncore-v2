@@ -1,0 +1,330 @@
+{
+  "name": "Paul downstairs",
+  "meta": {
+    "name": "Paul downstairs",
+    "category": "4",
+    "build": 2,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "motion",
+              "d": [
+                "Cave_Motion"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "active",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "active"
+                  }
+                ],
+                "ok": true,
+                "str": "active",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor_All"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "not present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:10",
+                    "ok": true,
+                    "t": "string",
+                    "v": "not present"
+                  }
+                ],
+                "ok": true,
+                "str": "not present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 4,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 420,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 420
+                  }
+                ],
+                "ok": true,
+                "str": "420",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 510,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 510
+                  }
+                ],
+                "ok": true,
+                "str": "510",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 5,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 6,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 80,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 80
+                        }
+                      ],
+                      "ok": true,
+                      "str": "80",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Paul do not go downstairs",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:24",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Paul do not go downstairs"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Paul do not go downstairs",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 8,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 9,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "exp": {
+                      "i": [],
+                      "ok": true,
+                      "str": "",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Cave_Motion",
+        "t": "device",
+        "v": {
+          "d": [
+            ":d313c63940ae1a4dcd8dae46c940b8bb:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "name": "sound Test",
+  "meta": {
+    "name": "sound Test",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "d": [
+          ":f6e65d85f5ce571076f5da98d0a657ce:"
+        ],
+        "k": [
+          {
+            "$": 2,
+            "c": "playText",
+            "p": [
+              {
+                "c": "I fixed echo speaks",
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:18",
+                      "ok": true,
+                      "t": "string",
+                      "v": "I fixed echo speaks"
+                    }
+                  ],
+                  "ok": true,
+                  "str": "I fixed echo speaks",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "string"
+              },
+              {
+                "d": [],
+                "f": "l",
+                "g": "avg",
+                "vt": "integer"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      }
+    ],
+    "v": [],
+    "z": ""
+  }
+}

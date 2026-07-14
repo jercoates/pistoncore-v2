@@ -1,0 +1,221 @@
+{
+  "name": "Server Light",
+  "meta": {
+    "name": "Server Light",
+    "category": "1",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Server_Door"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "Server_Light"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 5,
+        "a": "0",
+        "c": [
+          {
+            "$": 6,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Server_Door"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "closed",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "closed"
+                  }
+                ],
+                "ok": true,
+                "str": "closed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 7,
+            "a": "0",
+            "d": [
+              "Server_Light"
+            ],
+            "k": [
+              {
+                "$": 8,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Server_Light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":e0e6666142dcf0ab05ec56fa8a949772:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Server_Door",
+        "t": "device",
+        "v": {
+          "d": [
+            ":4651385b9fbe145ab6d0f915f13cb2d1:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

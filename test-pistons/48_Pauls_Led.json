@@ -1,0 +1,937 @@
+{
+  "name": "Pauls Led",
+  "meta": {
+    "name": "Pauls Led",
+    "category": "4",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "doubleTapped",
+              "d": [
+                "Pauls_Button"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 1,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1
+                  }
+                ],
+                "ok": true,
+                "str": "1",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Pauls_Led"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "Pauls_Led"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "setColorTemperature",
+                "p": [
+                  {
+                    "c": 4000,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:3",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 4000
+                        }
+                      ],
+                      "ok": true,
+                      "str": "4000",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "p": "a",
+                    "vt": "enum"
+                  },
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "c": 0,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 0
+                        }
+                      ],
+                      "ok": true,
+                      "str": "0",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "decimal"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 6,
+            "a": "0",
+            "d": [
+              "Pauls_Led"
+            ],
+            "k": [
+              {
+                "$": 7,
+                "c": "stopColorLoop",
+                "cm": true,
+                "p": []
+              },
+              {
+                "$": 8,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "ms"
+                  }
+                ]
+              },
+              {
+                "$": 9,
+                "c": "stopColorTemperatureChange",
+                "cm": true,
+                "p": []
+              },
+              {
+                "$": 10,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "ms"
+                  }
+                ]
+              },
+              {
+                "$": 11,
+                "c": "toggle",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 12,
+        "a": "0",
+        "c": [
+          {
+            "$": 13,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "doubleTapped",
+              "d": [
+                "Pauls_Button"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 2,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 2
+                  }
+                ],
+                "ok": true,
+                "str": "2",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 14,
+            "co": "is_not",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "colorMode",
+              "d": [
+                "Pauls_Led"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "CT",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "CT"
+                  }
+                ],
+                "ok": true,
+                "str": "CT",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 15,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Pauls_Led"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 16,
+            "a": "0",
+            "d": [
+              "Pauls_Led"
+            ],
+            "k": [
+              {
+                "$": 17,
+                "c": "stopColorLoop",
+                "cm": true,
+                "p": []
+              },
+              {
+                "$": 18,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 500,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 500
+                        }
+                      ],
+                      "ok": true,
+                      "str": "500",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "ms"
+                  }
+                ]
+              },
+              {
+                "$": 19,
+                "c": "stopColorTemperatureChange",
+                "cm": true,
+                "p": []
+              },
+              {
+                "$": 20,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 500,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 500
+                        }
+                      ],
+                      "ok": true,
+                      "str": "500",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "ms"
+                  }
+                ]
+              },
+              {
+                "$": 21,
+                "c": "setColorTemperature",
+                "p": [
+                  {
+                    "c": 4000,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:3",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 4000
+                        }
+                      ],
+                      "ok": true,
+                      "str": "4000",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  },
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "c": 0,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 0
+                        }
+                      ],
+                      "ok": true,
+                      "str": "0",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "decimal"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 22,
+        "a": "0",
+        "c": [
+          {
+            "$": 23,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "colorMode",
+              "d": [
+                "Pauls_Led"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "CT",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "CT"
+                  }
+                ],
+                "ok": true,
+                "str": "CT",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 24,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Pauls_Led"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 25,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "doubleTapped",
+              "d": [
+                "Pauls_Button"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 2,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 2
+                  }
+                ],
+                "ok": true,
+                "str": "2",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 26,
+            "a": "0",
+            "d": [
+              "Pauls_Led"
+            ],
+            "k": [
+              {
+                "$": 27,
+                "c": "stopColorLoop",
+                "cm": true,
+                "p": []
+              },
+              {
+                "$": 28,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 500,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 500
+                        }
+                      ],
+                      "ok": true,
+                      "str": "500",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "ms"
+                  }
+                ]
+              },
+              {
+                "$": 29,
+                "c": "stopColorTemperatureChange",
+                "cm": true,
+                "p": []
+              },
+              {
+                "$": 30,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 500,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 500
+                        }
+                      ],
+                      "ok": true,
+                      "str": "500",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "ms"
+                  }
+                ]
+              },
+              {
+                "$": 31,
+                "c": "startColorLoop",
+                "cm": true,
+                "p": [
+                  {
+                    "c": "quick",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:4",
+                          "ok": true,
+                          "t": "string",
+                          "v": "quick"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "quick",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "enum"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Pauls_Button",
+        "t": "device",
+        "v": {
+          "d": [
+            ":e6a5bf3627ffe62fa6612ea4c05ec499:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Pauls_Led",
+        "t": "device",
+        "v": {
+          "d": [
+            ":91211a6b35eefc2950c34f2acaf805a1:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

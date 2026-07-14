@@ -1,0 +1,1418 @@
+{
+  "name": "Camera and Motion Lights GPT(Side Light)",
+  "meta": {
+    "name": "Camera and Motion Lights GPT(Side Light)",
+    "category": "0",
+    "build": 9,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Device_Lights"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "off",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "string",
+                    "v": "off"
+                  }
+                ],
+                "ok": true,
+                "str": "off",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "Device_Lights"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 6,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "programatic"
+                  },
+                  {
+                    "c": "false",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:4",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "false"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "false",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "manualOveride"
+                  },
+                  {
+                    "c": "false",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:4",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "false"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "false",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 8,
+        "a": "0",
+        "c": [
+          {
+            "$": 9,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "illuminance",
+              "d": [
+                "@Light_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 100,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 100
+                  }
+                ],
+                "ok": true,
+                "str": "100",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 10,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Device_Lights"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "off",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "string",
+                    "v": "off"
+                  }
+                ],
+                "ok": true,
+                "str": "off",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 11,
+            "c": [
+              {
+                "$": 12,
+                "co": "changes_to",
+                "ct": "t",
+                "fs": [],
+                "lo": {
+                  "a": "smartDetectType",
+                  "d": [
+                    "Camera_Motion"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "person",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "person"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "person",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "string"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 13,
+                "co": "changes_to",
+                "ct": "t",
+                "fs": [],
+                "lo": {
+                  "a": "motion",
+                  "d": [
+                    "Motion_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "active",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "active"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "active",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "fs": [],
+            "o": "or",
+            "sm": "auto",
+            "t": "group",
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 14,
+            "a": "0",
+            "d": [
+              "Device_Lights"
+            ],
+            "k": [
+              {
+                "$": 15,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 16,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 17,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "programatic"
+                  },
+                  {
+                    "c": "true",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:3",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "true"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "true",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              },
+              {
+                "$": 18,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "manualOveride"
+                  },
+                  {
+                    "c": "false",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:4",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "false"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "false",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              },
+              {
+                "$": 19,
+                "c": "cancelTasks",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 20,
+        "a": "0",
+        "c": [
+          {
+            "$": 21,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Device_Lights"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 22,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "string",
+              "x": "programatic"
+            },
+            "ro": {
+              "c": "false",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:4",
+                    "ok": true,
+                    "t": "boolean",
+                    "v": "false"
+                  }
+                ],
+                "ok": true,
+                "str": "false",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "boolean"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 23,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 24,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "manualOveride"
+                  },
+                  {
+                    "c": "true",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:3",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "true"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "true",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 25,
+        "a": "0",
+        "c": [
+          {
+            "$": 26,
+            "c": [
+              {
+                "$": 27,
+                "co": "changes_away_from",
+                "ct": "t",
+                "fs": [],
+                "lo": {
+                  "a": "smartDetectType",
+                  "d": [
+                    "Camera_Motion"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "person",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "person"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "person",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "string"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 28,
+                "co": "changes_to",
+                "ct": "t",
+                "fs": [],
+                "lo": {
+                  "a": "motion",
+                  "d": [
+                    "Motion_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "inactive",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:7",
+                        "ok": true,
+                        "t": "string",
+                        "v": "inactive"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "inactive",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "fs": [],
+            "o": "or",
+            "sm": "auto",
+            "t": "group",
+            "ts": []
+          },
+          {
+            "$": 29,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "string",
+              "x": "programatic"
+            },
+            "ro": {
+              "c": "true",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "boolean",
+                    "v": "true"
+                  }
+                ],
+                "ok": true,
+                "str": "true",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "boolean"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 30,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 31,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 32,
+            "a": "0",
+            "c": [
+              {
+                "$": 33,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "motion",
+                  "d": [
+                    "Motion_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "inactive",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:7",
+                        "ok": true,
+                        "t": "string",
+                        "v": "inactive"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "inactive",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 34,
+                "co": "is_not",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "smartDetectType",
+                  "d": [
+                    "Camera_Motion"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "person",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "person"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "person",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "string"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 35,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "f": "l",
+                  "g": "any",
+                  "t": "x",
+                  "vt": "string",
+                  "x": "programatic"
+                },
+                "ro": {
+                  "c": "true",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:3",
+                        "ok": true,
+                        "t": "boolean",
+                        "v": "true"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "true",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "boolean"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 36,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "f": "l",
+                  "g": "any",
+                  "t": "x",
+                  "vt": "string",
+                  "x": "manualOveride"
+                },
+                "ro": {
+                  "c": "false",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:4",
+                        "ok": true,
+                        "t": "boolean",
+                        "v": "false"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "false",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "boolean"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 37,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "switch",
+                  "d": [
+                    "Device_Lights"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "p": "a",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "on",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:1",
+                        "ok": true,
+                        "t": "string",
+                        "v": "on"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "on",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 38,
+                "a": "0",
+                "d": [
+                  "Device_Lights"
+                ],
+                "k": [
+                  {
+                    "$": 39,
+                    "c": "off",
+                    "p": []
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 40,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 41,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "programatic"
+                      },
+                      {
+                        "c": "false",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:4",
+                              "ok": true,
+                              "t": "boolean",
+                              "v": "false"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "false",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "boolean"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 42,
+        "a": "0",
+        "c": [
+          {
+            "$": 43,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smartDetectType",
+              "d": [
+                "Camera_Motion"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "person",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "person"
+                  }
+                ],
+                "ok": true,
+                "str": "person",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 44,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "motion",
+              "d": [
+                "Motion_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "active",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "active"
+                  }
+                ],
+                "ok": true,
+                "str": "active",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "or",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 45,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 46,
+                "c": "cancelTasks",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Device_Lights",
+        "t": "device",
+        "v": {
+          "d": [
+            ":be3ce31a4d514576a2bf623e9ab77767:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Camera_Motion",
+        "t": "device",
+        "v": {
+          "d": [
+            ":a66c1ca143799644cd4e479e769079a2:",
+            ":cc03769427f57f9294d141b6f8210e3d:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "programatic",
+        "t": "boolean"
+      },
+      {
+        "a": "d",
+        "n": "manualOveride",
+        "t": "boolean"
+      },
+      {
+        "a": "d",
+        "n": "Motion_Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":745f7757ef797cdc8addfaadd8d4b6c3:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

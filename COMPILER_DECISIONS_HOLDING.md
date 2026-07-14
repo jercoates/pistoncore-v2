@@ -304,7 +304,21 @@ documentation. Verify live at the v2 compiler spec — HA helper capabilities mo
 
 ## D. OPEN — not decided, do not treat as settled
 
-
+- **Execution-mode default — genuinely undecided, real options now on the table
+  (PYSCRIPT_COMPILER_RESEARCH.md §6, ported 2026-07).** All four HA modes are reproducible
+  on both compile targets (`parallel`=default/zero-code, `restart`=`@task_unique`,
+  `single`=`@task_unique(kill_me=True)`, `queued`=an `asyncio.Lock`-held function body on
+  PyScript; `mode: single/restart/queued/parallel` directly on YAML automations/scripts).
+  The question is which one the compiler picks as the DEFAULT when the piston JSON doesn't
+  force a specific one. Two real candidates, genuinely in tension:
+  - webCoRE itself serializes piston executions per-piston via its own semaphore
+    (§2.5 point 1 — events queue, one processed at a time) — that argues `queued` as the
+    faithful default.
+  - HA automations themselves default to `single` — that argues consistency with what an
+    HA-native user would expect from an unconfigured automation.
+  Whatever gets picked must apply IDENTICALLY to both compile targets so they agree with
+  each other. Do not silently default to one — this needs one explicit line in the v2
+  compiler spec, decided once by Jeremy.
 - **Command classification is a PENDING research deliverable.** The full WebCoRE command
   menu (device / emulated / location — see WITH_BLOCK_TASK_FRAMEWORK.md §5.4) must be sorted
   by the **reproduce-cleanly test** against CURRENT HA: can HA cleanly reproduce the action
@@ -412,12 +426,24 @@ default false). The compiler must:
 - If `timeout_seconds` is set → emit `task.wait_until(..., timeout=N)` and respect
   `continue_on_timeout` to either continue or stop after timeout.
 
-### E5. `exit` value — open decision
+### E5. `exit` value — PyScript half now has a concrete mechanism; YAML half still open
 
-`exit` `value` field: native HA `stop:` drops it silently. PyScript can write the value
-to a piston-state helper entity before stopping. **Decision required at the v2 compiler spec:** implement
-the PyScript path or emit `CompilerWarning: EXIT_VALUE_DROPPED` for both targets and
-document it. Do not silently drop without at least the warning.
+`exit`'s `value` field (real field name: statement `t:"exit"`'s `lo` operand — VERIFIED,
+PISTON_JSON_REFERENCE §2.2): native HA `stop:` drops it silently.
+
+**PyScript path — VERIFIED, concrete (PYSCRIPT_COMPILER_RESEARCH.md §7, ported 2026-07):**
+`state.persist("pyscript.pistoncore_<piston_id>_state", ...)` gives a real,
+restart-surviving piston-state entity — the exit value writes there before the piston
+stops, visible in Developer Tools, readable by other pistons on either compile target
+(it's a normal HA entity once persisted). This closes the PyScript half of this decision.
+
+**YAML path — still open.** `state.persist` is PyScript-only (pyscript-domain entities
+can't be written from plain YAML/templates) — the native target would need a helper
+entity (`input_text`, matching the C-TYPES table's scalar-global pattern) written via an
+explicit action before `stop:`. **Decision still required:** implement that helper-write
+path for the YAML target, or emit `CompilerWarning: EXIT_VALUE_DROPPED` there and document
+it. Do not silently drop without at least the warning on whichever half stays unimplemented
+at v1.
 
 ### E6. `every` `only_on_wom` — runtime check pattern
 

@@ -1,0 +1,285 @@
+{
+  "name": "Play pirate song",
+  "meta": {
+    "name": "Play pirate song",
+    "category": "2",
+    "build": 7,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                ":a914ca41aed509d0dbf919687f21b2eb:"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 420,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 420
+                  }
+                ],
+                "ok": true,
+                "str": "420",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 1200,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1200
+                  }
+                ],
+                "ok": true,
+                "str": "1200",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 60,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 60
+                        }
+                      ],
+                      "ok": true,
+                      "str": "60",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 6,
+                "c": "playTrack",
+                "p": [
+                  {
+                    "c": "x-file-cifs://192.168.1.10/Hubitat/HoistTheColours.mp3",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:53",
+                          "ok": true,
+                          "t": "string",
+                          "v": "x-file-cifs://192.168.1.10/Hubitat/HoistTheColours.mp3"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "x-file-cifs://192.168.1.10/Hubitat/HoistTheColours.mp3",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "uri"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 7,
+            "a": "0",
+            "d": [
+              ":a914ca41aed509d0dbf919687f21b2eb:"
+            ],
+            "k": [
+              {
+                "$": 8,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 3,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 3
+                        }
+                      ],
+                      "ok": true,
+                      "str": "3",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              },
+              {
+                "$": 9,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "virtual_switxh",
+        "t": "device",
+        "v": {
+          "d": [
+            ":a914ca41aed509d0dbf919687f21b2eb:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

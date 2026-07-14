@@ -1,0 +1,680 @@
+{
+  "name": "Main TV off",
+  "meta": {
+    "name": "Main TV off",
+    "category": "4",
+    "build": 4,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 445,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 445
+                  }
+                ],
+                "ok": true,
+                "str": "445",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 660,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 660
+                  }
+                ],
+                "ok": true,
+                "str": "660",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is_not",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor_All"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:6",
+                    "ok": true,
+                    "t": "string",
+                    "v": "present"
+                  }
+                ],
+                "ok": true,
+                "str": "present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "Main_TV"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 6,
+        "a": "0",
+        "c": [
+          {
+            "$": 7,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 661,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 661
+                  }
+                ],
+                "ok": true,
+                "str": "661",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 8,
+            "a": "0",
+            "d": [
+              "Main_TV"
+            ],
+            "k": [
+              {
+                "$": 9,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 10,
+        "a": "0",
+        "c": [
+          {
+            "$": 11,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                0,
+                1,
+                2,
+                3,
+                4
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 1380,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1380
+                  }
+                ],
+                "ok": true,
+                "str": "1380",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 12,
+            "a": "0",
+            "d": [
+              "Main_TV"
+            ],
+            "k": [
+              {
+                "$": 13,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 14,
+        "a": "0",
+        "c": [
+          {
+            "$": 15,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 375,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 375
+                  }
+                ],
+                "ok": true,
+                "str": "375",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 16,
+            "a": "0",
+            "d": [
+              "Main_TV"
+            ],
+            "k": [
+              {
+                "$": 17,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 18,
+        "a": "0",
+        "c": [
+          {
+            "$": 19,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Main_TV"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "p",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 20,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 510,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 510
+                  }
+                ],
+                "ok": true,
+                "str": "510",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 600,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 600
+                  }
+                ],
+                "ok": true,
+                "str": "600",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 21,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor_All"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "not present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:10",
+                    "ok": true,
+                    "t": "string",
+                    "v": "not present"
+                  }
+                ],
+                "ok": true,
+                "str": "not present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 22,
+            "a": "0",
+            "d": [
+              "Main_TV"
+            ],
+            "k": [
+              {
+                "$": 23,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Main_TV",
+        "t": "device",
+        "v": {
+          "d": [
+            ":464c3f5caebf5273bcdfabc9367927e9:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

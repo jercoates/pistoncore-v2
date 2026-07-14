@@ -1,0 +1,539 @@
+{
+  "name": "Tamper alarm",
+  "meta": {
+    "name": "Tamper alarm",
+    "category": "4",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "tamper",
+              "d": [
+                "@Tamper"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "detected",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "detected"
+                  }
+                ],
+                "ok": true,
+                "str": "detected",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Message"
+                  },
+                  {
+                    "e": "\"\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:0",
+                          "ok": true,
+                          "t": "string",
+                          "v": ""
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 6,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Message"
+                  },
+                  {
+                    "e": "\"<prosody rate='slow'>\" $currentEventDevice \", Has been Tampered with </prosody>\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:21",
+                          "ok": true,
+                          "t": "string",
+                          "v": "<prosody rate='slow'>"
+                        },
+                        {
+                          "l": "24:42",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        },
+                        {
+                          "l": "45:79",
+                          "ok": true,
+                          "t": "string",
+                          "v": ", Has been Tampered with </prosody>"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"<prosody rate='slow'>\" $currentEventDevice \", Has been Tampered with </prosody>\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 7,
+            "a": "0",
+            "c": [
+              {
+                "$": 8,
+                "co": "is_between",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "f": "l",
+                  "g": "any",
+                  "odw": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ],
+                  "t": "v",
+                  "v": "time",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": 1320,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:3",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 1320
+                      }
+                    ],
+                    "ok": true,
+                    "str": "1320",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "ro2": {
+                  "c": 480,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:2",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 480
+                      }
+                    ],
+                    "ok": true,
+                    "str": "480",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 9,
+                "co": "is_between",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "f": "l",
+                  "g": "any",
+                  "odw": [
+                    0,
+                    6
+                  ],
+                  "t": "v",
+                  "v": "time",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": 1320,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:3",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 1320
+                      }
+                    ],
+                    "ok": true,
+                    "str": "1320",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "ro2": {
+                  "c": 600,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:2",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 600
+                      }
+                    ],
+                    "ok": true,
+                    "str": "600",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [
+              {
+                "$": 10,
+                "a": "0",
+                "d": [
+                  "@Speakers"
+                ],
+                "k": [
+                  {
+                    "$": 11,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 90,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 90
+                            }
+                          ],
+                          "ok": true,
+                          "str": "90",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 12,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 13,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 14,
+                    "c": "deviceNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "ei": [],
+            "o": "or",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 15,
+                "a": "0",
+                "d": [
+                  "@Speakers"
+                ],
+                "k": [
+                  {
+                    "$": 16,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 60,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 60
+                            }
+                          ],
+                          "ok": true,
+                          "str": "60",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 17,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 18,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 19,
+                    "c": "deviceNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Sensors",
+        "t": "device",
+        "v": {
+          "d": [
+            "@Tamper"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Message",
+        "t": "string"
+      }
+    ],
+    "z": "Notes: \"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\""
+  }
+}

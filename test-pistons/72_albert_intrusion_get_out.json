@@ -1,0 +1,475 @@
+{
+  "name": "albert intrusion get out",
+  "meta": {
+    "name": "albert intrusion get out",
+    "category": "3",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "executes",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "alarmSystemAlert",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "intrusion",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:8",
+                    "ok": true,
+                    "t": "string",
+                    "v": "intrusion"
+                  }
+                ],
+                "ok": true,
+                "str": "intrusion",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "sendNotification",
+                "p": [
+                  {
+                    "e": "\"\u26a0\ufe0f Intrusion Detected \u26a0\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:25",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\u26a0\ufe0f Intrusion Detected \u26a0\ufe0f\n"
+                        },
+                        {
+                          "l": "27:36",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$monthName"
+                        },
+                        {
+                          "l": "38",
+                          "ok": true,
+                          "t": "string",
+                          "v": " "
+                        },
+                        {
+                          "l": "40:43",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$day"
+                        },
+                        {
+                          "l": "45:51",
+                          "ok": true,
+                          "t": "string",
+                          "v": "   -   "
+                        },
+                        {
+                          "l": "53:57",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$time"
+                        },
+                        {
+                          "l": "59:62",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\n.\n."
+                        },
+                        {
+                          "l": "65:83",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\u26a0\ufe0f Intrusion Detected \u26a0\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 6,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "playTrack",
+                "p": [
+                  {
+                    "c": "http://192.168.1.233/local/Siren.mp3",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:35",
+                          "ok": true,
+                          "t": "string",
+                          "v": "http://192.168.1.233/local/Siren.mp3"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "http://192.168.1.233/local/Siren.mp3",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "uri"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 8,
+        "a": "0",
+        "c": [
+          {
+            "$": 9,
+            "co": "executes",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "alarmSystemAlert",
+              "vt": "string"
+            },
+            "ro": {
+              "e": "\"intrusion-delay\"",
+              "exp": {
+                "i": [
+                  {
+                    "l": "1:15",
+                    "ok": true,
+                    "t": "string",
+                    "v": "intrusion-delay"
+                  }
+                ],
+                "ok": true,
+                "str": "\"intrusion-delay\"",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "e",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 10,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 11,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "e": "\"\u26a0\ufe0f Intrusion-Delay Detected \u26a0\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:31",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\u26a0\ufe0f Intrusion-Delay Detected \u26a0\ufe0f\n"
+                        },
+                        {
+                          "l": "33:42",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$monthName"
+                        },
+                        {
+                          "l": "44",
+                          "ok": true,
+                          "t": "string",
+                          "v": " "
+                        },
+                        {
+                          "l": "46:49",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$day"
+                        },
+                        {
+                          "l": "51:57",
+                          "ok": true,
+                          "t": "string",
+                          "v": "   -   "
+                        },
+                        {
+                          "l": "59:63",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$time"
+                        },
+                        {
+                          "l": "65:68",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\n.\n."
+                        },
+                        {
+                          "l": "71:89",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\u26a0\ufe0f Intrusion-Delay Detected \u26a0\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 12,
+            "a": "0",
+            "d": [
+              "Speakers"
+            ],
+            "k": [
+              {
+                "$": 13,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 99,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 99
+                        }
+                      ],
+                      "ok": true,
+                      "str": "99",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 14,
+                "c": "playTrack",
+                "p": [
+                  {
+                    "c": "http://192.168.1.233/local/Intruder.mp3",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:38",
+                          "ok": true,
+                          "t": "string",
+                          "v": "http://192.168.1.233/local/Intruder.mp3"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "http://192.168.1.233/local/Intruder.mp3",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "uri"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Speakers",
+        "t": "device",
+        "v": {
+          "d": [
+            "@Speakers"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": "Play Track Example: x-file-cifs://10.1.20.135/PiShare/Music/Intruder.mp3"
+  }
+}

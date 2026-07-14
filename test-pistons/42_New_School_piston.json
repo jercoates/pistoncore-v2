@@ -1,0 +1,1728 @@
+{
+  "name": "New School piston",
+  "meta": {
+    "name": "New School piston",
+    "category": "4",
+    "build": 11,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "omy": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                8,
+                9,
+                10,
+                11,
+                12
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 320,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 320
+                  }
+                ],
+                "ok": true,
+                "str": "320",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "Naomi_Notifications"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Naomi time to get up",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:19",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Naomi time to get up"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Naomi time to get up",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 5,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 6,
+            "a": "0",
+            "d": [
+              "Naomi_dot"
+            ],
+            "k": [
+              {
+                "$": 7,
+                "c": "searchAmazonMusic",
+                "p": [
+                  {
+                    "c": "reveille",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:7",
+                          "ok": true,
+                          "t": "string",
+                          "v": "reveille"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "reveille",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 8,
+            "a": "0",
+            "d": [
+              "Naomi_Lights"
+            ],
+            "k": [
+              {
+                "$": 9,
+                "c": "on",
+                "p": []
+              },
+              {
+                "$": 10,
+                "c": "flash",
+                "p": [
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              },
+              {
+                "$": 11,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 20,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 20
+                        }
+                      ],
+                      "ok": true,
+                      "str": "20",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              },
+              {
+                "$": 12,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 13,
+        "a": "0",
+        "c": [
+          {
+            "$": 14,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "omy": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                8,
+                9,
+                10,
+                11,
+                12
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 380,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 380
+                  }
+                ],
+                "ok": true,
+                "str": "380",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 15,
+            "a": "0",
+            "d": [
+              "@Speakers_All"
+            ],
+            "k": [
+              {
+                "$": 16,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 17,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Naomi Time to go to school",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:25",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Naomi Time to go to school"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Naomi Time to go to school",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 18,
+            "a": "0",
+            "d": [
+              "Flashin_all"
+            ],
+            "k": [
+              {
+                "$": 19,
+                "c": "flash",
+                "p": [
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              },
+              {
+                "$": 20,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 60,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 60
+                        }
+                      ],
+                      "ok": true,
+                      "str": "60",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              },
+              {
+                "$": 21,
+                "c": "allOn",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 22,
+        "a": "0",
+        "c": [
+          {
+            "$": 23,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "omy": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                8,
+                9,
+                10,
+                11,
+                12
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 360,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 360
+                  }
+                ],
+                "ok": true,
+                "str": "360",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 24,
+            "a": "0",
+            "d": [
+              "Paul_Speakers"
+            ],
+            "k": [
+              {
+                "$": 25,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Paul Time to get up",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:18",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Paul Time to get up"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Paul Time to get up",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 26,
+            "a": "0",
+            "d": [
+              "Pauls_Light"
+            ],
+            "k": [
+              {
+                "$": 27,
+                "c": "flash",
+                "p": [
+                  {
+                    "c": 20,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 20
+                        }
+                      ],
+                      "ok": true,
+                      "str": "20",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 5,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 5
+                        }
+                      ],
+                      "ok": true,
+                      "str": "5",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 28,
+        "a": "0",
+        "c": [
+          {
+            "$": 29,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "omy": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                8,
+                9,
+                10,
+                11,
+                12
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 420,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 420
+                  }
+                ],
+                "ok": true,
+                "str": "420",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 30,
+            "a": "0",
+            "d": [
+              "@Speakers_All"
+            ],
+            "k": [
+              {
+                "$": 31,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 32,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Paul make sure you are ready for school put your watch on and your shoes",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:71",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Paul make sure you are ready for school put your watch on and your shoes"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Paul make sure you are ready for school put your watch on and your shoes",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 33,
+            "a": "0",
+            "d": [
+              "Flashin_all"
+            ],
+            "k": [
+              {
+                "$": 34,
+                "c": "flash",
+                "p": [
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              },
+              {
+                "$": 35,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 30,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 30
+                        }
+                      ],
+                      "ok": true,
+                      "str": "30",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              },
+              {
+                "$": 36,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 37,
+        "a": "0",
+        "c": [
+          {
+            "$": 38,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "omy": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                8,
+                9,
+                10,
+                11,
+                12
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 446,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 446
+                  }
+                ],
+                "ok": true,
+                "str": "446",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 39,
+            "a": "0",
+            "d": [
+              "@Speakers_All"
+            ],
+            "k": [
+              {
+                "$": 40,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Paul Time to catch the bus right now.",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:36",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Paul Time to catch the bus right now."
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Paul Time to catch the bus right now.",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 41,
+            "a": "0",
+            "d": [
+              "Flashin_all"
+            ],
+            "k": [
+              {
+                "$": 42,
+                "c": "flash",
+                "p": [
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 1,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 1
+                        }
+                      ],
+                      "ok": true,
+                      "str": "1",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  },
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              },
+              {
+                "$": 43,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 30,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 30
+                        }
+                      ],
+                      "ok": true,
+                      "str": "30",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              },
+              {
+                "$": 44,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 45,
+        "a": "0",
+        "c": [
+          {
+            "$": 46,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 530,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 530
+                  }
+                ],
+                "ok": true,
+                "str": "530",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 47,
+            "a": "0",
+            "d": [
+              "Lights_all"
+            ],
+            "k": [
+              {
+                "$": 48,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 49,
+        "a": "0",
+        "c": [
+          {
+            "$": 50,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "omy": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                8,
+                9,
+                10,
+                11,
+                12
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 365,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 365
+                  }
+                ],
+                "ok": true,
+                "str": "365",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 51,
+            "a": "0",
+            "d": [
+              "@Speakers_All"
+            ],
+            "k": [
+              {
+                "$": 52,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 53,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Make sure Paul takes his pills",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:29",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Make sure Paul takes his pills"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Make sure Paul takes his pills",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Naomi_Notifications",
+        "t": "device",
+        "v": {
+          "d": [
+            ":9cfb0b725c3de84c0eb9251b351b4198:",
+            ":d8e7e904803a23f13e116388e6fd9617:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Paul_Speakers",
+        "t": "device",
+        "v": {
+          "d": [
+            ":9d4f50e0c4dde12dc7902e7b375641f8:",
+            ":137bbfe7a3ad5ee300c2c507be254b92:",
+            ":1fb4cf95b05dc7a641f1d67655fc0f20:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Naomi_dot",
+        "t": "device",
+        "v": {
+          "d": [
+            ":9cfb0b725c3de84c0eb9251b351b4198:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Naomi_Lights",
+        "t": "device",
+        "v": {
+          "d": [
+            ":c0b8d58450b4290295ec1a94303b7dda:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Pauls_Light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":8bcf455d42e367d9a91017ce74845b1d:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Lights_all",
+        "t": "device",
+        "v": {
+          "d": [
+            ":2bdd6b27875592721a4b1b50b757791c:",
+            ":62b017a2488cdbec6e0152bd7abe3ef0:",
+            ":791b45ec63ada4b93cf1eb74c2cbeff6:",
+            ":5616e6f74f01b620966ea9feef0fb2f8:",
+            ":2cedd9f68c0e20baf0c26a0daf859588:",
+            ":8575fa05924a55466852dc3483e094d9:",
+            ":0ad7e02051d98bf7f349f7cef1fbbcb6:",
+            ":2258cd5f9ec47f616d90cd3d53d1e9d9:",
+            ":fc2166e3c41f9b496410f8d9bac04477:",
+            ":c0b8d58450b4290295ec1a94303b7dda:",
+            ":8a65e7ed37078d5f873410f4805c1cbe:",
+            ":816843686a80aac0ab4a5e7c034b6c52:",
+            ":be3ce31a4d514576a2bf623e9ab77767:",
+            ":22f7ff7bcc8d91b12fd4f596d5be24af:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Flashin_all",
+        "t": "device",
+        "v": {
+          "d": [
+            ":2cedd9f68c0e20baf0c26a0daf859588:",
+            ":0ad7e02051d98bf7f349f7cef1fbbcb6:",
+            ":fc2166e3c41f9b496410f8d9bac04477:",
+            ":c0b8d58450b4290295ec1a94303b7dda:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Pauls_Light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":7b8c9414f5691b21a3284c43feeec445:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

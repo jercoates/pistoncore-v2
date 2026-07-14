@@ -1,0 +1,335 @@
+{
+  "name": "Stove Range On",
+  "meta": {
+    "name": "Stove Range On",
+    "category": "2",
+    "build": 2,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor_All"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "not present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:10",
+                    "ok": true,
+                    "t": "string",
+                    "v": "not present"
+                  }
+                ],
+                "ok": true,
+                "str": "not present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "c": [
+              {
+                "$": 4,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "presence",
+                  "d": [
+                    "@Presence_Sensor_All"
+                  ],
+                  "f": "l",
+                  "g": "all",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "not present",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:10",
+                        "ok": true,
+                        "t": "string",
+                        "v": "not present"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "not present",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 5,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 6,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "cooktopOperatingState",
+                      "d": [
+                        "Range_Main"
+                      ],
+                      "f": "l",
+                      "g": "any",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "run",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:2",
+                            "ok": true,
+                            "t": "string",
+                            "v": "run"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "run",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "string"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 7,
+                    "a": "0",
+                    "d": [
+                      "@Notifications_Text_Push_All"
+                    ],
+                    "k": [
+                      {
+                        "$": 8,
+                        "c": "deviceNotification",
+                        "p": [
+                          {
+                            "e": "\"\ud83d\udd25 Stove Range On \ud83d\udd25\n\"$monthName \" \" $day \" - \" $time \"\n\nNobody is home and the CookTop was left on\n.\nPlease return home now and turn it off'\"",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "1:21",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\ud83d\udd25 Stove Range On \ud83d\udd25\n"
+                                },
+                                {
+                                  "l": "23:32",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$monthName"
+                                },
+                                {
+                                  "l": "35",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": " "
+                                },
+                                {
+                                  "l": "38:41",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$day"
+                                },
+                                {
+                                  "l": "44:46",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": " - "
+                                },
+                                {
+                                  "l": "49:53",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$time"
+                                },
+                                {
+                                  "l": "56:141",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\n\nNobody is home and the CookTop was left on\n.\nPlease return home now and turn it off'"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "\"\ud83d\udd25 Stove Range On \ud83d\udd25\n\"$monthName \" \" $day \" - \" $time \"\n\nNobody is home and the CookTop was left on\n.\nPlease return home now and turn it off'\"",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Range_Main",
+        "t": "device",
+        "v": {
+          "d": [
+            ":25d49ba53be086ff43936769cda708d4:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

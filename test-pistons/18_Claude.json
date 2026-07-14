@@ -1,0 +1,35 @@
+{
+  "name": "Claude",
+  "meta": {
+    "name": "Claude",
+    "category": "0",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [],
+    "z": ""
+  }
+}

@@ -188,6 +188,24 @@ def piston_set_end(request: Request):
     return jsonp(request, _save_response(entry))
 
 
+@router.get("/piston/pause")
+def piston_pause(request: Request):
+    piston_id = request.query_params.get("id", "")
+    entry = storage.set_piston_active(piston_id, False)
+    if entry is None:
+        return jsonp(request, {"error": "ERR_INVALID_ID"})
+    return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"]})
+
+
+@router.get("/piston/resume")
+def piston_resume(request: Request):
+    piston_id = request.query_params.get("id", "")
+    entry = storage.set_piston_active(piston_id, True)
+    if entry is None:
+        return jsonp(request, {"error": "ERR_INVALID_ID"})
+    return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"]})
+
+
 @router.get("/variable/set")
 def variable_set(request: Request):
     name = request.query_params.get("name", "")

@@ -1,0 +1,341 @@
+{
+  "name": "Camera Alarm",
+  "meta": {
+    "name": "Camera Alarm",
+    "category": "3",
+    "build": 3,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smartDetectType",
+              "d": [
+                "cameras"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "person",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "person"
+                  }
+                ],
+                "ok": true,
+                "str": "person",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "alarmSystemStatus",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "armedAway",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:8",
+                    "ok": true,
+                    "t": "string",
+                    "v": "armedAway"
+                  }
+                ],
+                "ok": true,
+                "str": "armedAway",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "@Notifications_Text_Push_All"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "sendNotification",
+                "p": [
+                  {
+                    "e": "\"\u26a0\ufe0f Intrusion Detected \u26a0\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:25",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\u26a0\ufe0f Intrusion Detected \u26a0\ufe0f\n"
+                        },
+                        {
+                          "l": "27:36",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$monthName"
+                        },
+                        {
+                          "l": "38",
+                          "ok": true,
+                          "t": "string",
+                          "v": " "
+                        },
+                        {
+                          "l": "40:43",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$day"
+                        },
+                        {
+                          "l": "45:51",
+                          "ok": true,
+                          "t": "string",
+                          "v": "   -   "
+                        },
+                        {
+                          "l": "53:57",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$time"
+                        },
+                        {
+                          "l": "59:62",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\n.\n."
+                        },
+                        {
+                          "l": "65:83",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\u26a0\ufe0f Intrusion Detected \u26a0\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 6,
+            "a": "0",
+            "d": [
+              "@Speakers_All"
+            ],
+            "k": [
+              {
+                "$": 7,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              },
+              {
+                "$": 8,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 9,
+                "c": "playTrack",
+                "p": [
+                  {
+                    "c": "x-file-cifs://192.168.1.208/PiShare/Music/Siren.mp3",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:50",
+                          "ok": true,
+                          "t": "string",
+                          "v": "x-file-cifs://192.168.1.208/PiShare/Music/Siren.mp3"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "x-file-cifs://192.168.1.208/PiShare/Music/Siren.mp3",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "uri"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "cameras",
+        "t": "device",
+        "v": {
+          "d": [
+            ":547ff24341994c8d06a07ed2e927877f:",
+            ":2e1299ff921b8b4665ba0ee579f29a3b:",
+            ":53b8d1183e350121f7cd0d10b37656bf:",
+            ":b566d82c0844c08e6c7f3efac1ae3928:",
+            ":714af5aa6fa4a10a32dc80f43e6cfd4e:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": "Uses cameras to detect people when alarm is armed"
+  }
+}

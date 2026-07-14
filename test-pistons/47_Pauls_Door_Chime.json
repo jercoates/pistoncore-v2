@@ -1,0 +1,1134 @@
+{
+  "name": "Pauls Door Chime",
+  "meta": {
+    "name": "Pauls Door Chime",
+    "category": "4",
+    "build": 4,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 270,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 270
+                  }
+                ],
+                "ok": true,
+                "str": "270",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 1290,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1290
+                  }
+                ],
+                "ok": true,
+                "str": "1290",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 6,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Pauls door has opened",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:20",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Pauls door has opened"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Pauls door has opened",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 7,
+        "a": "0",
+        "c": [
+          {
+            "$": 8,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 9,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 1290,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1290
+                  }
+                ],
+                "ok": true,
+                "str": "1290",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 360,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 360
+                  }
+                ],
+                "ok": true,
+                "str": "360",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 10,
+            "a": "0",
+            "d": [
+              "alexa"
+            ],
+            "k": [
+              {
+                "$": 11,
+                "c": "playTextAndResume",
+                "p": [
+                  {
+                    "c": "Paul has left his room",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:21",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Paul has left his room"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Paul has left his room",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "c": 60,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 60
+                        }
+                      ],
+                      "ok": true,
+                      "str": "60",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 12,
+            "a": "0",
+            "d": [
+              "@Announcement_Sonos"
+            ],
+            "k": [
+              {
+                "$": 13,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 50,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 50
+                        }
+                      ],
+                      "ok": true,
+                      "str": "50",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 14,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Pauls door has been opened",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:25",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Pauls door has been opened"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Pauls door has been opened",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 15,
+        "a": "0",
+        "c": [
+          {
+            "$": 16,
+            "co": "changes_away_from",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "tamper",
+              "d": [
+                "Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "clear",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:4",
+                    "ok": true,
+                    "t": "string",
+                    "v": "clear"
+                  }
+                ],
+                "ok": true,
+                "str": "clear",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 17,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 18,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 19,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Paul do not touch the batteries",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:30",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Paul do not touch the batteries"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Paul do not touch the batteries",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 20,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 21,
+                "c": "sendPushNotification",
+                "p": [
+                  {
+                    "c": "Pauls Sensor Tamper alert",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:24",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Pauls Sensor Tamper alert"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Pauls Sensor Tamper alert",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "c": "false",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:4",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "false"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "false",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 22,
+        "a": "0",
+        "c": [
+          {
+            "$": 23,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Bathroom_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "closed",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "closed"
+                  }
+                ],
+                "ok": true,
+                "str": "closed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 24,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 1290,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1290
+                  }
+                ],
+                "ok": true,
+                "str": "1290",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 360,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 360
+                  }
+                ],
+                "ok": true,
+                "str": "360",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 25,
+            "a": "0",
+            "d": [
+              "alexa"
+            ],
+            "k": [
+              {
+                "$": 26,
+                "c": "playTextAndResume",
+                "p": [
+                  {
+                    "c": "someone is in the bathroom",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:25",
+                          "ok": true,
+                          "t": "string",
+                          "v": "someone is in the bathroom"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "someone is in the bathroom",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "c": 60,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 60
+                        }
+                      ],
+                      "ok": true,
+                      "str": "60",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 27,
+        "a": "0",
+        "c": [
+          {
+            "$": 28,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "End_table"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 29,
+            "co": "is_not",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:6",
+                    "ok": true,
+                    "t": "string",
+                    "v": "present"
+                  }
+                ],
+                "ok": true,
+                "str": "present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 30,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 31,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "c": "Jeremy's end table has been opened",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:33",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Jeremy's end table has been opened"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Jeremy's end table has been opened",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":9048c2fb2564025db6fe49741cee8607:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Downstars_Door",
+        "t": "device",
+        "v": {
+          "d": [
+            ":9fb30af822ab34d333f4098228e1757f:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Master_Light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":fc2166e3c41f9b496410f8d9bac04477:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "alexa",
+        "t": "device",
+        "v": {
+          "d": [
+            ":ea004319fb063d49fcc6b0eac617fd27:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Bathroom_Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":5f873b9202e316149de8d7d35c8f68ff:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "End_table",
+        "t": "device",
+        "v": {
+          "d": [
+            ":9a85ea5e001b9dcaf4f19ff461c0dc8b:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

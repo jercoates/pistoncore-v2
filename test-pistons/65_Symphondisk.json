@@ -1,0 +1,897 @@
+{
+  "name": "Symphondisk",
+  "meta": {
+    "name": "Symphondisk",
+    "category": "2",
+    "build": 10,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "pushed",
+              "d": [
+                "SceneButton"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 1,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1
+                  }
+                ],
+                "ok": true,
+                "str": "1",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "CameraScreen"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "selectLiveview",
+                "cm": true,
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "PlayButton"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Play Button"
+      },
+      {
+        "$": 5,
+        "a": "0",
+        "c": [
+          {
+            "$": 6,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "pushed",
+              "d": [
+                "SceneButton"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 2,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 2
+                  }
+                ],
+                "ok": true,
+                "str": "2",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 7,
+            "a": "0",
+            "d": [
+              "CameraScreen"
+            ],
+            "k": [
+              {
+                "$": 8,
+                "c": "selectLiveview",
+                "cm": true,
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "PlusButton"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Plus Button"
+      },
+      {
+        "$": 9,
+        "a": "0",
+        "c": [
+          {
+            "$": 10,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "pushed",
+              "d": [
+                "SceneButton"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 3,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 3
+                  }
+                ],
+                "ok": true,
+                "str": "3",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 11,
+            "a": "0",
+            "d": [
+              "CameraScreen"
+            ],
+            "k": [
+              {
+                "$": 12,
+                "c": "selectLiveview",
+                "cm": true,
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "MinusButton"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Minus Button"
+      },
+      {
+        "$": 13,
+        "a": "0",
+        "c": [
+          {
+            "$": 14,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "pushed",
+              "d": [
+                "SceneButton"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 4,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 4
+                  }
+                ],
+                "ok": true,
+                "str": "4",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 15,
+            "a": "0",
+            "d": [
+              "CameraScreen"
+            ],
+            "k": [
+              {
+                "$": 16,
+                "c": "selectLiveview",
+                "cm": true,
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "ForwardButton"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Forward Button"
+      },
+      {
+        "$": 17,
+        "a": "0",
+        "c": [
+          {
+            "$": 18,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "pushed",
+              "d": [
+                "SceneButton"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 5,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 5
+                  }
+                ],
+                "ok": true,
+                "str": "5",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 19,
+            "a": "0",
+            "d": [
+              "CameraScreen"
+            ],
+            "k": [
+              {
+                "$": 20,
+                "c": "selectLiveview",
+                "cm": true,
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "BackButton"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Back Button"
+      },
+      {
+        "$": 21,
+        "a": "0",
+        "c": [
+          {
+            "$": 22,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "pushed",
+              "d": [
+                "SceneButton"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 6,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 6
+                  }
+                ],
+                "ok": true,
+                "str": "6",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 23,
+            "a": "0",
+            "d": [
+              "CameraScreen"
+            ],
+            "k": [
+              {
+                "$": 24,
+                "c": "selectLiveview",
+                "cm": true,
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "DotButton"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Dot Button"
+      },
+      {
+        "$": 25,
+        "a": "0",
+        "c": [
+          {
+            "$": 26,
+            "co": "gets",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "pushed",
+              "d": [
+                "SceneButton"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 7,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 7
+                  }
+                ],
+                "ok": true,
+                "str": "7",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 27,
+            "a": "0",
+            "d": [
+              "CameraScreen"
+            ],
+            "k": [
+              {
+                "$": 28,
+                "c": "selectLiveview",
+                "cm": true,
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "DotDotButton"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "DotDot Button"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "SceneButton",
+        "t": "device",
+        "v": {
+          "d": [
+            ":aa303b2cddbc24095471745f8a7e28ce:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "CameraScreen",
+        "t": "device",
+        "v": {
+          "d": [
+            ":0a2b4c719bc318ec1998112d51c39608:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "PlayButton",
+        "t": "string",
+        "v": {
+          "c": "Main",
+          "exp": {
+            "i": [
+              {
+                "l": "0:3",
+                "ok": true,
+                "t": "string",
+                "v": "Main"
+              }
+            ],
+            "ok": true,
+            "str": "Main",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      },
+      {
+        "a": "d",
+        "n": "PlusButton",
+        "t": "string",
+        "v": {
+          "c": "Doorbell",
+          "exp": {
+            "i": [
+              {
+                "l": "0:7",
+                "ok": true,
+                "t": "string",
+                "v": "Doorbell"
+              }
+            ],
+            "ok": true,
+            "str": "Doorbell",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      },
+      {
+        "a": "d",
+        "n": "MinusButton",
+        "t": "string",
+        "v": {
+          "c": "Patio",
+          "exp": {
+            "i": [
+              {
+                "l": "0:4",
+                "ok": true,
+                "t": "string",
+                "v": "Patio"
+              }
+            ],
+            "ok": true,
+            "str": "Patio",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      },
+      {
+        "a": "d",
+        "n": "ForwardButton",
+        "t": "string",
+        "v": {
+          "c": "Front Yard",
+          "exp": {
+            "i": [
+              {
+                "l": "0:9",
+                "ok": true,
+                "t": "string",
+                "v": "Front Yard"
+              }
+            ],
+            "ok": true,
+            "str": "Front Yard",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      },
+      {
+        "a": "d",
+        "n": "BackButton",
+        "t": "string",
+        "v": {
+          "c": "Back Yard",
+          "exp": {
+            "i": [
+              {
+                "l": "0:8",
+                "ok": true,
+                "t": "string",
+                "v": "Back Yard"
+              }
+            ],
+            "ok": true,
+            "str": "Back Yard",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      },
+      {
+        "a": "d",
+        "n": "DotButton",
+        "t": "string",
+        "v": {
+          "c": "Pauls Room",
+          "exp": {
+            "i": [
+              {
+                "l": "0:9",
+                "ok": true,
+                "t": "string",
+                "v": "Pauls Room"
+              }
+            ],
+            "ok": true,
+            "str": "Pauls Room",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      },
+      {
+        "a": "d",
+        "n": "DotDotButton",
+        "t": "string",
+        "v": {
+          "c": "Back Yard",
+          "exp": {
+            "i": [
+              {
+                "l": "0:8",
+                "ok": true,
+                "t": "string",
+                "v": "Back Yard"
+              }
+            ],
+            "ok": true,
+            "str": "Back Yard",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      }
+    ],
+    "z": "Ikea 7 button Controller"
+  }
+}

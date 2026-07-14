@@ -1,0 +1,231 @@
+{
+  "name": "Entertainment alarm",
+  "meta": {
+    "name": "Entertainment alarm",
+    "category": "4",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_away_from",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Entertainment_Door"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "closed",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "closed"
+                  }
+                ],
+                "ok": true,
+                "str": "closed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 5,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Paul do not get into the cabinet I have told your parents you tried",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:66",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Paul do not get into the cabinet I have told your parents you tried"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Paul do not get into the cabinet I have told your parents you tried",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 6,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 7,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "c": "Entertainment Cabinet Open",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:25",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Entertainment Cabinet Open"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Entertainment Cabinet Open",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Entertainment Cabnet"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Entertainment_Door",
+        "t": "device",
+        "v": {
+          "d": [
+            ":15ba85370044d28a4252d947cd9c5d9c:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

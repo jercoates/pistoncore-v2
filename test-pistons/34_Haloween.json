@@ -1,0 +1,835 @@
+{
+  "name": "Haloween",
+  "meta": {
+    "name": "Haloween",
+    "category": "5",
+    "build": 6,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smartDetectType",
+              "d": [
+                "motion"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "person",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "person"
+                  }
+                ],
+                "ok": true,
+                "str": "person",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "omy": [
+                10
+              ],
+              "owm": [
+                2,
+                3,
+                4,
+                5,
+                -1,
+                -2,
+                -3
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 900,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 900
+                  }
+                ],
+                "ok": true,
+                "str": "900",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "Sonos"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "playTrackAndRestore",
+                "p": [
+                  {
+                    "c": "x-file-cifs://192.168.1.10/Hubitat/funny-evil-cartoon-voice-with-laugh.mp3",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:73",
+                          "ok": true,
+                          "t": "string",
+                          "v": "x-file-cifs://192.168.1.10/Hubitat/funny-evil-cartoon-voice-with-laugh.mp3"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "x-file-cifs://192.168.1.10/Hubitat/funny-evil-cartoon-voice-with-laugh.mp3",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "uri"
+                  },
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 6,
+            "a": "0",
+            "d": [
+              "Light"
+            ],
+            "k": [
+              {
+                "$": 7,
+                "c": "on",
+                "p": []
+              },
+              {
+                "$": 8,
+                "c": "setColor",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "s": "Red",
+                    "t": "s",
+                    "vt": "color"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 9,
+        "a": "0",
+        "c": [
+          {
+            "$": 10,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "front_door_contact"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 11,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "omy": [
+                10
+              ],
+              "owm": [
+                4,
+                5,
+                -1
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 900,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 900
+                  }
+                ],
+                "ok": true,
+                "str": "900",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 12,
+            "a": "0",
+            "d": [
+              "Sonos"
+            ],
+            "k": [
+              {
+                "$": 13,
+                "c": "playTrackAndRestore",
+                "p": [
+                  {
+                    "c": "x-file-cifs://192.168.1.10/Hubitat/hauntedhouse.wav",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:50",
+                          "ok": true,
+                          "t": "string",
+                          "v": "x-file-cifs://192.168.1.10/Hubitat/hauntedhouse.wav"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "x-file-cifs://192.168.1.10/Hubitat/hauntedhouse.wav",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "uri"
+                  },
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 14,
+        "a": "0",
+        "c": [
+          {
+            "$": 15,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "front_door_contact"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "closed",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "closed"
+                  }
+                ],
+                "ok": true,
+                "str": "closed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 16,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "omy": [
+                10
+              ],
+              "owm": [
+                4,
+                5,
+                -1
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 900,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 900
+                  }
+                ],
+                "ok": true,
+                "str": "900",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 17,
+            "a": "0",
+            "d": [
+              "Sonos"
+            ],
+            "k": [
+              {
+                "$": 18,
+                "c": "playTrackAndRestore",
+                "p": [
+                  {
+                    "c": "x-file-cifs://192.168.1.10/Hubitat/happy-halloween.mp3",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:53",
+                          "ok": true,
+                          "t": "string",
+                          "v": "x-file-cifs://192.168.1.10/Hubitat/happy-halloween.mp3"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "x-file-cifs://192.168.1.10/Hubitat/happy-halloween.mp3",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "uri"
+                  },
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 19,
+        "a": "0",
+        "c": [
+          {
+            "$": 20,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "datetime",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 1761961487544,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:12",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1761961487544
+                  }
+                ],
+                "ok": true,
+                "str": "1761961487544",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "datetime"
+            },
+            "ro2": {
+              "c": 1761973247544,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:12",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1761973247544
+                  }
+                ],
+                "ok": true,
+                "str": "1761973247544",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "datetime"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 21,
+            "a": "0",
+            "d": [
+              "Light"
+            ],
+            "k": [
+              {
+                "$": 22,
+                "c": "on",
+                "p": []
+              },
+              {
+                "$": 23,
+                "c": "setColor",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "s": "Red",
+                    "t": "s",
+                    "vt": "color"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Sonos",
+        "t": "device",
+        "v": {
+          "d": [
+            ":0516a139b3604c5e83bc264a78f8ff2b:",
+            ":6e7f78e4084dd4b9a9ea80e4e56616fb:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "motion",
+        "t": "device",
+        "v": {
+          "d": [
+            ":43a52cdd3509f22e12b91eb1477fa773:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "front_door_contact",
+        "t": "device",
+        "v": {
+          "d": [
+            ":78ed895d16625fb145acc7ea878e6806:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":5ab7ed393d77e27083b225e9d74dda5c:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

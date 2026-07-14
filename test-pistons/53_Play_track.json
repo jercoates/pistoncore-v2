@@ -1,0 +1,279 @@
+{
+  "name": "Play track",
+  "meta": {
+    "name": "Play track",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Sensors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Track"
+                  },
+                  {
+                    "e": "\"x-file-cifs://192.168.1.10/Hubitat/\"$currentEventDevice\".mp3\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:35",
+                          "ok": true,
+                          "t": "string",
+                          "v": "x-file-cifs://192.168.1.10/Hubitat/"
+                        },
+                        {
+                          "l": "37:55",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        },
+                        {
+                          "l": "57:60",
+                          "ok": true,
+                          "t": "string",
+                          "v": ".mp3"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"x-file-cifs://192.168.1.10/Hubitat/\"$currentEventDevice\".mp3\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 5,
+        "a": "0",
+        "c": [
+          {
+            "$": 6,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Sensors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 7,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 8,
+                "c": "playTrack",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "uri",
+                    "x": "Track"
+                  },
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Track",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "Sensors",
+        "t": "device",
+        "v": {
+          "d": [
+            ":72910b3cd194379ef35ec85348838d1d:",
+            ":78ed895d16625fb145acc7ea878e6806:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

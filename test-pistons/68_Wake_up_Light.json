@@ -1,0 +1,249 @@
+{
+  "name": "Wake up Light",
+  "meta": {
+    "name": "Wake up Light",
+    "category": "1",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "happens_daily_at",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "odw": [
+                1,
+                2,
+                3,
+                4
+              ],
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 255,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 255
+                  }
+                ],
+                "ok": true,
+                "str": "255",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:6",
+                    "ok": true,
+                    "t": "string",
+                    "v": "present"
+                  }
+                ],
+                "ok": true,
+                "str": "present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "Lights"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "fadeLevel",
+                "p": [
+                  {
+                    "c": 0,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 0
+                        }
+                      ],
+                      "ok": true,
+                      "str": "0",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  },
+                  {
+                    "c": 5,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 5
+                        }
+                      ],
+                      "ok": true,
+                      "str": "5",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "enum"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Lights",
+        "t": "device",
+        "v": {
+          "d": [
+            ":fc2166e3c41f9b496410f8d9bac04477:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

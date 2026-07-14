@@ -1,0 +1,1214 @@
+{
+  "name": "Smoke Detected",
+  "meta": {
+    "name": "Smoke Detected",
+    "category": "3",
+    "build": 2,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smoke",
+              "d": [
+                "@Smoke_Detectors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "detected",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "detected"
+                  }
+                ],
+                "ok": true,
+                "str": "detected",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Smoke_Status"
+                  },
+                  {
+                    "e": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:21",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\ud83d\udd25 Smoke detected \ud83d\udd25\n"
+                        },
+                        {
+                          "l": "23:32",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$monthName"
+                        },
+                        {
+                          "l": "34",
+                          "ok": true,
+                          "t": "string",
+                          "v": " "
+                        },
+                        {
+                          "l": "36:39",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$day"
+                        },
+                        {
+                          "l": "41:47",
+                          "ok": true,
+                          "t": "string",
+                          "v": "   -   "
+                        },
+                        {
+                          "l": "49:53",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$time"
+                        },
+                        {
+                          "l": "55:56",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\n\n"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "lo": {
+              "d": [
+                "@Smoke_Detectors"
+              ],
+              "f": "l",
+              "g": "avg",
+              "t": "d",
+              "vt": "device"
+            },
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 6,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 7,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "smoke",
+                      "d": [
+                        "$device"
+                      ],
+                      "f": "l",
+                      "g": "any",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "detected",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:7",
+                            "ok": true,
+                            "t": "string",
+                            "v": "detected"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "detected",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 8,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 9,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "Smoke_Status"
+                          },
+                          {
+                            "e": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:11",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "Smoke_Status"
+                                },
+                                {
+                                  "l": "13:19",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$device"
+                                },
+                                {
+                                  "l": "22:24",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": " - "
+                                },
+                                {
+                                  "i": [
+                                    {
+                                      "a": "battery",
+                                      "l": "28:44",
+                                      "ok": true,
+                                      "t": "device",
+                                      "x": "$device"
+                                    }
+                                  ],
+                                  "l": "27:45",
+                                  "ok": true,
+                                  "t": "expression"
+                                },
+                                {
+                                  "l": "47",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "%"
+                                },
+                                {
+                                  "l": "51",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\n"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              }
+            ],
+            "t": "each",
+            "tcp": "c"
+          },
+          {
+            "$": 10,
+            "a": "0",
+            "d": [
+              "@Notification_Text"
+            ],
+            "k": [
+              {
+                "$": 11,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "Smoke_Status"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 12,
+            "a": "0",
+            "d": [
+              "@Email_All"
+            ],
+            "k": [
+              {
+                "$": 13,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "e": "\"Subject:\ud83d\udd25 Smoke Detected -,\" Smoke_Status",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:28",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Subject:\ud83d\udd25 Smoke Detected -,"
+                        },
+                        {
+                          "l": "31:42",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "Smoke_Status"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"Subject:\ud83d\udd25 Smoke Detected -,\" Smoke_Status",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 14,
+            "a": "0",
+            "c": [
+              {
+                "$": 15,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "smoke",
+                  "d": [
+                    "@Smoke_Detectors"
+                  ],
+                  "f": "l",
+                  "g": "all",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "clear",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:4",
+                        "ok": true,
+                        "t": "string",
+                        "v": "clear"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "clear",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 16,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 17,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Smoke_Status"
+                      },
+                      {
+                        "e": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:21",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\ud83d\udd25 Smoke detected \ud83d\udd25\n"
+                            },
+                            {
+                              "l": "23:32",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$monthName"
+                            },
+                            {
+                              "l": "34",
+                              "ok": true,
+                              "t": "string",
+                              "v": " "
+                            },
+                            {
+                              "l": "36:39",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$day"
+                            },
+                            {
+                              "l": "41:47",
+                              "ok": true,
+                              "t": "string",
+                              "v": "   -   "
+                            },
+                            {
+                              "l": "49:53",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$time"
+                            },
+                            {
+                              "l": "55:56",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 18,
+                "a": "0",
+                "lo": {
+                  "d": [
+                    "@Smoke_Detectors"
+                  ],
+                  "f": "l",
+                  "g": "avg",
+                  "t": "d",
+                  "vt": "device"
+                },
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 19,
+                    "a": "0",
+                    "c": [
+                      {
+                        "$": 20,
+                        "co": "is",
+                        "ct": "c",
+                        "fs": [],
+                        "lo": {
+                          "a": "smoke",
+                          "d": [
+                            "$device"
+                          ],
+                          "f": "l",
+                          "g": "any",
+                          "t": "p",
+                          "vt": "string"
+                        },
+                        "ro": {
+                          "c": "detected",
+                          "exp": {
+                            "i": [
+                              {
+                                "l": "0:7",
+                                "ok": true,
+                                "t": "string",
+                                "v": "detected"
+                              }
+                            ],
+                            "ok": true,
+                            "str": "detected",
+                            "t": "expression"
+                          },
+                          "f": "l",
+                          "g": "any",
+                          "t": "c",
+                          "vt": "enum"
+                        },
+                        "ro2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "sm": "auto",
+                        "t": "condition",
+                        "to": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "to2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "ts": []
+                      }
+                    ],
+                    "e": [],
+                    "ei": [],
+                    "o": "and",
+                    "r": [],
+                    "rop": "and",
+                    "s": [
+                      {
+                        "$": 21,
+                        "a": "0",
+                        "d": [],
+                        "k": [
+                          {
+                            "$": 22,
+                            "c": "setVariable",
+                            "p": [
+                              {
+                                "f": "l",
+                                "g": "avg",
+                                "t": "x",
+                                "vt": "variable",
+                                "x": "Smoke_Status"
+                              },
+                              {
+                                "e": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "0:11",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "Smoke_Status"
+                                    },
+                                    {
+                                      "l": "13:19",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$device"
+                                    },
+                                    {
+                                      "l": "22:24",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": " - "
+                                    },
+                                    {
+                                      "i": [
+                                        {
+                                          "a": "battery",
+                                          "l": "28:44",
+                                          "ok": true,
+                                          "t": "device",
+                                          "x": "$device"
+                                        }
+                                      ],
+                                      "l": "27:45",
+                                      "ok": true,
+                                      "t": "expression"
+                                    },
+                                    {
+                                      "l": "47",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "%"
+                                    },
+                                    {
+                                      "l": "51",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\n"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 23,
+                        "a": "0",
+                        "d": [
+                          "@Speakers_All"
+                        ],
+                        "k": [
+                          {
+                            "$": 24,
+                            "c": "setVolume",
+                            "p": [
+                              {
+                                "c": 90,
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "0:1",
+                                      "ok": true,
+                                      "t": "integer",
+                                      "v": 90
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "90",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "c",
+                                "vt": "integer"
+                              }
+                            ]
+                          },
+                          {
+                            "$": 25,
+                            "c": "playText",
+                            "p": [
+                              {
+                                "e": "\"Smoke detected from\" $device",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "1:19",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "Smoke detected from"
+                                    },
+                                    {
+                                      "l": "22:28",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$device"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "\"Smoke detected from\" $device",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              },
+                              {
+                                "d": [],
+                                "f": "l",
+                                "g": "avg",
+                                "vt": "integer"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      }
+                    ],
+                    "t": "if",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "each",
+                "tcp": "c"
+              },
+              {
+                "$": 26,
+                "a": "0",
+                "d": [
+                  "@Alert_Lights"
+                ],
+                "k": [
+                  {
+                    "$": 27,
+                    "c": "on",
+                    "p": []
+                  },
+                  {
+                    "$": 28,
+                    "c": "flash",
+                    "p": [
+                      {
+                        "c": 1,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 1
+                            }
+                          ],
+                          "ok": true,
+                          "str": "1",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "s"
+                      },
+                      {
+                        "c": 1,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 1
+                            }
+                          ],
+                          "ok": true,
+                          "str": "1",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "s"
+                      },
+                      {
+                        "c": 10,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 10
+                            }
+                          ],
+                          "ok": true,
+                          "str": "10",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "enum"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 29,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 30,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Smoke_Status"
+                      },
+                      {
+                        "e": "Smoke_Status\"\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:11",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "Smoke_Status"
+                            },
+                            {
+                              "l": "13",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "Smoke_Status\"\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 31,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 32,
+                    "c": "deviceNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Smoke_Status"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 33,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 34,
+                    "c": "wait",
+                    "p": [
+                      {
+                        "c": 30,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 30
+                            }
+                          ],
+                          "ok": true,
+                          "str": "30",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "s"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "repeat",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 35,
+        "a": "0",
+        "c": [
+          {
+            "$": 36,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smoke",
+              "d": [
+                "@Smoke_Detectors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "clear",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:4",
+                    "ok": true,
+                    "t": "string",
+                    "v": "clear"
+                  }
+                ],
+                "ok": true,
+                "str": "clear",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 37,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "smoke",
+              "d": [
+                "@Smoke_Detectors"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "clear",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:4",
+                    "ok": true,
+                    "t": "string",
+                    "v": "clear"
+                  }
+                ],
+                "ok": true,
+                "str": "clear",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 38,
+            "a": "0",
+            "d": [
+              "@Notification_Text"
+            ],
+            "k": [
+              {
+                "$": 39,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "e": "\"\ud83d\udd25 Smoke Cleared \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:20",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\ud83d\udd25 Smoke Cleared \ud83d\udd25\n"
+                        },
+                        {
+                          "l": "22:31",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$monthName"
+                        },
+                        {
+                          "l": "33",
+                          "ok": true,
+                          "t": "string",
+                          "v": " "
+                        },
+                        {
+                          "l": "35:38",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$day"
+                        },
+                        {
+                          "l": "40:46",
+                          "ok": true,
+                          "t": "string",
+                          "v": "   -   "
+                        },
+                        {
+                          "l": "48:52",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$time"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\ud83d\udd25 Smoke Cleared \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Smoke_Status",
+        "t": "string"
+      }
+    ],
+    "z": "Check for Smoke send Notification and Speak"
+  }
+}

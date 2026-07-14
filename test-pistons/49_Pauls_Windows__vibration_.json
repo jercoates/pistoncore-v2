@@ -1,0 +1,334 @@
+{
+  "name": "Pauls Windows (vibration)",
+  "meta": {
+    "name": "Pauls Windows (vibration)",
+    "category": "4",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "acceleration",
+              "d": [
+                "Vibration_Sensors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "active",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "active"
+                  }
+                ],
+                "ok": true,
+                "str": "active",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 5,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Attention pauls windows have been messed with",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:44",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Attention pauls windows have been messed with"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Attention pauls windows have been messed with",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 6,
+        "a": "0",
+        "c": [
+          {
+            "$": 7,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "acceleration",
+              "d": [
+                "Vibration_Sensors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "active",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "active"
+                  }
+                ],
+                "ok": true,
+                "str": "active",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 8,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "not present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:10",
+                    "ok": true,
+                    "t": "string",
+                    "v": "not present"
+                  }
+                ],
+                "ok": true,
+                "str": "not present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 9,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 10,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "c": "Attention: Paul's windows have been messed with",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:46",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Attention: Paul's windows have been messed with"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Attention: Paul's windows have been messed with",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Vibration_Sensors",
+        "t": "device",
+        "v": {
+          "d": [
+            ":5174c8a7aadd0762986c8b8764bd4215:",
+            ":07762836ba3b6dbeb71fd8b8236acd18:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

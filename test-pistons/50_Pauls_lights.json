@@ -1,0 +1,315 @@
+{
+  "name": "Pauls lights",
+  "meta": {
+    "name": "Pauls lights",
+    "category": "4",
+    "build": 6,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Pauls_Switch"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "off",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "string",
+                    "v": "off"
+                  }
+                ],
+                "ok": true,
+                "str": "off",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "Pauls_Light"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "d": [
+              "Pauls_Led"
+            ],
+            "k": [
+              {
+                "$": 6,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 2,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 2
+                        }
+                      ],
+                      "ok": true,
+                      "str": "2",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 8,
+        "a": "0",
+        "c": [
+          {
+            "$": 9,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                "Pauls_Switch"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 10,
+            "a": "0",
+            "d": [
+              "Pauls_Light"
+            ],
+            "k": [
+              {
+                "$": 11,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Pauls_Light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":7b8c9414f5691b21a3284c43feeec445:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Pauls",
+        "t": "device",
+        "v": {
+          "d": [
+            ":8bcf455d42e367d9a91017ce74845b1d:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Pauls_Led",
+        "t": "device",
+        "v": {
+          "d": [
+            ":91211a6b35eefc2950c34f2acaf805a1:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Pauls_Switch",
+        "t": "device",
+        "v": {
+          "d": [
+            ":e6a5bf3627ffe62fa6612ea4c05ec499:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Paul_Led",
+        "t": "device",
+        "v": {
+          "d": [
+            ":91211a6b35eefc2950c34f2acaf805a1:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": "Turns pauls light on and off"
+  }
+}

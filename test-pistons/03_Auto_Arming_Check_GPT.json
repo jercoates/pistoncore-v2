@@ -1,0 +1,1464 @@
+{
+  "name": "Auto Arming Check GPT",
+  "meta": {
+    "name": "Auto Arming Check GPT",
+    "category": "0",
+    "build": 3,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "e": "$now - lastRunTime",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "variable",
+                    "x": "$now"
+                  },
+                  {
+                    "l": "5",
+                    "o": "-",
+                    "ok": true,
+                    "t": "operator"
+                  },
+                  {
+                    "l": "7:17",
+                    "ok": true,
+                    "t": "variable",
+                    "x": "lastRunTime"
+                  }
+                ],
+                "ok": true,
+                "str": "$now - lastRunTime",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "e",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "10000",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:4",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 10000
+                  }
+                ],
+                "ok": true,
+                "str": "10000",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "dynamic"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 1,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1
+                  }
+                ],
+                "ok": true,
+                "str": "1",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "ms"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "lastRunTime"
+                  },
+                  {
+                    "c": "$now",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:3",
+                          "ok": true,
+                          "t": "string",
+                          "v": "$now"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "$now",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "dynamic"
+                  }
+                ]
+              },
+              {
+                "$": 5,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "unlockedList"
+                  },
+                  {
+                    "exp": {
+                      "i": [],
+                      "ok": true,
+                      "str": "",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              },
+              {
+                "$": 6,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "doorsOpenList"
+                  },
+                  {
+                    "exp": {
+                      "i": [],
+                      "ok": true,
+                      "str": "",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "windowsOpenList"
+                  },
+                  {
+                    "exp": {
+                      "i": [],
+                      "ok": true,
+                      "str": "",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 8,
+            "a": "0",
+            "c": [
+              {
+                "$": 9,
+                "co": "is_not",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "lock",
+                  "d": [
+                    "Door_Locks"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "p": "a",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "locked",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "locked"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "locked",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 10,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 11,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "f": "l",
+                      "g": "any",
+                      "t": "x",
+                      "vt": "string",
+                      "x": "unlockedList"
+                    },
+                    "ro": {
+                      "e": "\"\"",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "1:0",
+                            "ok": true,
+                            "t": "string",
+                            "v": ""
+                          }
+                        ],
+                        "ok": true,
+                        "str": "\"\"",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "e",
+                      "vt": "string"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [
+                  {
+                    "$": 12,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 13,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "unlockedList"
+                          },
+                          {
+                            "e": "${unlockedList} + \", \" + lockDevice.displayName",
+                            "exp": {
+                              "err": "Variable lockDevice.displayName not found",
+                              "errVar": "lockDevice.displayName",
+                              "i": [
+                                {
+                                  "l": "0",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "$"
+                                },
+                                {
+                                  "i": [
+                                    {
+                                      "l": "2:13",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "unlockedList"
+                                    }
+                                  ],
+                                  "l": "1:14",
+                                  "ok": true,
+                                  "t": "expression"
+                                },
+                                {
+                                  "l": "16",
+                                  "o": "+",
+                                  "ok": true,
+                                  "t": "operator"
+                                },
+                                {
+                                  "l": "19:20",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": ", "
+                                },
+                                {
+                                  "l": "23",
+                                  "o": "+",
+                                  "ok": true,
+                                  "t": "operator"
+                                },
+                                {
+                                  "err": "Variable lockDevice.displayName not found",
+                                  "l": "25:46",
+                                  "ok": false,
+                                  "t": "variable",
+                                  "x": "lockDevice.displayName"
+                                }
+                              ],
+                              "loc": "25:46",
+                              "ok": false,
+                              "str": "${unlockedList} + \", \" + lockDevice.displayName",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 14,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 15,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "unlockedList"
+                          },
+                          {
+                            "e": "lockDevice.displayName",
+                            "exp": {
+                              "err": "Variable lockDevice.displayName not found",
+                              "errVar": "lockDevice.displayName",
+                              "i": [
+                                {
+                                  "err": "Variable lockDevice.displayName not found",
+                                  "l": "0:21",
+                                  "ok": false,
+                                  "t": "variable",
+                                  "x": "lockDevice.displayName"
+                                }
+                              ],
+                              "loc": "0:21",
+                              "ok": false,
+                              "str": "lockDevice.displayName",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          },
+          {
+            "$": 16,
+            "a": "0",
+            "c": [
+              {
+                "$": 17,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "contact",
+                  "d": [
+                    "Window_Contacts"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "open",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:3",
+                        "ok": true,
+                        "t": "string",
+                        "v": "open"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "open",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 18,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 19,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "f": "l",
+                      "g": "any",
+                      "t": "x",
+                      "vt": "string",
+                      "x": "windowsOpenList"
+                    },
+                    "ro": {
+                      "e": "\"\"",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "1:0",
+                            "ok": true,
+                            "t": "string",
+                            "v": ""
+                          }
+                        ],
+                        "ok": true,
+                        "str": "\"\"",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "e",
+                      "vt": "string"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [
+                  {
+                    "$": 20,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 21,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "windowsOpenList"
+                          },
+                          {
+                            "e": "${windowsOpenList} + \", \" + d.displayName",
+                            "exp": {
+                              "err": "Variable d.displayName not found",
+                              "errVar": "d.displayName",
+                              "i": [
+                                {
+                                  "l": "0",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "$"
+                                },
+                                {
+                                  "i": [
+                                    {
+                                      "l": "2:16",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "windowsOpenList"
+                                    }
+                                  ],
+                                  "l": "1:17",
+                                  "ok": true,
+                                  "t": "expression"
+                                },
+                                {
+                                  "l": "19",
+                                  "o": "+",
+                                  "ok": true,
+                                  "t": "operator"
+                                },
+                                {
+                                  "l": "22:23",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": ", "
+                                },
+                                {
+                                  "l": "26",
+                                  "o": "+",
+                                  "ok": true,
+                                  "t": "operator"
+                                },
+                                {
+                                  "err": "Variable d.displayName not found",
+                                  "l": "28:40",
+                                  "ok": false,
+                                  "t": "variable",
+                                  "x": "d.displayName"
+                                }
+                              ],
+                              "loc": "28:40",
+                              "ok": false,
+                              "str": "${windowsOpenList} + \", \" + d.displayName",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 22,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 23,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "windowsOpenList"
+                          },
+                          {
+                            "e": "d.displayName",
+                            "exp": {
+                              "err": "Variable d.displayName not found",
+                              "errVar": "d.displayName",
+                              "i": [
+                                {
+                                  "err": "Variable d.displayName not found",
+                                  "l": "0:12",
+                                  "ok": false,
+                                  "t": "variable",
+                                  "x": "d.displayName"
+                                }
+                              ],
+                              "loc": "0:12",
+                              "ok": false,
+                              "str": "d.displayName",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          },
+          {
+            "$": 24,
+            "a": "0",
+            "c": [
+              {
+                "$": 25,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "contact",
+                  "d": [
+                    "Door_Contacts"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "open",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:3",
+                        "ok": true,
+                        "t": "string",
+                        "v": "open"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "open",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 26,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 27,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "f": "l",
+                      "g": "any",
+                      "t": "x",
+                      "vt": "string",
+                      "x": "doorsOpenList"
+                    },
+                    "ro": {
+                      "e": "\"\"",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "1:0",
+                            "ok": true,
+                            "t": "string",
+                            "v": ""
+                          }
+                        ],
+                        "ok": true,
+                        "str": "\"\"",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "e",
+                      "vt": "string"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [
+                  {
+                    "$": 28,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 29,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "doorsOpenList"
+                          },
+                          {
+                            "e": "${doorsOpenList} + \", \" + d.displayName",
+                            "exp": {
+                              "err": "Variable d.displayName not found",
+                              "errVar": "d.displayName",
+                              "i": [
+                                {
+                                  "l": "0",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "$"
+                                },
+                                {
+                                  "i": [
+                                    {
+                                      "l": "2:14",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "doorsOpenList"
+                                    }
+                                  ],
+                                  "l": "1:15",
+                                  "ok": true,
+                                  "t": "expression"
+                                },
+                                {
+                                  "l": "17",
+                                  "o": "+",
+                                  "ok": true,
+                                  "t": "operator"
+                                },
+                                {
+                                  "l": "20:21",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": ", "
+                                },
+                                {
+                                  "l": "24",
+                                  "o": "+",
+                                  "ok": true,
+                                  "t": "operator"
+                                },
+                                {
+                                  "err": "Variable d.displayName not found",
+                                  "l": "26:38",
+                                  "ok": false,
+                                  "t": "variable",
+                                  "x": "d.displayName"
+                                }
+                              ],
+                              "loc": "26:38",
+                              "ok": false,
+                              "str": "${doorsOpenList} + \", \" + d.displayName",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 30,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 31,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "doorsOpenList"
+                          },
+                          {
+                            "e": "d.displayName",
+                            "exp": {
+                              "err": "Variable d.displayName not found",
+                              "errVar": "d.displayName",
+                              "i": [
+                                {
+                                  "err": "Variable d.displayName not found",
+                                  "l": "0:12",
+                                  "ok": false,
+                                  "t": "variable",
+                                  "x": "d.displayName"
+                                }
+                              ],
+                              "loc": "0:12",
+                              "ok": false,
+                              "str": "d.displayName",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 32,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 33,
+                "c": "log",
+                "p": [
+                  {
+                    "c": "info",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:3",
+                          "ok": true,
+                          "t": "string",
+                          "v": "info"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "info",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "enum"
+                  },
+                  {
+                    "c": "AutoArmingCheck: skipped due to debounce",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:39",
+                          "ok": true,
+                          "t": "string",
+                          "v": "AutoArmingCheck: skipped due to debounce"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "AutoArmingCheck: skipped due to debounce",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "c": "false",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:4",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "false"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "false",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 34,
+        "a": "0",
+        "c": [
+          {
+            "$": 35,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "string",
+              "x": "unlockedList"
+            },
+            "ro": {
+              "e": "\"^, .*\"",
+              "exp": {
+                "i": [
+                  {
+                    "l": "1:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "^, .*"
+                  }
+                ],
+                "ok": true,
+                "str": "\"^, .*\"",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "e",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 36,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 37,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "unlockedList"
+                  },
+                  {
+                    "e": "unlockedList.substring(2)",
+                    "exp": {
+                      "err": "Variable unlockedList.substring not found",
+                      "errVar": "unlockedList.substring",
+                      "i": [
+                        {
+                          "err": "Variable unlockedList.substring not found",
+                          "l": "0:21",
+                          "ok": false,
+                          "t": "variable",
+                          "x": "unlockedList.substring"
+                        },
+                        {
+                          "i": [
+                            {
+                              "l": "23",
+                              "t": "integer",
+                              "v": 2
+                            }
+                          ],
+                          "l": "0:24",
+                          "t": "expression"
+                        }
+                      ],
+                      "loc": "0:21",
+                      "ok": false,
+                      "str": "unlockedList.substring(2)",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 38,
+        "a": "0",
+        "c": [
+          {
+            "$": 39,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "string",
+              "x": "doorsOpenList"
+            },
+            "ro": {
+              "e": "\", \"",
+              "exp": {
+                "i": [
+                  {
+                    "l": "1:2",
+                    "ok": true,
+                    "t": "string",
+                    "v": ", "
+                  }
+                ],
+                "ok": true,
+                "str": "\", \"",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "e",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 40,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 41,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable"
+                  },
+                  {
+                    "e": "doorsOpenList.substring(2)",
+                    "exp": {
+                      "err": "Variable doorsOpenList.substring not found",
+                      "errVar": "doorsOpenList.substring",
+                      "i": [
+                        {
+                          "err": "Variable doorsOpenList.substring not found",
+                          "l": "0:22",
+                          "ok": false,
+                          "t": "variable",
+                          "x": "doorsOpenList.substring"
+                        },
+                        {
+                          "i": [
+                            {
+                              "l": "24",
+                              "t": "integer",
+                              "v": 2
+                            }
+                          ],
+                          "l": "0:25",
+                          "t": "expression"
+                        }
+                      ],
+                      "loc": "0:22",
+                      "ok": false,
+                      "str": "doorsOpenList.substring(2)",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Door_Locks",
+        "t": "device",
+        "v": {
+          "d": [
+            ":087f0779fbe605de0e950f6f1722e64e:",
+            ":ae9c3ee89975e00d6a785149929ef06f:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Door_Contacts",
+        "t": "device",
+        "v": {
+          "d": [
+            ":72910b3cd194379ef35ec85348838d1d:",
+            ":78ed895d16625fb145acc7ea878e6806:",
+            ":ed02bf9ce2b6e494c0345c7bedd0cdde:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Window_Contacts",
+        "t": "device",
+        "v": {
+          "d": [
+            ":12eefec6c80a4d3b419376b9195af609:",
+            ":db94f5cceeb55f79cc7d04cf4ccd31b4:",
+            ":1034c992a28e8e298e6ea992cdd400a5:",
+            ":2a4db0cb990c80be6bb082b7e9c59ffd:",
+            ":02e03d751aa6581f05332a98b988110b:",
+            ":9fb30af822ab34d333f4098228e1757f:",
+            ":0b56f018305ad7a681ae3dbab065e684:",
+            ":0edfc52e58983afc68a25411d1d6b9fa:",
+            ":5174c8a7aadd0762986c8b8764bd4215:",
+            ":07762836ba3b6dbeb71fd8b8236acd18:",
+            ":6a982b1007bcbd3a53ba39c2396ca547:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "unlockedList",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "doorsOpenList",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "windowsOpenList",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "SystemStatus",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "_lastRunTime",
+        "t": "integer",
+        "v": {
+          "c": 0,
+          "exp": {
+            "i": [
+              {
+                "l": "0",
+                "ok": true,
+                "t": "integer",
+                "v": 0
+              }
+            ],
+            "ok": true,
+            "str": "0",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+        }
+      },
+      {
+        "n": "lastRunTime",
+        "t": "dynamic"
+      }
+    ],
+    "z": ""
+  }
+}

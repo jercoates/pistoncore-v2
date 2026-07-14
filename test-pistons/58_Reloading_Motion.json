@@ -1,0 +1,503 @@
+{
+  "name": "Reloading Motion",
+  "meta": {
+    "name": "Reloading Motion",
+    "category": "4",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "motion",
+              "d": [
+                "Reloading_Motion"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "active",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "active"
+                  }
+                ],
+                "ok": true,
+                "str": "active",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "switch",
+              "d": [
+                ":d164f7b3d899fa2b07bce3a39d7bb217:"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "on",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "string",
+                    "v": "on"
+                  }
+                ],
+                "ok": true,
+                "str": "on",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 4,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 330,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 330
+                  }
+                ],
+                "ok": true,
+                "str": "330",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 1290,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1290
+                  }
+                ],
+                "ok": true,
+                "str": "1290",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 5,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 6,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Stay away from the reloading bench",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:33",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Stay away from the reloading bench"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Stay away from the reloading bench",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 8,
+            "a": "0",
+            "c": [
+              {
+                "$": 9,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "presence",
+                  "d": [
+                    "@Presence_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "all",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "not present",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:10",
+                        "ok": true,
+                        "t": "string",
+                        "v": "not present"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "not present",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 10,
+                "co": "stays_any_of",
+                "ct": "t",
+                "fs": [],
+                "lo": {
+                  "a": "motion",
+                  "d": [
+                    "Reloading_Motion"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": [
+                    "active"
+                  ],
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "active"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "active",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "c": 120,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:2",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 120
+                      }
+                    ],
+                    "ok": true,
+                    "str": "120",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "s"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 11,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 12,
+                    "c": "sendPushNotification",
+                    "p": [
+                      {
+                        "c": "Some one is at the reloading bench",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:33",
+                              "ok": true,
+                              "t": "string",
+                              "v": "Some one is at the reloading bench"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "Some one is at the reloading bench",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "string"
+                      },
+                      {
+                        "c": "false",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:4",
+                              "ok": true,
+                              "t": "boolean",
+                              "v": "false"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "false",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "boolean"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Reloading_Motion",
+        "t": "device",
+        "v": {
+          "d": [
+            ":4b20b935521c15c1dc3535ba61140cf2:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Reloading_Motion_switch",
+        "t": "device",
+        "v": {
+          "d": [
+            ":d164f7b3d899fa2b07bce3a39d7bb217:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

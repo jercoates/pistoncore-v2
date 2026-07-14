@@ -1,0 +1,133 @@
+{
+  "name": "push notification test",
+  "meta": {
+    "name": "push notification test",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "d": [
+          "@Notifications_Push"
+        ],
+        "k": [
+          {
+            "$": 2,
+            "c": "sendPushNotification",
+            "p": [
+              {
+                "c": "test",
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:3",
+                      "ok": true,
+                      "t": "string",
+                      "v": "test"
+                    }
+                  ],
+                  "ok": true,
+                  "str": "test",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "string"
+              },
+              {
+                "c": "false",
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:4",
+                      "ok": true,
+                      "t": "boolean",
+                      "v": "false"
+                    }
+                  ],
+                  "ok": true,
+                  "str": "false",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "boolean"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      },
+      {
+        "$": 3,
+        "a": "0",
+        "d": [
+          "@Notifications_Push"
+        ],
+        "k": [
+          {
+            "$": 4,
+            "c": "deviceNotification",
+            "p": [
+              {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "string",
+                "x": "Battery_Status_Smoke"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Battery_Status_Smoke",
+        "t": "string",
+        "v": {
+          "c": "test1",
+          "exp": {
+            "i": [
+              {
+                "l": "0:4",
+                "ok": true,
+                "t": "string",
+                "v": "test1"
+              }
+            ],
+            "ok": true,
+            "str": "test1",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

@@ -1,0 +1,444 @@
+{
+  "name": "Glass break",
+  "meta": {
+    "name": "Glass break",
+    "category": "3",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_away_from",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "shock",
+              "d": [
+                "Glass_break_Sensors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "clear",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:4",
+                    "ok": true,
+                    "t": "string",
+                    "v": "clear"
+                  }
+                ],
+                "ok": true,
+                "str": "clear",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Message"
+                  },
+                  {
+                    "e": "$currentEventDevice \" detected\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:18",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        },
+                        {
+                          "l": "21:29",
+                          "ok": true,
+                          "t": "string",
+                          "v": " detected"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "$currentEventDevice \" detected\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "c": [
+              {
+                "$": 6,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "presence",
+                  "d": [
+                    "@Presence_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "all",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "not present",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:10",
+                        "ok": true,
+                        "t": "string",
+                        "v": "not present"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "not present",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [
+              {
+                "$": 7,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 8,
+                    "c": "deviceNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 9,
+                "a": "0",
+                "d": [
+                  "@Notifications_Text_Push_All"
+                ],
+                "k": [
+                  {
+                    "$": 10,
+                    "c": "deviceNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 11,
+        "a": "0",
+        "c": [
+          {
+            "$": 12,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "tamper",
+              "d": [
+                "Glass_break_Sensors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "detected",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "detected"
+                  }
+                ],
+                "ok": true,
+                "str": "detected",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 13,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "not present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:10",
+                    "ok": true,
+                    "t": "string",
+                    "v": "not present"
+                  }
+                ],
+                "ok": true,
+                "str": "not present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 14,
+            "a": "0",
+            "d": [
+              "@Notifications_Text_Push_All"
+            ],
+            "k": [
+              {
+                "$": 15,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "c": "A Glass break sensor has been tampered with",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:42",
+                          "ok": true,
+                          "t": "string",
+                          "v": "A Glass break sensor has been tampered with"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "A Glass break sensor has been tampered with",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Glass_break_Sensors",
+        "t": "device",
+        "v": {
+          "d": [
+            ":3c953145e9ec2ab900382a936ab7a35b:",
+            ":dddec07ce870008f30beaf45df30b516:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Message",
+        "t": "string"
+      }
+    ],
+    "z": ""
+  }
+}

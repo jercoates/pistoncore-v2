@@ -1,0 +1,69 @@
+{
+  "name": "paul light tests",
+  "meta": {
+    "name": "paul light tests",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "d": [
+          "Pauls_Led"
+        ],
+        "k": [
+          {
+            "$": 2,
+            "c": "setColor",
+            "p": [
+              {
+                "f": "l",
+                "g": "avg",
+                "s": "Cool White",
+                "t": "s",
+                "vt": "color"
+              },
+              {
+                "d": [],
+                "f": "l",
+                "g": "avg",
+                "vt": "enum"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Pauls_Led",
+        "t": "device",
+        "v": {
+          "d": [
+            ":91211a6b35eefc2950c34f2acaf805a1:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

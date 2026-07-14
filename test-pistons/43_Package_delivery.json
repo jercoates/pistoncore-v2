@@ -1,0 +1,209 @@
+{
+  "name": "Package delivery",
+  "meta": {
+    "name": "Package delivery",
+    "category": "2",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                ":d16b411741dc087836561f0381874b52:"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": [
+              {
+                "$": 3,
+                "a": "0",
+                "d": [
+                  "@Speakers"
+                ],
+                "k": [
+                  {
+                    "$": 4,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 90,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 90
+                            }
+                          ],
+                          "ok": true,
+                          "str": "90",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 5,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "c": "<prosody rate='slow'> Package locker has been opened </prosody>",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:62",
+                              "ok": true,
+                              "t": "string",
+                              "v": "<prosody rate='slow'> Package locker has been opened </prosody>"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "<prosody rate='slow'> Package locker has been opened </prosody>",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "string"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 6,
+                "a": "0",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 7,
+                    "a": "0",
+                    "d": [
+                      "@Notifications_Push"
+                    ],
+                    "k": [
+                      {
+                        "$": 8,
+                        "c": "deviceNotification",
+                        "p": [
+                          {
+                            "c": "Package locker opened",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:20",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "Package locker opened"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "Package locker opened",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "c",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "do",
+                "tcp": "c"
+              }
+            ]
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [],
+    "z": ""
+  }
+}

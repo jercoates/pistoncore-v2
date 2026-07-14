@@ -1,0 +1,97 @@
+{
+  "name": "sound Test 2",
+  "meta": {
+    "name": "sound Test 2",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "d": [
+          "@Speakers"
+        ],
+        "k": [
+          {
+            "$": 2,
+            "c": "playText",
+            "cm": true,
+            "p": [
+              {
+                "c": "TICKLE NAOMI",
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:11",
+                      "ok": true,
+                      "t": "string",
+                      "v": "TICKLE NAOMI"
+                    }
+                  ],
+                  "ok": true,
+                  "str": "TICKLE NAOMI",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "string"
+              },
+              {
+                "c": 70,
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:1",
+                      "ok": true,
+                      "t": "integer",
+                      "v": 70
+                    }
+                  ],
+                  "ok": true,
+                  "str": "70",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "integer"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Speakers",
+        "t": "device",
+        "v": {
+          "d": [
+            ":1fb4cf95b05dc7a641f1d67655fc0f20:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

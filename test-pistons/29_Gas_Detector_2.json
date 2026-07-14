@@ -1,0 +1,655 @@
+{
+  "name": "Gas Detector 2",
+  "meta": {
+    "name": "Gas Detector 2",
+    "category": "3",
+    "build": 1,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "naturalGas",
+              "d": [
+                "Gas_Detectors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "detected",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "detected"
+                  }
+                ],
+                "ok": true,
+                "str": "detected",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "c": [
+              {
+                "$": 4,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "naturalGas",
+                  "d": [
+                    "Gas_Detectors"
+                  ],
+                  "f": "l",
+                  "g": "all",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "clear",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:4",
+                        "ok": true,
+                        "t": "string",
+                        "v": "clear"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "clear",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 5,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 6,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Gas_Detected"
+                      },
+                      {
+                        "e": "\"\u26fd Gas Detected \u26fd\n\" $monthName \" \"$day\" - \"$time\"\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:17",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\u26fd Gas Detected \u26fd\n"
+                            },
+                            {
+                              "l": "20:29",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$monthName"
+                            },
+                            {
+                              "l": "32",
+                              "ok": true,
+                              "t": "string",
+                              "v": " "
+                            },
+                            {
+                              "l": "34:37",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$day"
+                            },
+                            {
+                              "l": "39:41",
+                              "ok": true,
+                              "t": "string",
+                              "v": " - "
+                            },
+                            {
+                              "l": "43:47",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$time"
+                            },
+                            {
+                              "l": "49",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\u26fd Gas Detected \u26fd\n\" $monthName \" \"$day\" - \"$time\"\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 7,
+                "a": "0",
+                "lo": {
+                  "d": [
+                    "Gas_Detectors"
+                  ],
+                  "f": "l",
+                  "g": "avg",
+                  "t": "d",
+                  "vt": "device"
+                },
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 8,
+                    "a": "0",
+                    "c": [
+                      {
+                        "$": 9,
+                        "co": "is",
+                        "ct": "c",
+                        "fs": [],
+                        "lo": {
+                          "a": "naturalGas",
+                          "d": [
+                            "$device"
+                          ],
+                          "f": "l",
+                          "g": "any",
+                          "t": "p",
+                          "vt": "string"
+                        },
+                        "ro": {
+                          "c": "detected",
+                          "exp": {
+                            "i": [
+                              {
+                                "l": "0:7",
+                                "ok": true,
+                                "t": "string",
+                                "v": "detected"
+                              }
+                            ],
+                            "ok": true,
+                            "str": "detected",
+                            "t": "expression"
+                          },
+                          "f": "l",
+                          "g": "any",
+                          "t": "c",
+                          "vt": "enum"
+                        },
+                        "ro2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "sm": "auto",
+                        "t": "condition",
+                        "to": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "to2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "ts": []
+                      }
+                    ],
+                    "e": [],
+                    "ei": [],
+                    "o": "and",
+                    "r": [],
+                    "rop": "and",
+                    "s": [
+                      {
+                        "$": 10,
+                        "a": "0",
+                        "d": [],
+                        "k": [
+                          {
+                            "$": 11,
+                            "c": "setVariable",
+                            "p": [
+                              {
+                                "f": "l",
+                                "g": "avg",
+                                "t": "x",
+                                "vt": "variable",
+                                "x": "Gas_Detected"
+                              },
+                              {
+                                "e": "Gas_Detected \"\nDetected from \"$device",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "0:11",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "Gas_Detected"
+                                    },
+                                    {
+                                      "l": "14:28",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\nDetected from "
+                                    },
+                                    {
+                                      "l": "30:36",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$device"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "Gas_Detected \"\nDetected from \"$device",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 12,
+                        "a": "0",
+                        "d": [
+                          "@Speakers_All"
+                        ],
+                        "k": [
+                          {
+                            "$": 13,
+                            "c": "setVolume",
+                            "p": [
+                              {
+                                "c": 90,
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "0:1",
+                                      "ok": true,
+                                      "t": "integer",
+                                      "v": 90
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "90",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "c",
+                                "vt": "integer"
+                              }
+                            ]
+                          },
+                          {
+                            "$": 14,
+                            "c": "playText",
+                            "p": [
+                              {
+                                "e": "\"Natural Gas detected from \" $device",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "1:26",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "Natural Gas detected from "
+                                    },
+                                    {
+                                      "l": "29:35",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$device"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "\"Natural Gas detected from \" $device",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              },
+                              {
+                                "d": [],
+                                "f": "l",
+                                "g": "avg",
+                                "vt": "integer"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 15,
+                        "a": "0",
+                        "c": [
+                          {
+                            "$": 16,
+                            "co": "is_not",
+                            "ct": "c",
+                            "fs": [],
+                            "lo": {
+                              "a": "presence",
+                              "d": [
+                                "@Presence_Sensor"
+                              ],
+                              "f": "l",
+                              "g": "any",
+                              "t": "p",
+                              "vt": "string"
+                            },
+                            "ro": {
+                              "c": "not present",
+                              "exp": {
+                                "i": [
+                                  {
+                                    "l": "0:10",
+                                    "ok": true,
+                                    "t": "string",
+                                    "v": "not present"
+                                  }
+                                ],
+                                "ok": true,
+                                "str": "not present",
+                                "t": "expression"
+                              },
+                              "f": "l",
+                              "g": "any",
+                              "t": "c",
+                              "vt": "enum"
+                            },
+                            "ro2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "s": true,
+                            "sm": "auto",
+                            "t": "condition",
+                            "to": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "to2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "ts": []
+                          }
+                        ],
+                        "e": [],
+                        "ei": [],
+                        "o": "and",
+                        "r": [],
+                        "rop": "and",
+                        "s": [
+                          {
+                            "$": 17,
+                            "a": "0",
+                            "d": [
+                              "@Notification_Text"
+                            ],
+                            "k": [
+                              {
+                                "$": 18,
+                                "c": "deviceNotification",
+                                "p": [
+                                  {
+                                    "e": "Gas_Detected",
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "0:11",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "Gas_Detected"
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "Gas_Detected",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "e",
+                                    "vt": "string"
+                                  }
+                                ]
+                              }
+                            ],
+                            "r": [],
+                            "rop": "and",
+                            "t": "action",
+                            "tcp": "c"
+                          }
+                        ],
+                        "t": "if",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 19,
+                        "a": "0",
+                        "d": [
+                          "@Notifications_Push"
+                        ],
+                        "k": [
+                          {
+                            "$": 20,
+                            "c": "deviceNotification",
+                            "p": [
+                              {
+                                "e": "Gas_Detected",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "0:11",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "Gas_Detected"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "Gas_Detected",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      }
+                    ],
+                    "t": "if",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "each",
+                "tcp": "c"
+              },
+              {
+                "$": 21,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 22,
+                    "c": "wait",
+                    "p": [
+                      {
+                        "c": 1,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 1
+                            }
+                          ],
+                          "ok": true,
+                          "str": "1",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "m"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "repeat",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Gas_Detectors",
+        "t": "device",
+        "v": {
+          "d": [
+            ":fad0ce04586b0feaf569f77d905ad351:",
+            ":b0939a45d3239ba7a6486cfda212f7f8:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Gas_Detected",
+        "t": "string"
+      }
+    ],
+    "z": ""
+  }
+}

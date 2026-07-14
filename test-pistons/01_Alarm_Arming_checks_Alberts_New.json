@@ -1,0 +1,2540 @@
+{
+  "name": "Alarm Arming checks Alberts New",
+  "meta": {
+    "name": "Alarm Arming checks Alberts New",
+    "category": "3",
+    "build": 4,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "ish": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "is_any_of",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "string",
+              "x": "$currentEventDescription"
+            },
+            "ro": {
+              "c": "{{$currentEventDevice} \" was unlocked by Jeremy\"}",
+              "exp": {
+                "i": [
+                  {
+                    "i": [
+                      {
+                        "i": [
+                          {
+                            "l": "2:20",
+                            "ok": true,
+                            "t": "variable",
+                            "x": "$currentEventDevice"
+                          }
+                        ],
+                        "l": "1:21",
+                        "ok": true,
+                        "t": "expression"
+                      },
+                      {
+                        "l": "24:46",
+                        "ok": true,
+                        "t": "string",
+                        "v": " was unlocked by Jeremy"
+                      }
+                    ],
+                    "l": "0:48",
+                    "ok": true,
+                    "t": "expression"
+                  }
+                ],
+                "ok": true,
+                "str": "{{$currentEventDevice} \" was unlocked by Jeremy\"}",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "alarmSystemStatus",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "armedAway",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:8",
+                    "ok": true,
+                    "t": "string",
+                    "v": "armedAway"
+                  }
+                ],
+                "ok": true,
+                "str": "armedAway",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 4,
+            "c": [
+              {
+                "$": 5,
+                "co": "changes_to",
+                "ct": "t",
+                "fs": [],
+                "lo": {
+                  "a": "lock",
+                  "d": [
+                    "Door_Locks"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "i": [],
+                  "p": "p",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "unlocked",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:7",
+                        "ok": true,
+                        "t": "string",
+                        "v": "unlocked"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "unlocked",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "fs": [],
+            "o": "or",
+            "sm": "auto",
+            "t": "group",
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 6,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 7,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Unlocked_By"
+                  },
+                  {
+                    "e": "\"Disarmed by: \"{([ $currentEventDevice : lastCodeName ])}\" via \"$currentEventDevice",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:13",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Disarmed by: "
+                        },
+                        {
+                          "i": [
+                            {
+                              "i": [
+                                {
+                                  "a": "lastCodeName",
+                                  "l": "17:54",
+                                  "ok": true,
+                                  "t": "device",
+                                  "x": "$currentEventDevice"
+                                }
+                              ],
+                              "l": "16:55",
+                              "ok": true,
+                              "t": "expression"
+                            }
+                          ],
+                          "l": "15:56",
+                          "ok": true,
+                          "t": "expression"
+                        },
+                        {
+                          "l": "58:62",
+                          "ok": true,
+                          "t": "string",
+                          "v": " via "
+                        },
+                        {
+                          "l": "64:82",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"Disarmed by: \"{([ $currentEventDevice : lastCodeName ])}\" via \"$currentEventDevice",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              },
+              {
+                "$": 8,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 2,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 2
+                        }
+                      ],
+                      "ok": true,
+                      "str": "2",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "s"
+                  }
+                ]
+              },
+              {
+                "$": 9,
+                "c": "setAlarmSystemStatus",
+                "p": [
+                  {
+                    "c": "disarm",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:5",
+                          "ok": true,
+                          "t": "string",
+                          "v": "disarm"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "disarm",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "enum"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "If Lock/Keypad code is entered and system is armed, then disarm and send message of what and who dissarmed."
+      },
+      {
+        "$": 10,
+        "a": "0",
+        "c": [
+          {
+            "$": 11,
+            "co": "changes_to_any_of",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "alarmSystemStatus",
+              "vt": "string"
+            },
+            "ro": {
+              "c": [
+                "armedAway",
+                "disarmed",
+                "allDisarmed"
+              ],
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:29",
+                    "ok": true,
+                    "t": "string",
+                    "v": "armedAway,disarmed,allDisarmed"
+                  }
+                ],
+                "ok": true,
+                "str": "armedAway,disarmed,allDisarmed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": [
+              {
+                "$": 12,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 13,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "DoorsOpen"
+                      },
+                      {
+                        "e": "\"\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:0",
+                              "ok": true,
+                              "t": "string",
+                              "v": ""
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 14,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "WindowsOpen"
+                      },
+                      {
+                        "e": "\"\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:0",
+                              "ok": true,
+                              "t": "string",
+                              "v": ""
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 15,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "SystemStatus"
+                      },
+                      {
+                        "e": "\"\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:0",
+                              "ok": true,
+                              "t": "string",
+                              "v": ""
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ]
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 16,
+            "a": "0",
+            "c": [
+              {
+                "$": 17,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "f": "l",
+                  "g": "any",
+                  "t": "v",
+                  "v": "alarmSystemStatus",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "armedAway",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:8",
+                        "ok": true,
+                        "t": "string",
+                        "v": "armedAway"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "armedAway",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": [
+                  {
+                    "$": 18,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 19,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "SystemStatus"
+                          },
+                          {
+                            "e": "\"\ud83d\udd14 System Armed \ud83d\udd14\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "1:19",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\ud83d\udd14 System Armed \ud83d\udd14\n"
+                                },
+                                {
+                                  "l": "21:30",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$monthName"
+                                },
+                                {
+                                  "l": "32",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": " "
+                                },
+                                {
+                                  "l": "34:37",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$day"
+                                },
+                                {
+                                  "l": "39:45",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "   -   "
+                                },
+                                {
+                                  "l": "47:51",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$time"
+                                },
+                                {
+                                  "l": "53:54",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\n\n"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "\"\ud83d\udd14 System Armed \ud83d\udd14\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ]
+              }
+            ],
+            "e": [
+              {
+                "$": 20,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 21,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "f": "l",
+                      "g": "any",
+                      "t": "v",
+                      "v": "alarmSystemStatus",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "disarmed",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:7",
+                            "ok": true,
+                            "t": "string",
+                            "v": "disarmed"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "disarmed",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 22,
+                    "a": "0",
+                    "d": [
+                      "@Speakers"
+                    ],
+                    "k": [
+                      {
+                        "$": 23,
+                        "c": "stop",
+                        "p": []
+                      },
+                      {
+                        "$": 24,
+                        "c": "setVolume",
+                        "p": [
+                          {
+                            "c": 100,
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:2",
+                                  "ok": true,
+                                  "t": "integer",
+                                  "v": 100
+                                }
+                              ],
+                              "ok": true,
+                              "str": "100",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "c",
+                            "vt": "integer"
+                          }
+                        ]
+                      },
+                      {
+                        "$": 25,
+                        "c": "playText",
+                        "p": [
+                          {
+                            "c": "System Disarmed",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:14",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "System Disarmed"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "System Disarmed",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "c",
+                            "vt": "string"
+                          },
+                          {
+                            "d": [],
+                            "f": "l",
+                            "g": "avg",
+                            "vt": "integer"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 26,
+                    "a": "0",
+                    "d": [
+                      "@Speakers"
+                    ],
+                    "k": [
+                      {
+                        "$": 27,
+                        "c": "stop",
+                        "p": []
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 28,
+                    "a": "0",
+                    "d": [
+                      "@Notifications_Push"
+                    ],
+                    "k": [
+                      {
+                        "$": 29,
+                        "c": "deviceNotification",
+                        "p": [
+                          {
+                            "e": "\"\ud83d\udd15 System Disarmed \ud83d\udd15\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n\"\nUnlocked_By",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "1:22",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\ud83d\udd15 System Disarmed \ud83d\udd15\n"
+                                },
+                                {
+                                  "l": "24:33",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$monthName"
+                                },
+                                {
+                                  "l": "35",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": " "
+                                },
+                                {
+                                  "l": "37:40",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$day"
+                                },
+                                {
+                                  "l": "42:48",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "   -   "
+                                },
+                                {
+                                  "l": "50:54",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$time"
+                                },
+                                {
+                                  "l": "56:58",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\n.\n"
+                                },
+                                {
+                                  "l": "61:71",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "Unlocked_By"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "\"\ud83d\udd15 System Disarmed \ud83d\udd15\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n\"\nUnlocked_By",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              }
+            ],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 30,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 31,
+                    "co": "is_not",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "lock",
+                      "d": [
+                        "Door_Locks"
+                      ],
+                      "f": "l",
+                      "g": "any",
+                      "i": [],
+                      "p": "a",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "locked",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:5",
+                            "ok": true,
+                            "t": "string",
+                            "v": "locked"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "locked",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 32,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 33,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "DoorLeftUnlocked"
+                          },
+                          {
+                            "e": "\"\ud83d\udd13 Door(s) Left Unlocked \ud83d\udd13\n\"",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "1:28",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\ud83d\udd13 Door(s) Left Unlocked \ud83d\udd13\n"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "\"\ud83d\udd13 Door(s) Left Unlocked \ud83d\udd13\n\"",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 34,
+                    "a": "0",
+                    "lo": {
+                      "d": [
+                        "Door_Locks"
+                      ],
+                      "f": "l",
+                      "g": "avg",
+                      "t": "d",
+                      "vt": "device"
+                    },
+                    "r": [],
+                    "rop": "and",
+                    "s": [
+                      {
+                        "$": 35,
+                        "a": "0",
+                        "c": [
+                          {
+                            "$": 36,
+                            "co": "is_not",
+                            "ct": "c",
+                            "fs": [],
+                            "lo": {
+                              "a": "lock",
+                              "d": [
+                                "$device"
+                              ],
+                              "f": "l",
+                              "g": "any",
+                              "i": [],
+                              "p": "a",
+                              "t": "p",
+                              "vt": "string"
+                            },
+                            "ro": {
+                              "c": "locked",
+                              "exp": {
+                                "i": [
+                                  {
+                                    "l": "0:5",
+                                    "ok": true,
+                                    "t": "string",
+                                    "v": "locked"
+                                  }
+                                ],
+                                "ok": true,
+                                "str": "locked",
+                                "t": "expression"
+                              },
+                              "f": "l",
+                              "g": "any",
+                              "t": "c",
+                              "vt": "enum"
+                            },
+                            "ro2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "sm": "auto",
+                            "t": "condition",
+                            "to": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "to2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "ts": []
+                          }
+                        ],
+                        "e": [],
+                        "ei": [],
+                        "o": "and",
+                        "r": [],
+                        "rop": "and",
+                        "s": [
+                          {
+                            "$": 37,
+                            "a": "0",
+                            "d": [],
+                            "k": [
+                              {
+                                "$": 38,
+                                "c": "setVariable",
+                                "p": [
+                                  {
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "x",
+                                    "vt": "variable",
+                                    "x": "DoorLeftUnlocked"
+                                  },
+                                  {
+                                    "e": "DoorLeftUnlocked $device\"\n\"",
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "0:15",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "DoorLeftUnlocked"
+                                        },
+                                        {
+                                          "l": "17:23",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "$device"
+                                        },
+                                        {
+                                          "l": "25",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": "\n"
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "DoorLeftUnlocked $device\"\n\"",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "e",
+                                    "vt": "string"
+                                  }
+                                ]
+                              }
+                            ],
+                            "r": [],
+                            "rop": "and",
+                            "t": "action",
+                            "tcp": "c"
+                          }
+                        ],
+                        "t": "if",
+                        "tcp": "c"
+                      }
+                    ],
+                    "t": "each",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 39,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 40,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "DoorLeftUnlocked"
+                          },
+                          {
+                            "e": "DoorLeftUnlocked\"\n.\nAttempting to lock door(s)\"",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:15",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "DoorLeftUnlocked"
+                                },
+                                {
+                                  "l": "17:45",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\n.\nAttempting to lock door(s)"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "DoorLeftUnlocked\"\n.\nAttempting to lock door(s)\"",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              },
+              {
+                "$": 41,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 42,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "contact",
+                      "d": [
+                        "@Door_Contacts_Exterior"
+                      ],
+                      "f": "l",
+                      "g": "any",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "open",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:3",
+                            "ok": true,
+                            "t": "string",
+                            "v": "open"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "open",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": [
+                      {
+                        "$": 43,
+                        "a": "0",
+                        "d": [],
+                        "k": [
+                          {
+                            "$": 44,
+                            "c": "setVariable",
+                            "p": [
+                              {
+                                "f": "l",
+                                "g": "avg",
+                                "t": "x",
+                                "vt": "variable",
+                                "x": "DoorsOpen"
+                              },
+                              {
+                                "e": "\"\ud83d\udeaa Door(s) Left Open \ud83d\udeaa\n\"",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "1:24",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\ud83d\udeaa Door(s) Left Open \ud83d\udeaa\n"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "\"\ud83d\udeaa Door(s) Left Open \ud83d\udeaa\n\"",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 45,
+                        "a": "0",
+                        "lo": {
+                          "f": "l",
+                          "g": "avg",
+                          "t": "x",
+                          "vt": "device",
+                          "x": [
+                            "@Door_Contacts_Exterior"
+                          ]
+                        },
+                        "r": [],
+                        "rop": "and",
+                        "s": [
+                          {
+                            "$": 46,
+                            "a": "0",
+                            "c": [
+                              {
+                                "$": 47,
+                                "co": "is",
+                                "ct": "c",
+                                "fs": [],
+                                "lo": {
+                                  "a": "contact",
+                                  "d": [
+                                    "$device"
+                                  ],
+                                  "f": "l",
+                                  "g": "any",
+                                  "t": "p",
+                                  "vt": "string"
+                                },
+                                "ro": {
+                                  "c": "open",
+                                  "exp": {
+                                    "i": [
+                                      {
+                                        "l": "0:3",
+                                        "ok": true,
+                                        "t": "string",
+                                        "v": "open"
+                                      }
+                                    ],
+                                    "ok": true,
+                                    "str": "open",
+                                    "t": "expression"
+                                  },
+                                  "f": "l",
+                                  "g": "any",
+                                  "t": "c",
+                                  "vt": "enum"
+                                },
+                                "ro2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "sm": "auto",
+                                "t": "condition",
+                                "to": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "to2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "ts": [
+                                  {
+                                    "$": 48,
+                                    "a": "0",
+                                    "d": [],
+                                    "k": [
+                                      {
+                                        "$": 49,
+                                        "c": "setVariable",
+                                        "p": [
+                                          {
+                                            "f": "l",
+                                            "g": "avg",
+                                            "t": "x",
+                                            "vt": "variable",
+                                            "x": "DoorsOpen"
+                                          },
+                                          {
+                                            "e": "DoorsOpen  $device\"\n\"",
+                                            "exp": {
+                                              "i": [
+                                                {
+                                                  "l": "0:8",
+                                                  "ok": true,
+                                                  "t": "variable",
+                                                  "x": "DoorsOpen"
+                                                },
+                                                {
+                                                  "l": "11:17",
+                                                  "ok": true,
+                                                  "t": "variable",
+                                                  "x": "$device"
+                                                },
+                                                {
+                                                  "l": "19",
+                                                  "ok": true,
+                                                  "t": "string",
+                                                  "v": "\n"
+                                                }
+                                              ],
+                                              "ok": true,
+                                              "str": "DoorsOpen  $device\"\n\"",
+                                              "t": "expression"
+                                            },
+                                            "f": "l",
+                                            "g": "avg",
+                                            "t": "e",
+                                            "vt": "string"
+                                          }
+                                        ]
+                                      }
+                                    ],
+                                    "r": [],
+                                    "rop": "and",
+                                    "t": "action",
+                                    "tcp": "c"
+                                  }
+                                ]
+                              }
+                            ],
+                            "e": [],
+                            "ei": [],
+                            "o": "and",
+                            "r": [],
+                            "rop": "and",
+                            "s": [],
+                            "t": "if",
+                            "tcp": "c"
+                          }
+                        ],
+                        "t": "each",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 50,
+                        "a": "0",
+                        "d": [],
+                        "k": [
+                          {
+                            "$": 51,
+                            "c": "setVariable",
+                            "p": [
+                              {
+                                "f": "l",
+                                "g": "avg",
+                                "t": "x",
+                                "vt": "variable",
+                                "x": "DoorsOpen"
+                              },
+                              {
+                                "e": "DoorsOpen\"\n\"",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "0:8",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "DoorsOpen"
+                                    },
+                                    {
+                                      "l": "10",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\n"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "DoorsOpen\"\n\"",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      }
+                    ]
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [],
+                "t": "if",
+                "tcp": "c"
+              },
+              {
+                "$": 52,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 53,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "contact",
+                      "d": [
+                        "@Windows"
+                      ],
+                      "f": "l",
+                      "g": "any",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "open",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:3",
+                            "ok": true,
+                            "t": "string",
+                            "v": "open"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "open",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": [
+                      {
+                        "$": 54,
+                        "a": "0",
+                        "d": [],
+                        "k": [
+                          {
+                            "$": 55,
+                            "c": "setVariable",
+                            "p": [
+                              {
+                                "f": "l",
+                                "g": "avg",
+                                "t": "x",
+                                "vt": "variable",
+                                "x": "WindowsOpen"
+                              },
+                              {
+                                "e": "\"\n\ud83d\uddbc\ufe0f Window(s) Left Open \ud83d\uddbc\ufe0f\n\"",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "1:29",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\n\ud83d\uddbc\ufe0f Window(s) Left Open \ud83d\uddbc\ufe0f\n"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "\"\n\ud83d\uddbc\ufe0f Window(s) Left Open \ud83d\uddbc\ufe0f\n\"",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 56,
+                        "a": "0",
+                        "lo": {
+                          "d": [
+                            "@Windows"
+                          ],
+                          "f": "l",
+                          "g": "avg",
+                          "t": "d",
+                          "vt": "device"
+                        },
+                        "r": [],
+                        "rop": "and",
+                        "s": [
+                          {
+                            "$": 57,
+                            "a": "0",
+                            "c": [
+                              {
+                                "$": 58,
+                                "co": "is",
+                                "ct": "c",
+                                "fs": [],
+                                "lo": {
+                                  "a": "contact",
+                                  "d": [
+                                    "$device"
+                                  ],
+                                  "f": "l",
+                                  "g": "any",
+                                  "t": "p",
+                                  "vt": "string"
+                                },
+                                "ro": {
+                                  "c": "open",
+                                  "exp": {
+                                    "i": [
+                                      {
+                                        "l": "0:3",
+                                        "ok": true,
+                                        "t": "string",
+                                        "v": "open"
+                                      }
+                                    ],
+                                    "ok": true,
+                                    "str": "open",
+                                    "t": "expression"
+                                  },
+                                  "f": "l",
+                                  "g": "any",
+                                  "t": "c",
+                                  "vt": "enum"
+                                },
+                                "ro2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "sm": "auto",
+                                "t": "condition",
+                                "to": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "to2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "ts": [
+                                  {
+                                    "$": 59,
+                                    "a": "0",
+                                    "d": [],
+                                    "k": [
+                                      {
+                                        "$": 60,
+                                        "c": "setVariable",
+                                        "p": [
+                                          {
+                                            "f": "l",
+                                            "g": "avg",
+                                            "t": "x",
+                                            "vt": "variable",
+                                            "x": "WindowsOpen"
+                                          },
+                                          {
+                                            "e": "WindowsOpen $device\"\n\"",
+                                            "exp": {
+                                              "i": [
+                                                {
+                                                  "l": "0:10",
+                                                  "ok": true,
+                                                  "t": "variable",
+                                                  "x": "WindowsOpen"
+                                                },
+                                                {
+                                                  "l": "12:18",
+                                                  "ok": true,
+                                                  "t": "variable",
+                                                  "x": "$device"
+                                                },
+                                                {
+                                                  "l": "20",
+                                                  "ok": true,
+                                                  "t": "string",
+                                                  "v": "\n"
+                                                }
+                                              ],
+                                              "ok": true,
+                                              "str": "WindowsOpen $device\"\n\"",
+                                              "t": "expression"
+                                            },
+                                            "f": "l",
+                                            "g": "avg",
+                                            "t": "e",
+                                            "vt": "string"
+                                          }
+                                        ]
+                                      }
+                                    ],
+                                    "r": [],
+                                    "rop": "and",
+                                    "t": "action",
+                                    "tcp": "c"
+                                  }
+                                ]
+                              }
+                            ],
+                            "e": [],
+                            "ei": [],
+                            "o": "and",
+                            "r": [],
+                            "rop": "and",
+                            "s": [],
+                            "t": "if",
+                            "tcp": "c"
+                          }
+                        ],
+                        "t": "each",
+                        "tcp": "c"
+                      }
+                    ]
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [],
+                "t": "if",
+                "tcp": "c"
+              },
+              {
+                "$": 61,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 62,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "SystemStatus"
+                      },
+                      {
+                        "e": "SystemStatus DoorLeftUnlocked DoorsOpen WindowsOpen \"\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:11",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "SystemStatus"
+                            },
+                            {
+                              "l": "13:28",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "DoorLeftUnlocked"
+                            },
+                            {
+                              "l": "30:38",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "DoorsOpen"
+                            },
+                            {
+                              "l": "40:50",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "WindowsOpen"
+                            },
+                            {
+                              "l": "53",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "SystemStatus DoorLeftUnlocked DoorsOpen WindowsOpen \"\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 63,
+                    "c": "deviceNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "SystemStatus"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 64,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 65,
+                    "co": "is_not",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "lock",
+                      "d": [
+                        "Door_Locks"
+                      ],
+                      "f": "l",
+                      "g": "any",
+                      "i": [],
+                      "p": "a",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "locked",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:5",
+                            "ok": true,
+                            "t": "string",
+                            "v": "locked"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "locked",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 66,
+                    "a": "0",
+                    "lo": {
+                      "d": [
+                        "Door_Locks"
+                      ],
+                      "f": "l",
+                      "g": "avg",
+                      "t": "d",
+                      "vt": "device"
+                    },
+                    "r": [],
+                    "rop": "and",
+                    "s": [
+                      {
+                        "$": 67,
+                        "a": "0",
+                        "c": [
+                          {
+                            "$": 68,
+                            "co": "is_not",
+                            "ct": "c",
+                            "fs": [],
+                            "lo": {
+                              "a": "lock",
+                              "d": [
+                                "$device"
+                              ],
+                              "f": "l",
+                              "g": "any",
+                              "i": [],
+                              "p": "a",
+                              "t": "p",
+                              "vt": "string"
+                            },
+                            "ro": {
+                              "c": "locked",
+                              "exp": {
+                                "i": [
+                                  {
+                                    "l": "0:5",
+                                    "ok": true,
+                                    "t": "string",
+                                    "v": "locked"
+                                  }
+                                ],
+                                "ok": true,
+                                "str": "locked",
+                                "t": "expression"
+                              },
+                              "f": "l",
+                              "g": "any",
+                              "t": "c",
+                              "vt": "enum"
+                            },
+                            "ro2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "sm": "auto",
+                            "t": "condition",
+                            "to": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "to2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "ts": []
+                          }
+                        ],
+                        "e": [],
+                        "ei": [],
+                        "o": "and",
+                        "r": [],
+                        "rop": "and",
+                        "s": [
+                          {
+                            "$": 69,
+                            "a": "0",
+                            "d": [
+                              "$device"
+                            ],
+                            "k": [
+                              {
+                                "$": 70,
+                                "c": "lock",
+                                "p": []
+                              }
+                            ],
+                            "r": [],
+                            "rop": "and",
+                            "t": "action",
+                            "tcp": "c"
+                          }
+                        ],
+                        "t": "if",
+                        "tcp": "c"
+                      }
+                    ],
+                    "t": "each",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 71,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 72,
+                        "c": "wait",
+                        "p": [
+                          {
+                            "c": 60,
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:1",
+                                  "ok": true,
+                                  "t": "integer",
+                                  "v": 60
+                                }
+                              ],
+                              "ok": true,
+                              "str": "60",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "c",
+                            "vt": "s"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 73,
+                    "a": "0",
+                    "c": [
+                      {
+                        "$": 74,
+                        "co": "is_not",
+                        "ct": "c",
+                        "fs": [],
+                        "lo": {
+                          "a": "lock",
+                          "d": [
+                            "Door_Locks"
+                          ],
+                          "f": "l",
+                          "g": "any",
+                          "i": [],
+                          "p": "a",
+                          "t": "p",
+                          "vt": "string"
+                        },
+                        "ro": {
+                          "c": "locked",
+                          "exp": {
+                            "i": [
+                              {
+                                "l": "0:5",
+                                "ok": true,
+                                "t": "string",
+                                "v": "locked"
+                              }
+                            ],
+                            "ok": true,
+                            "str": "locked",
+                            "t": "expression"
+                          },
+                          "f": "l",
+                          "g": "any",
+                          "t": "c",
+                          "vt": "enum"
+                        },
+                        "ro2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "s": false,
+                        "sm": "auto",
+                        "t": "condition",
+                        "to": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "to2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "ts": []
+                      }
+                    ],
+                    "e": [
+                      {
+                        "$": 75,
+                        "a": "0",
+                        "d": [
+                          "@Notifications_Push"
+                        ],
+                        "k": [
+                          {
+                            "$": 76,
+                            "c": "deviceNotification",
+                            "p": [
+                              {
+                                "e": "\"\ud83d\udeaa\ud83d\udd12 Door(s) Locked \ud83d\udd12\ud83d\udeaa\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "1:25",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\ud83d\udeaa\ud83d\udd12 Door(s) Locked \ud83d\udd12\ud83d\udeaa\n"
+                                    },
+                                    {
+                                      "l": "27:36",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$monthName"
+                                    },
+                                    {
+                                      "l": "38",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": " "
+                                    },
+                                    {
+                                      "l": "40:43",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$day"
+                                    },
+                                    {
+                                      "l": "45:51",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "   -   "
+                                    },
+                                    {
+                                      "l": "53:57",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$time"
+                                    },
+                                    {
+                                      "l": "59",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\n"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "\"\ud83d\udeaa\ud83d\udd12 Door(s) Locked \ud83d\udd12\ud83d\udeaa\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      }
+                    ],
+                    "ei": [],
+                    "o": "and",
+                    "r": [],
+                    "rop": "and",
+                    "s": [
+                      {
+                        "$": 77,
+                        "a": "0",
+                        "d": [],
+                        "k": [
+                          {
+                            "$": 78,
+                            "c": "setVariable",
+                            "p": [
+                              {
+                                "f": "l",
+                                "g": "avg",
+                                "t": "x",
+                                "vt": "variable",
+                                "x": "DoorLeftUnlocked"
+                              },
+                              {
+                                "e": "\"\ud83d\udea8 Unable to Lock Door(s) \ud83d\udea8\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "1:29",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\ud83d\udea8 Unable to Lock Door(s) \ud83d\udea8\n"
+                                    },
+                                    {
+                                      "l": "31:40",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$monthName"
+                                    },
+                                    {
+                                      "l": "42",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": " "
+                                    },
+                                    {
+                                      "l": "44:47",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$day"
+                                    },
+                                    {
+                                      "l": "49:55",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "   -   "
+                                    },
+                                    {
+                                      "l": "57:61",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "$time"
+                                    },
+                                    {
+                                      "l": "63:64",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\n\n"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "\"\ud83d\udea8 Unable to Lock Door(s) \ud83d\udea8\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 79,
+                        "a": "0",
+                        "lo": {
+                          "d": [
+                            "Door_Locks"
+                          ],
+                          "f": "l",
+                          "g": "avg",
+                          "t": "d",
+                          "vt": "device"
+                        },
+                        "r": [],
+                        "rop": "and",
+                        "s": [
+                          {
+                            "$": 80,
+                            "a": "0",
+                            "c": [
+                              {
+                                "$": 81,
+                                "co": "is_not",
+                                "ct": "c",
+                                "fs": [],
+                                "lo": {
+                                  "a": "lock",
+                                  "d": [
+                                    "$device"
+                                  ],
+                                  "f": "l",
+                                  "g": "any",
+                                  "i": [],
+                                  "p": "a",
+                                  "t": "p",
+                                  "vt": "string"
+                                },
+                                "ro": {
+                                  "c": "locked",
+                                  "exp": {
+                                    "i": [
+                                      {
+                                        "l": "0:5",
+                                        "ok": true,
+                                        "t": "string",
+                                        "v": "locked"
+                                      }
+                                    ],
+                                    "ok": true,
+                                    "str": "locked",
+                                    "t": "expression"
+                                  },
+                                  "f": "l",
+                                  "g": "any",
+                                  "t": "c",
+                                  "vt": "enum"
+                                },
+                                "ro2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "sm": "auto",
+                                "t": "condition",
+                                "to": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "to2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "ts": []
+                              }
+                            ],
+                            "e": [],
+                            "ei": [],
+                            "o": "and",
+                            "r": [],
+                            "rop": "and",
+                            "s": [
+                              {
+                                "$": 82,
+                                "a": "0",
+                                "d": [],
+                                "k": [
+                                  {
+                                    "$": 83,
+                                    "c": "setVariable",
+                                    "p": [
+                                      {
+                                        "f": "l",
+                                        "g": "avg",
+                                        "t": "x",
+                                        "vt": "variable",
+                                        "x": "DoorLeftUnlocked"
+                                      },
+                                      {
+                                        "e": "DoorLeftUnlocked $device\"\n\"",
+                                        "exp": {
+                                          "i": [
+                                            {
+                                              "l": "0:15",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "DoorLeftUnlocked"
+                                            },
+                                            {
+                                              "l": "17:23",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "$device"
+                                            },
+                                            {
+                                              "l": "25",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": "\n"
+                                            }
+                                          ],
+                                          "ok": true,
+                                          "str": "DoorLeftUnlocked $device\"\n\"",
+                                          "t": "expression"
+                                        },
+                                        "f": "l",
+                                        "g": "avg",
+                                        "t": "e",
+                                        "vt": "string"
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "r": [],
+                                "rop": "and",
+                                "t": "action",
+                                "tcp": "c"
+                              }
+                            ],
+                            "t": "if",
+                            "tcp": "c"
+                          }
+                        ],
+                        "t": "each",
+                        "tcp": "c"
+                      },
+                      {
+                        "$": 84,
+                        "a": "0",
+                        "d": [
+                          "@Notifications_Push"
+                        ],
+                        "k": [
+                          {
+                            "$": 85,
+                            "c": "deviceNotification",
+                            "p": [
+                              {
+                                "e": "DoorLeftUnlocked \"\n\nPlease Return Home and Manually Lock Door(s)\"",
+                                "exp": {
+                                  "i": [
+                                    {
+                                      "l": "0:15",
+                                      "ok": true,
+                                      "t": "variable",
+                                      "x": "DoorLeftUnlocked"
+                                    },
+                                    {
+                                      "l": "18:63",
+                                      "ok": true,
+                                      "t": "string",
+                                      "v": "\n\nPlease Return Home and Manually Lock Door(s)"
+                                    }
+                                  ],
+                                  "ok": true,
+                                  "str": "DoorLeftUnlocked \"\n\nPlease Return Home and Manually Lock Door(s)\"",
+                                  "t": "expression"
+                                },
+                                "f": "l",
+                                "g": "avg",
+                                "t": "e",
+                                "vt": "string"
+                              }
+                            ]
+                          }
+                        ],
+                        "r": [],
+                        "rop": "and",
+                        "t": "action",
+                        "tcp": "c"
+                      }
+                    ],
+                    "t": "if",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "z": "Auto Arm System if everyone is gone, check for things left open or unlocked send status messages and error messages."
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "DoorsOpen",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "WindowsOpen",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "SystemStatus",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "DoorLeftUnlocked",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "Unlocked_By",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "Keypad",
+        "t": "device",
+        "v": {
+          "d": [
+            ":3791c34e185f6da2a8285c7c90af4637:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Door_Locks",
+        "t": "device",
+        "v": {
+          "d": [
+            ":087f0779fbe605de0e950f6f1722e64e:",
+            ":ae9c3ee89975e00d6a785149929ef06f:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": "When system is armed check for open doors and windows.\nSend SMS Message when system is armed and list any doors or windows that are open\nSend SMS Message when system is disarmed"
+  }
+}

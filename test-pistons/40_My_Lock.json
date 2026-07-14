@@ -1,0 +1,573 @@
+{
+  "name": "My Lock",
+  "meta": {
+    "name": "My Lock",
+    "category": "3",
+    "build": 3,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Back_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "i": [],
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "closed",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "closed"
+                  }
+                ],
+                "ok": true,
+                "str": "closed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "lock",
+              "d": [
+                "Back_Lock"
+              ],
+              "f": "l",
+              "g": "any",
+              "i": [],
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "unlocked",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "unlocked"
+                  }
+                ],
+                "ok": true,
+                "str": "unlocked",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "Back_Lock"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 5,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 5
+                        }
+                      ],
+                      "ok": true,
+                      "str": "5",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 6,
+            "a": "0",
+            "c": [
+              {
+                "$": 7,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "contact",
+                  "d": [
+                    "Back_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "closed",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "closed"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "closed",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 8,
+                "a": "0",
+                "d": [
+                  "Back_Lock"
+                ],
+                "k": [
+                  {
+                    "$": 9,
+                    "c": "lock",
+                    "p": []
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 10,
+        "a": "0",
+        "c": [
+          {
+            "$": 11,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Front_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "i": [],
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "closed",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "closed"
+                  }
+                ],
+                "ok": true,
+                "str": "closed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 12,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "lock",
+              "d": [
+                "Front_Lock"
+              ],
+              "f": "l",
+              "g": "any",
+              "i": [],
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "unlocked",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "unlocked"
+                  }
+                ],
+                "ok": true,
+                "str": "unlocked",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 13,
+            "a": "0",
+            "d": [
+              "Front_Lock"
+            ],
+            "k": [
+              {
+                "$": 14,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 5,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 5
+                        }
+                      ],
+                      "ok": true,
+                      "str": "5",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 15,
+            "a": "0",
+            "c": [
+              {
+                "$": 16,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "contact",
+                  "d": [
+                    "Front_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "closed",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "closed"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "closed",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": true,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 17,
+                "a": "0",
+                "d": [
+                  "Front_Lock"
+                ],
+                "k": [
+                  {
+                    "$": 18,
+                    "c": "lock",
+                    "p": []
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Back_Lock",
+        "t": "device",
+        "v": {
+          "d": [
+            ":087f0779fbe605de0e950f6f1722e64e:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Back_Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":72910b3cd194379ef35ec85348838d1d:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Front_Lock",
+        "t": "device",
+        "v": {
+          "d": [
+            ":ae9c3ee89975e00d6a785149929ef06f:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Front_Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":78ed895d16625fb145acc7ea878e6806:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

@@ -85,6 +85,12 @@ The `was` / `stays` distinction is critical and has real edge cases:
   when sunrise is at 6am = 4am, but what if piston runs at 11pm?). **Test specifically.**
 - `for:` duration on state triggers has edge cases with unknown/unavailable states.
   HA may not evaluate the duration correctly if the entity goes unavailable mid-wait.
+- **`for:` does NOT survive a HA restart or automation reload** (VERIFIED — HA docs,
+  ported from HA_YAML_COMPILER_RESEARCH.md §2, 2026-07): the timer resets when HA restarts
+  or automations reload, same as webCoRE pistons resetting on restart — this is an
+  equivalent limitation on both systems, not a regression introduced by compiling to HA.
+  Worth stating explicitly in user-facing help text so a `stays`/`was` piston's behavior
+  around a restart doesn't look like a compiler bug.
 
 ### Numeric State Trigger Edge Cases
 
@@ -148,6 +154,41 @@ option since `@state_trigger` takes string expressions not entity lists.
 
 **Verified against official HA docs (May 2026). Locked decision.**
 
+### ⚠ Presence/Zone Semantics Changed in HA 2026.7 (ported from HA_YAML_COMPILER_RESEARCH.md §4)
+
+All three [Verified — HA 2026.7 release notes, backward-incompatible changes]:
+1. **Zone person-counts:** zone entity state and the `persons` attribute are now
+   calculated from each person entity's new `in_zones` attribute — a person can count in
+   MULTIPLE zones simultaneously (e.g. `home` AND `near_home`). A piston comparing zone
+   occupancy counts can see different numbers than it did pre-2026.7.
+2. **Device tracker zone resolution:** position-aware device trackers now report the
+   SMALLEST zone they're in, not the zone whose center is closest. A presence piston keyed
+   on zone-name state can flip behavior where zones overlap.
+3. **Person coordinates:** person entities no longer report home-zone lat/long when their
+   location comes from a presence scanner associated with home — any piston reading person
+   coordinates must use `in_zones` instead.
+
+**Compiler consequence:** presence/zone compilation is not fidelity-clean until re-tested
+against a real HA 2026.7 instance with Jeremy's actual zones. Do not declare presence
+pistons done without that test.
+
+### Event Entities May Miss Repeated Identical Events on the Classic (YAML) Path
+
+[Verified — HA 2026.7 release notes] Automating around an event entity with a plain
+`state` trigger "may discover it doesn't fire the second time the same event happens" —
+event entities can report the same state value on consecutive distinct events (e.g. two
+button presses in a row), and a state trigger only fires on a value CHANGE. This is a real
+edge for button/scene-controller devices — a webCoRE "button pushed" piston compiled to a
+plain state trigger can miss repeat presses.
+
+**Interim mitigation:** trigger on the event entity's state change including same-state
+timestamps (`to: null`-style forms). [Assumed — needs a dev-HA test with a real button
+event entity to confirm this fires reliably on repeated identical events; not yet tested.]
+Purpose-specific event triggers would solve this natively, but PistonCore's compiler
+deliberately doesn't emit those (COMPILER_SPEC.md §3.3, classic-primitives-only decision)
+— this is the one concrete case where that decision has a real, known cost, not just a
+theoretical one. Revisit if this limitation turns out to affect real users often.
+
 ### Entity vs Device Model
 
 HA's entity model means one physical device can have 10-20 entities.
@@ -184,7 +225,9 @@ sequence level) is separate and remains outstanding.
 
 ### File Permissions in Addon
 
-Writing to `/config/automations/pistoncore/` and `/config/pyscript/pistoncore/`
+Writing to `/config/automations/pistoncore/` and `/config/pyscript/scripts/pistoncore/`
+(corrected path — `pyscript/pistoncore/` is NOT autoloaded at all, PyScript's loader only
+recurses `pyscript/scripts/**`; PYSCRIPT_COMPILER_RESEARCH.md §0.1/§2, 2026-07)
 requires correct addon permissions in config.json (addon manifest).
 Easy to get wrong during addon packaging.
 **Must be tested end-to-end in real HA addon environment before release.**
@@ -224,9 +267,13 @@ Route the compiler's output target logic to accommodate this from the start.
 ### PyScript Routing — Full Verified Feature Table
 
 The following features are confirmed PyScript-capable as of June 2026 (PyScript 2.0.1,
-HA 2026.6). This table is the authoritative routing reference until the v2 compiler spec locks. Re-verify on major HA releases — native is always preferred.
+HA 2026.6). **Field names below are v1 placeholders — COMPILER_SPEC.md §3.2 has the
+VERIFIED re-key to real v2 piston JSON field names (statement `t` values, `o`/`wd`/`wt`
+group fields, `ctp`, etc.), including the finding that `cancel_pending_tasks` is actually
+a task command (`k[].c == "cancelTasks"`), not a statement type. Treat §3.2 as
+authoritative for field names; this table's PyScript-mechanism column still holds.**
 
-| Feature | JSON field(s) that trigger routing | PyScript mechanism |
+| Feature | v1 JSON field (placeholder — see COMPILER_SPEC.md §3.2 for the real field) | PyScript mechanism |
 |---|---|---|
 | `on_event` statement | `type: "on_event"` | `task.wait_until()` with optional timeout |
 | `break` statement | `type: "break"` | Python `break` |
@@ -245,6 +292,34 @@ screen must display a prominent notice: "This piston uses features that require 
 It will be deployed as a PyScript file, not a native HA automation. PyScript must be
 installed via HACS." This is not optional — users who haven't installed PyScript will
 have silently non-functional pistons without it.
+
+### Deploy Lifecycle Facts (VERIFIED — PYSCRIPT_COMPILER_RESEARCH.md §2, ported 2026-07)
+
+- **Reload is per-file granular.** PyScript auto-reloads changed files, and only changed
+  files (plus dependents) reload — deploying piston A never touches running piston B. The
+  deploy flow still calls `pyscript.reload` explicitly with
+  `global_ctx="scripts.pistoncore.<piston_id>"` for a deterministic, per-piston,
+  error-surfaced reload.
+- **Redeploy kills in-flight old-version execution, by design.** Reload does NOT stop a
+  currently-running triggered function on its own — a mid-`wait` piston from the OLD code
+  keeps running unless something explicitly kills it. The fix: `task.unique
+  ("pistoncore_<piston_id>")` in the file preamble (outside any function, so it runs on
+  every load/reload) terminates any running task that already claimed that name. This
+  means redeploying a piston kills its in-flight old-version run — which happens to be
+  exactly webCoRE's own behavior when you save a piston mid-run. Verbatim fidelity, by
+  accident of how PyScript's task-uniqueness mechanism works.
+- **Pause = rename the file to `#<piston_id>.py`.** A filename starting with `#` is
+  skipped by PyScript's loader, and renaming triggers an automatic reload — this is the
+  documented enable/disable mechanism. Chosen so both compile targets have symmetric pause
+  behavior (`automation.turn_off` on the YAML target). Neither target preserves mid-run
+  state across a pause — the existing cut of webCoRE's mid-run pause/resume (§10.2) stands
+  for the PyScript target too.
+- **Each piston gets its own isolated global context and its own log path**
+  (`scripts.pistoncore.<piston_id>` / `custom_components.pyscript.scripts.pistoncore.
+  <piston_id>.<function_name>`) — pistons cannot see each other's globals (isolation for
+  free), and per-piston, per-function log level is controllable at runtime via the
+  `logger.set_level` service with no HA restart needed. This is the PyScript-side answer
+  to webCoRE's per-piston logging levels (None/Minimal/Medium/Full).
 
 ### PyScript Runtime Constraints (verified against 2.0.1 release notes + docs, July 2026)
 

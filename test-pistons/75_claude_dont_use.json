@@ -1,0 +1,479 @@
+{
+  "name": "claude dont use",
+  "meta": {
+    "name": "claude dont use",
+    "category": "0",
+    "build": 3,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "motion",
+              "d": [
+                "Motion_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "p": "a",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "active",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "active"
+                  }
+                ],
+                "ok": true,
+                "str": "active",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "stays_less_than",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "illuminance",
+              "d": [
+                "@Light_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 800,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 800
+                  }
+                ],
+                "ok": true,
+                "str": "800",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "integer"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 5,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 5
+                  }
+                ],
+                "ok": true,
+                "str": "5",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "m"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "light"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "on",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "w": [
+          "Found multiple trigger comparisons ANDed together"
+        ]
+      },
+      {
+        "$": 6,
+        "a": "0",
+        "c": [],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 7,
+            "a": "0",
+            "c": [
+              {
+                "$": 8,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "contact",
+                  "d": [
+                    ":72910b3cd194379ef35ec85348838d1d:"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "closed",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:5",
+                        "ok": true,
+                        "t": "string",
+                        "v": "closed"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "closed",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [
+              {
+                "$": 9,
+                "a": "0",
+                "d": [],
+                "k": [],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 10,
+                "a": "0",
+                "d": [
+                  "@Speakers"
+                ],
+                "k": [
+                  {
+                    "$": 11,
+                    "c": "wait",
+                    "p": [
+                      {
+                        "c": 5,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 5
+                            }
+                          ],
+                          "ok": true,
+                          "str": "5",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "m"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 12,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 70,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 70
+                            }
+                          ],
+                          "ok": true,
+                          "str": "70",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 13,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "c": "hi",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "string",
+                              "v": "hi"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "hi",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "string"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 14,
+                "a": "0",
+                "d": [
+                  "@Speakers"
+                ],
+                "k": [
+                  {
+                    "$": 15,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 70,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 70
+                            }
+                          ],
+                          "ok": true,
+                          "str": "70",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 16,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "c": "hi",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "string",
+                              "v": "hi"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "hi",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "string"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":8ea121d21c0071ce2dfbacfa2dd835b2:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Motion_Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":b566d82c0844c08e6c7f3efac1ae3928:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "duh",
+        "t": "device",
+        "v": {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

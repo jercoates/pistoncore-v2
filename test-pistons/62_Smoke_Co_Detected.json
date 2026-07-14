@@ -1,0 +1,1149 @@
+{
+  "name": "Smoke Co Detected",
+  "meta": {
+    "name": "Smoke Co Detected",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smoke",
+              "d": [
+                "Smoke_CO"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "detected",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "detected"
+                  }
+                ],
+                "ok": true,
+                "str": "detected",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": [
+              {
+                "$": 3,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 4,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Smoke_Status"
+                      },
+                      {
+                        "e": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:21",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\ud83d\udd25 Smoke detected \ud83d\udd25\n"
+                            },
+                            {
+                              "l": "23:32",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$monthName"
+                            },
+                            {
+                              "l": "34",
+                              "ok": true,
+                              "t": "string",
+                              "v": " "
+                            },
+                            {
+                              "l": "36:39",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$day"
+                            },
+                            {
+                              "l": "41:47",
+                              "ok": true,
+                              "t": "string",
+                              "v": "   -   "
+                            },
+                            {
+                              "l": "49:53",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$time"
+                            },
+                            {
+                              "l": "55:56",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c",
+                "w": [
+                  "Found Set variable to a pre initialized variable: Smoke_Status num: 4"
+                ]
+              },
+              {
+                "$": 5,
+                "a": "0",
+                "lo": {
+                  "d": [
+                    "Smoke_CO"
+                  ],
+                  "f": "l",
+                  "g": "avg",
+                  "t": "d",
+                  "vt": "device"
+                },
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 6,
+                    "a": "0",
+                    "c": [
+                      {
+                        "$": 7,
+                        "co": "is",
+                        "ct": "c",
+                        "fs": [],
+                        "lo": {
+                          "a": "smoke",
+                          "d": [
+                            "$device"
+                          ],
+                          "f": "l",
+                          "g": "any",
+                          "t": "p",
+                          "vt": "string"
+                        },
+                        "ro": {
+                          "c": "detected",
+                          "exp": {
+                            "i": [
+                              {
+                                "l": "0:7",
+                                "ok": true,
+                                "t": "string",
+                                "v": "detected"
+                              }
+                            ],
+                            "ok": true,
+                            "str": "detected",
+                            "t": "expression"
+                          },
+                          "f": "l",
+                          "g": "any",
+                          "t": "c",
+                          "vt": "enum"
+                        },
+                        "ro2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "sm": "auto",
+                        "t": "condition",
+                        "to": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "to2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "ts": [
+                          {
+                            "$": 8,
+                            "a": "0",
+                            "d": [],
+                            "k": [
+                              {
+                                "$": 9,
+                                "c": "setVariable",
+                                "p": [
+                                  {
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "x",
+                                    "vt": "variable",
+                                    "x": "Smoke_Status"
+                                  },
+                                  {
+                                    "e": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "0:11",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "Smoke_Status"
+                                        },
+                                        {
+                                          "l": "13:19",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "$device"
+                                        },
+                                        {
+                                          "l": "22:24",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": " - "
+                                        },
+                                        {
+                                          "i": [
+                                            {
+                                              "a": "battery",
+                                              "l": "28:44",
+                                              "ok": true,
+                                              "t": "device",
+                                              "x": "$device"
+                                            }
+                                          ],
+                                          "l": "27:45",
+                                          "ok": true,
+                                          "t": "expression"
+                                        },
+                                        {
+                                          "l": "47",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": "%"
+                                        },
+                                        {
+                                          "l": "51",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": "\n"
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "e",
+                                    "vt": "string"
+                                  }
+                                ]
+                              }
+                            ],
+                            "r": [],
+                            "rop": "and",
+                            "t": "action",
+                            "tcp": "c",
+                            "w": [
+                              "Found Set variable to a pre initialized variable: Smoke_Status num: 9"
+                            ]
+                          },
+                          {
+                            "$": 10,
+                            "a": "0",
+                            "d": [
+                              "@Speakers_All"
+                            ],
+                            "k": [
+                              {
+                                "$": 11,
+                                "c": "playText",
+                                "p": [
+                                  {
+                                    "e": "\"Smoke detected from\" $device",
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "1:19",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": "Smoke detected from"
+                                        },
+                                        {
+                                          "l": "22:28",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "$device"
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "\"Smoke detected from\" $device",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "e",
+                                    "vt": "string"
+                                  },
+                                  {
+                                    "c": 100,
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "0:2",
+                                          "ok": true,
+                                          "t": "integer",
+                                          "v": 100
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "100",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "c",
+                                    "vt": "integer"
+                                  }
+                                ]
+                              }
+                            ],
+                            "r": [],
+                            "rop": "and",
+                            "t": "action",
+                            "tcp": "c"
+                          },
+                          {
+                            "$": 12,
+                            "a": "0",
+                            "c": [
+                              {
+                                "$": 13,
+                                "co": "is",
+                                "ct": "c",
+                                "fs": [],
+                                "lo": {
+                                  "a": "presence",
+                                  "d": [
+                                    "@Presence_Sensor"
+                                  ],
+                                  "f": "l",
+                                  "g": "any",
+                                  "t": "p",
+                                  "vt": "string"
+                                },
+                                "ro": {
+                                  "c": "not present",
+                                  "exp": {
+                                    "i": [
+                                      {
+                                        "l": "0:10",
+                                        "ok": true,
+                                        "t": "string",
+                                        "v": "not present"
+                                      }
+                                    ],
+                                    "ok": true,
+                                    "str": "not present",
+                                    "t": "expression"
+                                  },
+                                  "f": "l",
+                                  "g": "any",
+                                  "t": "c",
+                                  "vt": "enum"
+                                },
+                                "ro2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "s": false,
+                                "sm": "auto",
+                                "t": "condition",
+                                "to": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "to2": {
+                                  "g": "any",
+                                  "t": "c"
+                                },
+                                "ts": []
+                              }
+                            ],
+                            "e": [],
+                            "ei": [],
+                            "o": "and",
+                            "r": [],
+                            "rop": "and",
+                            "s": [
+                              {
+                                "$": 14,
+                                "a": "0",
+                                "d": [
+                                  "@Notification_Text"
+                                ],
+                                "k": [
+                                  {
+                                    "$": 15,
+                                    "c": "deviceNotification",
+                                    "p": [
+                                      {
+                                        "e": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                                        "exp": {
+                                          "i": [
+                                            {
+                                              "l": "1:20",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": "\ud83d\udd25 Smoke detected \ud83d\udd25"
+                                            },
+                                            {
+                                              "l": "22:31",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "$monthName"
+                                            },
+                                            {
+                                              "l": "33",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": " "
+                                            },
+                                            {
+                                              "l": "35:38",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "$day"
+                                            },
+                                            {
+                                              "l": "40:46",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": "   -   "
+                                            },
+                                            {
+                                              "l": "48:52",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "$time"
+                                            },
+                                            {
+                                              "l": "54:57",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": "\n.\n."
+                                            },
+                                            {
+                                              "l": "60:78",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "$currentEventDevice"
+                                            }
+                                          ],
+                                          "ok": true,
+                                          "str": "\"\ud83d\udd25 Smoke detected \ud83d\udd25\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+                                          "t": "expression"
+                                        },
+                                        "f": "l",
+                                        "g": "avg",
+                                        "t": "e",
+                                        "vt": "string"
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "r": [],
+                                "rop": "and",
+                                "t": "action",
+                                "tcp": "c"
+                              }
+                            ],
+                            "t": "if",
+                            "tcp": "c"
+                          }
+                        ]
+                      }
+                    ],
+                    "e": [],
+                    "ei": [],
+                    "o": "and",
+                    "r": [],
+                    "rop": "and",
+                    "s": [],
+                    "t": "if",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "each",
+                "tcp": "c"
+              },
+              {
+                "$": 16,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 17,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Smoke_Status"
+                      },
+                      {
+                        "e": "Smoke_Status\"\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:11",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "Smoke_Status"
+                            },
+                            {
+                              "l": "13",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "Smoke_Status\"\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c",
+                "w": [
+                  "Found Set variable to a pre initialized variable: Smoke_Status num: 17"
+                ]
+              }
+            ]
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 18,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 19,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "Smoke_Status"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 20,
+        "a": "0",
+        "c": [
+          {
+            "$": 21,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "carbonMonoxide",
+              "d": [
+                "Smoke_CO"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "detected",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "detected"
+                  }
+                ],
+                "ok": true,
+                "str": "detected",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": [
+              {
+                "$": 22,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 23,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Smoke_Status"
+                      },
+                      {
+                        "e": "\"\ud83d\udd25 Carbon Monoxide detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:31",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\ud83d\udd25 Carbon Monoxide detected \ud83d\udd25\n"
+                            },
+                            {
+                              "l": "33:42",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$monthName"
+                            },
+                            {
+                              "l": "44",
+                              "ok": true,
+                              "t": "string",
+                              "v": " "
+                            },
+                            {
+                              "l": "46:49",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$day"
+                            },
+                            {
+                              "l": "51:57",
+                              "ok": true,
+                              "t": "string",
+                              "v": "   -   "
+                            },
+                            {
+                              "l": "59:63",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$time"
+                            },
+                            {
+                              "l": "65:66",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\ud83d\udd25 Carbon Monoxide detected \ud83d\udd25\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c",
+                "w": [
+                  "Found Set variable to a pre initialized variable: Smoke_Status num: 23"
+                ]
+              },
+              {
+                "$": 24,
+                "a": "0",
+                "lo": {
+                  "d": [
+                    "Smoke_CO"
+                  ],
+                  "f": "l",
+                  "g": "avg",
+                  "t": "d",
+                  "vt": "device"
+                },
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 25,
+                    "a": "0",
+                    "c": [
+                      {
+                        "$": 26,
+                        "co": "is",
+                        "ct": "c",
+                        "fs": [],
+                        "lo": {
+                          "a": "carbonMonoxide",
+                          "d": [
+                            "$device"
+                          ],
+                          "f": "l",
+                          "g": "any",
+                          "t": "p",
+                          "vt": "string"
+                        },
+                        "ro": {
+                          "c": "detected",
+                          "exp": {
+                            "i": [
+                              {
+                                "l": "0:7",
+                                "ok": true,
+                                "t": "string",
+                                "v": "detected"
+                              }
+                            ],
+                            "ok": true,
+                            "str": "detected",
+                            "t": "expression"
+                          },
+                          "f": "l",
+                          "g": "any",
+                          "t": "c",
+                          "vt": "enum"
+                        },
+                        "ro2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "sm": "auto",
+                        "t": "condition",
+                        "to": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "to2": {
+                          "g": "any",
+                          "t": "c"
+                        },
+                        "ts": [
+                          {
+                            "$": 27,
+                            "a": "0",
+                            "d": [],
+                            "k": [
+                              {
+                                "$": 28,
+                                "c": "setVariable",
+                                "p": [
+                                  {
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "x",
+                                    "vt": "variable",
+                                    "x": "Smoke_Status"
+                                  },
+                                  {
+                                    "e": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "0:11",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "Smoke_Status"
+                                        },
+                                        {
+                                          "l": "13:19",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "$device"
+                                        },
+                                        {
+                                          "l": "22:24",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": " - "
+                                        },
+                                        {
+                                          "i": [
+                                            {
+                                              "a": "battery",
+                                              "l": "28:44",
+                                              "ok": true,
+                                              "t": "device",
+                                              "x": "$device"
+                                            }
+                                          ],
+                                          "l": "27:45",
+                                          "ok": true,
+                                          "t": "expression"
+                                        },
+                                        {
+                                          "l": "47",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": "%"
+                                        },
+                                        {
+                                          "l": "51",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": "\n"
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "Smoke_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "e",
+                                    "vt": "string"
+                                  }
+                                ]
+                              }
+                            ],
+                            "r": [],
+                            "rop": "and",
+                            "t": "action",
+                            "tcp": "c",
+                            "w": [
+                              "Found Set variable to a pre initialized variable: Smoke_Status num: 28"
+                            ]
+                          },
+                          {
+                            "$": 29,
+                            "a": "0",
+                            "d": [
+                              "@Speakers_All"
+                            ],
+                            "k": [
+                              {
+                                "$": 30,
+                                "c": "playText",
+                                "p": [
+                                  {
+                                    "e": "\"Carbon Monoxide detected from\" $device",
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "1:29",
+                                          "ok": true,
+                                          "t": "string",
+                                          "v": "Carbon Monoxide detected from"
+                                        },
+                                        {
+                                          "l": "32:38",
+                                          "ok": true,
+                                          "t": "variable",
+                                          "x": "$device"
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "\"Carbon Monoxide detected from\" $device",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "e",
+                                    "vt": "string"
+                                  },
+                                  {
+                                    "c": 100,
+                                    "exp": {
+                                      "i": [
+                                        {
+                                          "l": "0:2",
+                                          "ok": true,
+                                          "t": "integer",
+                                          "v": 100
+                                        }
+                                      ],
+                                      "ok": true,
+                                      "str": "100",
+                                      "t": "expression"
+                                    },
+                                    "f": "l",
+                                    "g": "avg",
+                                    "t": "c",
+                                    "vt": "integer"
+                                  }
+                                ]
+                              }
+                            ],
+                            "r": [],
+                            "rop": "and",
+                            "t": "action",
+                            "tcp": "c"
+                          }
+                        ]
+                      }
+                    ],
+                    "e": [],
+                    "ei": [],
+                    "o": "and",
+                    "r": [],
+                    "rop": "and",
+                    "s": [],
+                    "t": "if",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "each",
+                "tcp": "c"
+              },
+              {
+                "$": 31,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 32,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Smoke_Status"
+                      },
+                      {
+                        "e": "Smoke_Status\"\n\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:11",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "Smoke_Status"
+                            },
+                            {
+                              "l": "13",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\n"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "Smoke_Status\"\n\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c",
+                "w": [
+                  "Found Set variable to a pre initialized variable: Smoke_Status num: 32"
+                ]
+              }
+            ]
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 33,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 34,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "Smoke_Status"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Smoke_CO",
+        "t": "device",
+        "v": {
+          "d": [
+            ":9f8f0474be268452b147475dd779d03d:",
+            ":79e05e88f7f0211543e2c6cb44e1c18c:",
+            ":645775ca33c841edcd0c9eeefc977b46:",
+            ":ee196143ec996c07788dfd018ab47f2f:",
+            ":7656c488d773fc56fadc3d2659046778:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Smoke_Status",
+        "t": "string",
+        "v": {
+          "e": "\"\"",
+          "exp": {
+            "i": [
+              {
+                "l": "1:0",
+                "ok": true,
+                "t": "string",
+                "v": ""
+              }
+            ],
+            "ok": true,
+            "str": "\"\"",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+        }
+      }
+    ],
+    "z": "Smoke Co Detected send notification"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "name": "File sound test",
+  "meta": {
+    "name": "File sound test",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "d": [
+          ":0ef347a435e1d7544e54c1ddee398e6b:",
+          ":1fb4cf95b05dc7a641f1d67655fc0f20:"
+        ],
+        "k": [
+          {
+            "$": 2,
+            "c": "playTrackAndRestore",
+            "p": [
+              {
+                "c": "x-file-cifs://192.168.1.208/PiShare/Music/Siren.mp3",
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:50",
+                      "ok": true,
+                      "t": "string",
+                      "v": "x-file-cifs://192.168.1.208/PiShare/Music/Siren.mp3"
+                    }
+                  ],
+                  "ok": true,
+                  "str": "x-file-cifs://192.168.1.208/PiShare/Music/Siren.mp3",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "uri"
+              },
+              {
+                "c": 90,
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:1",
+                      "ok": true,
+                      "t": "integer",
+                      "v": 90
+                    }
+                  ],
+                  "ok": true,
+                  "str": "90",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "integer"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      }
+    ],
+    "v": [],
+    "z": ""
+  }
+}

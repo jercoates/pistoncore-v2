@@ -1,0 +1,334 @@
+{
+  "name": "Welcolm Lights",
+  "meta": {
+    "name": "Welcolm Lights",
+    "category": "1",
+    "build": 2,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor_All"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:6",
+                    "ok": true,
+                    "t": "string",
+                    "v": "present"
+                  }
+                ],
+                "ok": true,
+                "str": "present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "time",
+              "x": "$sunset"
+            },
+            "ro2": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "time",
+              "x": "$nextSunrise"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": -10,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": -10
+                  }
+                ],
+                "ok": true,
+                "str": "-10",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "c": 10,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 10
+                  }
+                ],
+                "ok": true,
+                "str": "10",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "out_side_Lights"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "on",
+                "p": []
+              },
+              {
+                "$": 6,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 20,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 20
+                        }
+                      ],
+                      "ok": true,
+                      "str": "20",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 8,
+        "a": "0",
+        "c": [
+          {
+            "$": 9,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "time",
+              "x": "$sunrise"
+            },
+            "ro2": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "time",
+              "x": "$sunset"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 10,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 10
+                  }
+                ],
+                "ok": true,
+                "str": "10",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "c": -10,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": -10
+                  }
+                ],
+                "ok": true,
+                "str": "-10",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 10,
+            "a": "0",
+            "d": [
+              "out_side_Lights"
+            ],
+            "k": [
+              {
+                "$": 11,
+                "c": "allOff",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "out_side_Lights",
+        "t": "device",
+        "v": {
+          "d": [
+            ":a8cb39ba49c973073100f88fd6255509:",
+            ":be3ce31a4d514576a2bf623e9ab77767:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

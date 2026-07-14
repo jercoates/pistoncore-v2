@@ -1,0 +1,832 @@
+{
+  "name": "Door Motion Alert",
+  "meta": {
+    "name": "Door Motion Alert",
+    "category": "2",
+    "build": 4,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smartDetectType",
+              "d": [
+                "Front_Doorbell_Camera"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "person",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "person"
+                  }
+                ],
+                "ok": true,
+                "str": "person",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVolume",
+                "p": [
+                  {
+                    "c": 90,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 90
+                        }
+                      ],
+                      "ok": true,
+                      "str": "90",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 5,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Someone was detected at the front door.",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:38",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Someone was detected at the front door."
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Someone was detected at the front door.",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              },
+              {
+                "$": 6,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 5,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 5
+                        }
+                      ],
+                      "ok": true,
+                      "str": "5",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 7,
+            "a": "0",
+            "c": [
+              {
+                "$": 8,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "presence",
+                  "d": [
+                    "@Presence_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "all",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "not present",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:10",
+                        "ok": true,
+                        "t": "string",
+                        "v": "not present"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "not present",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 9,
+                "a": "0",
+                "d": [
+                  "Front_Doorbell_Camera"
+                ],
+                "k": [
+                  {
+                    "$": 10,
+                    "c": "take",
+                    "p": []
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 11,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 12,
+                    "c": "sendNotification",
+                    "p": [
+                      {
+                        "e": "\"\ud83d\udeaa Front Door Bell \ud83d\udeaa\nSomeone was detected at your front door.\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:62",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\ud83d\udeaa Front Door Bell \ud83d\udeaa\nSomeone was detected at your front door."
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\ud83d\udeaa Front Door Bell \ud83d\udeaa\nSomeone was detected at your front door.\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 13,
+                "a": "0",
+                "d": [
+                  "@Email_All"
+                ],
+                "k": [
+                  {
+                    "$": 14,
+                    "c": "deviceNotification",
+                    "cm": true,
+                    "p": [
+                      {
+                        "e": "\"'Subject:\u26a0\ufe0f \ud83d\udeaa Front Door Bell \ud83d\udeaa \u26a0\ufe0f, File:\" DoorBell_Camera_Image \",\"\n\"Someone was at the Front Door\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:43",
+                              "ok": true,
+                              "t": "string",
+                              "v": "'Subject:\u26a0\ufe0f \ud83d\udeaa Front Door Bell \ud83d\udeaa \u26a0\ufe0f, File:"
+                            },
+                            {
+                              "l": "46:66",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "DoorBell_Camera_Image"
+                            },
+                            {
+                              "l": "69",
+                              "ok": true,
+                              "t": "string",
+                              "v": ","
+                            },
+                            {
+                              "l": "73:101",
+                              "ok": true,
+                              "t": "string",
+                              "v": "Someone was at the Front Door"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"'Subject:\u26a0\ufe0f \ud83d\udeaa Front Door Bell \ud83d\udeaa \u26a0\ufe0f, File:\" DoorBell_Camera_Image \",\"\n\"Someone was at the Front Door\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 15,
+                "a": "0",
+                "d": [
+                  "Front_Doorbell_Camera"
+                ],
+                "k": [
+                  {
+                    "$": 16,
+                    "c": "clearImages",
+                    "cm": true,
+                    "p": []
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          },
+          {
+            "$": 17,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 18,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 5,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 5
+                        }
+                      ],
+                      "ok": true,
+                      "str": "5",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 19,
+        "a": "0",
+        "c": [
+          {
+            "$": 20,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "smartDetectType",
+              "d": [
+                "Front_Doorbell_Camera"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "package",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:6",
+                    "ok": true,
+                    "t": "string",
+                    "v": "package"
+                  }
+                ],
+                "ok": true,
+                "str": "package",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 21,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 22,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "A package was detected at the front door.",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:40",
+                          "ok": true,
+                          "t": "string",
+                          "v": "A package was detected at the front door."
+                        }
+                      ],
+                      "ok": true,
+                      "str": "A package was detected at the front door.",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "c": 100,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:2",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 100
+                        }
+                      ],
+                      "ok": true,
+                      "str": "100",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 23,
+            "a": "0",
+            "c": [
+              {
+                "$": 24,
+                "co": "is",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "presence",
+                  "d": [
+                    "@Presence_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": "not present",
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:10",
+                        "ok": true,
+                        "t": "string",
+                        "v": "not present"
+                      }
+                    ],
+                    "ok": true,
+                    "str": "not present",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "enum"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 25,
+                "a": "0",
+                "d": [
+                  "Front_Doorbell_Camera"
+                ],
+                "k": [
+                  {
+                    "$": 26,
+                    "c": "take",
+                    "p": []
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 27,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 28,
+                    "c": "sendNotification",
+                    "p": [
+                      {
+                        "e": "\"\ud83d\udeaa Front Door Bell \ud83d\udeaa\nA Package was detected at your front door.\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:64",
+                              "ok": true,
+                              "t": "string",
+                              "v": "\ud83d\udeaa Front Door Bell \ud83d\udeaa\nA Package was detected at your front door."
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"\ud83d\udeaa Front Door Bell \ud83d\udeaa\nA Package was detected at your front door.\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 29,
+                "a": "0",
+                "d": [
+                  "@Email_All"
+                ],
+                "k": [
+                  {
+                    "$": 30,
+                    "c": "deviceNotification",
+                    "p": [
+                      {
+                        "e": "\"'Subject:\u26a0\ufe0f \ud83d\udeaa Front Door Bell \ud83d\udeaa \u26a0\ufe0f, File:\" DoorBell_Camera_Image \",\"\n\"Someone was at the Front Door\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "1:43",
+                              "ok": true,
+                              "t": "string",
+                              "v": "'Subject:\u26a0\ufe0f \ud83d\udeaa Front Door Bell \ud83d\udeaa \u26a0\ufe0f, File:"
+                            },
+                            {
+                              "l": "46:66",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "DoorBell_Camera_Image"
+                            },
+                            {
+                              "l": "69",
+                              "ok": true,
+                              "t": "string",
+                              "v": ","
+                            },
+                            {
+                              "l": "73:101",
+                              "ok": true,
+                              "t": "string",
+                              "v": "Someone was at the Front Door"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "\"'Subject:\u26a0\ufe0f \ud83d\udeaa Front Door Bell \ud83d\udeaa \u26a0\ufe0f, File:\" DoorBell_Camera_Image \",\"\n\"Someone was at the Front Door\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 31,
+                "a": "0",
+                "d": [
+                  "Front_Doorbell_Camera"
+                ],
+                "k": [
+                  {
+                    "$": 32,
+                    "c": "clearImages",
+                    "cm": true,
+                    "p": []
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          },
+          {
+            "$": 33,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 34,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 5,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 5
+                        }
+                      ],
+                      "ok": true,
+                      "str": "5",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Front_Doorbell_Camera",
+        "t": "device",
+        "v": {
+          "d": [
+            ":43a52cdd3509f22e12b91eb1477fa773:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "DoorBell_Camera_Image",
+        "t": "string",
+        "v": {
+          "c": "Doorbell_Pro_-motion_6735472b03704603e4061eb9-motion.jpg",
+          "exp": {
+            "i": [
+              {
+                "l": "0:55",
+                "ok": true,
+                "t": "string",
+                "v": "Doorbell_Pro_-motion_6735472b03704603e4061eb9-motion.jpg"
+              }
+            ],
+            "ok": true,
+            "str": "Doorbell_Pro_-motion_6735472b03704603e4061eb9-motion.jpg",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+        }
+      }
+    ],
+    "z": "Detect Person at door / Notify, Doorbell Pushed  /Notify"
+  }
+}

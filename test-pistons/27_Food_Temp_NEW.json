@@ -1,0 +1,1017 @@
+{
+  "name": "Food Temp NEW",
+  "meta": {
+    "name": "Food Temp NEW",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "stays_greater_than_or_equal_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "temperature",
+              "d": [
+                "Fridge_Temp_Sensor"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 50,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 50
+                  }
+                ],
+                "ok": true,
+                "str": "50",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "decimal"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 15,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 15
+                  }
+                ],
+                "ok": true,
+                "str": "15",
+                "t": "expression"
+              },
+              "f": "g",
+              "g": "any",
+              "t": "c",
+              "vt": "m"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "c": [
+              {
+                "$": 4,
+                "co": "is_greater_than_or_equal_to",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "temperature",
+                  "d": [
+                    "Fridge_Temp_Sensor"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": 50,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:1",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 50
+                      }
+                    ],
+                    "ok": true,
+                    "str": "50",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "decimal"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 5,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 6,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "Message"
+                      },
+                      {
+                        "e": "$currentEventDevice \" is High, Current temp is \"{([ $currentEventDevice : temperature ])}\" degrees\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:18",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$currentEventDevice"
+                            },
+                            {
+                              "l": "21:46",
+                              "ok": true,
+                              "t": "string",
+                              "v": " is High, Current temp is "
+                            },
+                            {
+                              "i": [
+                                {
+                                  "i": [
+                                    {
+                                      "a": "temperature",
+                                      "l": "50:86",
+                                      "ok": true,
+                                      "t": "device",
+                                      "x": "$currentEventDevice"
+                                    }
+                                  ],
+                                  "l": "49:87",
+                                  "ok": true,
+                                  "t": "expression"
+                                }
+                              ],
+                              "l": "48:88",
+                              "ok": true,
+                              "t": "expression"
+                            },
+                            {
+                              "l": "90:97",
+                              "ok": true,
+                              "t": "string",
+                              "v": " degrees"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "$currentEventDevice \" is High, Current temp is \"{([ $currentEventDevice : temperature ])}\" degrees\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 7,
+                "a": "0",
+                "d": [
+                  "@Speakers"
+                ],
+                "k": [
+                  {
+                    "$": 8,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 90,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 90
+                            }
+                          ],
+                          "ok": true,
+                          "str": "90",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 9,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 10,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 11,
+                    "c": "sendPushNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      },
+                      {
+                        "c": "false",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:4",
+                              "ok": true,
+                              "t": "boolean",
+                              "v": "false"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "false",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "boolean"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 12,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 13,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "presence",
+                      "d": [
+                        "@Presence_Sensor"
+                      ],
+                      "f": "l",
+                      "g": "all",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "not present",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:10",
+                            "ok": true,
+                            "t": "string",
+                            "v": "not present"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "not present",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 14,
+                    "a": "0",
+                    "d": [
+                      "@Notification_Text"
+                    ],
+                    "k": [
+                      {
+                        "$": 15,
+                        "c": "deviceNotification",
+                        "p": [
+                          {
+                            "e": "Message",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:6",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "Message"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "Message",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              },
+              {
+                "$": 16,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 17,
+                    "c": "wait",
+                    "p": [
+                      {
+                        "c": 30,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 30
+                            }
+                          ],
+                          "ok": true,
+                          "str": "30",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "m"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "while",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 18,
+        "a": "0",
+        "c": [
+          {
+            "$": 19,
+            "co": "stays_greater_than",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "temperature",
+              "d": [
+                "Freezer_Temp_Sensors"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 20,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 20
+                  }
+                ],
+                "ok": true,
+                "str": "20",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "decimal"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 15,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 15
+                  }
+                ],
+                "ok": true,
+                "str": "15",
+                "t": "expression"
+              },
+              "f": "g",
+              "g": "any",
+              "t": "c",
+              "vt": "m"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 20,
+            "a": "0",
+            "c": [
+              {
+                "$": 21,
+                "co": "is_greater_than_or_equal_to",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "a": "temperature",
+                  "d": [
+                    "Freezer_Temp_Sensors"
+                  ],
+                  "f": "l",
+                  "g": "any",
+                  "t": "p",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": 20,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:1",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 20
+                      }
+                    ],
+                    "ok": true,
+                    "str": "20",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "decimal"
+                },
+                "ro2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 22,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 23,
+                    "c": "setVariable",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "variable",
+                        "x": "message_freezer"
+                      },
+                      {
+                        "e": "$currentEventDevice \" is High, Current temp is \"{([ $currentEventDevice : temperature ])}\" degrees\"",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:18",
+                              "ok": true,
+                              "t": "variable",
+                              "x": "$currentEventDevice"
+                            },
+                            {
+                              "l": "21:46",
+                              "ok": true,
+                              "t": "string",
+                              "v": " is High, Current temp is "
+                            },
+                            {
+                              "i": [
+                                {
+                                  "i": [
+                                    {
+                                      "a": "temperature",
+                                      "l": "50:86",
+                                      "ok": true,
+                                      "t": "device",
+                                      "x": "$currentEventDevice"
+                                    }
+                                  ],
+                                  "l": "49:87",
+                                  "ok": true,
+                                  "t": "expression"
+                                }
+                              ],
+                              "l": "48:88",
+                              "ok": true,
+                              "t": "expression"
+                            },
+                            {
+                              "l": "90:97",
+                              "ok": true,
+                              "t": "string",
+                              "v": " degrees"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "$currentEventDevice \" is High, Current temp is \"{([ $currentEventDevice : temperature ])}\" degrees\"",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "e",
+                        "vt": "string"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 24,
+                "a": "0",
+                "d": [
+                  "@Speakers"
+                ],
+                "k": [
+                  {
+                    "$": 25,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 90,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 90
+                            }
+                          ],
+                          "ok": true,
+                          "str": "90",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 26,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "message_freezer"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 27,
+                "a": "0",
+                "d": [
+                  "@Notifications_Push"
+                ],
+                "k": [
+                  {
+                    "$": 28,
+                    "c": "sendPushNotification",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      },
+                      {
+                        "c": "false",
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:4",
+                              "ok": true,
+                              "t": "boolean",
+                              "v": "false"
+                            }
+                          ],
+                          "ok": true,
+                          "str": "false",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "boolean"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              },
+              {
+                "$": 29,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 30,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "presence",
+                      "d": [
+                        "@Presence_Sensor"
+                      ],
+                      "f": "l",
+                      "g": "all",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "not present",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:10",
+                            "ok": true,
+                            "t": "string",
+                            "v": "not present"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "not present",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "e": [],
+                "ei": [],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 31,
+                    "a": "0",
+                    "d": [
+                      "@Notification_Text"
+                    ],
+                    "k": [
+                      {
+                        "$": 32,
+                        "c": "deviceNotification",
+                        "p": [
+                          {
+                            "e": "message_freezer",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:14",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "message_freezer"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "message_freezer",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "if",
+                "tcp": "c"
+              },
+              {
+                "$": 33,
+                "a": "0",
+                "d": [],
+                "k": [
+                  {
+                    "$": 34,
+                    "c": "wait",
+                    "p": [
+                      {
+                        "c": 30,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 30
+                            }
+                          ],
+                          "ok": true,
+                          "str": "30",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "m"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "while",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Freezer_Temp_Sensors",
+        "t": "device",
+        "v": {
+          "d": [
+            ":a3dd4affd449a7b8172591a068c306d7:",
+            ":0bb2a22c7602ec75f8f14aef0a3c58d1:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Fridge_Temp_Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":7d87d3c6a5f53e75014c8ea521690f8d:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Message",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "Temp",
+        "t": "device"
+      },
+      {
+        "a": "d",
+        "n": "Fridge_Message",
+        "t": "device"
+      },
+      {
+        "a": "d",
+        "n": "message_freezer",
+        "t": "string"
+      }
+    ],
+    "z": ""
+  }
+}

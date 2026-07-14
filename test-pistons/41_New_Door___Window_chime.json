@@ -1,0 +1,523 @@
+{
+  "name": "New Door / Window chime",
+  "meta": {
+    "name": "New Door / Window chime",
+    "category": "2",
+    "build": 3,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Doors",
+                "Windows"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 4,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Message"
+                  },
+                  {
+                    "e": "\"\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:0",
+                          "ok": true,
+                          "t": "string",
+                          "v": ""
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "d": [],
+            "k": [
+              {
+                "$": 6,
+                "c": "setVariable",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "variable",
+                    "x": "Message"
+                  },
+                  {
+                    "e": "\"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:21",
+                          "ok": true,
+                          "t": "string",
+                          "v": "<prosody rate='slow'>"
+                        },
+                        {
+                          "l": "24:42",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$currentEventDevice"
+                        },
+                        {
+                          "l": "45:63",
+                          "ok": true,
+                          "t": "string",
+                          "v": ", Opened </prosody>"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 7,
+            "a": "0",
+            "c": [
+              {
+                "$": 8,
+                "co": "is_between",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "f": "l",
+                  "g": "any",
+                  "odw": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                  ],
+                  "t": "v",
+                  "v": "time",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": 1200,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:3",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 1200
+                      }
+                    ],
+                    "ok": true,
+                    "str": "1200",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "ro2": {
+                  "c": 480,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:2",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 480
+                      }
+                    ],
+                    "ok": true,
+                    "str": "480",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              },
+              {
+                "$": 9,
+                "co": "is_between",
+                "ct": "c",
+                "fs": [],
+                "lo": {
+                  "f": "l",
+                  "g": "any",
+                  "odw": [
+                    0,
+                    6
+                  ],
+                  "t": "v",
+                  "v": "time",
+                  "vt": "string"
+                },
+                "ro": {
+                  "c": 1200,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:3",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 1200
+                      }
+                    ],
+                    "ok": true,
+                    "str": "1200",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "ro2": {
+                  "c": 480,
+                  "exp": {
+                    "i": [
+                      {
+                        "l": "0:2",
+                        "ok": true,
+                        "t": "integer",
+                        "v": 480
+                      }
+                    ],
+                    "ok": true,
+                    "str": "480",
+                    "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "any",
+                  "t": "c",
+                  "vt": "time"
+                },
+                "s": false,
+                "sm": "auto",
+                "t": "condition",
+                "to": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "to2": {
+                  "g": "any",
+                  "t": "c"
+                },
+                "ts": []
+              }
+            ],
+            "e": [
+              {
+                "$": 10,
+                "a": "0",
+                "d": [
+                  "@Announcement_Sonos"
+                ],
+                "k": [
+                  {
+                    "$": 11,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 90,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 90
+                            }
+                          ],
+                          "ok": true,
+                          "str": "90",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 12,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "ei": [],
+            "o": "or",
+            "r": [],
+            "rop": "and",
+            "s": [
+              {
+                "$": 13,
+                "a": "0",
+                "d": [
+                  "@Announcement_Sonos"
+                ],
+                "k": [
+                  {
+                    "$": 14,
+                    "c": "setVolume",
+                    "p": [
+                      {
+                        "c": 70,
+                        "exp": {
+                          "i": [
+                            {
+                              "l": "0:1",
+                              "ok": true,
+                              "t": "integer",
+                              "v": 70
+                            }
+                          ],
+                          "ok": true,
+                          "str": "70",
+                          "t": "expression"
+                        },
+                        "f": "l",
+                        "g": "avg",
+                        "t": "c",
+                        "vt": "integer"
+                      }
+                    ]
+                  },
+                  {
+                    "$": 15,
+                    "c": "playText",
+                    "p": [
+                      {
+                        "f": "l",
+                        "g": "avg",
+                        "t": "x",
+                        "vt": "string",
+                        "x": "Message"
+                      },
+                      {
+                        "d": [],
+                        "f": "l",
+                        "g": "avg",
+                        "vt": "integer"
+                      }
+                    ]
+                  }
+                ],
+                "r": [],
+                "rop": "and",
+                "t": "action",
+                "tcp": "c"
+              }
+            ],
+            "t": "if",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Doors",
+        "t": "device",
+        "v": {
+          "d": [
+            ":72910b3cd194379ef35ec85348838d1d:",
+            ":78ed895d16625fb145acc7ea878e6806:",
+            ":ed02bf9ce2b6e494c0345c7bedd0cdde:",
+            ":e296adc6945d540ec524b81aa7dd1192:",
+            ":907341f6a8085ec02d8a2b4d7522177c:",
+            ":9a85ea5e001b9dcaf4f19ff461c0dc8b:",
+            ":af869e06458163539af535bc167e847c:",
+            ":9fb30af822ab34d333f4098228e1757f:",
+            ":5dbb618a8cf5ddadb1a4edab1fed9c59:",
+            ":d16b411741dc087836561f0381874b52:",
+            ":5371cc86900a05d5fc83863408a49423:",
+            ":d8ec850f942b2ada4f06e8803aa38b6f:",
+            ":025c2ea21a788ee56251516aed0e5aac:",
+            ":4651385b9fbe145ab6d0f915f13cb2d1:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Message",
+        "t": "string"
+      },
+      {
+        "a": "d",
+        "n": "Windows",
+        "t": "device",
+        "v": {
+          "d": [
+            ":12eefec6c80a4d3b419376b9195af609:",
+            ":db94f5cceeb55f79cc7d04cf4ccd31b4:",
+            ":1034c992a28e8e298e6ea992cdd400a5:",
+            ":2a4db0cb990c80be6bb082b7e9c59ffd:",
+            ":02e03d751aa6581f05332a98b988110b:",
+            ":9fb30af822ab34d333f4098228e1757f:",
+            ":0b56f018305ad7a681ae3dbab065e684:",
+            ":0edfc52e58983afc68a25411d1d6b9fa:",
+            ":6a982b1007bcbd3a53ba39c2396ca547:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": "Notes: \"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\""
+  }
+}

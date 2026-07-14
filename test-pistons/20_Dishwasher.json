@@ -1,0 +1,294 @@
+{
+  "name": "Dishwasher",
+  "meta": {
+    "name": "Dishwasher",
+    "category": "2",
+    "build": 2,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "jobState",
+              "d": [
+                "Dishwasher"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "finished",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:7",
+                    "ok": true,
+                    "t": "string",
+                    "v": "finished"
+                  }
+                ],
+                "ok": true,
+                "str": "finished",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "string"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "c": 540,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 540
+                  }
+                ],
+                "ok": true,
+                "str": "540",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "ro2": {
+              "c": 1260,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 1260
+                  }
+                ],
+                "ok": true,
+                "str": "1260",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "time"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "playText",
+                "p": [
+                  {
+                    "c": "Dishwasher has finished",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:22",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Dishwasher has finished"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Dishwasher has finished",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 6,
+            "a": "0",
+            "d": [
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 7,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "e": "\"\ud83c\udf7d\ufe0f Dishwasher \ud83c\udf7d\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n\nDishwasher has finished.\"",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "1:19",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\ud83c\udf7d\ufe0f Dishwasher \ud83c\udf7d\ufe0f\n"
+                        },
+                        {
+                          "l": "21:30",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$monthName"
+                        },
+                        {
+                          "l": "32",
+                          "ok": true,
+                          "t": "string",
+                          "v": " "
+                        },
+                        {
+                          "l": "34:37",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$day"
+                        },
+                        {
+                          "l": "39:45",
+                          "ok": true,
+                          "t": "string",
+                          "v": "   -   "
+                        },
+                        {
+                          "l": "47:51",
+                          "ok": true,
+                          "t": "variable",
+                          "x": "$time"
+                        },
+                        {
+                          "l": "53:78",
+                          "ok": true,
+                          "t": "string",
+                          "v": "\n\nDishwasher has finished."
+                        }
+                      ],
+                      "ok": true,
+                      "str": "\"\ud83c\udf7d\ufe0f Dishwasher \ud83c\udf7d\ufe0f\n\"$monthName\" \"$day\"   -   \"$time\"\n\nDishwasher has finished.\"",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "e",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Dishwasher",
+        "t": "device",
+        "v": {
+          "d": [
+            ":b410b613e44a7ddb2787348d1a1c49a5:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": "Once Dishwasher is done speak announcement"
+  }
+}

@@ -1,0 +1,268 @@
+{
+  "name": "test",
+  "meta": {
+    "name": "test",
+    "category": "0",
+    "build": 1,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "ced": 0,
+      "cto": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "executes",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "alarmSystemRules",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "armedRule",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:8",
+                    "ok": true,
+                    "t": "string",
+                    "v": "armedRule"
+                  }
+                ],
+                "ok": true,
+                "str": "armedRule",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 3,
+            "a": "0",
+            "d": [
+              "@Speakers"
+            ],
+            "k": [
+              {
+                "$": 4,
+                "c": "playTextAndRestore",
+                "p": [
+                  {
+                    "c": "got it",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:5",
+                          "ok": true,
+                          "t": "string",
+                          "v": "got it"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "got it",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  },
+                  {
+                    "d": [],
+                    "f": "l",
+                    "g": "avg",
+                    "vt": "integer"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          },
+          {
+            "$": 5,
+            "a": "0",
+            "d": [
+              ":8ecb65857e78d0a9d8a2a6f89533f1d5:"
+            ],
+            "k": [
+              {
+                "$": 6,
+                "c": "sendPushNotification",
+                "p": [
+                  {
+                    "f": "l",
+                    "g": "avg",
+                    "t": "x",
+                    "vt": "string",
+                    "x": "hsm_status"
+                  },
+                  {
+                    "c": "false",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:4",
+                          "ok": true,
+                          "t": "boolean",
+                          "v": "false"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "false",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "boolean"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 7,
+        "a": "0",
+        "d": [
+          "@Speakers"
+        ],
+        "k": [
+          {
+            "$": 8,
+            "c": "speak",
+            "p": [
+              {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "string",
+                "x": "$hsmStatus"
+              },
+              {
+                "d": [],
+                "f": "l",
+                "g": "avg",
+                "vt": "integer"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      },
+      {
+        "$": 9,
+        "a": "0",
+        "d": [
+          ":8ecb65857e78d0a9d8a2a6f89533f1d5:"
+        ],
+        "k": [
+          {
+            "$": 10,
+            "c": "sendPushNotification",
+            "p": [
+              {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "string",
+                "x": "hsm_status"
+              },
+              {
+                "c": "false",
+                "exp": {
+                  "i": [
+                    {
+                      "l": "0:4",
+                      "ok": true,
+                      "t": "boolean",
+                      "v": "false"
+                    }
+                  ],
+                  "ok": true,
+                  "str": "false",
+                  "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "c",
+                "vt": "boolean"
+              }
+            ]
+          }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "hsm_status",
+        "t": "string",
+        "v": {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "string",
+          "x": "$hsmStatus"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

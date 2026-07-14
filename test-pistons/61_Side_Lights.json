@@ -1,0 +1,247 @@
+{
+  "name": "Side Lights",
+  "meta": {
+    "name": "Side Lights",
+    "category": "1",
+    "build": 2,
+    "active": false
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "is_between",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "f": "l",
+              "g": "any",
+              "t": "v",
+              "v": "time",
+              "vt": "string"
+            },
+            "ro": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "time",
+              "x": "$sunset"
+            },
+            "ro2": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "time",
+              "x": "$nextSunrise"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": -30,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "integer",
+                    "v": -30
+                  }
+                ],
+                "ok": true,
+                "str": "-30",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "m"
+            },
+            "to2": {
+              "c": 30,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:1",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 30
+                  }
+                ],
+                "ok": true,
+                "str": "30",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "m"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "contact",
+              "d": [
+                "Door_Sensor"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "Side_Light"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "on",
+                "p": []
+              },
+              {
+                "$": 6,
+                "c": "wait",
+                "p": [
+                  {
+                    "c": 10,
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:1",
+                          "ok": true,
+                          "t": "integer",
+                          "v": 10
+                        }
+                      ],
+                      "ok": true,
+                      "str": "10",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "m"
+                  }
+                ]
+              },
+              {
+                "$": 7,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c",
+        "w": [
+          "Found trigger comparison type using multiple devices with ALL (ANDed trigger), that may cause errors; comparison: changes_to  num: 3"
+        ],
+        "z": "Side Light"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Side_Light",
+        "t": "device",
+        "v": {
+          "d": [
+            ":be3ce31a4d514576a2bf623e9ab77767:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Door_Sensor",
+        "t": "device",
+        "v": {
+          "d": [
+            ":72910b3cd194379ef35ec85348838d1d:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

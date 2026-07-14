@@ -1,0 +1,1160 @@
+{
+  "name": "Water Leak Notification and shutt off",
+  "meta": {
+    "name": "Water Leak Notification and shutt off",
+    "category": "3",
+    "build": 4,
+    "active": true
+  },
+  "piston": {
+    "o": {
+      "aps": 0,
+      "ced": 0,
+      "cto": 0,
+      "dco": 0,
+      "des": 0,
+      "mps": 0,
+      "pep": 0
+    },
+    "r": [],
+    "rn": false,
+    "rop": "and",
+    "s": [
+      {
+        "$": 1,
+        "a": "0",
+        "c": [
+          {
+            "$": 2,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "water",
+              "d": [
+                "Water_Sensors_Away"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "wet",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "string",
+                    "v": "wet"
+                  }
+                ],
+                "ok": true,
+                "str": "wet",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          },
+          {
+            "$": 3,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+              "a": "presence",
+              "d": [
+                "@Presence_Sensor"
+              ],
+              "f": "l",
+              "g": "all",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "not present",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:10",
+                    "ok": true,
+                    "t": "string",
+                    "v": "not present"
+                  }
+                ],
+                "ok": true,
+                "str": "not present",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": false,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 4,
+            "a": "0",
+            "d": [
+              "Shut_off_valve"
+            ],
+            "k": [
+              {
+                "$": 5,
+                "c": "off",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 6,
+        "a": "0",
+        "c": [
+          {
+            "$": 7,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "water",
+              "d": [
+                "Water_Sensor_All"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "wet",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "string",
+                    "v": "wet"
+                  }
+                ],
+                "ok": true,
+                "str": "wet",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "c": 0,
+              "exp": {
+                "i": [
+                  {
+                    "l": "0",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                  }
+                ],
+                "ok": true,
+                "str": "0",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": [
+              {
+                "$": 8,
+                "a": "0",
+                "c": [
+                  {
+                    "$": 9,
+                    "co": "is",
+                    "ct": "c",
+                    "fs": [],
+                    "lo": {
+                      "a": "water",
+                      "d": [
+                        "Water_Sensor_All"
+                      ],
+                      "f": "l",
+                      "g": "all",
+                      "t": "p",
+                      "vt": "string"
+                    },
+                    "ro": {
+                      "c": "dry",
+                      "exp": {
+                        "i": [
+                          {
+                            "l": "0:2",
+                            "ok": true,
+                            "t": "string",
+                            "v": "dry"
+                          }
+                        ],
+                        "ok": true,
+                        "str": "dry",
+                        "t": "expression"
+                      },
+                      "f": "l",
+                      "g": "any",
+                      "t": "c",
+                      "vt": "enum"
+                    },
+                    "ro2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "s": false,
+                    "sm": "auto",
+                    "t": "condition",
+                    "to": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "to2": {
+                      "g": "any",
+                      "t": "c"
+                    },
+                    "ts": []
+                  }
+                ],
+                "o": "and",
+                "r": [],
+                "rop": "and",
+                "s": [
+                  {
+                    "$": 10,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 11,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "Water_Status"
+                          },
+                          {
+                            "e": "\"\ud83d\udca7 Water Leak detected \ud83d\udca7\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "1:26",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\ud83d\udca7 Water Leak detected \ud83d\udca7\n"
+                                },
+                                {
+                                  "l": "28:37",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$monthName"
+                                },
+                                {
+                                  "l": "39",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": " "
+                                },
+                                {
+                                  "l": "41:44",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$day"
+                                },
+                                {
+                                  "l": "46:52",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "   -   "
+                                },
+                                {
+                                  "l": "54:58",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "$time"
+                                },
+                                {
+                                  "l": "60:61",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\n\n"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "\"\ud83d\udca7 Water Leak detected \ud83d\udca7\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c",
+                    "w": [
+                      "Found Set variable to a pre initialized variable: Water_Status num: 11"
+                    ]
+                  },
+                  {
+                    "$": 12,
+                    "a": "0",
+                    "lo": {
+                      "d": [
+                        "Water_Sensor_All"
+                      ],
+                      "f": "l",
+                      "g": "avg",
+                      "t": "d",
+                      "vt": "device"
+                    },
+                    "r": [],
+                    "rop": "and",
+                    "s": [
+                      {
+                        "$": 13,
+                        "a": "0",
+                        "c": [
+                          {
+                            "$": 14,
+                            "co": "is",
+                            "ct": "c",
+                            "fs": [],
+                            "lo": {
+                              "a": "water",
+                              "d": [
+                                "$device"
+                              ],
+                              "f": "l",
+                              "g": "any",
+                              "t": "p",
+                              "vt": "string"
+                            },
+                            "ro": {
+                              "c": "wet",
+                              "exp": {
+                                "i": [
+                                  {
+                                    "l": "0:2",
+                                    "ok": true,
+                                    "t": "string",
+                                    "v": "wet"
+                                  }
+                                ],
+                                "ok": true,
+                                "str": "wet",
+                                "t": "expression"
+                              },
+                              "f": "l",
+                              "g": "any",
+                              "t": "c",
+                              "vt": "enum"
+                            },
+                            "ro2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "sm": "auto",
+                            "t": "condition",
+                            "to": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "to2": {
+                              "g": "any",
+                              "t": "c"
+                            },
+                            "ts": [
+                              {
+                                "$": 15,
+                                "a": "0",
+                                "d": [],
+                                "k": [
+                                  {
+                                    "$": 16,
+                                    "c": "setVariable",
+                                    "p": [
+                                      {
+                                        "f": "l",
+                                        "g": "avg",
+                                        "t": "x",
+                                        "vt": "variable",
+                                        "x": "Water_Status"
+                                      },
+                                      {
+                                        "e": "Water_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                        "exp": {
+                                          "i": [
+                                            {
+                                              "l": "0:11",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "Water_Status"
+                                            },
+                                            {
+                                              "l": "13:19",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "$device"
+                                            },
+                                            {
+                                              "l": "22:24",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": " - "
+                                            },
+                                            {
+                                              "i": [
+                                                {
+                                                  "a": "battery",
+                                                  "l": "28:44",
+                                                  "ok": true,
+                                                  "t": "device",
+                                                  "x": "$device"
+                                                }
+                                              ],
+                                              "l": "27:45",
+                                              "ok": true,
+                                              "t": "expression"
+                                            },
+                                            {
+                                              "l": "47",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": "%"
+                                            },
+                                            {
+                                              "l": "51",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": "\n"
+                                            }
+                                          ],
+                                          "ok": true,
+                                          "str": "Water_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                                          "t": "expression"
+                                        },
+                                        "f": "l",
+                                        "g": "avg",
+                                        "t": "e",
+                                        "vt": "string"
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "r": [],
+                                "rop": "and",
+                                "t": "action",
+                                "tcp": "c",
+                                "w": [
+                                  "Found Set variable to a pre initialized variable: Water_Status num: 16"
+                                ]
+                              },
+                              {
+                                "$": 17,
+                                "a": "0",
+                                "d": [
+                                  "@Speakers"
+                                ],
+                                "k": [
+                                  {
+                                    "$": 18,
+                                    "c": "setVolume",
+                                    "p": [
+                                      {
+                                        "c": 90,
+                                        "exp": {
+                                          "i": [
+                                            {
+                                              "l": "0:1",
+                                              "ok": true,
+                                              "t": "integer",
+                                              "v": 90
+                                            }
+                                          ],
+                                          "ok": true,
+                                          "str": "90",
+                                          "t": "expression"
+                                        },
+                                        "f": "l",
+                                        "g": "avg",
+                                        "t": "c",
+                                        "vt": "integer"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "$": 19,
+                                    "c": "playText",
+                                    "p": [
+                                      {
+                                        "e": "\"Water Leak detected from\" $device",
+                                        "exp": {
+                                          "i": [
+                                            {
+                                              "l": "1:24",
+                                              "ok": true,
+                                              "t": "string",
+                                              "v": "Water Leak detected from"
+                                            },
+                                            {
+                                              "l": "27:33",
+                                              "ok": true,
+                                              "t": "variable",
+                                              "x": "$device"
+                                            }
+                                          ],
+                                          "ok": true,
+                                          "str": "\"Water Leak detected from\" $device",
+                                          "t": "expression"
+                                        },
+                                        "f": "l",
+                                        "g": "avg",
+                                        "t": "e",
+                                        "vt": "string"
+                                      },
+                                      {
+                                        "d": [],
+                                        "f": "l",
+                                        "g": "avg",
+                                        "vt": "integer"
+                                      }
+                                    ]
+                                  }
+                                ],
+                                "r": [],
+                                "rop": "and",
+                                "t": "action",
+                                "tcp": "c"
+                              }
+                            ]
+                          }
+                        ],
+                        "e": [],
+                        "ei": [],
+                        "o": "and",
+                        "r": [],
+                        "rop": "and",
+                        "s": [],
+                        "t": "if",
+                        "tcp": "c"
+                      }
+                    ],
+                    "t": "each",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 20,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 21,
+                        "c": "setVariable",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "variable",
+                            "x": "Water_Status"
+                          },
+                          {
+                            "e": "Water_Status\"\n\"",
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:11",
+                                  "ok": true,
+                                  "t": "variable",
+                                  "x": "Water_Status"
+                                },
+                                {
+                                  "l": "13",
+                                  "ok": true,
+                                  "t": "string",
+                                  "v": "\n"
+                                }
+                              ],
+                              "ok": true,
+                              "str": "Water_Status\"\n\"",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "e",
+                            "vt": "string"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c",
+                    "w": [
+                      "Found Set variable to a pre initialized variable: Water_Status num: 21"
+                    ]
+                  },
+                  {
+                    "$": 22,
+                    "a": "0",
+                    "d": [
+                      "@Notifications_Push"
+                    ],
+                    "k": [
+                      {
+                        "$": 23,
+                        "c": "deviceNotification",
+                        "p": [
+                          {
+                            "f": "l",
+                            "g": "avg",
+                            "t": "x",
+                            "vt": "string",
+                            "x": "Water_Status"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  },
+                  {
+                    "$": 24,
+                    "a": "0",
+                    "d": [],
+                    "k": [
+                      {
+                        "$": 25,
+                        "c": "wait",
+                        "p": [
+                          {
+                            "c": 60,
+                            "exp": {
+                              "i": [
+                                {
+                                  "l": "0:1",
+                                  "ok": true,
+                                  "t": "integer",
+                                  "v": 60
+                                }
+                              ],
+                              "ok": true,
+                              "str": "60",
+                              "t": "expression"
+                            },
+                            "f": "l",
+                            "g": "avg",
+                            "t": "c",
+                            "vt": "s"
+                          }
+                        ]
+                      }
+                    ],
+                    "r": [],
+                    "rop": "and",
+                    "t": "action",
+                    "tcp": "c"
+                  }
+                ],
+                "t": "repeat",
+                "tcp": "c"
+              }
+            ]
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 26,
+        "a": "0",
+        "c": [
+          {
+            "$": 27,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "water",
+              "d": [
+                "Water_Sensors_Always"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "wet",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:2",
+                    "ok": true,
+                    "t": "string",
+                    "v": "wet"
+                  }
+                ],
+                "ok": true,
+                "str": "wet",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "g": "any",
+              "t": "c"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 28,
+            "a": "0",
+            "d": [
+              "Shut_off_valve"
+            ],
+            "k": [
+              {
+                "$": 29,
+                "c": "close",
+                "p": []
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 30,
+        "a": "0",
+        "c": [
+          {
+            "$": 31,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "valve",
+              "d": [
+                "Shut_off_valve"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "closed",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:5",
+                    "ok": true,
+                    "t": "string",
+                    "v": "closed"
+                  }
+                ],
+                "ok": true,
+                "str": "closed",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 32,
+            "a": "0",
+            "d": [
+              "@Notification_Text",
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 33,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "c": "Water has been turned  off",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:25",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Water has been turned  off"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Water has been turned  off",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      },
+      {
+        "$": 34,
+        "a": "0",
+        "c": [
+          {
+            "$": 35,
+            "co": "changes_to",
+            "ct": "t",
+            "fs": [],
+            "lo": {
+              "a": "valve",
+              "d": [
+                "Shut_off_valve"
+              ],
+              "f": "l",
+              "g": "any",
+              "t": "p",
+              "vt": "string"
+            },
+            "ro": {
+              "c": "open",
+              "exp": {
+                "i": [
+                  {
+                    "l": "0:3",
+                    "ok": true,
+                    "t": "string",
+                    "v": "open"
+                  }
+                ],
+                "ok": true,
+                "str": "open",
+                "t": "expression"
+              },
+              "f": "l",
+              "g": "any",
+              "t": "c",
+              "vt": "enum"
+            },
+            "ro2": {
+              "g": "any",
+              "t": "c"
+            },
+            "s": true,
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+              "f": "l",
+              "g": "any",
+              "t": "x",
+              "vt": "s"
+            },
+            "to2": {
+              "g": "any",
+              "t": "c"
+            },
+            "ts": []
+          }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+          {
+            "$": 36,
+            "a": "0",
+            "d": [
+              "@Notification_Text",
+              "@Notifications_Push"
+            ],
+            "k": [
+              {
+                "$": 37,
+                "c": "deviceNotification",
+                "p": [
+                  {
+                    "c": "Water has been turned on",
+                    "exp": {
+                      "i": [
+                        {
+                          "l": "0:23",
+                          "ok": true,
+                          "t": "string",
+                          "v": "Water has been turned on"
+                        }
+                      ],
+                      "ok": true,
+                      "str": "Water has been turned on",
+                      "t": "expression"
+                    },
+                    "f": "l",
+                    "g": "avg",
+                    "t": "c",
+                    "vt": "string"
+                  }
+                ]
+              }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+          }
+        ],
+        "t": "if",
+        "tcp": "c"
+      }
+    ],
+    "v": [
+      {
+        "a": "d",
+        "n": "Shut_off_valve",
+        "t": "device",
+        "v": {
+          "d": [
+            ":3bae5620709a1c7867ea6eab2f18ede9:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Water_Sensors_Away",
+        "t": "device",
+        "v": {
+          "d": [
+            ":31af97bf46dd751e60d618e218f62321:",
+            ":d6e2df243c654bd6e2062a1a8ce055bb:",
+            ":2552589e6a53b0cfa17a50d7c09b9272:",
+            ":e27f9df6e226499cc2b27975a009a68e:",
+            ":0246a51c0f7d1d5c51a5c8ee9cf941b4:",
+            ":286ed15af3ca0921929f9ca15977b1dc:",
+            ":d98c2b33a3c229868625390d81b50f1f:",
+            ":b516198e7fd4cb65a92cf5366b637b8d:",
+            ":1201b74c8487dd07d5dff2c139d61c63:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Water_Status",
+        "t": "string",
+        "v": {
+          "e": "\"\"",
+          "exp": {
+            "i": [
+              {
+                "l": "1:0",
+                "ok": true,
+                "t": "string",
+                "v": ""
+              }
+            ],
+            "ok": true,
+            "str": "\"\"",
+            "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Water_Sensor_All",
+        "t": "device",
+        "v": {
+          "d": [
+            ":31af97bf46dd751e60d618e218f62321:",
+            ":d6e2df243c654bd6e2062a1a8ce055bb:",
+            ":2552589e6a53b0cfa17a50d7c09b9272:",
+            ":e27f9df6e226499cc2b27975a009a68e:",
+            ":0246a51c0f7d1d5c51a5c8ee9cf941b4:",
+            ":286ed15af3ca0921929f9ca15977b1dc:",
+            ":d98c2b33a3c229868625390d81b50f1f:",
+            ":b516198e7fd4cb65a92cf5366b637b8d:",
+            ":1201b74c8487dd07d5dff2c139d61c63:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      },
+      {
+        "a": "d",
+        "n": "Water_Sensors_Always",
+        "t": "device",
+        "v": {
+          "d": [
+            ":e27f9df6e226499cc2b27975a009a68e:",
+            ":0246a51c0f7d1d5c51a5c8ee9cf941b4:"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "d",
+          "vt": "device"
+        }
+      }
+    ],
+    "z": ""
+  }
+}

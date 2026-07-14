@@ -191,6 +191,18 @@ def load_piston(piston_id: str) -> dict | None:
         return json.load(f)
 
 
+def set_piston_active(piston_id: str, active: bool) -> dict | None:
+    """piston/pause and piston/resume (SHIM_API_SPEC.md §4.6) -- only the
+    active flag changes, no other meta bookkeeping (unlike save_piston,
+    this isn't a content edit, so build/modified stay untouched)."""
+    entry = load_piston(piston_id)
+    if entry is None:
+        return None
+    entry["meta"]["active"] = active
+    _save_piston_file(entry)
+    return entry
+
+
 def meta_for_get(entry: dict) -> dict:
     """
     Long-key meta shape — VERIFIED-HE-GROOVY webcore-piston.groovy:1148-1166
