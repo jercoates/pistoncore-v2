@@ -1,0 +1,91 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# GOLDEN FIXTURE — expected compiler output (hand-written 2026-07-15, NO compiler exists yet)
+# Source piston: test-pistons/12_Cave_motion_V2.json  ("Cave motion V2")
+# Band: YAML/native (nothing in this piston routes to PyScript)
+# Exercises intent patterns (COMPILER_SPEC.md §3.0): #1 trigger-gated action,
+#   #4 timed follow-up with reset, #6 group-aggregate trigger (2-sensor motion group)
+#
+# BEHAVIORAL REVIEW (Jeremy: is this what the piston should do?):
+#   1. When EITHER cave motion sensor goes active AND the lumen sensor reads <= 1000,
+#      turn the cave light on.
+#   2. When either sensor goes inactive, wait 2 minutes, then turn the light off —
+#      BUT if any motion goes active during those 2 minutes, the countdown is
+#      cancelled (webCoRE TCP default "c": condition flip cancels the pending wait).
+#      A second inactive report during the countdown restarts the 2 minutes
+#      (same as webCoRE — re-executing the statement replaces its scheduled task).
+#
+# COMPILE DECISIONS EXERCISED:
+#   - One automation PER top-level if statement (§2.5 point 4: per-condition-group TCP
+#     scoping — bundling both branches into one mode:restart automation would let
+#     branch 1's triggers cancel branch 2's countdown incorrectly, and vice versa).
+#   - TCP default ("c") compiles to: mode: restart + auxiliary "cancel triggers" for
+#     every event that flips the guarding trigger-condition + a `condition: trigger`
+#     id-gate so cancel events kill the pending run but execute nothing themselves.
+#   - is_less_than_or_equal_to has no exact numeric_state form (below: is strictly-less);
+#     compiled as a template condition with an unavailability guard that fails CLOSED
+#     (unknown sensor -> condition false -> light stays off; matches webCoRE evaluating
+#     an unknown comparison as not-true).
+#   - Multi-device group with g:"any" on a changes_to trigger -> entity_id list on one
+#     state trigger (fires per-entity; behavior map §2.2 / HA_LIMITATIONS §3 multi-entity).
+#   - Piston is device-variable-portable (§9 AI-authoring rule): hashes live only in
+#     v[] definitions. Fixture uses PLACEHOLDER entity_ids — the resolution map decides
+#     real ones at compile time:
+#       Cave_motion  :d313c63940ae1a4dcd8dae46c940b8bb: -> binary_sensor.cave_motion_a
+#       Cave_motion  :70dc91546bba4d51ff162f830ae72610: -> binary_sensor.cave_motion_b
+#       Cave_Light   :791b45ec63ada4b93cf1eb74c2cbeff6: -> light.cave_light
+#       Lumen_sensor :5a0d2c765d7779900ff56de2c8d6b578: -> sensor.cave_lumen
+#
+# KNOWN NON-GOALS: the 2-minute countdown does not survive an HA restart — neither
+#   does webCoRE's scheduler on hub reboot (equivalent limitation, HA_LIMITATIONS §2).
+# ═══════════════════════════════════════════════════════════════════════════
+# PistonCore compiled piston — Cave motion V2 (12cavemotionv2)
+# Generated <timestamp> — template-set <version> — DO NOT EDIT
+
+# ── Statement $1: motion active + dark enough -> light on ──────────────────
+- id: pistoncore_12cavemotionv2_s1
+  alias: "PistonCore: Cave motion V2 — $1 motion -> light on"
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.cave_motion_a
+        - binary_sensor.cave_motion_b
+      to: "on"
+  conditions:
+    # is_less_than_or_equal_to 1000 — template form, fails closed on unavailable
+    - condition: template
+      value_template: >-
+        {{ states('sensor.cave_lumen') | float(default=1.0e9) <= 1000 }}
+  actions:
+    - action: light.turn_on
+      target:
+        entity_id: light.cave_light
+
+# ── Statement $6: motion inactive -> wait 2m -> light off (TCP-cancelable) ──
+- id: pistoncore_12cavemotionv2_s6
+  alias: "PistonCore: Cave motion V2 — $6 no motion -> delayed off"
+  mode: restart
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.cave_motion_a
+        - binary_sensor.cave_motion_b
+      to: "off"
+      id: fire
+    # TCP cancel triggers: any event that flips the guarding trigger-condition
+    # ("motion changes to inactive") restarts this automation, killing the pending
+    # delay. The condition gate below stops the cancel run from doing anything.
+    - trigger: state
+      entity_id:
+        - binary_sensor.cave_motion_a
+        - binary_sensor.cave_motion_b
+      to: "on"
+      id: tcp_cancel
+  conditions:
+    - condition: trigger
+      id: fire
+  actions:
+    - delay: "00:02:00"
+    - action: light.turn_off
+      target:
+        entity_id: light.cave_light

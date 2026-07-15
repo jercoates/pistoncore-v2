@@ -593,21 +593,56 @@ mapping table for it].
   drive Stage-3/getDb filtering).
 - Pistons using routed-but-PyScript features when PyScript is absent: compile error with
   the E3 notice ("statement $N requires PyScript") + install link. Never silent.
-- Truly unmappable (HA_LIMITATIONS + behavior map §6 after reconciliation): [FILL —
-  reconcile behavior map §6 against routing table first; four items it lists as cut are
-  actually PyScript-routed].
+- **Behavior-map §6 reconciliation (DONE 2026-07-15).** WEBCORE_HA_BEHAVIOR_MAP.md §6
+  listed 11 items as "cannot be mapped" — that list predates the PyScript routing table
+  and the Session-73 command research, and most of it is stale. Reconciled disposition:
+  | §6 item | Real disposition |
+  |---|---|
+  | Followed-by condition group | **PyScript-ROUTED** (chained `task.wait_until`, §3.2) — with the recorded FOLLOWED_BY_EVENT_GAP caveat (§3.3) |
+  | `on` event nested trigger | **PyScript-ROUTED** (`task.wait_until(event_trigger=...)`, §3.2) |
+  | XOR logical operator | **PyScript-ROUTED** (`sum([...]) == 1`, §3.2) or template condition on the YAML band (§3.3) |
+  | Switch fall-through | **PyScript-ROUTED** (`if/elif` without early exit, §3.2) |
+  | Piston state / exit with value | **HALF-ROUTED** — PyScript target solved via `state.persist` (holding doc §E5, updated); YAML target still open (helper-write vs EXIT_VALUE_DROPPED warning) |
+  | IFTTT virtual device | **STAYS — natively reproducible** (`rest_command` webhook, Session-73 research, HA_LIMITATIONS §10) — §6's "works differently" framing was pre-research |
+  | LIFX cloud virtual device | **STAYS — natively reproducible** (native `lifx.*` actions, HA_LIMITATIONS §10) |
+  | Physical vs programmatic operand filter (`p:"p"`/`p:"s"` on device operands) | **GENUINE CUT at the operand level** — neither HA nor Hubitat reliably distinguishes hardware vs software interaction per-device (behavior map §6, corroborated by Jeremy's direct experience). NOT rare: 7 real occurrences in the corpus (6 `p`, 1 `s`). Compile behavior: treat as `p:"a"` (any) + emit `CompilerWarning: INTERACTION_FILTER_DROPPED` naming the statement — never silently change semantics without the warning. The USER-level workaround (local-variable tracking, §3.0 pattern 3) compiles verbatim and is the recommended migration path; the warning's help text should point at it. |
+  | Task Execution Policy (`tep`) | **DEFER, evidence-based** — 0/84 corpus pistons set `tep` (verified 2026-07-15; likewise `tcp` only ever appears as default `"c"`, 673/673). On YAML there is no equivalent; on PyScript it is implementable (persist the §2.5-point-3 condition-change flag) but unrouted and unbuilt. v1: compile error if a non-default `tep` is encountered (never silent), revisit if real pistons ever use it. |
+  | AskAlexa / EchoSistant virtual devices | **GENUINE CUT** — deprecated platform artifacts |
+  | Contacts / SMS | **GENUINE CUT** — no HA equivalent; `notify` is the replacement, but auto-rewriting to it is a lossy rename (fails the reproduce-cleanly test) → compile error naming the task |
+  Net result: only THREE genuine cuts survive (operand-level interaction filter,
+  AskAlexa/EchoSistant, Contacts/SMS) plus one evidence-based deferral (`tep`). Everything
+  else §6 called unmappable is routed, half-routed, or natively reproducible.
 
 ## 6. Regression & acceptance
 - Compile-all-84 (`test-pistons/`) is the regression suite and the progress bar; work
   order: single-feature test pistons → mid-size → the three ~80-node alarm pistons.
-- Per-construct golden outputs: [FILL: one expected-YAML/py fixture per §3.3 table row].
+- **Golden fixtures (STARTED 2026-07-15, `test-pistons/fixtures/`):** hand-written
+  expected outputs for real corpus pistons, one per band — Jeremy reviews these
+  BEHAVIORALLY ("is this what that piston should do?"), and they become the acceptance
+  set before any compiler code exists.
+  - `12_Cave_motion_V2.expected.yaml` — native band. Exercises patterns #1/#4/#6; makes
+    concrete: one-automation-per-top-level-if (TCP scoping), the TCP-default compilation
+    idiom (mode: restart + auxiliary cancel-triggers + `condition: trigger` id-gate),
+    ≤-comparison as a fail-closed template condition, multi-entity trigger lists.
+  - `04_Back_Yard_Light_GPT.expected.py` — PyScript band (routed by `cancelTasks`).
+    Exercises patterns #1-#5; makes concrete: locals-as-persisted-pyscript-entities,
+    the one-function/OR'd-decorators/one-pass-body anatomy, `.old` for changes_away_from,
+    forgiving numeric helpers, and TWO explicit REVIEW POINTS — (a) @task_unique as the
+    TCP approximation (kills in-flight runs on ANY subscribed event, not only on the
+    owning condition's flip — exact for this piston, over-broad in general), and
+    (b) `cancelTasks` compiling to a structural no-op + breadcrumb under that model.
+  - NOT yet covered by fixtures: patterns #6 aggregation-`all` (Gas Detector's all-clear),
+    #7 speak/notify (blocked on the Notify band, §7 item 6), `each`/`repeat`/`while`
+    loops, and everything absent from the corpus (`every`/`on`/`exit`/restrictions —
+    needs the §7-item-3 hand-built captures first). Extend one fixture per pattern as
+    each EMIT template gets written.
 - Dev-HA test list (port from research docs): reload-new-file behavior; restart kills
   in-flight waits (PyScript §12); `state_hold_false=0` chatty-sensor; event-entity repeat
   under classic state trigger; presence semantics vs Jeremy's zones (2026.7 changes).
 
 ## 7. Open items
 1. Jeremy: confirm classic-primitives-only (§3.3) → flip to DECIDED.
-2. Behavior-map §6 reconciliation pass (Fable, offered).
+2. ~~Behavior-map §6 reconciliation pass~~ — DONE 2026-07-15, see §5 table.
 3. Five uncaptured statement types → hand-built captures (editor session).
 4. Engine-mining leftovers: exact TCP per-statement semantics, `a` async flag, mixed
    trigger evaluation order, `every` scheduling internals, expression evaluator coercion
