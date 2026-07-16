@@ -462,13 +462,39 @@ before assuming the pattern needs compiler support at v1.
     needs mapping onto that family precisely), `was_greater_than_or_equal_to`,
     `stays_any_of` (table covers "was"/"stayed" generically, not this specific combination
     by name).
-  - **NOT covered at all — genuine gaps, do not guess:** `happens_daily_at` (used 33 times
-    in the corpus — the SECOND most common operator after `is`/`changes_to`, not a rare
-    edge case), `gets` (19 uses), `executes` (4 uses, likely tied to `executePiston`/rule
-    execution rather than a state comparison at all — TO VERIFY against the groovy
-    comparisons vocab before assuming). These three need dedicated research before v1
-    compiles anything using them — `happens_daily_at` in particular is too frequent to
-    defer.
+  - **The three special triggers the behavior map skipped — RESEARCHED 2026-07-15 from
+    real corpus captures** (they were never lost from the vocab — all three live in
+    `comparisons.triggers`; the behavior-map research pass walked the state-comparison
+    categories and missed these because they aren't state comparisons at all):
+    - **`happens_daily_at` (33 uses — the daily schedule trigger).** Shape: `lo` = virtual
+      device `time` (`{t:"v","v":"time"}`), `ro` = either a time CONSTANT in minutes-since-
+      midnight (`480` = 8:00 AM, `1215` = 8:15 PM — §4's documented time encoding) or a
+      system variable (`{t:"x","x":"$sunrise"}`). Mapping: constant → `trigger: time,
+      at: "HH:MM:SS"` (native, clean); `$sunrise`/`$sunset` → `trigger: sun,
+      event: sunrise|sunset` (+ `offset:` when the operand is an offset expression);
+      any other variable/expression time → `trigger: time` accepts an `input_datetime`
+      entity id natively, else PyScript `@time_trigger`. All observed corpus uses are the
+      first two forms.
+    - **`gets` (19 uses — the momentary-event trigger, vocab bucket `g:"m"`).** Shape:
+      `lo` = device attribute `pushed` (scene controller / button device), `ro` = the
+      button NUMBER (Hubitat button devices emit `pushed=<n>` events). Semantics: fires on
+      EVENT ARRIVAL, even when the value repeats (two presses of button 1 in a row both
+      fire) — this is exactly the event-entity repeat-fire problem already flagged in
+      HA_LIMITATIONS §3: a plain `to:` state trigger will MISS repeat presses. Mapping:
+      Hubitat-bridged buttons surface in HA as `event` entities whose state is the
+      last-event timestamp (changes on EVERY event) → `trigger: state` on the event entity
+      with no `to:`, plus a condition on the event's attribute for the button number.
+      [ASSUMED — needs the dev-HA button test already on §6's list before trusting.]
+    - **`executes` (4 uses — virtual-device event trigger, vocab bucket `g:"v"`).** All
+      corpus uses: `lo` = virtual device `alarmSystemAlert`, `ro` = `"intrusion"` /
+      `"intrusion-delay"` — i.e. "HSM fired an intrusion alert." Mapping: HSM → HA
+      `alarm_control_panel` (HA_LIMITATIONS §10); the alert firing → `trigger: state,
+      to: "triggered"` on the alarm entity. OPEN detail: HA's alarm entity state doesn't
+      distinguish alert TYPES (intrusion vs intrusion-delay) — whether PistonCore's
+      alarm virtual-device mapping can expose that granularity is a shim design question
+      (TO DECIDE at the alarm virtual-device implementation, not a comparison-table
+      issue). `executes` is broader in webCoRE (pistons/rules execute too — `on`-statement
+      territory) but 4/4 corpus uses are the HSM-alert form.
 - Hard template rules (DECIDED, v1 postmortem — HA_LIMITATIONS §9): ALWAYS quote state
   values; EVERY wait emits `timeout:` + `continue_on_timeout:`; parallel branches carry
   sequence-level `continue_on_error`.
@@ -549,7 +575,14 @@ to the actual PyScript 2.0.1 manual, not re-verified here — see that doc for s
   no emitted-code strings in compiler Python source (this is the actual breaking-change
   insurance Recompile All depends on).
 
-### 3.4 DEPLOY (DECIDED — COMPILER_DECISIONS_DEPLOY §3–§5)
+### 3.4 DEPLOY (DECIDED — COMPILER_DECISIONS_DEPLOY §2.5–§5)
+- **Write transport — TWO modes (COMPILER_DECISIONS_DEPLOY §2.5), the thing that makes
+  every write below actually reach HA.** PistonCore's container has no inherent access to
+  HA's `/config`. Mode A = **Samba/SMB** (HA in a VM/HAOS/separate box — network write,
+  creds on Settings). Mode B = **shared volume / local path** (HA as a co-located Docker
+  container — bind-mounted config dir, plain local writes). Selected on the Settings page
+  (`write_mode`), abstracted behind one `deploy_writer` interface so the compiler never
+  knows which is active. Control path (reload) stays on the HA API regardless.
 - Labeled includes, NOT packages: `automation pistoncore: !include_dir_merge_list
   pistoncore/automations/` (+ scripts). Packages rejected (UI-duplicate bug, filename
   uniqueness).
@@ -571,9 +604,21 @@ to the actual PyScript 2.0.1 manual, not re-verified here — see that doc for s
 
 ## 4. Execution modes
 First-run prompt sets the default; settings changes it; webCoRE piston settings honored
-per-piston where they express an equivalent. **TCP value set now VERIFIED (§2.5 point 4):
+per-piston where they express an equivalent.
+
+**ALL FOUR policy value sets now VERIFIED from the dialog templates (piston.module.html
+:337-365, read 2026-07-15) — no longer TO VERIFY:**
+| field | option values (default marked *) | meaning |
+|---|---|---|
+| `tcp` taskCancellationPolicy | `""`* / `c` / `p` / `b` | Never* / on condition state / on piston state / on either. **⚠ CONFLICT to resolve on dev HA:** the dialog labels `""` as "Never" (:357) and `c` as the greyed default; but the groovy engine's own comment (`gTCP`, :4601 `?: sC`) treats ABSENT tcp as `c`, and the status-badge logic (:499) shows badge "N"(never) for tcp NOT in c/p/b. So `""` present-on-wire = Never, but tcp KEY ABSENT = defaults to `c`. The compiler must distinguish absent-key from empty-string-value (the dashboard-next wire map's "absent ≠ empty" rule, PISTON_JSON_WIRE_MAP §2, matters here). |
+| `tep` taskExecutionPolicy | `""`* / `c` / `p` / `b` | Always* / only on condition state change / on piston state / on either (:361). |
+| `tsp` taskSchedulingPolicy | `""`* / `a` | Override* / Allow multiple (:365). "Override" = a new scheduled task replaces the pending one of the same statement; "Allow multiple" = they coexist. (Semantics inferred from the two labels; confirm against engine scheduling code when the scheduler is implemented.) |
+| `ctp` caseTraversalPolicy (switch only) | `i`* / `e` | Safe* (break after first match) / Fall-through (continue to next case) — `e` forces PyScript (§3.2). |
+
+**TCP** (repeated from §2.5 point 4 for the routing consequence):
 `""`/`"c"` (cancel-on-condition-change, default), `"p"` (cancel-on-piston-change), `"b"`
-(either), `"n"` (never).** `mode: restart` is a real but PARTIAL match — exact only when a
+(either), and Never (key absent behaves as `c`; explicit `""`-on-wire = Never per the
+dialog — see conflict note above). `mode: restart` is a real but PARTIAL match — exact only when a
 compiled automation contains exactly one independent condition-scoped TCP unit; bundling
 multiple condition groups into one automation breaks it (§2.5 point 4 has the full
 reasoning). Routing consequence: **the ANALYZE/ROUTE stages need a rule that keeps each
@@ -582,36 +627,65 @@ when tcp is `c`/`b`/`default`, rather than assuming one-automation-per-piston al
 tcp=`"n"` and tcp=`"p"` still have no `mode: restart` equivalent — TO VERIFY: does `"p"`
 map to a piston-wide (not condition-wide) `mode: restart`-per-automation-if-one-piston-one-
 automation-holds, or does it need PyScript's `task.unique`/`state.persist`?
-TEP (a separate field, gates re-execution not cancellation — §2.5 point 3) is ALSO already
-VERIFIED: blank = always execute, `"c"` = only if condition state changed, `"p"` = only if
-piston state changed, `"b"` = either. [FILL: `tsp` — not yet confirmed as a real distinct
-field at all (may be a brief typo for tcp/tep); TO VERIFY it exists before building any
-mapping table for it].
+All four value sets are tabled above. Disposition for the non-native ones (tep, tsp, and
+non-default tcp/ctp) per §5's governing rule: IMPLEMENT via the PyScript route, never
+defer — corpus frequency sets test priority only. Remaining unknowns are RUNTIME
+SEMANTICS (exactly what tsp "Override" cancels, the tcp absent-vs-empty resolution), to be
+mined from the engine's scheduling code when that piece is built — not the value sets
+themselves, which are now closed.
 
 ## 5. What does not compile
+
+**GOVERNING RULE (DECISION, Jeremy 2026-07-15 — supersedes every earlier "defer"/"cut"
+in this spec): MAKE WHATEVER CAN WORK, WORK.** PyScript exists in this architecture
+precisely so hard things still work. A compile error is reserved for the VERIFIABLY
+impossible only, and the spec must record the verified reason — specifically why even
+PyScript cannot do it. Corpus absence is NEVER a reason to defer or cut: the 84-piston
+corpus is Jeremy's test/debug set and the regression priority order, NOT the feature
+ceiling ("I'm only testing and debugging my pistons through the compiler — I am not
+purposely leaving shit out").
+
 - Omitted-from-db features never reach pistons (reproduce-cleanly test; `ha:"n/a"` markers
-  drive Stage-3/getDb filtering).
+  drive Stage-3/getDb filtering) — this is picker-side scope, decided separately.
 - Pistons using routed-but-PyScript features when PyScript is absent: compile error with
-  the E3 notice ("statement $N requires PyScript") + install link. Never silent.
-- **Behavior-map §6 reconciliation (DONE 2026-07-15).** WEBCORE_HA_BEHAVIOR_MAP.md §6
-  listed 11 items as "cannot be mapped" — that list predates the PyScript routing table
-  and the Session-73 command research, and most of it is stale. Reconciled disposition:
+  the E3 notice ("statement $N requires PyScript") + install link. Never silent. (This is
+  environmental — the feature works, the runtime is missing — not a feature cut.)
+- **Behavior-map §6 reconciliation (2026-07-15, REVISED same day under the governing
+  rule).** WEBCORE_HA_BEHAVIOR_MAP.md §6 listed 11 items as "cannot be mapped" — stale;
+  reconciled disposition:
   | §6 item | Real disposition |
   |---|---|
   | Followed-by condition group | **PyScript-ROUTED** (chained `task.wait_until`, §3.2) — with the recorded FOLLOWED_BY_EVENT_GAP caveat (§3.3) |
   | `on` event nested trigger | **PyScript-ROUTED** (`task.wait_until(event_trigger=...)`, §3.2) |
   | XOR logical operator | **PyScript-ROUTED** (`sum([...]) == 1`, §3.2) or template condition on the YAML band (§3.3) |
   | Switch fall-through | **PyScript-ROUTED** (`if/elif` without early exit, §3.2) |
-  | Piston state / exit with value | **HALF-ROUTED** — PyScript target solved via `state.persist` (holding doc §E5, updated); YAML target still open (helper-write vs EXIT_VALUE_DROPPED warning) |
-  | IFTTT virtual device | **STAYS — natively reproducible** (`rest_command` webhook, Session-73 research, HA_LIMITATIONS §10) — §6's "works differently" framing was pre-research |
+  | Piston state / exit with value | **IMPLEMENT BOTH BANDS** — PyScript via `state.persist` (holding doc §E5); YAML via writing the piston-state helper entity (`input_text`, C-TYPES pattern) before `stop:`. No drop-with-warning option. |
+  | IFTTT virtual device | **STAYS — natively reproducible** (`rest_command` webhook, Session-73 research, HA_LIMITATIONS §10) |
   | LIFX cloud virtual device | **STAYS — natively reproducible** (native `lifx.*` actions, HA_LIMITATIONS §10) |
-  | Physical vs programmatic operand filter (`p:"p"`/`p:"s"` on device operands) | **GENUINE CUT at the operand level** — neither HA nor Hubitat reliably distinguishes hardware vs software interaction per-device (behavior map §6, corroborated by Jeremy's direct experience). NOT rare: 7 real occurrences in the corpus (6 `p`, 1 `s`). Compile behavior: treat as `p:"a"` (any) + emit `CompilerWarning: INTERACTION_FILTER_DROPPED` naming the statement — never silently change semantics without the warning. The USER-level workaround (local-variable tracking, §3.0 pattern 3) compiles verbatim and is the recommended migration path; the warning's help text should point at it. |
-  | Task Execution Policy (`tep`) | **DEFER, evidence-based** — 0/84 corpus pistons set `tep` (verified 2026-07-15; likewise `tcp` only ever appears as default `"c"`, 673/673). On YAML there is no equivalent; on PyScript it is implementable (persist the §2.5-point-3 condition-change flag) but unrouted and unbuilt. v1: compile error if a non-default `tep` is encountered (never silent), revisit if real pistons ever use it. |
-  | AskAlexa / EchoSistant virtual devices | **GENUINE CUT** — deprecated platform artifacts |
-  | Contacts / SMS | **GENUINE CUT** — no HA equivalent; `notify` is the replacement, but auto-rewriting to it is a lossy rename (fails the reproduce-cleanly test) → compile error naming the task |
-  Net result: only THREE genuine cuts survive (operand-level interaction filter,
-  AskAlexa/EchoSistant, Contacts/SMS) plus one evidence-based deferral (`tep`). Everything
-  else §6 called unmappable is routed, half-routed, or natively reproducible.
+  | Physical vs programmatic operand filter (`p:"p"`/`p:"s"`) | **IMPLEMENT — PyScript route, context-based.** HA state events carry a `context` (who/what caused the change): a change caused by a service call from an automation/script carries a parent context; a device-originated report does not. PyScript trigger functions receive the event `context` — so `p:"s"` (programmatic) ≈ "context has a parent," `p:"p"` (physical) ≈ "no parent and no automation origin." TO VERIFY on dev HA: exact context fidelity per integration (Hubitat-bridged devices especially), and the residual approximation vs. Hubitat's own flaky per-device support (Jeremy's direct experience: unreliable there too — parity with an imperfect source, not regression from a perfect one). 7 real corpus occurrences — this WILL fire. Only if dev-HA verification proves the context signal genuinely unusable does this become an error, with that verified evidence recorded here. |
+  | Task Execution Policy (`tep`) | **IMPLEMENT — PyScript route.** Persist the per-condition-group truth cache (§2.5 point 3's own mechanism) in the piston's `state.persist` entity attributes; gate statement bodies on the c/p/b flags exactly as `executeStatement` does (engine lines 3921-3954). Native YAML has no equivalent → non-default `tep` is a routing-table row (forces PyScript), same as XOR. Corpus's 0 uses = lowest test priority, nothing more. |
+  | `tsp` (task scheduling policy) | **IMPLEMENT — same path as tep**: enumerate the value set from piston.module.html dialogs, mine the engine for semantics, implement on the PyScript band; route non-default values there. TO VERIFY (semantics not yet mined), never "defer." |
+  | AskAlexa / EchoSistant virtual devices | **MOOT — not in the served vocab at all** (verified 2026-07-15: no askAlexa/echoSistant entries in webcore_vocab.json commands, virtualCommands, or virtualDevices). They cannot appear in any piston authored against this shim; imported ancient pistons referencing them fail device/command resolution generically. Not a cut — there is nothing to cut. |
+  | Contacts / SMS (`sendSMSNotification`, `sendNotificationToContacts` — both ARE in the served vocab, verified 2026-07-15) | **IMPLEMENT — Notify band.** Both are notification fan-outs; HA's notify platforms include SMS-capable targets (Twilio, SMS gateways, carrier email-gateways) and person-targeted notify services. Compile through the C1/C2 stable-target-reference mechanism: the piston stores the intent, deploy-time config maps it to the user's configured notify target(s). If the user has no SMS-capable notify service configured, that's a deploy-time resolution error naming the missing target (environmental, same class as PyScript-absent) — not a feature cut. |
+  Net result under the governing rule: **ZERO cuts from the behavior-map list.** Two items
+  are moot (absent from the vocab), everything else is implemented, routed, or an
+  environmental/resolution error with the specific missing dependency named.
+
+**The complete verified can't-do list (HA_LIMITATIONS §10.2 — exactly two, matching
+Jeremy's recollection), re-examined 2026-07-15 under the governing rule:**
+1. **Mid-run piston pause/resume** — webCoRE pause preserved mid-run state and resumed
+   from the paused point. VERIFIED impossible on both bands: HA automations and PyScript
+   tasks cannot be suspended and resumed mid-statement — in-flight tasks are killed, not
+   frozen (PYSCRIPT_COMPILER_RESEARCH restart/reload semantics; `automation.turn_off`
+   stops runs). Future-trigger pause (what PistonCore's pause does) is the implementable
+   part and IS implemented.
+2. **Piston tiles** (setTile family) — not a capability gap: the tile display surface is
+   deliberately absent from PistonCore by Jeremy's own design (no tile layouts, ever).
+   Out by decision, recorded as such.
+   **Partial upgrade:** `setPistonState` was bundled with pause/resume in §10.2 but is NOT
+   impossible — it writes the piston's state string, which is exactly what the
+   piston-state entity (E5's `state.persist` / helper mechanism) holds. IMPLEMENT it
+   through that entity on both bands.
 
 ## 6. Regression & acceptance
 - Compile-all-84 (`test-pistons/`) is the regression suite and the progress bar; work

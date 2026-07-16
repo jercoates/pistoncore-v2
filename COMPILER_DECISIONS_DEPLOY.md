@@ -39,6 +39,58 @@ silently break a working automation. Failure surfaces as: banner on the piston s
 - **Single-device statement** whose only device is unresolvable: that statement errors →
   piston flagged/paused, surfaced on the debug page.
 
+## 2.5 Write transport — HOW compiled files reach HA's `/config`
+
+**THE GAP THIS CLOSES (flagged by Jeremy 2026-07-15; a v1→v2 port omission — v1 had worked
+this out).** PistonCore's process has no inherent access to HA's `/config`. Every "write"
+in §3-§9 below (automation YAML, pyscript `.py`, the configuration.yaml backup+edit) needs
+a transport. The **control path stays the HA API** (`automation.reload`/`script.reload`,
+§5 — already has its token, no filesystem access needed); only the **write path** varies.
+
+**END GOAL: PistonCore ships as a HOME ASSISTANT ADD-ON (Jeremy, 2026-07-15).** That is
+the primary intended distribution, and it's the simplest write case — an add-on's manifest
+declares `map: [homeassistant_config:rw]` (or `config:rw`) and the supervisor mounts HA's
+`/config` into the add-on at a local path. No SMB, no user config, no credentials. Auth is
+`SUPERVISOR_TOKEN` (already handled in `ha_client.py`). **The compiler's write layer must
+be built so the add-on case is plain local file ops.**
+
+**DECISION (Jeremy, 2026-07-15): two write-path implementations, chosen by install
+topology. The real distinction is LOCAL-PATH vs IN-APP-SMB:**
+
+**Path 1 — LOCAL PATH (`deploy_writer` does plain file ops to a mounted directory).**
+Covers the majority of installs:
+- **HA add-on** [END GOAL] — supervisor-mapped `/config`. No config beyond the mapped path.
+- **Standalone Docker where HA's config is mounted into PistonCore's container** — either a
+  co-located Docker HA sharing a volume, OR a host-level SMB mount bind-mounted in. **This
+  is Jeremy's current Unraid test setup:** Unraid's Unassigned Devices already mounts the
+  HA VM's Samba share (`//192.168.1.65/config` → a host path); PistonCore's container just
+  bind-mounts that host path (`-v …:/ha-config`) and writes locally — the SMB lives at the
+  Unraid layer, invisible to PistonCore.
+
+  Settings field: `ha_config_path` (default `/ha-config`, the in-container mount point).
+  The mount itself is a `docker run`/add-on-manifest concern, documented in the install
+  guide like the existing `-v …:/data` line.
+
+**Path 2 — IN-APP SMB (`deploy_writer` speaks SMB directly).** For standalone Docker where
+the user has NOT mounted the share at the host/Docker layer — PistonCore connects to HA's
+Samba share add-on itself using an SMB client (`pysmb`/`smbprotocol`). Settings fields:
+| field | default | notes |
+|---|---|---|
+| `smb_host` | derived from `ha_url` host | the HA host, unless the share lives elsewhere |
+| `smb_share` | `config` | the Samba add-on's config share = HA's `/config` root |
+| `smb_username` | — | Samba add-on credential |
+| `smb_password` | — | stored like `ha_token` (write-only in UI: "already set", never echoed) |
+
+**Common to both paths:**
+- **A `write_mode` selector on Settings** (`"local" | "smb"`; add-on install defaults to
+  `local` and hides the selector). `deploy_writer.py` exposes ONE interface
+  (write/read/delete/backup) with the two backends behind it — the compiler never knows
+  which is active.
+- **A "Test write target" check on Settings** — write + read-back + delete a probe file —
+  so a bad mount/share fails VISIBLY at setup, not silently at first compile (same
+  philosophy as testing the HA connection). A deploy that can't reach its write target is
+  an environmental error naming the target, never a silent drop.
+
 ## 3. Deploy layout — labeled includes, NOT packages
 
 **DECISION (revised after research):** compiled artifacts live in PistonCore's own folder,
@@ -104,6 +156,9 @@ syntax, update templates → recompile all → zero manual automation edits.
 
 PistonCore's first run must present, with explanation:
 1. **HA connection** (URL/token, or supervisor token on the add-on).
+1a. **Write transport** (§2.5): pick Samba (HA in a VM/HAOS/remote) or shared-volume/local
+   (co-located Docker HA), enter that mode's fields, and run the "Test write target" probe
+   before proceeding. The compiler cannot deploy anything until this passes.
 2. **configuration.yaml edit consent.** PistonCore can add the include lines itself, but
    ONLY safely: (a) write a timestamped backup of configuration.yaml first; (b) SHOW the
    exact lines to be added and the exact rename (`automation:` → `automation ui:`) needed

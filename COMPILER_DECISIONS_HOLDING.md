@@ -437,13 +437,14 @@ restart-surviving piston-state entity — the exit value writes there before the
 stops, visible in Developer Tools, readable by other pistons on either compile target
 (it's a normal HA entity once persisted). This closes the PyScript half of this decision.
 
-**YAML path — still open.** `state.persist` is PyScript-only (pyscript-domain entities
-can't be written from plain YAML/templates) — the native target would need a helper
-entity (`input_text`, matching the C-TYPES table's scalar-global pattern) written via an
-explicit action before `stop:`. **Decision still required:** implement that helper-write
-path for the YAML target, or emit `CompilerWarning: EXIT_VALUE_DROPPED` there and document
-it. Do not silently drop without at least the warning on whichever half stays unimplemented
-at v1.
+**YAML path — DECIDED 2026-07-15 (make-it-work rule, COMPILER_SPEC §5): IMPLEMENT.**
+`state.persist` is PyScript-only, so the native target writes its piston-state helper
+entity (`input_text.pistoncore_<piston_id>_state`, C-TYPES scalar pattern; deploy flow
+creates it like any other helper) via `input_text.set_value` immediately before `stop:`.
+Both bands now implement exit-with-value; the drop-with-warning option is retired. Same
+entity also serves `setPistonState` (HA_LIMITATIONS §10.2 upgrade, same date) and the
+automatic piston state (§2.5 point 5 — first top-level if's truth value) if/when that
+mirrors to HA.
 
 ### E6. `every` `only_on_wom` — runtime check pattern
 

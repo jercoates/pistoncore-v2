@@ -557,7 +557,7 @@ an equivalent for. Cut from the wizard; logged here.
 | WebCoRE command | Why no clean HA reproduction |
 |---|---|
 | Piston tiles (set tile, tile colors/footer/text/title/mouseover, clear tile) | WebCoRE-dashboard-specific UI construct; HA has no piston-tile concept. (HIGH confidence — pure WebCoRE UI.) |
-| Set piston state / Pause piston / Resume piston | Operate on the WebCoRE engine's own run state; no HA analog to a "piston" runtime to pause/resume. `automation.turn_off`/`turn_on` disables future triggers but cannot pause a mid-run execution — WebCoRE pause/resume preserved mid-run state, resuming from the paused point. These are fundamentally different behaviors. (ASSUMED — reasoning from HA automation behavior, not verified by end-to-end test. HIGH confidence the distinction is real.) |
+| ~~Set piston state~~ / Pause piston / Resume piston | **Split 2026-07-15 (make-it-work rule, COMPILER_SPEC §5): `setPistonState` is UPGRADED to reproducible** — it writes the piston's state string, which the piston-state entity (COMPILER_DECISIONS_HOLDING §E5: PyScript `state.persist` entity / YAML `input_text` helper) holds on both bands. What remains cut is MID-RUN pause/resume only: WebCoRE pause preserved mid-run state and resumed from the paused point; no HA analog — `automation.turn_off` disables future triggers but kills/cannot-freeze a mid-run execution, and PyScript in-flight tasks die on reload/restart rather than suspending. (ASSUMED — reasoning from HA automation behavior + PyScript restart semantics, not verified by end-to-end test. HIGH confidence the distinction is real.) |
 
 ### 10.3 EMULATED group — not v1 (unchanged)
 
