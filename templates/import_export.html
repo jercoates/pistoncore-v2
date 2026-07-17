@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}PistonCore — Import / Export{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <h1>Import / Export</h1>
+
+  <h2>Import a piston (JSON)</h2>
+  <p class="field-hint">
+    Paste piston JSON below, or drop a <code>.json</code> file on the box — one piston
+    at a time. Accepts the PistonCore share format (<code>{"name", "meta", "piston"}</code>)
+    or a bare piston body. Imported pistons arrive <em>paused</em>.
+    For webCoRE backup codes or <code>.backup</code> files, use
+    <a href="/">the front door</a> &rarr; + New Piston (Restore / Import options).
+  </p>
+  <div id="import-banner"></div>
+  <textarea id="import-json" rows="10" spellcheck="false"
+            placeholder='Paste piston JSON here, or drop a .json file on this box'></textarea>
+  <div class="form-actions">
+    <button class="btn btn-primary" id="import-btn">Import</button>
+  </div>
+
+  <h2>Export a piston</h2>
+  <p class="field-hint">Pretty-printed PistonCore share JSON — copy it anywhere.</p>
+  {% if pistons %}
+  <div class="form-group">
+    <select id="export-select">
+      {% for p in pistons %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+    </select>
+    <button class="btn" id="export-btn">Show JSON</button>
+    <button class="btn" id="copy-btn" style="display:none">Copy to clipboard</button>
+  </div>
+  <pre id="export-out" style="display:none"></pre>
+  {% else %}
+  <p>No pistons saved yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/pistoncore/import_export.js"></script>{% endblock %}

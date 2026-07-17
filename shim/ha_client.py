@@ -57,19 +57,36 @@ def get_config_for_display() -> dict:
     (shim/routes/pages.py's settings form uses this to avoid re-rendering
     the secret on every page load)."""
     config = _load_config()
-    return {"ha_url": config.get("ha_url", ""), "has_token": bool(config.get("ha_token"))}
+    return {
+        "ha_url": config.get("ha_url", ""),
+        "has_token": bool(config.get("ha_token")),
+        # write transport (COMPILER_DECISIONS_DEPLOY §2.5)
+        "write_mode": config.get("write_mode", "local"),
+        "ha_config_path": config.get("ha_config_path", ""),
+        "smb_host": config.get("smb_host", ""),
+        "smb_share": config.get("smb_share", "config"),
+        "smb_username": config.get("smb_username", ""),
+        "has_smb_password": bool(config.get("smb_password")),
+    }
 
 
-def save_config(ha_url: str, ha_token: str | None) -> None:
+def save_config(ha_url: str, ha_token: str | None, **extra) -> None:
     """
-    Settings-page save (shim/routes/pages.py). ha_token is None/empty when
-    the user left the token field blank to keep the existing one -- only
-    overwrite it when a real new value was actually typed in.
+    Settings-page save (shim/routes/pages.py). ha_token / smb_password are
+    None/empty when the user left the field blank to keep the existing one --
+    only overwrite when a real new value was typed. `extra` carries the write
+    transport fields (write_mode, ha_config_path, smb_host/share/username/
+    password — COMPILER_DECISIONS_DEPLOY §2.5).
     """
     config = _load_config()
     config["ha_url"] = ha_url
     if ha_token:
         config["ha_token"] = ha_token
+    for key in ("write_mode", "ha_config_path", "smb_host", "smb_share", "smb_username"):
+        if key in extra and extra[key] is not None:
+            config[key] = extra[key]
+    if extra.get("smb_password"):
+        config["smb_password"] = extra["smb_password"]
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)

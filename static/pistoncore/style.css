@@ -295,3 +295,18 @@ button {
 }
 .banner-info { background: var(--teal-bg); border: 1px solid var(--teal-dim); color: var(--teal); }
 .banner-success { background: rgba(76, 175, 80, 0.1); border: 1px solid var(--green); color: var(--green); }
+
+/* import/export page */
+.page-narrow textarea, .page-narrow select {
+  width: 100%; font-family: monospace; font-size: 13px;
+  background: var(--bg-input, var(--bg-hover)); color: var(--text-primary);
+  border: 1px solid var(--border-strong); border-radius: 4px; padding: 8px;
+}
+.page-narrow select { width: auto; min-width: 260px; font-family: inherit; margin-right: 8px; }
+.page-narrow .form-actions { margin: 10px 0 24px; }
+.page-narrow pre {
+  background: var(--bg-hover); border: 1px solid var(--border-subtle);
+  border-radius: 4px; padding: 10px; font-size: 12px; overflow-x: auto;
+  max-height: 420px;
+}
+.page-narrow h2 { margin-top: 28px; }

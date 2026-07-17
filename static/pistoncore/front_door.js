@@ -3,18 +3,14 @@ function openPiston(id) {
   window.location.href = "/connect";
 }
 
-document.getElementById("new-piston").addEventListener("click", async () => {
-  const name = prompt("Piston name:", "New Piston");
-  if (name === null) return;
-
-  const params = new URLSearchParams({ name: name || "New Piston" });
-  const resp = await fetch("/api/new-piston?" + params.toString(), { method: "POST" });
-  if (!resp.ok) {
-    alert("Could not create piston.");
-    return;
-  }
-  const data = await resp.json();
-  openPiston(data.id);
+// Open webCoRE's own New-Piston dialog (blank / Duplicate / restore-by-code /
+// import-backup-file — all four native creation paths) instead of the old
+// name-prompt shortcut, which could only make blank pistons. The flag is
+// consumed by dashboard/js/pistoncore-nav.js once the dashboard list page's
+// session bootstrap finishes.
+document.getElementById("new-piston").addEventListener("click", () => {
+  sessionStorage.setItem("pistoncore_open_newpiston", "1");
+  window.location.href = "/connect";
 });
 
 document.querySelectorAll(".piston-row").forEach((row) => {

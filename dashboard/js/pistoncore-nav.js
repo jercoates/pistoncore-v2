@@ -144,6 +144,48 @@
             }
         });
 
+        // NEW-PISTON DIALOG: the front door's "+ New Piston" sets this flag —
+        // once the list route's bootstrap finishes, open webCoRE's own
+        // New-Piston dialog (native blank/Duplicate/restore-code/import-file
+        // paths; there is no other menu that reaches it in PistonCore). The
+        // list page stays visible behind the dialog — pass-through per
+        // CLAUDE.md. Cancelling the dialog exits back to the front door.
+        $rootScope.$on('$routeChangeSuccess', function (event, current) {
+            var wantDialog = window.sessionStorage.getItem('pistoncore_open_newpiston');
+            var isListRoute = current && current.$$route && current.$$route.originalPath === '/';
+            if (!wantDialog || !isListRoute) return;
+            window.sessionStorage.removeItem('pistoncore_open_newpiston');
+
+            var attempts = 0;
+            function pollDialog() {
+                attempts++;
+                // the sidebar's own New Piston control exists once the list
+                // controller has rendered; its scope carries newPiston()
+                var el = document.querySelector('[ng-click="newPiston();"]');
+                if (loadRequestFinished() && el && window.angular) {
+                    var scope = angular.element(el).scope();
+                    if (scope && scope.newPiston) {
+                        scope.$applyAsync(function () { scope.newPiston(); });
+                        return;
+                    }
+                }
+                if (attempts < 100) $timeout(pollDialog, 100);
+            }
+            pollDialog();
+        });
+
+        // Leaving the New-Piston dialog without creating anything (Cancel/X)
+        // strands the user on webCoRE's list page — exit to the front door
+        // instead. createPiston() navigates to /piston/<id> ~100ms after
+        // closing the dialog, so wait long enough to tell the two apart.
+        $rootScope.$on('ngDialog.closed', function () {
+            $timeout(function () {
+                var onListRoute = $location.path() === '/' || $location.path() === '';
+                var dialogStillOpen = !!document.querySelector('.ngdialog');
+                if (onListRoute && !dialogStillOpen) window.location.href = '/';
+            }, 600);
+        });
+
         // IN: jump straight to a specific piston once the list route's own
         // session bootstrap has genuinely finished (see file header).
         $rootScope.$on('$routeChangeSuccess', function (event, current) {

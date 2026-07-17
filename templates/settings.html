@@ -24,12 +24,51 @@
       <input type="password" id="ha_token" name="ha_token" placeholder="{{ 'Already set — leave blank to keep it' if has_token else 'Paste a long-lived access token' }}">
       <p class="field-hint">Create one in Home Assistant: your profile → Security → Long-Lived Access Tokens.</p>
     </div>
+    <h2>Compiled-file write target</h2>
+    <p class="field-hint">
+      How PistonCore writes compiled automations into Home Assistant's <code>/config</code>.
+      <strong>Local path</strong>: HA's config folder is mounted into this container
+      (add-on, shared Docker volume, or a host-mounted share).
+      <strong>SMB</strong>: connect directly to HA's Samba share add-on over the network.
+    </p>
+    <div class="form-group">
+      <label for="write_mode">Write mode</label>
+      <select id="write_mode" name="write_mode">
+        <option value="local" {{ 'selected' if write_mode != 'smb' }}>Local path (mounted folder)</option>
+        <option value="smb" {{ 'selected' if write_mode == 'smb' }}>SMB (Samba share)</option>
+      </select>
+    </div>
+    <div id="local-fields" class="form-group">
+      <label for="ha_config_path">HA config path (inside this container)</label>
+      <input type="text" id="ha_config_path" name="ha_config_path" value="{{ ha_config_path }}" placeholder="/ha-config">
+    </div>
+    <div id="smb-fields" style="display:none">
+      <div class="form-group">
+        <label for="smb_host">SMB host</label>
+        <input type="text" id="smb_host" name="smb_host" value="{{ smb_host }}" placeholder="192.168.1.65 (blank = HA URL host)">
+      </div>
+      <div class="form-group">
+        <label for="smb_share">Share name</label>
+        <input type="text" id="smb_share" name="smb_share" value="{{ smb_share }}" placeholder="config">
+      </div>
+      <div class="form-group">
+        <label for="smb_username">Username</label>
+        <input type="text" id="smb_username" name="smb_username" value="{{ smb_username }}">
+      </div>
+      <div class="form-group">
+        <label for="smb_password">Password</label>
+        <input type="password" id="smb_password" name="smb_password" placeholder="{{ 'Already set — leave blank to keep it' if has_smb_password else '' }}">
+      </div>
+    </div>
+    <div id="write-test-banner"></div>
     <button type="submit" class="btn btn-primary">Save</button>
+    <button type="button" class="btn" id="test-write">Test write target</button>
   </form>
 
   <div class="mode-notice">
-    Default TTS engine, Location Mode source entity, dark/light default,
-    import/export, and backups aren't built into this page yet.
+    Default TTS engine, Location Mode source entity, and dark/light default
+    aren't built into this page yet. Import/export lives at
+    <a href="/backup">Import / Export</a>.
   </div>
 </div>
 {% endblock %}
