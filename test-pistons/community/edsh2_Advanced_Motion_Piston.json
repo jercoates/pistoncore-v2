@@ -1,0 +1,431 @@
+{
+ "name": "Advanced Motion Piston",
+ "meta": {
+  "name": "Advanced Motion Piston",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code edsh2 (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [
+   {
+    "t": "boolean",
+    "a": "d",
+    "n": "programmatic"
+   }
+  ],
+  "s": [
+   {
+    "t": "if",
+    "e": [],
+    "s": [
+     {
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+      ],
+      "t": "action",
+      "r": [],
+      "$": 29,
+      "a": "0",
+      "rop": "and",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "setVariable",
+        "$": 23,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "programmatic"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": "true",
+          "vt": "boolean"
+         }
+        ]
+       },
+       {
+        "c": "on",
+        "$": 30,
+        "p": []
+       },
+       {
+        "c": "setLevel",
+        "$": 31,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "(isBetween($now,time(\"04:00\"),time(\"23:00\")) ? 100 : 10)",
+          "t": "e",
+          "c": 0,
+          "vt": "integer"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "vt": "enum"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "r": [],
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "v": "time",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+       ],
+       "t": "p",
+       "a": "motion",
+       "vt": "string"
+      },
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "co": "changes_to",
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "active",
+       "vt": "enum"
+      },
+      "t": "condition",
+      "sm": "auto",
+      "s": true,
+      "ts": [],
+      "ro2": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "2017-07-22T05:00:00.000Z",
+       "vt": "string"
+      },
+      "$": 9,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "t"
+     },
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+       ],
+       "t": "p",
+       "a": "switch",
+       "p": "a",
+       "vt": "string"
+      },
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "co": "is",
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "off",
+       "vt": "enum"
+      },
+      "t": "condition",
+      "sm": "auto",
+      "ts": [],
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 32,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "c"
+     }
+    ],
+    "$": 3,
+    "a": "0",
+    "rop": "and",
+    "ei": [],
+    "o": "and",
+    "tcp": "c"
+   },
+   {
+    "e": [],
+    "t": "if",
+    "s": [
+     {
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+      ],
+      "t": "action",
+      "r": [],
+      "$": 18,
+      "rop": "and",
+      "a": "0",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "wait",
+        "$": 19,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": 5,
+          "vt": "m"
+         }
+        ]
+       },
+       {
+        "c": "off",
+        "$": 20,
+        "p": []
+       }
+      ]
+     }
+    ],
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+       ],
+       "t": "p",
+       "a": "motion",
+       "vt": "string"
+      },
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "inactive",
+       "vt": "enum"
+      },
+      "co": "changes_to",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 21,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "t"
+     },
+     {
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "x",
+       "vt": "string",
+       "x": "programmatic"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "true",
+       "vt": "boolean"
+      },
+      "co": "is",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 24,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "c"
+     }
+    ],
+    "r": [],
+    "$": 15,
+    "ei": [],
+    "rop": "and",
+    "a": "0",
+    "o": "and",
+    "tcp": "c"
+   },
+   {
+    "e": [],
+    "t": "if",
+    "s": [
+     {
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 26,
+      "rop": "and",
+      "a": "0",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "setVariable",
+        "$": 27,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "programmatic"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": "false",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+       ],
+       "t": "p",
+       "p": "a",
+       "a": "switch",
+       "vt": "string"
+      },
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "off",
+       "vt": "enum"
+      },
+      "co": "changes_to",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 28,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "t"
+     }
+    ],
+    "r": [],
+    "$": 25,
+    "ei": [],
+    "rop": "and",
+    "a": "0",
+    "o": "and",
+    "tcp": "c"
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "ced": 0
+  },
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "device",
+    "n": "White Bulb 9",
+    "a": [
+     "switch"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Motion Sensor 1",
+    "a": [
+     "motion"
+    ]
+   }
+  }
+ }
+}

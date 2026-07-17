@@ -1,0 +1,217 @@
+{
+ "name": "Time Between",
+ "meta": {
+  "name": "Time Between",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code x3pcd (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [],
+  "rn": false,
+  "s": [
+   {
+    "e": [],
+    "tep": "",
+    "rn": false,
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "v": "time",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "v",
+       "c": "",
+       "a": "",
+       "vt": "string",
+       "x": ""
+      },
+      "to": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "ro": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 300,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "co": "is_between",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 420,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "$": 2,
+      "fs": [],
+      "to2": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "z": "Using the virtual device time we can set a time frame we want an event to happen between",
+      "ct": "c"
+     },
+     {
+      "lo": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+       ],
+       "e": "",
+       "t": "p",
+       "c": "",
+       "a": "presence",
+       "vt": "string",
+       "x": ""
+      },
+      "to": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "ro": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "present",
+       "a": "",
+       "vt": "enum",
+       "x": ""
+      },
+      "co": "is",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "$": 3,
+      "fs": [],
+      "to2": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "z": "Check if I am home",
+      "ct": "c"
+     }
+    ],
+    "$": 1,
+    "a": "0",
+    "rop": "and",
+    "n": false,
+    "o": "and",
+    "tsp": "",
+    "t": "if",
+    "s": [
+     {
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+      ],
+      "rn": false,
+      "tep": "",
+      "$": 4,
+      "rop": "and",
+      "a": "0",
+      "k": [
+       {
+        "c": "on",
+        "$": 5,
+        "p": [],
+        "m": "",
+        "z": ""
+       }
+      ],
+      "tsp": "",
+      "t": "action",
+      "di": false,
+      "r": [],
+      "tcp": "c",
+      "z": "Turn on an outside light"
+     }
+    ],
+    "di": false,
+    "r": [],
+    "ei": [],
+    "tcp": "c",
+    "z": ""
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "ced": 0
+  },
+  "z": "An example piston that executes between a certain time frame",
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "device",
+    "n": "Presence Sensor 1",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Dimmer 2",
+    "a": []
+   }
+  }
+ }
+}

@@ -5,7 +5,8 @@
 # Exercises intent patterns (COMPILER_SPEC.md §3.0): #1 trigger-gated action,
 #   #4 timed follow-up with reset, #6 group-aggregate trigger (2-sensor motion group)
 #
-# BEHAVIORAL REVIEW (Jeremy: is this what the piston should do?):
+# BEHAVIORAL REVIEW: APPROVED (Jeremy, 2026-07-16 — "matches my intent").
+#   This fixture is a binding acceptance target.
 #   1. When EITHER cave motion sensor goes active AND the lumen sensor reads <= 1000,
 #      turn the cave light on.
 #   2. When either sensor goes inactive, wait 2 minutes, then turn the light off —

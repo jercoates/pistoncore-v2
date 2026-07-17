@@ -1,0 +1,2323 @@
+{
+ "name": "Magic Home",
+ "meta": {
+  "name": "Magic Home",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code dyf6 (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "e",
+     "e": "random(\"What up Fam!!\", \"What up hoe?\", \"Why, hello there!\", \"What's cookin good lookin?\", \"Uhhh who is it? Oh ello \" $currentEventDevice, \"Aaaaaaaaaaaaaaaah shit \"$currentEventDevice, \"Mmmmmmm \"$currentEventDevice\" it is so nice to have you back inside me!\", \"Welcome home \"$currentEventDevice\"!!\")",
+     "vt": "string"
+    },
+    "t": "string",
+    "a": "d",
+    "n": "arrivalMsg"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "e",
+     "e": "random(\"Bye Felicia!!\", \"See ya later \"$currentEventDevice\"! (but not if I see you first)\", \"Stay classy, sassy and a bit bad assy!!\", \"Toodle-oo kangaroo!!\", \"Like a fat kid in a dodgeball game \"$currentEventDevice\" is out!\", \"See ya later \"$currentEventDevice\"!!\")",
+     "vt": "string"
+    },
+    "t": "string",
+    "a": "d",
+    "n": "departureMsg"
+   },
+   {
+    "t": "boolean",
+    "a": "d",
+    "n": "onlyOnce"
+   }
+  ],
+  "s": [
+   {
+    "t": "if",
+    "e": [],
+    "s": [
+     {
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 3,
+      "a": "0",
+      "rop": "and",
+      "tcp": "c",
+      "z": "Disable the SHM",
+      "k": [
+       {
+        "c": "setAlarmSystemStatus",
+        "$": 4,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": "off",
+          "vt": "alarmSystemStatus"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        "$currentEventDevice"
+       ],
+       "t": "x",
+       "vt": "string",
+       "x": "$currentEventDevice"
+      },
+      "ctp": "i",
+      "e": [],
+      "t": "switch",
+      "r": [],
+      "$": 71,
+      "a": "0",
+      "rop": "and",
+      "tcp": "c",
+      "z": "Figure out who is home and open the correct garage",
+      "cs": [
+       {
+        "ro": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "c": "Dustin",
+         "vt": "string"
+        },
+        "t": "s",
+        "s": [
+         {
+          "t": "if",
+          "e": [],
+          "s": [
+           {
+            "d": [
+             ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+            ],
+            "t": "action",
+            "r": [],
+            "$": 108,
+            "a": "0",
+            "rop": "and",
+            "tcp": "c",
+            "k": [
+             {
+              "c": "open",
+              "$": 109,
+              "p": []
+             },
+             {
+              "c": "setVariable",
+              "$": 70,
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "d": [],
+                "t": "x",
+                "vt": "variable",
+                "x": "arrivalMsg"
+               },
+               {
+                "f": "l",
+                "g": "avg",
+                "d": [],
+                "t": "e",
+                "e": "arrivalMsg + \"  The main garage door is opening now!!  \"",
+                "vt": "string"
+               }
+              ]
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "c": [
+           {
+            "lo": {
+             "f": "l",
+             "g": "any",
+             "d": [
+              ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+             ],
+             "t": "p",
+             "a": "contact",
+             "vt": "string"
+            },
+            "to": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "co": "is",
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": "closed",
+             "vt": "enum"
+            },
+            "t": "condition",
+            "sm": "auto",
+            "ts": [],
+            "ro2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "$": 69,
+            "fs": [],
+            "to2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "ct": "c"
+           },
+           {
+            "lo": {
+             "f": "l",
+             "g": "any",
+             "d": [
+              ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+             ],
+             "t": "p",
+             "a": "presence",
+             "vt": "string"
+            },
+            "to": {
+             "f": "g",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": 1,
+             "vt": "m"
+            },
+            "co": "was_not",
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": "present",
+             "vt": "enum"
+            },
+            "t": "condition",
+            "sm": "auto",
+            "ts": [],
+            "ro2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "$": 94,
+            "fs": [],
+            "to2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "ct": "c"
+           }
+          ],
+          "$": 66,
+          "ei": [],
+          "rop": "and",
+          "a": "0",
+          "o": "and",
+          "tcp": "c"
+         },
+         {
+          "t": "if",
+          "e": [],
+          "s": [
+           {
+            "d": [
+             ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+            ],
+            "t": "action",
+            "r": [],
+            "$": 98,
+            "a": "0",
+            "rop": "and",
+            "tcp": "c",
+            "k": [
+             {
+              "c": "open",
+              "$": 158,
+              "p": []
+             },
+             {
+              "c": "setVariable",
+              "$": 99,
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "d": [],
+                "t": "x",
+                "vt": "variable",
+                "x": "arrivalMsg"
+               },
+               {
+                "f": "l",
+                "g": "avg",
+                "d": [],
+                "t": "e",
+                "e": "arrivalMsg + \"  The side garage door is opening now!!  \"",
+                "vt": "string"
+               }
+              ]
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "c": [
+           {
+            "lo": {
+             "f": "l",
+             "g": "any",
+             "d": [
+              ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+             ],
+             "t": "p",
+             "a": "contact",
+             "vt": "string"
+            },
+            "to": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "co": "is",
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": "closed",
+             "vt": "enum"
+            },
+            "t": "condition",
+            "sm": "auto",
+            "ts": [],
+            "ro2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "$": 96,
+            "fs": [],
+            "to2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "ct": "c"
+           },
+           {
+            "lo": {
+             "f": "l",
+             "g": "any",
+             "d": [
+              ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:"
+             ],
+             "t": "p",
+             "a": "presence",
+             "vt": "string"
+            },
+            "to": {
+             "f": "g",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": 1,
+             "vt": "m"
+            },
+            "co": "was_not",
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": "present",
+             "vt": "enum"
+            },
+            "t": "condition",
+            "sm": "auto",
+            "ts": [],
+            "ro2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "$": 97,
+            "fs": [],
+            "to2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "ct": "c"
+           }
+          ],
+          "$": 95,
+          "ei": [],
+          "rop": "and",
+          "a": "0",
+          "o": "and",
+          "tcp": "c"
+         },
+         {
+          "d": [],
+          "t": "action",
+          "r": [],
+          "$": 74,
+          "rop": "and",
+          "a": "0",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "sendNotificationToContacts",
+            "$": 75,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "x",
+              "vt": "string",
+              "x": "arrivalMsg"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": [
+               ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:"
+              ],
+              "vt": "contact"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": "true",
+              "vt": "boolean"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "ro2": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "vt": "string"
+        },
+        "$": 72
+       },
+       {
+        "ro": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "c": "Laura",
+         "vt": "string"
+        },
+        "t": "s",
+        "s": [
+         {
+          "t": "if",
+          "e": [],
+          "s": [
+           {
+            "d": [
+             ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+            ],
+            "t": "action",
+            "r": [],
+            "$": 103,
+            "a": "0",
+            "rop": "and",
+            "tcp": "c",
+            "k": [
+             {
+              "c": "open",
+              "$": 104,
+              "p": []
+             },
+             {
+              "c": "setVariable",
+              "$": 105,
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "d": [],
+                "t": "x",
+                "vt": "variable",
+                "x": "arrivalMsg"
+               },
+               {
+                "f": "l",
+                "g": "avg",
+                "d": [],
+                "t": "e",
+                "e": "arrivalMsg + \"  The main garage door is opening now!!  \"",
+                "vt": "string"
+               }
+              ]
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "c": [
+           {
+            "lo": {
+             "f": "l",
+             "g": "any",
+             "d": [
+              ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+             ],
+             "t": "p",
+             "a": "contact",
+             "vt": "string"
+            },
+            "to": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "co": "is",
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": "closed",
+             "vt": "enum"
+            },
+            "t": "condition",
+            "sm": "auto",
+            "ts": [],
+            "ro2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "$": 101,
+            "fs": [],
+            "to2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "ct": "c"
+           },
+           {
+            "lo": {
+             "f": "l",
+             "g": "any",
+             "d": [
+              ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:"
+             ],
+             "t": "p",
+             "a": "presence",
+             "vt": "string"
+            },
+            "to": {
+             "f": "g",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": 1,
+             "vt": "m"
+            },
+            "co": "was_not",
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "d": [],
+             "t": "c",
+             "c": "present",
+             "vt": "enum"
+            },
+            "t": "condition",
+            "sm": "auto",
+            "ts": [],
+            "ro2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "$": 102,
+            "fs": [],
+            "to2": {
+             "g": "any",
+             "d": [],
+             "t": "c"
+            },
+            "ct": "c"
+           }
+          ],
+          "$": 100,
+          "ei": [],
+          "rop": "and",
+          "a": "0",
+          "o": "and",
+          "tcp": "c"
+         },
+         {
+          "d": [],
+          "t": "action",
+          "r": [],
+          "$": 76,
+          "rop": "and",
+          "a": "0",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "sendNotificationToContacts",
+            "$": 77,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "x",
+              "vt": "string",
+              "x": "arrivalMsg"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": [
+               ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:"
+              ],
+              "vt": "contact"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": "true",
+              "vt": "boolean"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "ro2": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "vt": "string"
+        },
+        "$": 73
+       }
+      ]
+     },
+     {
+      "t": "if",
+      "e": [],
+      "s": [
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:"
+        ],
+        "t": "action",
+        "r": [],
+        "$": 110,
+        "a": "0",
+        "rop": "and",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setLocationMode",
+          "$": 111,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:",
+            "vt": "mode"
+           }
+          ]
+         },
+         {
+          "c": "setLevel",
+          "$": 21,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 100,
+            "vt": "integer"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "vt": "enum"
+           }
+          ]
+         },
+         {
+          "c": "wait",
+          "$": 23,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 10,
+            "vt": "m"
+           }
+          ]
+         },
+         {
+          "c": "off",
+          "$": 24,
+          "p": []
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "c": [
+       {
+        "to": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "v": "time",
+         "d": [],
+         "t": "v",
+         "vt": "string"
+        },
+        "co": "is_between",
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "c": 300,
+         "vt": "time"
+        },
+        "t": "condition",
+        "sm": "auto",
+        "ts": [],
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "s",
+         "s": "sunrise",
+         "c": 0,
+         "vt": "time"
+        },
+        "$": 35,
+        "fs": [],
+        "ct": "c"
+       }
+      ],
+      "$": 34,
+      "ei": [],
+      "rop": "and",
+      "a": "0",
+      "o": "and",
+      "tcp": "c",
+      "z": "The below IFs determine what mode to set the home"
+     },
+     {
+      "t": "if",
+      "e": [],
+      "s": [
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:"
+        ],
+        "t": "action",
+        "r": [],
+        "$": 114,
+        "a": "0",
+        "rop": "and",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setLocationMode",
+          "$": 115,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:",
+            "vt": "mode"
+           }
+          ]
+         },
+         {
+          "c": "setLevel",
+          "$": 116,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 100,
+            "vt": "integer"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "vt": "enum"
+           }
+          ]
+         },
+         {
+          "c": "wait",
+          "$": 117,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 10,
+            "vt": "m"
+           }
+          ]
+         },
+         {
+          "c": "off",
+          "$": 118,
+          "p": []
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "c": [
+       {
+        "to": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "v": "time",
+         "d": [],
+         "t": "v",
+         "vt": "string"
+        },
+        "co": "is_between",
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "s",
+         "s": "sunrise",
+         "c": 450,
+         "vt": "time"
+        },
+        "t": "condition",
+        "sm": "auto",
+        "ts": [],
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "c": 1200,
+         "vt": "time"
+        },
+        "$": 113,
+        "fs": [],
+        "ct": "c"
+       }
+      ],
+      "$": 112,
+      "ei": [],
+      "rop": "and",
+      "a": "0",
+      "o": "and",
+      "tcp": "c"
+     },
+     {
+      "t": "if",
+      "e": [],
+      "s": [
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:"
+        ],
+        "t": "action",
+        "r": [],
+        "$": 36,
+        "a": "0",
+        "rop": "and",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setLocationMode",
+          "$": 37,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx15:",
+            "vt": "mode"
+           }
+          ]
+         },
+         {
+          "c": "setLevel",
+          "$": 38,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 100,
+            "vt": "integer"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "vt": "enum"
+           }
+          ]
+         },
+         {
+          "c": "wait",
+          "$": 39,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 10,
+            "vt": "m"
+           }
+          ]
+         },
+         {
+          "c": "off",
+          "$": 40,
+          "p": []
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "c": [
+       {
+        "to": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "v": "time",
+         "d": [],
+         "t": "v",
+         "vt": "string"
+        },
+        "co": "is_between",
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "s": "sunrise",
+         "c": 1200,
+         "vt": "time"
+        },
+        "t": "condition",
+        "sm": "auto",
+        "ts": [],
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "c": 1320,
+         "vt": "time"
+        },
+        "$": 120,
+        "fs": [],
+        "ct": "c"
+       }
+      ],
+      "$": 119,
+      "ei": [],
+      "rop": "and",
+      "a": "0",
+      "o": "and",
+      "tcp": "c"
+     },
+     {
+      "t": "if",
+      "e": [],
+      "s": [
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx16:"
+        ],
+        "t": "action",
+        "r": [],
+        "$": 27,
+        "a": "0",
+        "rop": "and",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setLocationMode",
+          "$": 63,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx15:",
+            "vt": "mode"
+           }
+          ]
+         },
+         {
+          "c": "setLevel",
+          "$": 28,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 100,
+            "vt": "integer"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "vt": "enum"
+           }
+          ]
+         },
+         {
+          "c": "wait",
+          "$": 30,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 10,
+            "vt": "m"
+           }
+          ]
+         },
+         {
+          "c": "off",
+          "$": 31,
+          "p": []
+         },
+         {
+          "c": "setLocationMode",
+          "$": 166,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:",
+            "vt": "mode"
+           }
+          ]
+         },
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 64,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": "stay",
+            "vt": "alarmSystemStatus"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:"
+        ],
+        "t": "action",
+        "r": [],
+        "$": 32,
+        "a": "0",
+        "rop": "and",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setLevel",
+          "$": 33,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": 100,
+            "vt": "integer"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "vt": "enum"
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "c": [
+       {
+        "to": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "v": "time",
+         "d": [],
+         "t": "v",
+         "vt": "string"
+        },
+        "co": "is_between",
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "c": 1320,
+         "vt": "time"
+        },
+        "t": "condition",
+        "sm": "auto",
+        "ts": [],
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "c": 300,
+         "vt": "time"
+        },
+        "$": 26,
+        "fs": [],
+        "ct": "c"
+       }
+      ],
+      "$": 25,
+      "ei": [],
+      "rop": "and",
+      "a": "0",
+      "o": "and",
+      "tcp": "c"
+     },
+     {
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 167,
+      "rop": "and",
+      "a": "0",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "setState",
+        "$": 168,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "string",
+          "x": "arrivalMsg"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "r": [],
+    "c": [
+     {
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:",
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx20:"
+       ],
+       "t": "p",
+       "a": "presence",
+       "vt": "string"
+      },
+      "co": "changes_to",
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "present",
+       "vt": "enum"
+      },
+      "t": "condition",
+      "sm": "auto",
+      "s": true,
+      "ts": [],
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 2,
+      "fs": [],
+      "ct": "t"
+     }
+    ],
+    "$": 1,
+    "ei": [],
+    "rop": "and",
+    "a": "0",
+    "o": "and",
+    "tcp": "c",
+    "z": "This block handles when someone arrives"
+   },
+   {
+    "t": "if",
+    "e": [],
+    "s": [
+     {
+      "t": "if",
+      "e": [],
+      "s": [
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx21:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx22:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx23:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx16:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx24:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx25:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx26:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx27:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx28:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx29:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx30:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx31:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx32:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx33:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx34:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx35:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx36:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx37:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx38:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx39:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx40:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx41:"
+        ],
+        "t": "action",
+        "r": [],
+        "$": 43,
+        "a": "0",
+        "rop": "and",
+        "tcp": "c",
+        "z": "Turn off all the lights",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 44,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": "away",
+            "vt": "alarmSystemStatus"
+           }
+          ]
+         },
+         {
+          "c": "off",
+          "$": 45,
+          "p": []
+         },
+         {
+          "c": "setVariable",
+          "$": 46,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "x",
+            "vt": "variable",
+            "x": "departureMsg"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "e",
+            "e": "departureMsg + \"  The house has been shut down!\"",
+            "vt": "string"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "t": "while",
+        "s": [
+         {
+          "d": [
+           ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+          ],
+          "t": "action",
+          "r": [],
+          "$": 47,
+          "a": "0",
+          "rop": "and",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "close",
+            "$": 48,
+            "p": []
+           },
+           {
+            "c": "wait",
+            "$": 49,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": 1,
+              "vt": "m"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "c": [
+         {
+          "lo": {
+           "f": "l",
+           "g": "any",
+           "d": [
+            ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+           ],
+           "t": "p",
+           "a": "contact",
+           "vt": "string"
+          },
+          "to": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "co": "is",
+          "ro": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "c",
+           "c": "open",
+           "vt": "enum"
+          },
+          "t": "condition",
+          "sm": "auto",
+          "ts": [],
+          "ro2": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "$": 160,
+          "fs": [],
+          "to2": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "ct": "c"
+         }
+        ],
+        "$": 159,
+        "a": "1",
+        "rop": "and",
+        "o": "and",
+        "tcp": "c",
+        "z": "If the main garage door is open, then close it and keep trying every minute until it is closed"
+       },
+       {
+        "t": "while",
+        "s": [
+         {
+          "d": [
+           ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+          ],
+          "t": "action",
+          "r": [],
+          "$": 162,
+          "a": "0",
+          "rop": "and",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "close",
+            "$": 163,
+            "p": []
+           },
+           {
+            "c": "wait",
+            "$": 164,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": 1,
+              "vt": "m"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "c": [
+         {
+          "lo": {
+           "f": "l",
+           "g": "any",
+           "d": [
+            ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+           ],
+           "t": "p",
+           "a": "contact",
+           "vt": "string"
+          },
+          "to": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "co": "is",
+          "ro": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "c",
+           "c": "open",
+           "vt": "enum"
+          },
+          "t": "condition",
+          "sm": "auto",
+          "ts": [],
+          "ro2": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "$": 165,
+          "fs": [],
+          "to2": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "ct": "c"
+         }
+        ],
+        "$": 161,
+        "a": "1",
+        "rop": "and",
+        "o": "and",
+        "tcp": "c",
+        "z": "If the side garage door is open, then close it and keep trying every minute until it is closed"
+       },
+       {
+        "t": "if",
+        "e": [],
+        "s": [
+         {
+          "d": [],
+          "t": "action",
+          "r": [],
+          "$": 53,
+          "a": "0",
+          "rop": "and",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "setLocationMode",
+            "$": 54,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx42:",
+              "vt": "mode"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "c": [
+         {
+          "to": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "lo": {
+           "f": "l",
+           "g": "any",
+           "v": "time",
+           "d": [],
+           "t": "v",
+           "vt": "string"
+          },
+          "co": "is_between",
+          "ro": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "c",
+           "c": 300,
+           "vt": "time"
+          },
+          "t": "condition",
+          "sm": "auto",
+          "ts": [],
+          "ro2": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "s",
+           "s": "sunrise",
+           "c": 0,
+           "vt": "time"
+          },
+          "$": 52,
+          "fs": [],
+          "ct": "c"
+         }
+        ],
+        "$": 51,
+        "ei": [],
+        "rop": "and",
+        "a": "0",
+        "o": "and",
+        "tcp": "c",
+        "z": "Below handles the mode for away"
+       },
+       {
+        "t": "if",
+        "e": [],
+        "s": [
+         {
+          "d": [],
+          "t": "action",
+          "r": [],
+          "$": 57,
+          "a": "0",
+          "rop": "and",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "setLocationMode",
+            "$": 58,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx43:",
+              "vt": "mode"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "c": [
+         {
+          "to": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "lo": {
+           "f": "l",
+           "g": "any",
+           "v": "time",
+           "d": [],
+           "t": "v",
+           "vt": "string"
+          },
+          "co": "is_between",
+          "ro": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "s",
+           "s": "sunrise",
+           "c": 300,
+           "vt": "time"
+          },
+          "t": "condition",
+          "sm": "auto",
+          "ts": [],
+          "ro2": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "c",
+           "s": "sunrise",
+           "c": 1200,
+           "vt": "time"
+          },
+          "$": 56,
+          "fs": [],
+          "ct": "c"
+         }
+        ],
+        "$": 55,
+        "ei": [],
+        "rop": "and",
+        "a": "0",
+        "o": "and",
+        "tcp": "c"
+       },
+       {
+        "t": "if",
+        "e": [],
+        "s": [
+         {
+          "d": [],
+          "t": "action",
+          "r": [],
+          "$": 61,
+          "a": "0",
+          "rop": "and",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "setLocationMode",
+            "$": 62,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx44:",
+              "vt": "mode"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "c": [
+         {
+          "to": {
+           "g": "any",
+           "d": [],
+           "t": "c"
+          },
+          "lo": {
+           "f": "l",
+           "g": "any",
+           "v": "time",
+           "d": [],
+           "t": "v",
+           "vt": "string"
+          },
+          "co": "is_between",
+          "ro": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "c",
+           "s": "sunrise",
+           "c": 1200,
+           "vt": "time"
+          },
+          "t": "condition",
+          "sm": "auto",
+          "ts": [],
+          "ro2": {
+           "f": "l",
+           "g": "any",
+           "d": [],
+           "t": "c",
+           "s": "sunrise",
+           "c": 300,
+           "vt": "time"
+          },
+          "$": 60,
+          "fs": [],
+          "ct": "c"
+         }
+        ],
+        "$": 59,
+        "ei": [],
+        "rop": "and",
+        "a": "0",
+        "o": "and",
+        "tcp": "c"
+       }
+      ],
+      "r": [],
+      "c": [
+       {
+        "to": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "lo": {
+         "f": "l",
+         "g": "all",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:",
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx20:"
+         ],
+         "t": "p",
+         "a": "presence",
+         "vt": "string"
+        },
+        "co": "is",
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "c": "not present",
+         "vt": "enum"
+        },
+        "t": "condition",
+        "sm": "auto",
+        "ts": [],
+        "ro2": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "$": 42,
+        "fs": [],
+        "ct": "c"
+       }
+      ],
+      "$": 41,
+      "ei": [],
+      "rop": "and",
+      "a": "0",
+      "o": "and",
+      "tcp": "c",
+      "z": "This block is for when everyone is gone"
+     },
+     {
+      "lo": {
+       "f": "l",
+       "g": "avg",
+       "d": [],
+       "t": "x",
+       "vt": "string",
+       "x": "$currentEventDevice"
+      },
+      "ctp": "i",
+      "e": [],
+      "t": "switch",
+      "r": [],
+      "$": 82,
+      "a": "0",
+      "rop": "and",
+      "tcp": "c",
+      "z": "Only the current person leaving should get the notification",
+      "cs": [
+       {
+        "ro": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "c": "Dustin",
+         "vt": "string",
+         "x": "departureMsg"
+        },
+        "t": "s",
+        "s": [
+         {
+          "d": [],
+          "t": "action",
+          "r": [],
+          "$": 85,
+          "rop": "and",
+          "a": "0",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "sendNotificationToContacts",
+            "$": 86,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "x",
+              "vt": "string",
+              "x": "departureMsg"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": [
+               ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:"
+              ],
+              "vt": "contact"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": "true",
+              "vt": "boolean"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "ro2": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "vt": "string"
+        },
+        "$": 83
+       },
+       {
+        "ro": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "c": "Laura",
+         "vt": "string"
+        },
+        "t": "s",
+        "s": [
+         {
+          "d": [],
+          "t": "action",
+          "r": [],
+          "$": 87,
+          "rop": "and",
+          "a": "0",
+          "tcp": "c",
+          "k": [
+           {
+            "c": "sendNotificationToContacts",
+            "$": 88,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "x",
+              "vt": "string",
+              "x": "departureMsg"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": [
+               ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:"
+              ],
+              "vt": "contact"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": "true",
+              "vt": "boolean"
+             }
+            ]
+           },
+           {
+            "c": "setVariable",
+            "$": 142,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "x",
+              "vt": "variable",
+              "x": "onlyOnce"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "d": [],
+              "t": "c",
+              "c": "false",
+              "vt": "boolean"
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "ro2": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "vt": "string"
+        },
+        "$": 84
+       }
+      ]
+     },
+     {
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 169,
+      "rop": "and",
+      "a": "0",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "setState",
+        "$": 170,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "string",
+          "x": "departureMsg"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "r": [],
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:",
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx20:"
+       ],
+       "t": "p",
+       "a": "presence",
+       "vt": "string"
+      },
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "not present",
+       "vt": "enum"
+      },
+      "co": "changes_to",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 79,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "t"
+     }
+    ],
+    "$": 78,
+    "ei": [],
+    "rop": "and",
+    "a": "0",
+    "o": "and",
+    "tcp": "c",
+    "z": "This block handles when one of us leaves"
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "pep": 0,
+   "des": 0,
+   "mps": 1,
+   "ced": 0
+  },
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "device",
+    "n": "Contact Sensor 10",
+    "a": [
+     "contact"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Presence Sensor 4",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:": {
+    "t": "device",
+    "n": "Contact Sensor 14",
+    "a": [
+     "contact"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:": {
+    "t": "device",
+    "n": "Presence Sensor 6",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:": {
+    "t": "contact"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:": {
+    "t": "unknown"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:": {
+    "t": "device",
+    "n": "Presence Sensor 5",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7:": {
+    "t": "contact"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:": {
+    "t": "unknown"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:": {
+    "t": "device",
+    "n": "White Bulb 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:": {
+    "t": "device",
+    "n": "White Bulb 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:": {
+    "t": "device",
+    "n": "White Bulb 4",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:": {
+    "t": "device",
+    "n": "White Bulb 7",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx15:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx16:": {
+    "t": "device",
+    "n": "White Bulb 6",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:": {
+    "t": "mode",
+    "n": "Sleep"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:": {
+    "t": "device",
+    "n": "Dimmer 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:": {
+    "t": "device",
+    "n": "Presence Sensor 1",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx20:": {
+    "t": "device",
+    "n": "Presence Sensor 2",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx21:": {
+    "t": "device",
+    "n": "RGB Bulb 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx22:": {
+    "t": "device",
+    "n": "RGB Bulb 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx23:": {
+    "t": "device",
+    "n": "White Bulb 5",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx24:": {
+    "t": "device",
+    "n": "Switch 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx25:": {
+    "t": "device",
+    "n": "White Bulb 8",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx26:": {
+    "t": "device",
+    "n": "RGB Bulb 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx27:": {
+    "t": "device",
+    "n": "Dimmer 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx28:": {
+    "t": "device",
+    "n": "White Bulb 9",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx29:": {
+    "t": "device",
+    "n": "Switch 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx30:": {
+    "t": "device",
+    "n": "Switch 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx31:": {
+    "t": "device",
+    "n": "White Bulb 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx32:": {
+    "t": "device",
+    "n": "Switch 4",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx33:": {
+    "t": "device",
+    "n": "White Bulb 10",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx34:": {
+    "t": "device",
+    "n": "RGB Bulb 4",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx35:": {
+    "t": "device",
+    "n": "White Bulb 11",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx36:": {
+    "t": "device",
+    "n": "White Bulb 12",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx37:": {
+    "t": "device",
+    "n": "Outlet 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx38:": {
+    "t": "device",
+    "n": "Outlet 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx39:": {
+    "t": "device",
+    "n": "RGB Bulb 5",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx40:": {
+    "t": "device",
+    "n": "White Bulb 13",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx41:": {
+    "t": "device",
+    "n": "White Bulb 14",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx42:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx43:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx44:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   }
+  }
+ }
+}

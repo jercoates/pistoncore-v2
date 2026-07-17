@@ -1,0 +1,1314 @@
+{
+ "name": "House Scheduler",
+ "meta": {
+  "name": "House Scheduler",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code 1hj33x (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [],
+  "rn": false,
+  "s": [
+   {
+    "e": [],
+    "tep": "",
+    "rn": false,
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "v": "time",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "v",
+       "c": "",
+       "a": "",
+       "vt": "string",
+       "x": ""
+      },
+      "to": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "ro": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 300,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "co": "is_between",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "s",
+       "s": "sunrise",
+       "c": 0,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "$": 2,
+      "fs": [],
+      "z": "",
+      "ct": "c"
+     }
+    ],
+    "$": 1,
+    "a": "0",
+    "rop": "and",
+    "n": false,
+    "o": "and",
+    "t": "if",
+    "s": [
+     {
+      "e": [
+       {
+        "d": [],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 4,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 5,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "away",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 6,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "tep": "",
+      "rn": false,
+      "c": [
+       {
+        "lo": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:",
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+         ],
+         "e": "",
+         "t": "p",
+         "c": "",
+         "a": "presence",
+         "vt": "string",
+         "x": ""
+        },
+        "to": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "ro": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "present",
+         "a": "",
+         "vt": "enum",
+         "x": ""
+        },
+        "co": "is",
+        "sm": "never",
+        "t": "condition",
+        "ts": [],
+        "s": false,
+        "ro2": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "$": 7,
+        "fs": [],
+        "to2": {
+         "t": "c",
+         "c": 0
+        },
+        "z": "",
+        "ct": "c"
+       }
+      ],
+      "$": 3,
+      "a": "0",
+      "rop": "and",
+      "n": false,
+      "o": "and",
+      "t": "if",
+      "s": [
+       {
+        "d": [],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 8,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 9,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "off",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 10,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "r": [],
+      "ei": [],
+      "tcp": "c",
+      "z": ""
+     }
+    ],
+    "r": [],
+    "ei": [],
+    "tcp": "c",
+    "z": ""
+   },
+   {
+    "e": [],
+    "tep": "",
+    "rn": false,
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "v": "time",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "v",
+       "c": "",
+       "a": "",
+       "vt": "string",
+       "x": ""
+      },
+      "to": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "ro": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "s",
+       "s": "sunrise",
+       "c": 0,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "co": "is_between",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 1200,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "$": 12,
+      "fs": [],
+      "z": "",
+      "ct": "c"
+     }
+    ],
+    "$": 11,
+    "a": "0",
+    "rop": "and",
+    "n": false,
+    "o": "and",
+    "t": "if",
+    "s": [
+     {
+      "e": [
+       {
+        "d": [],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 14,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 15,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "away",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 16,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "tep": "",
+      "rn": false,
+      "c": [
+       {
+        "lo": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:",
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+         ],
+         "e": "",
+         "t": "p",
+         "c": "",
+         "a": "presence",
+         "vt": "string",
+         "x": ""
+        },
+        "to": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "ro": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "present",
+         "a": "",
+         "vt": "enum",
+         "x": ""
+        },
+        "co": "is",
+        "sm": "never",
+        "t": "condition",
+        "ts": [],
+        "s": false,
+        "ro2": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "$": 17,
+        "fs": [],
+        "to2": {
+         "t": "c",
+         "c": 0
+        },
+        "z": "",
+        "ct": "c"
+       }
+      ],
+      "$": 13,
+      "a": "0",
+      "rop": "and",
+      "n": false,
+      "o": "and",
+      "t": "if",
+      "s": [
+       {
+        "d": [],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 18,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 19,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "off",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 20,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "r": [],
+      "ei": [],
+      "tcp": "c",
+      "z": ""
+     }
+    ],
+    "r": [],
+    "ei": [],
+    "tcp": "c",
+    "z": ""
+   },
+   {
+    "e": [],
+    "tep": "",
+    "rn": false,
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "v": "time",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "v",
+       "c": "",
+       "a": "",
+       "vt": "string",
+       "x": ""
+      },
+      "to": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "ro": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 1200,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "co": "is_between",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 1320,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "$": 22,
+      "fs": [],
+      "z": "",
+      "ct": "c"
+     }
+    ],
+    "$": 21,
+    "a": "0",
+    "rop": "and",
+    "n": false,
+    "o": "and",
+    "t": "if",
+    "s": [
+     {
+      "e": [
+       {
+        "d": [],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 24,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 25,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "away",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 26,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "tep": "",
+      "rn": false,
+      "c": [
+       {
+        "lo": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:",
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+         ],
+         "e": "",
+         "t": "p",
+         "c": "",
+         "a": "presence",
+         "vt": "string",
+         "x": ""
+        },
+        "to": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "ro": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "present",
+         "a": "",
+         "vt": "enum",
+         "x": ""
+        },
+        "co": "is",
+        "sm": "never",
+        "t": "condition",
+        "ts": [],
+        "s": false,
+        "ro2": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "$": 27,
+        "fs": [],
+        "to2": {
+         "t": "c",
+         "c": 0
+        },
+        "z": "",
+        "ct": "c"
+       }
+      ],
+      "$": 23,
+      "a": "0",
+      "rop": "and",
+      "n": false,
+      "o": "and",
+      "t": "if",
+      "s": [
+       {
+        "d": [],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 28,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 29,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "off",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 30,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "r": [],
+      "ei": [],
+      "tcp": "c",
+      "z": ""
+     }
+    ],
+    "r": [],
+    "ei": [],
+    "tcp": "c",
+    "z": ""
+   },
+   {
+    "e": [],
+    "tep": "",
+    "rn": false,
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "v": "time",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "v",
+       "c": "",
+       "a": "",
+       "vt": "string",
+       "x": ""
+      },
+      "to": {
+       "v": null,
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "ro": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 1320,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "co": "is_between",
+      "sm": "auto",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "f": "l",
+       "v": "",
+       "g": "any",
+       "d": [],
+       "e": "",
+       "t": "c",
+       "c": 300,
+       "a": "",
+       "vt": "time",
+       "x": ""
+      },
+      "$": 32,
+      "fs": [],
+      "z": "",
+      "ct": "c"
+     }
+    ],
+    "$": 31,
+    "a": "0",
+    "rop": "and",
+    "n": false,
+    "o": "and",
+    "t": "if",
+    "s": [
+     {
+      "e": [
+       {
+        "d": [],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 34,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 35,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "away",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 36,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "tep": "",
+      "rn": false,
+      "c": [
+       {
+        "lo": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:",
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:"
+         ],
+         "e": "",
+         "t": "p",
+         "c": "",
+         "a": "presence",
+         "vt": "string",
+         "x": ""
+        },
+        "to": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "ro": {
+         "f": "l",
+         "v": "",
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "present",
+         "a": "",
+         "vt": "enum",
+         "x": ""
+        },
+        "co": "is",
+        "sm": "never",
+        "t": "condition",
+        "ts": [],
+        "s": false,
+        "ro2": {
+         "v": null,
+         "g": "any",
+         "d": [],
+         "e": "",
+         "t": "c",
+         "c": "",
+         "a": null,
+         "x": null
+        },
+        "$": 37,
+        "fs": [],
+        "to2": {
+         "t": "c",
+         "c": 0
+        },
+        "z": "",
+        "ct": "c"
+       }
+      ],
+      "$": 33,
+      "a": "0",
+      "rop": "and",
+      "n": false,
+      "o": "and",
+      "t": "if",
+      "s": [
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx15:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx16:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx20:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx21:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx22:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx23:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx24:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx25:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx26:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx27:"
+        ],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 38,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setAlarmSystemStatus",
+          "$": 39,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": "stay",
+            "a": "",
+            "vt": "alarmSystemStatus",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "setLocationMode",
+          "$": 40,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx28:",
+            "a": "",
+            "vt": "mode",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         },
+         {
+          "c": "off",
+          "$": 41,
+          "p": [],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       },
+       {
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx29:"
+        ],
+        "rn": false,
+        "tep": "",
+        "t": "action",
+        "r": [],
+        "$": 42,
+        "rop": "and",
+        "a": "0",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "setLevel",
+          "$": 43,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "c",
+            "e": "",
+            "c": 100,
+            "a": "",
+            "vt": "integer",
+            "x": ""
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "v": "",
+            "d": [],
+            "t": "",
+            "e": "",
+            "c": "",
+            "a": "",
+            "vt": "enum",
+            "x": ""
+           }
+          ],
+          "m": "",
+          "z": ""
+         }
+        ],
+        "z": ""
+       }
+      ],
+      "r": [],
+      "ei": [],
+      "tcp": "c",
+      "z": ""
+     }
+    ],
+    "r": [],
+    "ei": [],
+    "tcp": "c",
+    "z": ""
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "ced": 0
+  },
+  "z": "",
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Presence Sensor 1",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:": {
+    "t": "device",
+    "n": "Presence Sensor 2",
+    "a": [
+     "presence"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7:": {
+    "t": "mode",
+    "n": "Custom Mode"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:": {
+    "t": "device",
+    "n": "RGB Bulb 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:": {
+    "t": "device",
+    "n": "RGB Bulb 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:": {
+    "t": "device",
+    "n": "Dimmer 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:": {
+    "t": "device",
+    "n": "Dimmer 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:": {
+    "t": "device",
+    "n": "Dimmer 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:": {
+    "t": "device",
+    "n": "Dimmer 4",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:": {
+    "t": "device",
+    "n": "Dimmer 5",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx15:": {
+    "t": "device",
+    "n": "Dimmer 6",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx16:": {
+    "t": "device",
+    "n": "Dimmer 7",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:": {
+    "t": "device",
+    "n": "RGB Bulb 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:": {
+    "t": "device",
+    "n": "Dimmer 9",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:": {
+    "t": "device",
+    "n": "Switch 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx20:": {
+    "t": "device",
+    "n": "Dimmer 10",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx21:": {
+    "t": "device",
+    "n": "Dimmer 11",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx22:": {
+    "t": "device",
+    "n": "RGB Bulb 4",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx23:": {
+    "t": "device",
+    "n": "Dimmer 13",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx24:": {
+    "t": "device",
+    "n": "Dimmer 14",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx25:": {
+    "t": "device",
+    "n": "RGB Bulb 5",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx26:": {
+    "t": "device",
+    "n": "Dimmer 15",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx27:": {
+    "t": "device",
+    "n": "Dimmer 16",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx28:": {
+    "t": "mode",
+    "n": "Sleep"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx29:": {
+    "t": "device",
+    "n": "Dimmer 12",
+    "a": []
+   }
+  }
+ }
+}

@@ -1,0 +1,1071 @@
+{
+ "name": "Astronomical Data API v2",
+ "meta": {
+  "name": "Astronomical Data API v2",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code tybg (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "mps": 1,
+   "pep": 0
+  },
+  "r": [],
+  "rop": "and",
+  "s": [
+   {
+    "$": 25,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 959,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "s": "sunrise",
+     "t": "s",
+     "vt": "time"
+    },
+    "lo3": {
+     "c": -3,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "h"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 1,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 24,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "time_offset"
+         },
+         {
+          "c": 0,
+          "d": [],
+          "e": "integer(($localNow-$utc)/1000)",
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "integer"
+         }
+        ],
+        "z": "Calculate time offset from UTC in whole seconds.  Inherently accounts for DST adjustments."
+       },
+       {
+        "$": 2,
+        "c": "httpRequest",
+        "p": [
+         {
+          "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "uri",
+          "x": "api_uri"
+         },
+         {
+          "c": "GET",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         },
+         {
+          "c": "JSON",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "variable",
+          "x": [
+           "Lattitude",
+           "Longitude"
+          ]
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "string"
+         },
+         {
+          "c": "text/plain",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "string"
+         }
+        ],
+        "z": "API provided courtesy of https://sunrise-sunset.org/api"
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 4,
+      "a": "0",
+      "c": [
+       {
+        "$": 5,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "string",
+         "x": "$httpStatusOk"
+        },
+        "ro": {
+         "c": "true",
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "boolean"
+        },
+        "ro2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "ts": [
+         {
+          "$": 43,
+          "a": "0",
+          "d": [],
+          "k": [
+           {
+            "$": 44,
+            "c": "setState",
+            "p": [
+             {
+              "d": [],
+              "e": "formatDateTime({$now},\"EEEE, h:mm a\")\"\\nHTTP Status \"{$httpStatusCode}",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string",
+              "x": "$httpStatusOk"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "z": "If status code is OK, parse API data and set global variables."
+       }
+      ],
+      "e": [
+       {
+        "$": 21,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 52,
+          "c": "setState",
+          "p": [
+           {
+            "d": [],
+            "e": "\"[red b|:far fa-exclamation-circle: Error] \"formatDateTime({$now},\"EEEE, h:mm a\")\"\\nHTTP Status \"{$httpStatusCode}",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string",
+            "x": "$httpStatusOk"
+           }
+          ]
+         },
+         {
+          "$": 59,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Error",
+            "d": [],
+            "e": "Daylight",
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "[red b|:far fa-exclamation-circle:]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "{$httpStatusCode}",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Red",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "true",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         },
+         {
+          "$": 22,
+          "c": "log",
+          "p": [
+           {
+            "c": "error",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "d": [],
+            "e": "\"Status {$httpStatusCode}\"",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         },
+         {
+          "$": 23,
+          "c": "log",
+          "p": [
+           {
+            "c": "info",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "d": [],
+            "e": "{$response}",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c",
+        "z": "Write status code and response to log if API call fails."
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 6,
+        "a": "0",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 7,
+          "a": "0",
+          "d": [],
+          "k": [
+           {
+            "$": 11,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@day_length"
+             },
+             {
+              "c": 0,
+              "d": [],
+              "e": "$response.[results].day_length",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "integer"
+             }
+            ]
+           },
+           {
+            "$": 14,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@solar_noon"
+             },
+             {
+              "c": "2019-12-20T14:55:30.754Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].solar_noon,\"-\",\"/\"),10))+time($response.[results].solar_noon),decimal(mid($response.[results].solar_noon,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 12,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@astronomical_sunrise"
+             },
+             {
+              "c": "2019-12-20T14:55:30.754Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].sunrise,\"-\",\"/\"),10))+time($response.[results].sunrise),decimal(mid($response.[results].sunrise,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 13,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@astronomical_sunset"
+             },
+             {
+              "c": "2019-12-20T14:55:30.754Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].sunset,\"-\",\"/\"),10))+time($response.[results].sunset),decimal(mid($response.[results].sunset,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 19,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@astronomical_twilight_begin"
+             },
+             {
+              "c": "1970-01-01T00:00:00.000Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].astronomical_twilight_begin,\"-\",\"/\"),10))+time($response.[results].astronomical_twilight_begin),decimal(mid($response.[results].astronomical_twilight_begin,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 20,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@astronomical_twilight_end"
+             },
+             {
+              "c": "1970-01-01T00:00:00.000Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].astronomical_twilight_end,\"-\",\"/\"),10))+time($response.[results].astronomical_twilight_end),decimal(mid($response.[results].astronomical_twilight_end,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 15,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@civil_twilight_begin"
+             },
+             {
+              "c": "1970-01-01T00:00:00.000Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].civil_twilight_begin,\"-\",\"/\"),10))+time($response.[results].civil_twilight_begin),decimal(mid($response.[results].civil_twilight_begin,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 16,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@civil_twilight_end"
+             },
+             {
+              "c": "1970-01-01T00:00:00.000Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].civil_twilight_end,\"-\",\"/\"),10))+time($response.[results].civil_twilight_end),decimal(mid($response.[results].civil_twilight_end,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 17,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@nautical_twilight_begin"
+             },
+             {
+              "c": "1970-01-01T00:00:00.000Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].nautical_twilight_begin,\"-\",\"/\"),10))+time($response.[results].nautical_twilight_begin),decimal(mid($response.[results].nautical_twilight_begin,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 18,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@nautical_twilight_end"
+             },
+             {
+              "c": "1970-01-01T00:00:00.000Z",
+              "d": [],
+              "e": "addseconds(date(left(replace($response.[results].nautical_twilight_end,\"-\",\"/\"),10))+time($response.[results].nautical_twilight_end),decimal(mid($response.[results].nautical_twilight_end,17,2))+{time_offset})",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "datetime"
+             }
+            ]
+           },
+           {
+            "$": 9,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@dawn"
+             },
+             {
+              "c": "2019-12-20T13:53:44.050Z",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "datetime",
+              "x": "@civil_twilight_begin"
+             }
+            ]
+           },
+           {
+            "$": 10,
+            "c": "setVariable",
+            "p": [
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "@dusk"
+             },
+             {
+              "c": "2019-12-20T13:54:05.468Z",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "datetime",
+              "x": "@civil_twilight_end"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         },
+         {
+          "$": 60,
+          "a": "0",
+          "d": [],
+          "k": [
+           {
+            "$": 57,
+            "c": "setTile",
+            "p": [
+             {
+              "c": "1",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "enum"
+             },
+             {
+              "c": "Daylight",
+              "d": [],
+              "e": "\"Sunrise: \"formatDateTime({@astronomical_sunrise},\"h:mm:ss a\")",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "e": "'[fa-layers fa-fw|\n[gold|:fas fa-sun:]\n[fa-layers-counter fa-xs|{formatDuration(@day_length*1000,false,'m')}]\n]'",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string",
+              "x": "$twcweather"
+             },
+             {
+              "d": [],
+              "e": "\"Sunset: \"formatDateTime({@astronomical_sunset},\"h:mm:ss a\")",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "s": "Dark Blue",
+              "t": "s",
+              "vt": "color"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "s": "Alice Blue",
+              "t": "s",
+              "vt": "color"
+             },
+             {
+              "c": "false",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "boolean"
+             }
+            ],
+            "z": "Use \"counter\" for length of day due to known fa-layers bug.  (https://github.com/FortAwesome/Font-Awesome/issues/13497)"
+           },
+           {
+            "$": 65,
+            "c": "setTile",
+            "p": [
+             {
+              "c": "2",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "enum"
+             },
+             {
+              "c": "Daylight",
+              "d": [],
+              "e": "\"Dawn: \"formatDateTime({@dawn},\"h:mm:ss a\")",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "e": "'[fa-layers fa-fw|\n[darkgoldenrod|:fas fa-adjust:]\n]'",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string",
+              "x": "$twcweather"
+             },
+             {
+              "d": [],
+              "e": "\"Dusk: \"formatDateTime({@dusk},\"h:mm:ss a\")",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "s": "Dark Blue",
+              "t": "s",
+              "vt": "color"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "s": "Alice Blue",
+              "t": "s",
+              "vt": "color"
+             },
+             {
+              "c": "false",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "boolean"
+             }
+            ]
+           },
+           {
+            "$": 58,
+            "c": "setTile",
+            "p": [
+             {
+              "c": "3",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "enum"
+             },
+             {
+              "d": [],
+              "e": "\"Moonrise: \"formatDateTime(addSeconds({$twcweather.forecast.moonriseTimeUtc.[1]}*1000,0),\"h:mm:ss a\")",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "e": "'[fa-layers fa-fw|\n[lightsteelblue|:fas fa-moon:]\n[fa-layers-counter fa-xs|{$twcweather.forecast.moonPhaseCode.[0]}]\n]'",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string",
+              "x": "$twcweather"
+             },
+             {
+              "d": [],
+              "e": "\"Moonset: \"formatDateTime(addSeconds({$twcweather.forecast.moonsetTimeUtc.[1]}*1000,0),\"h:mm:ss a\")",
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "s": "Dark Blue",
+              "t": "s",
+              "vt": "color"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "s": "Alice Blue",
+              "t": "s",
+              "vt": "color"
+             },
+             {
+              "c": "false",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "boolean"
+             }
+            ],
+            "z": "Use \"counter\" for moon phase due to known fa-layers bug.  (https://github.com/FortAwesome/Font-Awesome/issues/13497)"
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c",
+          "z": "Update tiles"
+         }
+        ],
+        "t": "do",
+        "tcp": "c",
+        "z": "Update global variables.  Unused variables (e.g. @solar_noon) can be deleted."
+       },
+       {
+        "$": 48,
+        "a": "0",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 49,
+          "a": "0",
+          "d": [],
+          "k": [
+           {
+            "$": 67,
+            "c": "wait",
+            "p": [
+             {
+              "c": 10,
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "s"
+             }
+            ],
+            "z": "Wait for global variables to update before restarting child pistons."
+           },
+           {
+            "$": 66,
+            "c": "resumePiston",
+            "p": [
+             {
+              "c": ":0d398839ae3face56279828276d0f460:",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "piston"
+             }
+            ],
+            "z": "Resubscribe child pistons so they update their triggers/conditions to update global variable values."
+           },
+           {
+            "$": 53,
+            "c": "resumePiston",
+            "p": [
+             {
+              "c": ":88e2cad25237f7e8ace8861479f6888f:",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "piston"
+             }
+            ]
+           },
+           {
+            "$": 50,
+            "c": "resumePiston",
+            "p": [
+             {
+              "c": ":a8d98f39d981fc8656c00ead7243d166:",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "piston"
+             }
+            ]
+           },
+           {
+            "$": 46,
+            "c": "resumePiston",
+            "p": [
+             {
+              "c": ":ed156c0a2cb8d88a28f2fcdb3a0c8fcb:",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "piston"
+             }
+            ]
+           },
+           {
+            "$": 45,
+            "c": "resumePiston",
+            "p": [
+             {
+              "c": ":013f79e8321a05e8312051e5091d0cf2:",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "piston"
+             }
+            ]
+           },
+           {
+            "$": 47,
+            "c": "resumePiston",
+            "p": [
+             {
+              "c": ":c1d8694c0f65fb1a4b540399f2285e77:",
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "piston"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "do",
+        "tcp": "c",
+        "z": "Resubscribe child pistons to updated global variables."
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "s",
+    "n": "latitude",
+    "t": "decimal",
+    "v": {
+     "c": 38.889484,
+     "d": [],
+     "data": {},
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "decimal"
+    }
+   },
+   {
+    "a": "s",
+    "n": "longitude",
+    "t": "decimal",
+    "v": {
+     "c": -77.035279,
+     "d": [],
+     "data": {},
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "decimal"
+    }
+   },
+   {
+    "a": "s",
+    "n": "api_uri",
+    "t": "string",
+    "v": {
+     "c": "https://api.sunrise-sunset.org/json?lat={latitude}&lng={longitude}&formatted=0",
+     "d": [],
+     "data": {},
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "time_offset",
+    "t": "integer"
+   }
+  ],
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "uri"
+   }
+  }
+ }
+}

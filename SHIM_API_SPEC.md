@@ -277,6 +277,22 @@ Behaviorally verified live (Jeremy's real HA, 2026-07-11): helper auto-created, 
 
 `piston/backup` (§4.9) exports piston JSON; a paste-JSON import path replaces webCoRE's cloud bins. Because the entire system speaks one documented JSON format, AI-generated pistons = "produce JSON per PISTON_JSON_REFERENCE.md, import it." Details in IMPORT_EXPORT_SPEC.md (to be written).
 
+**DECISION (Jeremy, 2026-07-16): the import page ALSO accepts legacy webCoRE backup codes,
+same input box.** PistonCore's canonical share format is the JSON, but a pasted community
+code (e.g. `p3rz7`) imports directly too — auto-detected (code = short alphanumeric, JSON
+starts with `{`). Server-side in the shim: fetch
+`https://api.webcore.co/bins/<any-32hex>/<code>` → `{d: <SJCL blob>}` → decrypt with the
+dashboard's fixed key (public GPL source) → same import pipeline as pasted JSON. Whole
+chain VERIFIED live 2026-07-16 (14/15 wiki+forum codes pulled into `test-pistons/
+community/`; dead bins return an empty body → clear error). Private bins (`e` payloads,
+account-encrypted) cannot be decrypted without the original account id → clear error
+naming that. Related shim fix, same date: `fixtures.fake_instance()` now serves
+`account.id`, which makes the SEALED dashboard's own "Restore a piston using a backup
+code" dialog work against the cloud bins too (verified end-to-end: restore → Rebuild-items
+dialog → Ignore → save persisted through the shim). Side effect to watch: with account.id
+present, the piston-view "Automatic Backup" UI may also now reach the real webcore.co bin
+service — decide whether to neutralize that path (§9 candidate) before shipping.
+
 ---
 
 ## 9. External services to neutralize (VERIFIED URLs in source)

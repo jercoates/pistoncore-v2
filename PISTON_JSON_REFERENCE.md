@@ -118,6 +118,15 @@ than re-deriving it from the comparisons vocab. Treat the vocab bucket as the au
 disagree, the vocab wins (the node fields are engine output and may be stale on an
 imported/AI-authored piston that was never saved through a real engine — in that case the
 compiler must derive them itself).
+**SHIM NOW STAMPS THEM (2026-07-17, `storage.classify_conditions()`):** the editor does
+NOT write `ct`/`s` on save (VERIFIED via a hand-authored piston's editor round-trip — they
+came back absent), meaning every PistonCore-saved piston would lack them since there's no
+engine here. So the shim's save flow now replicates the engine's own classification
+(`ct` from the vocab bucket; `s` per the verified promotion rule, webcore-piston.groovy
+:9296/:9242 — including the no-triggers-promotes-all-conditions case), and `piston/get`
+serves the resulting `subscriptions` counts (Quick Facts + the no-subscriptions banner now
+behave exactly as on real webCoRE — verified live 2026-07-17). Pistons saved before this
+stamping show 0 subscriptions until re-saved.
 
 ## 4. Operands (VERIFIED renderOperand switch :3686–3830, picker cases :4116–4136)
 

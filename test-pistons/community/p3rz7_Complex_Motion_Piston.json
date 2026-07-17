@@ -1,0 +1,206 @@
+{
+ "name": "Complex Motion Piston",
+ "meta": {
+  "name": "Complex Motion Piston",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code p3rz7 (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [],
+  "s": [
+   {
+    "e": [],
+    "t": "if",
+    "s": [
+     {
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+      ],
+      "t": "action",
+      "r": [],
+      "$": 4,
+      "rop": "and",
+      "a": "0",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "on",
+        "$": 5,
+        "p": []
+       }
+      ]
+     }
+    ],
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+       ],
+       "t": "p",
+       "a": "motion",
+       "vt": "string"
+      },
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "active",
+       "vt": "enum"
+      },
+      "co": "changes_to",
+      "sm": "always",
+      "t": "condition",
+      "ts": [],
+      "s": true,
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 3,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "t"
+     }
+    ],
+    "r": [],
+    "$": 1,
+    "a": "0",
+    "rop": "and",
+    "ei": [],
+    "o": "and",
+    "tcp": "c"
+   },
+   {
+    "t": "if",
+    "e": [],
+    "s": [
+     {
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+      ],
+      "t": "action",
+      "r": [],
+      "$": 7,
+      "rop": "and",
+      "a": "0",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "wait",
+        "$": 10,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": 2,
+          "vt": "m"
+         }
+        ]
+       },
+       {
+        "c": "off",
+        "$": 8,
+        "p": []
+       }
+      ]
+     }
+    ],
+    "r": [],
+    "c": [
+     {
+      "to": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+       ],
+       "t": "p",
+       "a": "motion",
+       "vt": "string"
+      },
+      "co": "changes_to",
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "d": [],
+       "t": "c",
+       "c": "inactive",
+       "vt": "enum"
+      },
+      "t": "condition",
+      "sm": "auto",
+      "s": true,
+      "ts": [],
+      "ro2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "$": 11,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "d": [],
+       "t": "c"
+      },
+      "ct": "t"
+     }
+    ],
+    "$": 9,
+    "a": "0",
+    "rop": "and",
+    "ei": [],
+    "o": "and",
+    "tcp": "c"
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "des": 0,
+   "pep": 0,
+   "cto": 0,
+   "dco": 0,
+   "mps": 0,
+   "ced": 0
+  },
+  "z": "Turn on a light when motion is active, turn the light off when motion is inactive for a time period",
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "device",
+    "n": "White Bulb 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Motion Sensor 1",
+    "a": [
+     "motion"
+    ]
+   }
+  }
+ }
+}

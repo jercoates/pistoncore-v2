@@ -1,0 +1,313 @@
+{
+ "name": "Weather Tiles Daily",
+ "meta": {
+  "name": "Weather Tiles Daily",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code gkws (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": "false",
+     "data": {},
+     "vt": "boolean"
+    },
+    "t": "boolean",
+    "a": "s",
+    "n": "useCelsius"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": "#3d41ac",
+     "vt": "string"
+    },
+    "t": "string",
+    "a": "s",
+    "n": "color_coldestTemp",
+    "z": "Tile background colors for extreme temperatures defined below. Temperatures between those values will use an interpolated temperature."
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": "#bf4545",
+     "data": {},
+     "vt": "string"
+    },
+    "t": "string",
+    "a": "s",
+    "n": "color_hottestTemp"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 32,
+     "vt": "integer",
+     "data": {}
+    },
+    "t": "integer",
+    "a": "s",
+    "n": "value_coldestTemp",
+    "z": "Coldest and warmest temperatures for tile background colors. Values should be in °F or °C depending on what units are used."
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 104,
+     "vt": "integer",
+     "data": {}
+    },
+    "t": "integer",
+    "a": "s",
+    "n": "value_hottestTemp"
+   }
+  ],
+  "s": [
+   {
+    "lo": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 2,
+     "om": 0,
+     "vt": "h"
+    },
+    "lo2": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 892,
+     "vt": "time"
+    },
+    "t": "every",
+    "s": [
+     {
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 7,
+      "rop": "and",
+      "a": "0",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "executePiston",
+        "$": 8,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:",
+          "vt": "piston"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "vt": "variable"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": "false",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "r": [],
+    "$": 4,
+    "a": "1",
+    "rop": "and",
+    "tcp": "c",
+    "lo3": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 0,
+     "vt": "m"
+    }
+   },
+   {
+    "lo": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 0,
+     "vt": "decimal"
+    },
+    "lo2": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 7,
+     "vt": "decimal"
+    },
+    "t": "for",
+    "s": [
+     {
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 1,
+      "a": "0",
+      "rop": "and",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "setTile",
+        "$": 2,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "$index+1",
+          "t": "e",
+          "c": "1",
+          "vt": "enum"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "contains($weather.forecast.forecast.txt_forecast.forecastday[$index].title, 'Night') ? format('%s Night', left($weather.forecast.forecast.txt_forecast.forecastday[$index].title,3)) : $weather.forecast.forecast.txt_forecast.forecastday[$index].title",
+          "t": "e",
+          "c": "{}",
+          "vt": "string"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "format(\":wu-v4-%s:%s\",$weather.forecast10day.forecast.txt_forecast.forecastday[$index].icon, int($weather.forecast10day.forecast.txt_forecast.forecastday[$index].pop)>0?\" \"$weather.forecast10day.forecast.txt_forecast.forecastday[$index].pop\"%\":\"\")",
+          "t": "e",
+          "c": "{$weather.forecast10day.forecast.simpleforecast.forecastday[$index].low(celsius==true?'.celsius':'.fahrenheit')}-{$weather.forecast10day.forecast.simpleforecast.forecastday[$index].high(celsius==true?'.celsius':'.fahrenheit')}{celsius==true?'°C':'°F')",
+          "vt": "string"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "':fa-thermometer-half: ' (useCelsius ? format('%s–%s°C', $weather.forecast10day.forecast.simpleforecast.forecastday[$index].low.celsius, $weather.forecast10day.forecast.simpleforecast.forecastday[$index].high.celsius) : format('%s–%s°F', $weather.forecast10day.forecast.simpleforecast.forecastday[$index].low.fahrenheit, $weather.forecast10day.forecast.simpleforecast.forecastday[$index].high.fahrenheit))' :fa-tint: '$weather.forecast10day.forecast.simpleforecast.forecastday[$index].avehumidity'%'",
+          "t": "e",
+          "c": "$weather.forecast.forecast.simpleforecast.forecastday.conditions",
+          "vt": "string"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "s",
+          "s": "White",
+          "vt": "color"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "rainbowValue(useCelsius ? avg($weather.forecast10day.forecast.simpleforecast.forecastday[$index].low.celsius, $weather.forecast10day.forecast.simpleforecast.forecastday[$index].high.celsius) : avg($weather.forecast10day.forecast.simpleforecast.forecastday[$index].low.fahrenheit, $weather.forecast10day.forecast.simpleforecast.forecastday[$index].high.fahrenheit), value_coldestTemp, color_coldestTemp, value_hottestTemp, color_hottestTemp)",
+          "t": "e",
+          "vt": "color"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": "false",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "r": [],
+    "$": 3,
+    "rop": "and",
+    "a": "0",
+    "tcp": "c",
+    "lo3": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": 1,
+     "vt": "decimal"
+    }
+   },
+   {
+    "d": [],
+    "t": "action",
+    "r": [],
+    "$": 5,
+    "rop": "and",
+    "a": "0",
+    "tcp": "c",
+    "k": [
+     {
+      "c": "setState",
+      "$": 6,
+      "p": [
+       {
+        "f": "l",
+        "g": "avg",
+        "d": [],
+        "t": "e",
+        "e": "format('Updated %s %d @ %s', $monthName, $day, $time24)",
+        "vt": "string"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "pep": 0,
+   "des": 0,
+   "dco": 0,
+   "aps": 0,
+   "mps": 1,
+   "ced": 0
+  },
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "unknown"
+   }
+  }
+ }
+}

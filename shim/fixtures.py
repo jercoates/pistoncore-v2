@@ -162,6 +162,13 @@ def fake_instance(base_uri: str, virtual_devices: dict) -> dict:
     # call intf/dashboard/devices on first load (SHIM_API_SPEC.md §4.1).
     # pistons/globalVars are populated by the /load route from shim/storage.py
     # (real persistence, milestone 3) — left out here, not fixture data.
+    # account.id makes "Restore a piston using a backup code" work: loadFromBin
+    # (app.js:1203-1211) NULLS the bin code when instance.account.id is absent,
+    # then fetches https://api.webcore.co/bins/<md5(account.id)>/<code>. Public
+    # community bins decrypt with the fixed dashboard key regardless of which
+    # account hash is in the URL (verified live 2026-07-16, 14/15 wiki+forum
+    # codes pulled). Any stable string works; only .id is read (app.js greps
+    # clean for other account fields on this path).
     return {
         "id": "fake-instance",
         "name": "PistonCore Spike",
@@ -169,6 +176,7 @@ def fake_instance(base_uri: str, virtual_devices: dict) -> dict:
         "token": "pistoncore-spike",
         "deviceVersion": 1,
         "coreVersion": CORE_VERSION,
+        "account": {"id": "pistoncore-local"},
         "settings": {},
         "lifx": {},
         "contacts": [],

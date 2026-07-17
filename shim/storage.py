@@ -110,6 +110,73 @@ def find_global_references(piston: dict) -> set[str]:
 # §2-§7) rather than tagging every dict with a "t" field.
 # ---------------------------------------------------------------------------
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_comparison_buckets: dict | None = None
+
+
+def _get_comparison_buckets() -> dict:
+    """{co_name: 't'|'c'} from webcore_vocab.json's comparisons buckets."""
+    global _comparison_buckets
+    if _comparison_buckets is None:
+        with open(_REPO_ROOT / "webcore_vocab.json", encoding="utf-8") as f:
+            comp = json.load(f)["comparisons"]
+        _comparison_buckets = {}
+        for name in comp.get("conditions", {}):
+            _comparison_buckets[name] = "c"
+        for name in comp.get("triggers", {}):
+            _comparison_buckets[name] = "t"  # triggers win on any overlap
+    return _comparison_buckets
+
+
+def classify_conditions(piston: dict) -> int:
+    """Stamp ct/s onto condition nodes the way the ENGINE does at save —
+    PistonCore has no engine, so the shim replicates webcore-piston.groovy's
+    subscribeAll() classification (rule VERIFIED at :9296, COMPILER_SPEC §2.5
+    point 2): ct from the vocab comparison bucket; then
+      s = sm != "never" and (ct == "t" or sm == "always" or not hasTriggers)
+    (the no-triggers case promotes EVERY condition to subscribe — the engine's
+    own "no triggers, promoting conditions" rule, :9242). Editor deletes sm
+    when "auto", so absent sm == auto. Restriction nodes (r arrays) never
+    subscribe (behavior map §4) — only statement condition trees are walked.
+    Returns the subscribed-event count for piston/get's subscriptions meta.
+    These are webCoRE's OWN engine-written fields, not custom additions —
+    stamping them is impersonating the engine, which is the shim's job."""
+    buckets = _get_comparison_buckets()
+    nodes: list[dict] = []
+
+    def walk(obj, in_conditions: bool):
+        if isinstance(obj, dict):
+            if obj.get("t") == "condition" and "co" in obj:
+                nodes.append(obj)
+            for key, val in obj.items():
+                if key == "r":
+                    continue  # restrictions never subscribe
+                walk(val, in_conditions or key == "c")
+        elif isinstance(obj, list):
+            for item in obj:
+                walk(item, in_conditions)
+
+    walk(piston.get("s", []), False)
+
+    has_triggers = False
+    for node in nodes:
+        ct = buckets.get(node.get("co"))
+        if ct:
+            node["ct"] = ct
+            if ct == "t":
+                has_triggers = True
+
+    events = 0
+    for node in nodes:
+        sm = node.get("sm", "auto")
+        ct = node.get("ct")
+        subscribed = sm != "never" and (ct == "t" or sm == "always" or not has_triggers)
+        node["s"] = subscribed
+        if subscribed:
+            events += 1
+    return events
+
+
 def assign_node_ids(piston: dict) -> None:
     seen_ids: set[int] = set()
     to_assign: list[dict] = []
@@ -298,6 +365,7 @@ def save_piston(piston_id: str, piston_json: dict) -> dict:
     name = piston_json.get("n") or (existing["name"] if existing else "New Piston")
 
     assign_node_ids(piston_json)
+    classify_conditions(piston_json)  # engine-equivalent ct/s stamping (see docstring)
 
     entry = {
         "id": piston_id,
@@ -308,6 +376,28 @@ def save_piston(piston_id: str, piston_json: dict) -> dict:
     _save_piston_file(entry)
     update_used_by(piston_id, name, find_global_references(piston_json))
     return entry
+
+
+def count_subscriptions(piston: dict) -> int:
+    """Subscribed-event count for piston/get's subscriptions meta — counts the
+    s:true condition nodes stamped by classify_conditions() (older pistons
+    saved before stamping existed just count 0 until re-saved)."""
+    events = 0
+
+    def walk(obj):
+        nonlocal events
+        if isinstance(obj, dict):
+            if obj.get("t") == "condition" and obj.get("s") is True:
+                events += 1
+            for key, val in obj.items():
+                if key != "r":
+                    walk(val)
+        elif isinstance(obj, list):
+            for item in obj:
+                walk(item)
+
+    walk(piston.get("s", []))
+    return events
 
 
 def _save_piston_file(entry: dict):

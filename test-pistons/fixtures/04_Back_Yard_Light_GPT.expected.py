@@ -7,7 +7,8 @@
 #   #3 physical-vs-programmatic flag (DECIDED: replicate verbatim), #4 timed follow-up
 #   with re-check, #5 explicit cancel-on-retrigger.
 #
-# BEHAVIORAL REVIEW (Jeremy: is this what the piston should do?):
+# BEHAVIORAL REVIEW: APPROVED (Jeremy, 2026-07-16 — "matches my intent"), including
+#   both REVIEW POINTs below. This fixture is a binding acceptance target.
 #   1. Lights turn off (any reason) -> reset both tracking flags.
 #   2. Person seen on camera OR motion active, while dark (<100 lux) and lights off
 #      -> lights on, mark "programatic" (the piston did it), clear manual override.

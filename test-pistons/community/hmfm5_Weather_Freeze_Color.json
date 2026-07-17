@@ -1,0 +1,175 @@
+{
+ "name": "Weather Freeze Color",
+ "meta": {
+  "name": "Weather Freeze Color",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code hmfm5 (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [],
+  "rn": false,
+  "s": [
+   {
+    "e": [],
+    "tep": "",
+    "rn": false,
+    "c": [
+     {
+      "to": {
+       "g": "any",
+       "v": null,
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "v": "",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+       ],
+       "t": "p",
+       "e": "",
+       "c": "",
+       "a": "temperature",
+       "vt": "string",
+       "x": ""
+      },
+      "co": "is_less_than",
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "v": "",
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": 32,
+       "a": "",
+       "vt": "decimal",
+       "x": ""
+      },
+      "t": "condition",
+      "sm": "auto",
+      "s": true,
+      "ts": [],
+      "ro2": {
+       "g": "any",
+       "v": null,
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "$": 2,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "v": null,
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "z": "Using Nest Weather, check the temperature if it is below freezing",
+      "ct": "c"
+     }
+    ],
+    "$": 1,
+    "a": "0",
+    "rop": "and",
+    "n": false,
+    "o": "and",
+    "tsp": "",
+    "t": "if",
+    "di": false,
+    "s": [
+     {
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+      ],
+      "rn": false,
+      "tep": "",
+      "$": 3,
+      "rop": "and",
+      "a": "0",
+      "k": [
+       {
+        "c": "setColor",
+        "$": 4,
+        "p": [
+         {
+          "f": "l",
+          "v": "",
+          "g": "avg",
+          "d": [],
+          "e": "",
+          "t": "c",
+          "c": "#0000ff",
+          "a": "",
+          "vt": "color",
+          "x": ""
+         },
+         {
+          "f": "l",
+          "v": "",
+          "g": "avg",
+          "d": [],
+          "e": "",
+          "t": "",
+          "c": "",
+          "a": "",
+          "vt": "enum",
+          "x": ""
+         }
+        ],
+        "m": "",
+        "z": ""
+       }
+      ],
+      "tsp": "",
+      "t": "action",
+      "di": false,
+      "r": [],
+      "tcp": "c",
+      "z": "Set my lamp blue so I know it is going to be cold"
+     }
+    ],
+    "r": [],
+    "ei": [],
+    "tcp": "c",
+    "z": ""
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "ced": 0
+  },
+  "z": "An example piston based on weather conditions",
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "device",
+    "n": "Temperature Sensor 1",
+    "a": [
+     "temperature"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "RGB Bulb 4",
+    "a": []
+   }
+  }
+ }
+}

@@ -1,0 +1,656 @@
+{
+ "name": "Presence Tiles",
+ "meta": {
+  "name": "Presence Tiles",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code v78tz (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [
+   {
+    "t": "boolean",
+    "a": "d",
+    "n": "isPersonAtHome"
+   },
+   {
+    "t": "string",
+    "a": "d",
+    "n": "person"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:"
+     ],
+     "t": "d",
+     "data": {},
+     "vt": "device"
+    },
+    "t": "device",
+    "a": "d",
+    "n": "peoplePhones",
+    "z": "list all the phones or other presence sensors for which you want to create a tile."
+   },
+   {
+    "t": "integer",
+    "a": "d",
+    "n": "tile"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "e": "count(peoplePhones)",
+     "t": "e",
+     "c": 5,
+     "data": {},
+     "vt": "integer"
+    },
+    "t": "integer",
+    "a": "d",
+    "n": "persons"
+   },
+   {
+    "t": "datetime[]",
+    "a": "d",
+    "n": "tileTime"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": "Dad,Kid 1,Kid 2,Mom,Test",
+     "vt": "string"
+    },
+    "t": "string",
+    "a": "d",
+    "n": "peopleNames",
+    "z": "add the names of the persons in the same sequence as the presence devices are listed above in peoplePhones"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": "[grey|:fa-user-o:]",
+     "vt": "string"
+    },
+    "t": "string",
+    "a": "d",
+    "n": "tileTextAway"
+   },
+   {
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:",
+     "vt": "string"
+    },
+    "t": "string",
+    "a": "d",
+    "n": "tileTextHome"
+   }
+  ],
+  "s": [
+   {
+    "t": "on",
+    "s": [
+     {
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 91,
+      "a": "0",
+      "rop": "and",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "setVariable",
+        "$": 106,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "isPersonAtHome"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "(lower([$currentEventDevice : presence]) == 'present' ? true : false)",
+          "t": "e",
+          "c": "false",
+          "vt": "boolean"
+         }
+        ]
+       },
+       {
+        "c": "setVariable",
+        "$": 190,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "tile"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "(indexOf(peoplePhones, string($currentEventDevice)) +1)",
+          "c": 0,
+          "vt": "integer"
+         }
+        ]
+       },
+       {
+        "c": "setVariable",
+        "$": 191,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "person"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "arrayItem((tile-1), peopleNames)",
+          "vt": "string"
+         }
+        ]
+       },
+       {
+        "c": "setVariable",
+        "$": 194,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "xi": "tile",
+          "t": "x",
+          "vt": "variable",
+          "x": "tileTime"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "datetime[]",
+          "x": "$now"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "t": "if",
+      "e": [],
+      "s": [
+       {
+        "d": [],
+        "t": "action",
+        "r": [],
+        "$": 116,
+        "a": "0",
+        "rop": "and",
+        "tcp": "c",
+        "k": [
+         {
+          "c": "log",
+          "$": 117,
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": "error",
+            "vt": "enum"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "e": "\"Tile value \" tile \", how is that possible? persons:\" persons \" and person:\" person",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "f": "l",
+            "g": "avg",
+            "d": [],
+            "t": "c",
+            "c": "true",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "lo": {
+         "f": "l",
+         "g": "avg",
+         "d": [],
+         "t": "c",
+         "c": "person not found!",
+         "vt": "string"
+        },
+        "t": "exit",
+        "r": [],
+        "a": "0",
+        "rop": "and",
+        "tcp": "c"
+       }
+      ],
+      "r": [],
+      "c": [
+       {
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "x",
+         "vt": "string",
+         "x": "tile"
+        },
+        "to": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "co": "is_outside_of_range",
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "c",
+         "c": 1,
+         "vt": "integer"
+        },
+        "t": "condition",
+        "sm": "never",
+        "ts": [],
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "d": [],
+         "t": "x",
+         "c": 4,
+         "vt": "integer",
+         "x": "persons"
+        },
+        "$": 118,
+        "fs": [],
+        "to2": {
+         "g": "any",
+         "d": [],
+         "t": "c"
+        },
+        "ct": "c"
+       }
+      ],
+      "$": 115,
+      "a": "0",
+      "rop": "and",
+      "ei": [],
+      "o": "and",
+      "tcp": "c"
+     },
+     {
+      "tsp": "a",
+      "d": [],
+      "t": "action",
+      "r": [],
+      "$": 119,
+      "a": "0",
+      "rop": "and",
+      "tcp": "c",
+      "k": [
+       {
+        "c": "setTile",
+        "$": 92,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "c": "1",
+          "vt": "enum",
+          "x": "tile"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "string",
+          "x": "person"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "(isPersonAtHome ? tileTextHome : tileTextAway)",
+          "vt": "string"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "mid($now,5,(length($now)-9))",
+          "t": "c",
+          "c": "{formatDateTime(tileTime[tile], \"MMM d @ H:mm\")}",
+          "vt": "string",
+          "x": "$now"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "s",
+          "s": "Cool White",
+          "vt": "color"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "(isPersonAtHome ? '#00B000' : '#0006D6')",
+          "vt": "color",
+          "x": "backgroundColor"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": "false",
+          "vt": "boolean"
+         }
+        ]
+       },
+       {
+        "c": "wait",
+        "$": 101,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": 10,
+          "vt": "m",
+          "x": "@ChangeNotifyMinutes"
+         }
+        ]
+       },
+       {
+        "c": "setVariable",
+        "$": 128,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "isPersonAtHome"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "(lower([$currentEventDevice : presence]) == 'present' ? true : false)",
+          "t": "e",
+          "c": "false",
+          "vt": "boolean"
+         }
+        ]
+       },
+       {
+        "c": "setVariable",
+        "$": 192,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "tile"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "(indexOf(peoplePhones, string($currentEventDevice)) +1)",
+          "c": 0,
+          "vt": "integer"
+         }
+        ]
+       },
+       {
+        "c": "setVariable",
+        "$": 193,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "variable",
+          "x": "person"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "arrayItem((tile-1), peopleNames)",
+          "vt": "string"
+         }
+        ]
+       },
+       {
+        "c": "setTile",
+        "$": 104,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "c": "1",
+          "vt": "enum",
+          "x": "tile"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "x",
+          "vt": "string",
+          "x": "person"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "(isPersonAtHome ? tileTextHome : tileTextAway)",
+          "vt": "string"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "e": "mid($now,5,(length($now)-9))",
+          "t": "c",
+          "c": "{formatDateTime(tileTime[tile], \"MMM d @ H:mm\")}",
+          "vt": "string",
+          "x": "$now"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "s",
+          "s": "Cool White",
+          "vt": "color"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "e",
+          "e": "(isPersonAtHome ? '#008000' : '#000666')",
+          "vt": "color",
+          "x": "backgroundColor"
+         },
+         {
+          "f": "l",
+          "g": "avg",
+          "d": [],
+          "t": "c",
+          "c": "false",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "lo": {
+       "f": "l",
+       "g": "avg",
+       "d": [],
+       "t": "c",
+       "c": "true",
+       "vt": "string"
+      },
+      "t": "exit",
+      "r": [],
+      "a": "0",
+      "rop": "and",
+      "tcp": "c"
+     }
+    ],
+    "c": [
+     {
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "d": [
+        "peoplePhones"
+       ],
+       "t": "p",
+       "a": "presence",
+       "vt": "string"
+      },
+      "sm": "auto",
+      "t": "event",
+      "s": true,
+      "$": 83
+     }
+    ],
+    "r": [],
+    "$": 80,
+    "rop": "and",
+    "a": "1",
+    "o": "or",
+    "tcp": "c"
+   },
+   {
+    "lo": {
+     "f": "l",
+     "g": "avg",
+     "d": [],
+     "t": "c",
+     "c": "false",
+     "vt": "string"
+    },
+    "t": "exit",
+    "r": [],
+    "a": "0",
+    "rop": "and",
+    "tcp": "c"
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "pep": 0,
+   "des": 0,
+   "dco": 0,
+   "aps": 0,
+   "mps": 1,
+   "ced": 0
+  },
+  "z": "allows for multiple number person's presence tiles. don't think anyone has more than 16 person to a location so there is no explicit check for it but since only 16 tiles are allowed take care not to add more than 16 presence sensors to the devices list.",
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "device",
+    "n": "Presence Sensor 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Presence Sensor 1",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:": {
+    "t": "device",
+    "n": "Presence Sensor 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:": {
+    "t": "device",
+    "n": "Presence Sensor 5",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:": {
+    "t": "device",
+    "n": "Presence Sensor 4",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:": {
+    "t": "unknown"
+   }
+  }
+ }
+}

@@ -1,0 +1,150 @@
+{
+ "name": "Simple Motion Piston",
+ "meta": {
+  "name": "Simple Motion Piston",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code hsv3h (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "v": [],
+  "rn": false,
+  "s": [
+   {
+    "e": [],
+    "tep": "",
+    "rn": false,
+    "c": [
+     {
+      "to": {
+       "g": "any",
+       "v": null,
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "v": "",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+       ],
+       "t": "p",
+       "e": "",
+       "c": "",
+       "a": "motion",
+       "vt": "string",
+       "x": ""
+      },
+      "co": "changes_to",
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "v": "",
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": "active",
+       "a": "",
+       "vt": "enum",
+       "x": ""
+      },
+      "t": "condition",
+      "sm": "auto",
+      "s": true,
+      "ts": [],
+      "ro2": {
+       "g": "any",
+       "v": null,
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "$": 2,
+      "fs": [],
+      "to2": {
+       "g": "any",
+       "v": null,
+       "d": [],
+       "t": "c",
+       "e": "",
+       "c": "",
+       "a": null,
+       "x": null
+      },
+      "z": "When the motion sensor changes to active",
+      "ct": "t"
+     }
+    ],
+    "$": 1,
+    "a": "0",
+    "rop": "and",
+    "n": false,
+    "o": "and",
+    "tsp": "",
+    "t": "if",
+    "di": false,
+    "s": [
+     {
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+      ],
+      "rn": false,
+      "tep": "",
+      "$": 3,
+      "rop": "and",
+      "a": "0",
+      "k": [
+       {
+        "c": "on",
+        "$": 4,
+        "p": [],
+        "m": "",
+        "z": ""
+       }
+      ],
+      "tsp": "",
+      "t": "action",
+      "di": false,
+      "r": [],
+      "tcp": "c",
+      "z": "Turn on some lights"
+     }
+    ],
+    "r": [],
+    "ei": [],
+    "tcp": "c",
+    "z": ""
+   }
+  ],
+  "r": [],
+  "rop": "and",
+  "o": {
+   "cto": 0,
+   "ced": 0
+  },
+  "z": "Basic motion piston",
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "device",
+    "n": "Motion Sensor 1",
+    "a": [
+     "motion"
+    ]
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Dimmer 1",
+    "a": []
+   }
+  }
+ }
+}

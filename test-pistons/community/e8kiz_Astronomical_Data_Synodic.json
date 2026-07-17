@@ -1,0 +1,1267 @@
+{
+ "name": "Astronomical Data Synodic",
+ "meta": {
+  "name": "Astronomical Data Synodic",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code e8kiz (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "mps": 1,
+   "pep": 0
+  },
+  "r": [],
+  "rop": "and",
+  "s": [
+   {
+    "$": 26,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 538,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "time",
+     "x": "@nautical_twilight_end"
+    },
+    "lo3": {
+     "c": 0,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 27,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 3,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "@twilight"
+         },
+         {
+          "c": "true",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 87,
+      "a": "0",
+      "c": [
+       {
+        "$": 66,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "string",
+         "x": "@shabbat"
+        },
+        "ro": {
+         "c": "true",
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "boolean"
+        },
+        "ro2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 67,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 68,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "[orange|:fas fa-sunrise:]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "e": "formatDateTime({@nautical_twilight_end},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 69,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 70,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "e": "'[fa-layers fa-fw|\n[orange|:fas fa-sunrise:]\n[fa-layers-counter fa-xs|Shabbat]\n]'",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "formatDateTime({@nautical_twilight_end},\"h:mm:ss a\")",
+            "d": [],
+            "e": "formatDateTime({@nautical_twilight_end},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   },
+   {
+    "$": 28,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 538,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "time",
+     "x": "@astronomical_sunrise"
+    },
+    "lo3": {
+     "c": 0,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 29,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 30,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "@twilight"
+         },
+         {
+          "c": "false",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 71,
+      "a": "0",
+      "c": [
+       {
+        "$": 72,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "string",
+         "x": "@shabbat"
+        },
+        "ro": {
+         "c": "true",
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "boolean"
+        },
+        "ro2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 73,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 62,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Daylight",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "[gold|:fas fa-sun:]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "Daylight",
+            "d": [],
+            "e": "formatDateTime({@astronomical_sunrise},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 74,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 75,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Daylight",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "e": "'[fa-layers fa-fw|\n[gold|:fas fa-sun:]\n[fa-layers-counter fa-xs|Shabbat]\n]'",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "e": "formatDateTime({@astronomical_sunrise},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   },
+   {
+    "$": 31,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 538,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "time",
+     "x": "@astronomical_sunset"
+    },
+    "lo3": {
+     "c": 0,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 32,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 33,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "@twilight"
+         },
+         {
+          "c": "true",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 76,
+      "a": "0",
+      "c": [
+       {
+        "$": 77,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "string",
+         "x": "@shabbat"
+        },
+        "ro": {
+         "c": "true",
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "boolean"
+        },
+        "ro2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 78,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 63,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "[darkslateblue|:fas fa-sunset:]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "e": "formatDateTime({@astronomical_sunset},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 80,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 81,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "d": [],
+            "e": "formatDateTime({@astronomical_sunset},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "e": "'[fa-layers fa-fw|\n[darkslateblue|:fas fa-sunset:]\n[fa-layers-counter fa-xs|Shabbat]\n]'",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   },
+   {
+    "$": 34,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 538,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "time",
+     "x": "@nautical_twilight_end"
+    },
+    "lo3": {
+     "c": 0,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 35,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 36,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "@twilight"
+         },
+         {
+          "c": "false",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 82,
+      "a": "0",
+      "c": [
+       {
+        "$": 83,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "string",
+         "x": "@shabbat"
+        },
+        "ro": {
+         "c": "true",
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "boolean"
+        },
+        "ro2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 84,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 64,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Moonlight",
+            "d": [],
+            "e": "Moonlight",
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "[lightsteelblue|:fas fa-moon:]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "Moonlight",
+            "d": [],
+            "e": "formatDateTime({@nautical_twilight_end},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 85,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 86,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "Moonlight",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "e": "'[fa-layers fa-fw|\n[lightsteelblue|:fas fa-moon:]\n[fa-layers-counter fa-xs|Shabbat]\n]'",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string",
+            "x": "$twcweather"
+           },
+           {
+            "c": "Twilight",
+            "d": [],
+            "e": "formatDateTime({@nautical_twilight_end},\"h:mm:ss a\")",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Dark Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   },
+   {
+    "$": 37,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "odw": [
+      5
+     ],
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 662,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "s": "sunset",
+     "t": "x",
+     "vt": "time",
+     "x": "@astronomical_sunset"
+    },
+    "lo3": {
+     "c": -18,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 38,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 39,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "@shabbat"
+         },
+         {
+          "c": "true",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   },
+   {
+    "$": 40,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "odw": [
+      6
+     ],
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 664,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "s": "sunset",
+     "t": "x",
+     "vt": "time",
+     "x": "@astronomical_sunset"
+    },
+    "lo3": {
+     "c": 42,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 41,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 42,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "@shabbat"
+         },
+         {
+          "c": "false",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   }
+  ],
+  "v": [],
+  "l": {}
+ }
+}

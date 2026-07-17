@@ -1,0 +1,1022 @@
+{
+ "name": "Whole House Light Level WX",
+ "meta": {
+  "name": "Whole House Light Level WX",
+  "category": "0",
+  "build": 1,
+  "active": false,
+  "origin": "community bin code r3y84 (pulled 2026-07-16, devices anonymized :xxx: tokens)"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "mps": 1,
+   "pep": 0
+  },
+  "r": [],
+  "rop": "and",
+  "s": [
+   {
+    "$": 16,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 945,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "time",
+     "x": "@astronomical_sunrise"
+    },
+    "lo3": {
+     "c": 0,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 36,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 66,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "day_level"
+         },
+         {
+          "c": 0,
+          "d": [],
+          "e": "default_twilight_level+int((default_day_level-default_twilight_level)*((100-$twcweather.forecast.daypart[0].cloudCover[0])/100))",
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "integer"
+         }
+        ],
+        "z": "Adjust levels based on forecasted cloud cover."
+       },
+       {
+        "$": 37,
+        "c": "setState",
+        "p": [
+         {
+          "d": [],
+          "e": "\"Setting Day Level -- {day_level}\"",
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 28,
+      "a": "0",
+      "lo": {
+       "c": 0,
+       "d": [],
+       "f": "l",
+       "g": "avg",
+       "t": "x",
+       "vt": "decimal",
+       "x": "twilight_level"
+      },
+      "lo2": {
+       "c": 0,
+       "d": [],
+       "f": "l",
+       "g": "avg",
+       "t": "x",
+       "vt": "decimal",
+       "x": "day_level"
+      },
+      "lo3": {
+       "c": 1,
+       "d": [],
+       "f": "l",
+       "g": "avg",
+       "t": "c",
+       "vt": "decimal"
+      },
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 17,
+        "a": "0",
+        "d": [
+         "target_devices"
+        ],
+        "k": [
+         {
+          "$": 18,
+          "c": "setLevel",
+          "p": [
+           {
+            "c": 0,
+            "d": [],
+            "e": "{$index}",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "integer",
+            "x": "Twilight_Level"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "enum"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 26,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 52,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "[chart-gauge min=0 max=100 greenFrom=0 greenTo={night_level} greenColor={night_color} yellowFrom={night_level} yellowTo={twilight_level} yellowColor={twilight_color} redFrom={twilight_level} redTo=100 redColor={day_color} minorTicks=5 |{$index}]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "{$index}",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "Dawn",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Black",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         },
+         {
+          "$": 30,
+          "c": "wait",
+          "p": [
+           {
+            "c": 0,
+            "d": [],
+            "e": "(({@astronomical_sunrise}-{@dawn})/1000)/({day_level}-{twilight_level})",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "for",
+      "tcp": "c"
+     },
+     {
+      "$": 53,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 54,
+        "c": "setTileFooter",
+        "p": [
+         {
+          "c": "1",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         },
+         {
+          "c": "Day",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         }
+        ]
+       },
+       {
+        "$": 61,
+        "c": "setState",
+        "p": [
+         {
+          "c": "Day",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   },
+   {
+    "$": 19,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 945,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "time",
+     "x": "@astronomical_sunset"
+    },
+    "lo3": {
+     "c": 0,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 56,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 67,
+        "c": "setVariable",
+        "p": [
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "twilight_level"
+         },
+         {
+          "c": 0,
+          "d": [],
+          "e": "night_level+int((default_twilight_level-night_level)*((100-$twcweather.forecast.daypart[0].cloudCover[1])/100))",
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "integer"
+         }
+        ],
+        "z": "Adjust levels based on forecasted cloud cover."
+       },
+       {
+        "$": 57,
+        "c": "setState",
+        "p": [
+         {
+          "d": [],
+          "e": "\"Setting Dusk Level -- {twilight_level}\"",
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 31,
+      "a": "0",
+      "lo": {
+       "c": 0,
+       "d": [],
+       "f": "l",
+       "g": "avg",
+       "t": "x",
+       "vt": "decimal",
+       "x": "day_level"
+      },
+      "lo2": {
+       "c": 0,
+       "d": [],
+       "f": "l",
+       "g": "avg",
+       "t": "x",
+       "vt": "decimal",
+       "x": "twilight_level"
+      },
+      "lo3": {
+       "c": -1,
+       "d": [],
+       "f": "l",
+       "g": "avg",
+       "t": "c",
+       "vt": "decimal"
+      },
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 20,
+        "a": "0",
+        "d": [
+         "target_devices"
+        ],
+        "k": [
+         {
+          "$": 21,
+          "c": "setLevel",
+          "p": [
+           {
+            "c": 0,
+            "d": [],
+            "e": "{$index}",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "integer",
+            "x": "Twilight_Level"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "enum"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 32,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 58,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "[chart-gauge min=0 max=100 greenFrom=0 greenTo={night_level} greenColor={night_color} yellowFrom={night_level} yellowTo={twilight_level} yellowColor={twilight_color} redFrom={twilight_level} redTo=100 redColor={day_color} minorTicks=5 |{$index}]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "{$index}",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "Dusk",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Black",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         },
+         {
+          "$": 34,
+          "c": "wait",
+          "p": [
+           {
+            "c": 0,
+            "d": [],
+            "e": "(({@astronomical_sunset}-{@dusk})/1000)/({day_level}-{twilight_level})",
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "for",
+      "tcp": "c"
+     },
+     {
+      "$": 59,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 60,
+        "c": "setTileFooter",
+        "p": [
+         {
+          "c": "1",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         },
+         {
+          "c": "Evening",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         }
+        ]
+       },
+       {
+        "$": 64,
+        "c": "setState",
+        "p": [
+         {
+          "c": "Evening",
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   },
+   {
+    "$": 1,
+    "a": "1",
+    "c": [
+     {
+      "$": 2,
+      "lo": {
+       "d": [],
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "mode",
+       "vt": "string"
+      },
+      "sm": "auto",
+      "t": "event"
+     }
+    ],
+    "o": "or",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "c": [
+       {
+        "$": 5,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "v",
+         "v": "mode",
+         "vt": "string"
+        },
+        "ro": {
+         "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:",
+         "d": [],
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "d": [],
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 11,
+        "a": "0",
+        "d": [
+         "target_devices"
+        ],
+        "k": [
+         {
+          "$": 12,
+          "c": "setLevel",
+          "p": [
+           {
+            "c": 0,
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "night_level"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "enum"
+           }
+          ]
+         },
+         {
+          "$": 65,
+          "c": "setState",
+          "p": [
+           {
+            "c": "Night",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 62,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 63,
+          "c": "setTile",
+          "p": [
+           {
+            "c": "1",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           },
+           {
+            "c": "[chart-gauge min=0 max=100 greenFrom=0 greenTo={night_level} greenColor={night_color} yellowFrom={night_level} yellowTo={twilight_level} yellowColor={twilight_color} redFrom={twilight_level} redTo=100 redColor={day_color} minorTicks=5 |{night_level}]",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "{night_level}",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "c": "Night",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Black",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "s": "Alice Blue",
+            "t": "s",
+            "vt": "color"
+           },
+           {
+            "c": "false",
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "boolean"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "on",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "s",
+    "n": "default_day_level",
+    "t": "integer",
+    "v": {
+     "c": 90,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "s",
+    "n": "default_twilight_level",
+    "t": "integer",
+    "v": {
+     "c": 40,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "s",
+    "n": "night_level",
+    "t": "integer",
+    "v": {
+     "c": 10,
+     "d": [],
+     "data": {},
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "s",
+    "n": "day_color",
+    "t": "string",
+    "v": {
+     "c": "LightGray",
+     "d": [],
+     "data": {},
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "s",
+    "n": "twilight_color",
+    "t": "string",
+    "v": {
+     "c": "DarkGray",
+     "d": [],
+     "data": {},
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "s",
+    "n": "night_color",
+    "t": "string",
+    "v": {
+     "c": "DimGray",
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "s",
+    "n": "day_level",
+    "t": "integer",
+    "v": {
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "integer",
+     "x": "default_day_level"
+    }
+   },
+   {
+    "a": "s",
+    "n": "twilight_level",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "d": [],
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "integer",
+     "x": "default_twilight_level"
+    }
+   },
+   {
+    "a": "d",
+    "n": "target_devices",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:"
+     ],
+     "data": {},
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": "Set local & remote dim levels based on solar day & mode.",
+  "l": {
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:": {
+    "t": "mode",
+    "n": "Night"
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:": {
+    "t": "device",
+    "n": "Dimmer 2",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:": {
+    "t": "device",
+    "n": "Dimmer 3",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:": {
+    "t": "device",
+    "n": "Dimmer 5",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:": {
+    "t": "device",
+    "n": "Dimmer 6",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:": {
+    "t": "device",
+    "n": "Dimmer 8",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:": {
+    "t": "device",
+    "n": "Dimmer 9",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7:": {
+    "t": "device",
+    "n": "Dimmer 14",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:": {
+    "t": "device",
+    "n": "Dimmer 15",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:": {
+    "t": "device",
+    "n": "Dimmer 17",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:": {
+    "t": "device",
+    "n": "Dimmer 18",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:": {
+    "t": "device",
+    "n": "Dimmer 25",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:": {
+    "t": "device",
+    "n": "Dimmer 26",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:": {
+    "t": "device",
+    "n": "Dimmer 37",
+    "a": []
+   },
+   ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:": {
+    "t": "device",
+    "n": "Dimmer 38",
+    "a": []
+   }
+  }
+ }
+}

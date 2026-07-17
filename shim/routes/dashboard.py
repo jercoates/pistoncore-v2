@@ -132,7 +132,12 @@ def piston_get(request: Request):
     # it unconditionally makes the dashboard show "Database updated" on
     # every single load (app.js:1116-1119 has no comparison of its own).
     client_db_version = request.query_params.get("db", "")
-    response: dict = {"data": {"piston": piston, "meta": meta}}
+    # subscriptions meta: piston.module.js:258 reads response.data.subscriptions
+    # (Quick Facts "Subscriptions: N events" + the no-subscriptions warning
+    # banner, piston.module.html:133). Counted from the ct/s stamps the save
+    # flow writes (storage.classify_conditions — engine-equivalent behavior).
+    subscriptions = {"events": storage.count_subscriptions(piston), "controls": 0}
+    response: dict = {"data": {"piston": piston, "meta": meta, "subscriptions": subscriptions}}
     if client_db_version != fixtures.DB_VERSION:
         response["dbVersion"] = fixtures.DB_VERSION
         response["db"] = fixtures.get_db()

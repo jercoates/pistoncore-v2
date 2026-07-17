@@ -40,6 +40,12 @@ It replicates the **intent** of the piston, not webCoRE's architecture. There is
   present (engine-saved pistons); DERIVED from the comparisons vocab buckets
   (`comparisons.triggers{}` vs `.conditions{}`) when absent (imported/AI-authored pistons).
   Vocab is authority on disagreement. [VERIFIED — capture 2026-07-12 + HE groovy]
+  **UPDATE 2026-07-17: the SHIM now stamps `ct`/`s` at save** (`storage.
+  classify_conditions()`, replicating the engine's verified classification+promotion rule
+  — the editor itself never writes them, proven by a hand-authored round-trip). So
+  shim-saved pistons ALWAYS carry them; the derive-from-vocab fallback remains only for
+  raw pastes that bypass a save. Same stamping feeds `piston/get`'s `subscriptions`
+  counts (Quick Facts / no-subscriptions banner now engine-equivalent).
 - Scope: the 84-piston corpus (`test-pistons/`) defines v1 requirements: statement types
   {if, action, each, while, repeat, do, group}, 22 comparisons, ~70 commands, 12 system
   vars (PISTON_JSON_REFERENCE §8b). Types outside the corpus (for, switch, on, break,
@@ -693,7 +699,10 @@ Jeremy's recollection), re-examined 2026-07-15 under the governing rule:**
 - **Golden fixtures (STARTED 2026-07-15, `test-pistons/fixtures/`):** hand-written
   expected outputs for real corpus pistons, one per band — Jeremy reviews these
   BEHAVIORALLY ("is this what that piston should do?"), and they become the acceptance
-  set before any compiler code exists.
+  set before any compiler code exists. **BOTH APPROVED (Jeremy, 2026-07-16: "both of the
+  descriptions match my intent") — including 04's two flagged review points (@task_unique
+  as the TCP approximation; cancelTasks as structural no-op + breadcrumb). These two are
+  now binding acceptance targets.**
   - `12_Cave_motion_V2.expected.yaml` — native band. Exercises patterns #1/#4/#6; makes
     concrete: one-automation-per-top-level-if (TCP scoping), the TCP-default compilation
     idiom (mode: restart + auxiliary cancel-triggers + `condition: trigger` id-gate),
