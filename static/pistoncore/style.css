@@ -375,3 +375,4 @@ button {
 .header-icon-btn { width: 36px; height: 36px; color: var(--text-secondary); }
 .header-icon-btn svg { width: 20px; height: 20px; display: block; }
 .header-status { font-size: 13px; }
+.header-icon-btn { padding: 0; justify-content: center; }
