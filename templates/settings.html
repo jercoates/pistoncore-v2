@@ -63,6 +63,20 @@
     <div id="write-test-banner"></div>
     <button type="submit" class="btn btn-primary">Save</button>
     <button type="button" class="btn" id="test-write">Test write target</button>
+
+    <h2>Home Assistant configuration.yaml</h2>
+    <p class="field-hint">
+      HA only loads PistonCore's compiled automations if <code>configuration.yaml</code>
+      has the PistonCore include lines. This checks the file (through the write target
+      above) and shows you the exact changes before anything is touched. A timestamped
+      backup is written first. Nothing is ever changed without your click.
+    </p>
+    <div id="config-yaml-banner"></div>
+    <div id="config-yaml-changes" style="display:none">
+      <ul id="config-yaml-list"></ul>
+      <button type="button" class="btn btn-primary" id="config-yaml-apply">Apply these changes</button>
+    </div>
+    <button type="button" class="btn" id="config-yaml-check">Check configuration.yaml</button>
   </form>
 
   <div class="mode-notice">

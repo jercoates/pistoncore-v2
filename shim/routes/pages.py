@@ -108,6 +108,26 @@ async def save_settings(ha_url: str = "", ha_token: str = "", write_mode: str = 
     return {"ok": True}
 
 
+@router.get("/api/config-yaml")
+async def config_yaml_analyze():
+    """Show the EXACT configuration.yaml changes before consent (§9.2 rule b)."""
+    from .. import config_yaml, deploy_writer
+    try:
+        return config_yaml.analyze()
+    except deploy_writer.WriteTargetError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+
+@router.post("/api/config-yaml/apply")
+async def config_yaml_apply():
+    """The consent click: timestamped backup, then apply (§9.2 rules a+c)."""
+    from .. import config_yaml, deploy_writer
+    try:
+        return config_yaml.apply()
+    except deploy_writer.WriteTargetError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+
 @router.post("/api/settings/test-write")
 async def test_write_target():
     """The §2.5 'Test write target' probe — write/read-back/delete against the

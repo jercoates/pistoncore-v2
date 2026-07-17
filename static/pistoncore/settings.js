@@ -44,3 +44,48 @@ document.getElementById("test-write").addEventListener("click", async () => {
     ? '<div class="banner banner-success">Write target OK — ' + data.target + "</div>"
     : '<div class="banner banner-info">' + (data.error || "Test failed.") + "</div>";
 });
+
+// configuration.yaml include-lines (analyze -> show exact changes -> consent click)
+const cyBanner = document.getElementById("config-yaml-banner");
+const cyChanges = document.getElementById("config-yaml-changes");
+const cyList = document.getElementById("config-yaml-list");
+
+function cyShow(kind, msg) {
+  cyBanner.innerHTML = '<div class="banner banner-' + kind + '">' + msg + "</div>";
+}
+
+document.getElementById("config-yaml-check").addEventListener("click", async () => {
+  cyChanges.style.display = "none";
+  cyShow("info", "Checking…");
+  // make sure the probe target matches what's on screen
+  await fetch("/api/settings?" + settingsParams().toString(), { method: "POST" });
+  const resp = await fetch("/api/config-yaml");
+  const data = await resp.json();
+  if (!resp.ok) { cyShow("info", data.error || "Check failed."); return; }
+  if (data.status === "ok") { cyShow("success", data.message); return; }
+  cyList.innerHTML = "";
+  (data.changes || []).forEach((c) => {
+    const li = document.createElement("li"); li.textContent = c; cyList.appendChild(li);
+  });
+  (data.refusals || []).forEach((r) => {
+    const li = document.createElement("li"); li.textContent = "⚠ " + r; cyList.appendChild(li);
+  });
+  if ((data.changes || []).length) {
+    cyShow("info", "Proposed changes (a timestamped backup is written before applying):");
+    cyChanges.style.display = "";
+  } else {
+    cyShow("info", "Cannot auto-edit:");
+    cyChanges.style.display = "";
+    document.getElementById("config-yaml-apply").style.display = "none";
+  }
+});
+
+document.getElementById("config-yaml-apply").addEventListener("click", async () => {
+  cyShow("info", "Applying…");
+  const resp = await fetch("/api/config-yaml/apply", { method: "POST" });
+  const data = await resp.json();
+  if (!resp.ok) { cyShow("info", data.error || "Apply failed."); return; }
+  cyChanges.style.display = "none";
+  cyShow("success", (data.applied || []).join("; ") +
+    ". Backup: " + (data.backup || "n/a") + ". " + (data.note || ""));
+});
