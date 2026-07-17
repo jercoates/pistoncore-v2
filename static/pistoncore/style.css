@@ -152,7 +152,7 @@ button {
 .header-status.connected::before { background: var(--green); }
 .header-status.disconnected::before { background: var(--red); }
 
-#page-container { padding: var(--space-5); max-width: 900px; margin: 0 auto; }
+#page-container { padding: var(--space-5); max-width: 1100px; margin: 0 auto; }
 
 /* ── Buttons ── */
 .btn {
