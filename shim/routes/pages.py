@@ -36,9 +36,17 @@ def _tile_view(entry: dict) -> dict:
         "active": meta["a"],
         "description": meta["z"],
         "modified": modified,
+        "category": str(meta.get("c", "0") or "0"),
         "compile_status": "no compiler yet",
         "deploy_status": "no compiler yet",
     }
+
+
+def _folder_name(category: str) -> str:
+    # Category NAMES aren't served by the shim yet (webCoRE's are instance
+    # settings) — "0" is webCoRE's own Uncategorized; others get a plain
+    # numbered label until real names are wired.
+    return "Uncategorized" if category == "0" else f"Category {category}"
 
 
 @router.get("/")
@@ -50,10 +58,20 @@ async def front_door(request: Request):
     if not ha_client.is_configured():
         return RedirectResponse(url="/settings?first_run=1")
 
-    tiles = [_tile_view(entry) for entry in storage.list_pistons()]
+    tiles = sorted((_tile_view(entry) for entry in storage.list_pistons()),
+                   key=lambda t: t["name"].lower())
+    counts: dict[str, int] = {}
+    for t in tiles:
+        counts[t["category"]] = counts.get(t["category"], 0) + 1
+    folders = [{"id": c, "name": _folder_name(c), "count": n}
+               for c, n in counts.items()]
+    # named categories first (alphabetical), Uncategorized last — mockup order
+    folders.sort(key=lambda f: (f["id"] == "0", f["name"].lower()))
     ha_ok, ha_message = await ha_client.check_connection()
     return templates.TemplateResponse(request, "front_door.html", {
         "tiles": tiles,
+        "folders": folders,
+        "total": len(tiles),
         "ha_ok": ha_ok,
         "ha_message": ha_message,
     })

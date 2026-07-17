@@ -5,29 +5,31 @@
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
+/* Dark palette = the PistonCore Design System tokens (design handoff zip +
+   preview.png mockup, adopted 2026-07-17): navy ground, #4a9eff accent. */
 :root {
-  --bg-base:         #1a1d23;
-  --bg-surface:      #21252d;
-  --bg-raised:       #282c35;
-  --bg-hover:        #2e3340;
+  --bg-base:         #1a1a2e;
+  --bg-surface:      #16213e;
+  --bg-raised:       #0f3460;
+  --bg-hover:        rgba(74, 158, 255, 0.08);
 
-  --border-subtle:   #2e3340;
-  --border-strong:   #3d4454;
+  --border-subtle:   #2a2a4a;
+  --border-strong:   #3a3a5c;
 
-  --text-primary:    #d4dae8;
-  --text-secondary:  #8896b0;
-  --text-muted:      #5a6478;
+  --text-primary:    #e8e8f0;
+  --text-secondary:  #9999bb;
+  --text-muted:      #666688;
 
-  --teal:            #38c8c8;
-  --teal-dim:        #27908e;
-  --teal-bg:         rgba(56, 200, 200, 0.08);
+  --teal:            #4a9eff;
+  --teal-dim:        #6eb5ff;
+  --teal-bg:         rgba(74, 158, 255, 0.08);
 
   --green:           #4caf50;
-  --red:             #ef5350;
-  --yellow:          #ffca28;
+  --red:             #f44336;
+  --yellow:          #ff9800;
 
-  --btn-primary-bg:  #1a6e8a;
-  --btn-primary-hover: #1d8aaa;
+  --btn-primary-bg:  #2f7bd9;
+  --btn-primary-hover: #4a9eff;
 
   --font-ui:    'IBM Plex Sans', system-ui, sans-serif;
   --font-code:  'JetBrains Mono', 'Courier New', monospace;
@@ -310,3 +312,58 @@ button {
   max-height: 420px;
 }
 .page-narrow h2 { margin-top: 28px; }
+
+/* ── Front door: sidebar + list layout (design handoff, 2026-07-17) ── */
+.list-header h1 {
+  font-family: var(--font-ui);
+  font-size: 22px;
+  color: var(--text-primary);
+}
+.fd-layout { display: flex; gap: var(--space-5); align-items: flex-start; }
+
+.fd-sidebar { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; }
+.folder-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; text-align: left;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid transparent;
+  color: var(--text-secondary);
+  padding: 8px 10px; border-radius: 4px; font-size: 13px;
+}
+.folder-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
+.folder-btn.active {
+  color: var(--teal);
+  border-color: var(--teal);
+  border-left: 3px solid var(--teal);
+  background: var(--teal-bg);
+}
+.count-badge {
+  background: var(--border-subtle); color: var(--text-secondary);
+  font-size: 11px; padding: 1px 8px; border-radius: 999px;
+}
+
+.fd-list { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+#fd-search {
+  width: 100%; margin-bottom: var(--space-2);
+  background: var(--bg-surface); color: var(--text-primary);
+  border: 1px solid var(--border-subtle); border-radius: 4px;
+  padding: 7px 10px; font-family: var(--font-ui); font-size: 13px;
+}
+#fd-search:focus { outline: none; border-color: var(--teal); }
+#fd-rows { display: flex; flex-direction: column; gap: 6px; }
+
+.piston-row {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 10px var(--space-3);
+}
+.piston-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.piston-name { flex: none; font-size: 15px; font-weight: 500; }
+.piston-desc {
+  font-size: 13px; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.piston-meta { font-size: 12px; color: var(--text-muted); }
+.piston-toggle { flex-shrink: 0; border: 1px solid var(--border-subtle); }
+.piston-row .piston-toggle:hover { border-color: var(--teal); color: var(--teal); }

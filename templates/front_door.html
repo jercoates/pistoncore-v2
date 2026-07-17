@@ -12,25 +12,52 @@
   <div class="list-header">
     <h1>Pistons</h1>
     <div class="list-header-actions">
+      <a class="btn btn-sm" href="/backup">&#8681; Import</a>
+      <a class="btn btn-sm" href="/backup">&#9633; Backup Piston(s)</a>
       <button class="btn btn-primary btn-sm" id="new-piston">+ New Piston</button>
     </div>
   </div>
 
   {% if tiles %}
-  <div class="folder-section">
-    <div class="folder-header">
-      <span class="folder-name">Uncategorized</span>
-      <span class="folder-count">({{ tiles|length }})</span>
-      <div class="folder-divider"></div>
+  <div class="fd-layout">
+    <nav class="fd-sidebar">
+      <button class="folder-btn active" data-folder="all">
+        All Pistons <span class="count-badge">{{ total }}</span>
+      </button>
+      {% for f in folders %}
+      <button class="folder-btn" data-folder="{{ f.id }}">
+        {{ f.name }} <span class="count-badge">{{ f.count }}</span>
+      </button>
+      {% endfor %}
+    </nav>
+
+    <div class="fd-list">
+      <div class="folder-header">
+        <span class="folder-name" id="fd-folder-title">All</span>
+        <div class="folder-divider"></div>
+      </div>
+      <input type="search" id="fd-search" placeholder="Search pistons&hellip;"
+             autocomplete="off" spellcheck="false">
+      <div id="fd-rows">
+        {% for tile in tiles %}
+        <div class="piston-row" data-piston-id="{{ tile.id }}" data-category="{{ tile.category }}"
+             data-search="{{ (tile.name ~ ' ' ~ (tile.description or ''))|lower }}">
+          <span class="piston-enabled-dot {{ 'enabled' if tile.active else 'disabled' }}"
+                title="{{ 'Active' if tile.active else 'Paused' }}"></span>
+          <div class="piston-main">
+            <span class="piston-name">{{ tile.name }}</span>
+            {% if tile.description %}<span class="piston-desc">{{ tile.description }}</span>{% endif %}
+            <span class="piston-meta">Modified {{ tile.modified }}</span>
+          </div>
+          <button class="btn btn-sm btn-ghost piston-toggle"
+                  data-active="{{ '1' if tile.active else '0' }}">
+            {{ 'Pause' if tile.active else 'Enable' }}
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="mode-notice" id="fd-empty" style="display:none">No pistons match.</p>
     </div>
-    {% for tile in tiles %}
-    <div class="piston-row" data-piston-id="{{ tile.id }}">
-      <span class="piston-enabled-dot {{ 'enabled' if tile.active else 'disabled' }}" title="{{ 'Active' if tile.active else 'Paused' }}"></span>
-      <span class="piston-name">{{ tile.name }}</span>
-      <span class="piston-result" title="{{ tile.compile_status }} / {{ tile.deploy_status }}">—</span>
-      <span class="piston-time">{{ tile.modified }}</span>
-    </div>
-    {% endfor %}
   </div>
   {% else %}
   <p class="mode-notice">No pistons yet — create one to get started.</p>
