@@ -143,6 +143,20 @@ async def _ws_call(messages: list[dict]) -> dict[int, dict]:
     return results
 
 
+async def call_service(domain: str, service: str, service_data: dict | None = None) -> dict:
+    """Call an HA service over the websocket API (e.g. homeassistant.reload_all
+    after the configuration.yaml include-lines edit — COMPILER_DECISIONS_DEPLOY
+    §9.2 follow-up; later the deploy flow's automation.reload/script.reload)."""
+    msg: dict = {"id": 1, "type": "call_service", "domain": domain, "service": service}
+    if service_data:
+        msg["service_data"] = service_data
+    results = await _ws_call([msg])
+    result = results.get(1, {})
+    if not result.get("success"):
+        raise HAClientError(f"HA rejected {domain}.{service}: {result.get('error')}")
+    return result
+
+
 async def fetch_registries() -> dict:
     """
     Fetch device registry, entity registry, area registry, core config, and

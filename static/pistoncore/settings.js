@@ -87,5 +87,16 @@ document.getElementById("config-yaml-apply").addEventListener("click", async () 
   if (!resp.ok) { cyShow("info", data.error || "Apply failed."); return; }
   cyChanges.style.display = "none";
   cyShow("success", (data.applied || []).join("; ") +
-    ". Backup: " + (data.backup || "n/a") + ". " + (data.note || ""));
+    ". Backup: " + (data.backup || "n/a") +
+    '. <button type="button" class="btn" id="reload-yaml">Reload HA YAML now</button>');
+  document.getElementById("reload-yaml").addEventListener("click", async () => {
+    cyShow("info", "Reloading HA YAML configuration…");
+    const r = await fetch("/api/ha/reload-yaml", { method: "POST" });
+    const d = await r.json();
+    cyShow(r.ok ? "success" : "info", r.ok
+      ? "HA reloaded its YAML. Check that your automations list still looks right. " +
+        "If PistonCore items ever fail to appear after a reload, use a full restart " +
+        "(HA Settings → System → Restart)."
+      : (d.error || "Reload failed — restart HA manually (Settings → System → Restart)."));
+  });
 });

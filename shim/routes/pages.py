@@ -128,6 +128,19 @@ async def config_yaml_apply():
         return JSONResponse({"error": str(exc)}, status_code=400)
 
 
+@router.post("/api/ha/reload-yaml")
+async def reload_ha_yaml():
+    """homeassistant.reload_all — the gentle 'reload all YAML' (not a full
+    restart). Offered as the post-Apply prompt after the configuration.yaml
+    edit; whether a brand-new include line needs a FULL restart instead is the
+    deploy spec's open dev-HA question — the UI says so if items don't appear."""
+    try:
+        await ha_client.call_service("homeassistant", "reload_all")
+        return {"ok": True}
+    except ha_client.HAClientError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+
 @router.post("/api/settings/test-write")
 async def test_write_target():
     """The §2.5 'Test write target' probe — write/read-back/delete against the
