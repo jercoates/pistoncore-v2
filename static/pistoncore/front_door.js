@@ -26,6 +26,34 @@ document.querySelectorAll(".piston-toggle").forEach((btn) => {
     const resp = await fetch(`/intf/dashboard/piston/${action}?id=${row.dataset.pistonId}`);
     btn.disabled = false;
     if (!resp.ok) return;
+    // JSONP body -> compile record -> live pill + loud banner (no refresh)
+    try {
+      const m = (await resp.text()).match(/^callback\((.*)\)$/s);
+      const rec = m ? (JSON.parse(m[1]).compile || null) : null;
+      if (rec) {
+        const name = row.querySelector(".piston-name").textContent;
+        const pill = row.querySelector(".compile-pill");
+        const labels = { deployed: "deployed", error: "compile error",
+                         pyscript: "needs PyScript", paused: "paused" };
+        if (pill) {
+          pill.className = "compile-pill compile-" + rec.status;
+          pill.textContent = labels[rec.status] || rec.status;
+          pill.title = rec.message || rec.file || rec.status;
+        }
+        const banner = document.getElementById("fd-banner");
+        if (banner) {
+          const ok = rec.status === "deployed";
+          const cls = ok ? "banner-success" : (rec.status === "paused" ? "banner-info" : "banner-error");
+          const text = ok
+            ? "Compiled & deployed \"" + name + "\" -> " + rec.file + " (" + (rec.reload || "") + ")"
+            : rec.status === "paused"
+              ? "\"" + name + "\" paused - automation removed from HA"
+              : "\"" + name + "\": " + (rec.message || rec.status);
+          banner.innerHTML = '<div class="banner ' + cls + '"></div>';
+          banner.firstChild.textContent = text;
+        }
+      }
+    } catch (e) { /* banner is best-effort; the pill refresh on next load still tells the truth */ }
     const nowActive = !active;
     btn.dataset.active = nowActive ? "1" : "0";
     btn.textContent = nowActive ? "Pause" : "Enable";

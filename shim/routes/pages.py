@@ -37,8 +37,6 @@ def _tile_view(entry: dict) -> dict:
         "description": meta["z"],
         "modified": modified,
         "category": str(meta.get("c", "0") or "0"),
-        "compile": meta.get("compile") or {"status": "pending",
-                                           "message": "not compiled yet — save the piston to compile"},
     }
 
 
@@ -58,8 +56,13 @@ async def front_door(request: Request):
     if not ha_client.is_configured():
         return RedirectResponse(url="/settings?first_run=1")
 
+    from ..compiler import deploy as compiler_deploy
+    statuses = compiler_deploy.load_statuses()
     tiles = sorted((_tile_view(entry) for entry in storage.list_pistons()),
                    key=lambda t: t["name"].lower())
+    for t in tiles:
+        t["compile"] = statuses.get(t["id"]) or {
+            "status": "pending", "message": "not compiled yet — save the piston to compile"}
     counts: dict[str, int] = {}
     for t in tiles:
         counts[t["category"]] = counts.get(t["category"], 0) + 1
@@ -187,43 +190,6 @@ async def import_export_page(request: Request):
     return templates.TemplateResponse(request, "import_export.html", {
         "pistons": [{"id": e["id"], "name": e["name"]} for e in pistons],
     })
-
-
-@router.post("/api/import")
-async def import_piston(request: Request):
-    """Paste/drop-JSON import. Accepts the {name, meta, piston} share wrapper
-    or a bare piston body ({o,r,s,v,z}); one piston per call (Jeremy's
-    one-at-a-time debugging requirement). Imported pistons land PAUSED
-    (webCoRE's own import convention)."""
-    raw = (await request.body()).decode("utf-8", errors="replace").strip()
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        return JSONResponse({"error": f"Not valid JSON: {exc}"}, status_code=400)
-    if not isinstance(data, dict):
-        return JSONResponse({"error": "Expected a JSON object (a piston or a {name, meta, piston} wrapper)."}, status_code=400)
-
-    if isinstance(data.get("piston"), dict):
-        piston = data["piston"]
-        name = data.get("name") or (data.get("meta") or {}).get("name") or "Imported Piston"
-    elif "s" in data or "o" in data or "v" in data:
-        piston = data
-        name = data.get("n") or "Imported Piston"
-    else:
-        return JSONResponse({"error": "JSON has neither a 'piston' key nor piston-shaped "
-                             "top-level keys (o/r/s/v). See PISTON_JSON_REFERENCE.md."}, status_code=400)
-    if not isinstance(piston.get("s", []), list):
-        return JSONResponse({"error": "piston.s (statements) must be a list."}, status_code=400)
-
-    piston_id = uuid.uuid4().hex
-    entry = storage.save_piston(piston_id, piston)   # node ids + ct/s stamping + used_by
-    entry["name"] = name
-    entry["meta"]["active"] = False                  # imported pistons land paused
-    storage._save_piston_file(entry)
-    from ..compiler import deploy as compiler_deploy
-    await compiler_deploy.compile_and_deploy(piston_id)
-    return {"id": piston_id, "name": name,
-            "statements": len(entry["piston"].get("s", []))}
 
 
 @router.get("/api/export/{piston_id}")

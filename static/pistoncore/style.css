@@ -385,3 +385,5 @@ button {
 .compile-deployed { color: var(--green); border-color: var(--green); }
 .compile-error { color: var(--red); border-color: var(--red); }
 .compile-pyscript { color: var(--yellow); border-color: var(--yellow); }
+.banner-error { border: 1px solid var(--red); color: var(--red); }
+#fd-banner .banner { margin-bottom: var(--space-3); }

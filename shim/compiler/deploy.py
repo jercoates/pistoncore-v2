@@ -13,6 +13,7 @@ Rules honored here:
   — this doubles as the open dev-HA test for new-file pickup.
 """
 
+import json
 import re
 import time
 
@@ -21,6 +22,17 @@ from . import compile_piston
 from .errors import CompilerError
 
 _AUTOMATIONS_DIR = "pistoncore/automations"
+_STATUS_FILE = storage.DATA_DIR / "compile_status.json"
+
+
+def load_statuses() -> dict:
+    """Per-piston compile/deploy status — its own store, NEVER written into
+    the piston entry files (read-only-compiler rule, hard: the compiler and
+    its lifecycle machinery do not touch piston JSON or its files at all)."""
+    if not _STATUS_FILE.exists():
+        return {}
+    with open(_STATUS_FILE, encoding="utf-8") as f:
+        return json.load(f)
 
 _reg_cache: dict = {"t": 0.0, "map": None}
 
@@ -38,9 +50,14 @@ def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")[:40] or "piston"
 
 
-def _record(entry: dict, **fields) -> None:
-    entry["meta"]["compile"] = {"ts": int(time.time() * 1000), **fields}
-    storage._save_piston_file(entry)
+def _record(piston_id: str, **fields) -> dict:
+    statuses = load_statuses()
+    rec = {"ts": int(time.time() * 1000), **fields}
+    statuses[piston_id] = rec
+    _STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(_STATUS_FILE, "w", encoding="utf-8") as f:
+        json.dump(statuses, f, indent=1)
+    return rec
 
 
 async def _reload_ha() -> str:
@@ -62,7 +79,7 @@ async def compile_and_deploy(piston_id: str) -> dict:
     if entry is None:
         return {"status": "missing"}
     name = entry["name"]
-    prev = (entry["meta"].get("compile") or {})
+    prev = load_statuses().get(piston_id, {})
     filename = f"{_AUTOMATIONS_DIR}/{_slug(name)}_{piston_id[:8]}.yaml"
 
     def _remove_deployed(writer, why: str):
@@ -76,42 +93,35 @@ async def compile_and_deploy(piston_id: str) -> dict:
     try:
         writer = deploy_writer.get_writer()
     except deploy_writer.WriteTargetError as exc:
-        _record(entry, status="error", message=f"write target: {exc}")
-        return entry["meta"]["compile"]
+        return _record(piston_id, status="error", message=f"write target: {exc}")
 
     # Paused -> not deployed (v1 pause mechanism)
     if not entry["meta"].get("active", True):
         _remove_deployed(writer, "paused")
         reload_note = await _reload_ha()
-        _record(entry, status="paused", message="paused — not deployed", reload=reload_note)
-        return entry["meta"]["compile"]
+        return _record(piston_id, status="paused", message="paused — not deployed", reload=reload_note)
 
     try:
         resolution_map = await _resolution_map()
         result = compile_piston(entry["piston"], piston_id, name, resolution_map,
                                 storage.load_globals())
     except CompilerError as exc:
-        _record(entry, status="error", **exc.record())
-        return entry["meta"]["compile"]
+        return _record(piston_id, status="error", **exc.record())
     except Exception as exc:
-        _record(entry, status="error", message=f"internal compiler error: {exc}")
-        return entry["meta"]["compile"]
+        return _record(piston_id, status="error", message=f"internal compiler error: {exc}")
 
     if result["target"] == "pyscript":
         _remove_deployed(writer, "pyscript")
-        _record(entry, status="pyscript",
-                message="requires PyScript — that band isn't built yet: " +
-                        "; ".join(result["reasons"][:3]))
-        return entry["meta"]["compile"]
+        return _record(piston_id, status="pyscript",
+                       message="requires PyScript — that band isn't built yet: " +
+                               "; ".join(result["reasons"][:3]))
 
     try:
         if prev.get("file") and prev["file"] != filename:
             writer.delete(prev["file"])
         writer.write(filename, result["yaml"])
     except Exception as exc:
-        _record(entry, status="error", message=f"deploy write failed: {exc}")
-        return entry["meta"]["compile"]
+        return _record(piston_id, status="error", message=f"deploy write failed: {exc}")
 
     reload_note = await _reload_ha()
-    _record(entry, status="deployed", file=filename, reload=reload_note)
-    return entry["meta"]["compile"]
+    return _record(piston_id, status="deployed", file=filename, reload=reload_note)

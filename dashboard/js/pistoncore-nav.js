@@ -144,6 +144,39 @@
             }
         });
 
+        // STAGED JSON IMPORT (import/export page): feed the pasted piston into
+        // webCoRE's OWN import flow so its Rebuild-piston-items dialog forces a
+        // device remap before anything is saved — imported pistons can never
+        // land (or display) raw hash ids (house rule: friendly names only).
+        $rootScope.$on('$routeChangeSuccess', function (event, current) {
+            var staged = window.sessionStorage.getItem('pistoncore_stage_import');
+            var isListRoute = current && current.$$route && current.$$route.originalPath === '/';
+            if (!staged || !isListRoute) return;
+            window.sessionStorage.removeItem('pistoncore_stage_import');
+            var obj;
+            try { obj = JSON.parse(staged); } catch (e) { return; }
+            var entry = {
+                meta: { id: 'pcimport' + Date.now(), name: obj.name, author: '' },
+                piston: obj.piston, warnings: [], warningLevel: 0
+            };
+            var attempts = 0;
+            function pollStage() {
+                attempts++;
+                var el = document.querySelector('[ng-click="newPiston();"]');
+                if (loadRequestFinished() && el && window.angular) {
+                    var scope = angular.element(el).scope();
+                    if (scope && scope.resumeImport) {
+                        dataService.setImportedData([entry]).then(function () {
+                            scope.$applyAsync(function () { scope.resumeImport(); });
+                        });
+                        return;
+                    }
+                }
+                if (attempts < 100) $timeout(pollStage, 100);
+            }
+            pollStage();
+        });
+
         // NEW-PISTON DIALOG: the front door's "+ New Piston" sets this flag —
         // once the list route's bootstrap finishes, open webCoRE's own
         // New-Piston dialog (native blank/Duplicate/restore-code/import-file

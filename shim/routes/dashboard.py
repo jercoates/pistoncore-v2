@@ -203,8 +203,8 @@ async def piston_pause(request: Request):
     entry = storage.set_piston_active(piston_id, False)
     if entry is None:
         return jsonp(request, {"error": "ERR_INVALID_ID"})
-    await compiler_deploy.compile_and_deploy(piston_id)  # paused -> undeploy
-    return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"]})
+    rec = await compiler_deploy.compile_and_deploy(piston_id)  # paused -> undeploy
+    return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"], "compile": rec})
 
 
 @router.get("/piston/resume")
@@ -213,8 +213,8 @@ async def piston_resume(request: Request):
     entry = storage.set_piston_active(piston_id, True)
     if entry is None:
         return jsonp(request, {"error": "ERR_INVALID_ID"})
-    await compiler_deploy.compile_and_deploy(piston_id)  # resume -> redeploy
-    return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"]})
+    rec = await compiler_deploy.compile_and_deploy(piston_id)  # resume -> redeploy
+    return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"], "compile": rec})
 
 
 @router.get("/variable/set")
