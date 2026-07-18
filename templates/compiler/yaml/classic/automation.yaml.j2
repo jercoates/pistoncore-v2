@@ -1,0 +1,48 @@
+- id: {{ auto_id }}
+  alias: "{{ alias }}"
+  mode: {{ mode }}
+  triggers:
+{%- for t in triggers %}
+    - trigger: state
+{%- if t.entities|length == 1 %}
+      entity_id: {{ t.entities[0] }}
+{%- else %}
+      entity_id:
+{%- for e in t.entities %}
+        - {{ e }}
+{%- endfor %}
+{%- endif %}
+      to: "{{ t.to }}"
+{%- if t.id %}
+      id: {{ t.id }}
+{%- endif %}
+{%- endfor %}
+{%- if conditions %}
+  conditions:
+{%- for c in conditions %}
+{%- if c.kind == 'template' %}
+    - condition: template
+      value_template: "{{ c.template }}"
+{%- elif c.kind == 'trigger' %}
+    - condition: trigger
+      id: {{ c.id }}
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+  actions:
+{%- for a in actions %}
+{%- if a.kind == 'delay' %}
+    - delay: "{{ a.delay }}"
+{%- elif a.kind == 'service' %}
+    - action: {{ a.service }}
+      target:
+{%- if a.entities|length == 1 %}
+        entity_id: {{ a.entities[0] }}
+{%- else %}
+        entity_id:
+{%- for e in a.entities %}
+          - {{ e }}
+{%- endfor %}
+{%- endif %}
+{%- endif %}
+{%- endfor %}

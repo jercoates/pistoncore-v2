@@ -1,0 +1,9 @@
+{
+  "_comment": "webCoRE-JSON signatures that FORCE the PyScript band (COMPILER_SPEC §3.2). YAML/classic is the default; these are the exceptions. Data-driven on purpose (COMPILER_DECISIONS_HOLDING §E1) - edit here, never in compiler code. Checked by shim/compiler/routing.py.",
+  "statement_types": ["on", "break"],
+  "task_commands": ["cancelTasks"],
+  "group_operators": ["xor"],
+  "condition_fields_present": ["wd"],
+  "switch_ctp_values": ["e"],
+  "statement_fields_nondefault": {"tep": ["c", "p", "b"], "tsp": ["a"]}
+}

@@ -1,0 +1,5 @@
+{
+  "_comment": "webCoRE command -> HA service per target domain. Editable data (template band).",
+  "on":  {"light": "light.turn_on",  "switch": "switch.turn_on",  "fan": "fan.turn_on"},
+  "off": {"light": "light.turn_off", "switch": "switch.turn_off", "fan": "fan.turn_off"}
+}

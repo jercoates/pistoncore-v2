@@ -1,0 +1,10 @@
+{
+  "_comment": "webCoRE attribute values -> HA state values, plus binary opposites for TCP cancel-trigger derivation. Editable data (template band), never hardcoded in compiler source.",
+  "attribute_values": {
+    "motion":  {"active": "on", "inactive": "off"},
+    "contact": {"open": "on", "closed": "off"},
+    "presence": {"present": "home", "not present": "not_home"},
+    "switch": {"on": "on", "off": "off"}
+  },
+  "binary_opposites": {"on": "off", "off": "on"}
+}

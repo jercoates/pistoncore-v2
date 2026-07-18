@@ -304,21 +304,14 @@ documentation. Verify live at the v2 compiler spec — HA helper capabilities mo
 
 ## D. OPEN — not decided, do not treat as settled
 
-- **Execution-mode default — genuinely undecided, real options now on the table
-  (PYSCRIPT_COMPILER_RESEARCH.md §6, ported 2026-07).** All four HA modes are reproducible
-  on both compile targets (`parallel`=default/zero-code, `restart`=`@task_unique`,
-  `single`=`@task_unique(kill_me=True)`, `queued`=an `asyncio.Lock`-held function body on
-  PyScript; `mode: single/restart/queued/parallel` directly on YAML automations/scripts).
-  The question is which one the compiler picks as the DEFAULT when the piston JSON doesn't
-  force a specific one. Two real candidates, genuinely in tension:
-  - webCoRE itself serializes piston executions per-piston via its own semaphore
-    (§2.5 point 1 — events queue, one processed at a time) — that argues `queued` as the
-    faithful default.
-  - HA automations themselves default to `single` — that argues consistency with what an
-    HA-native user would expect from an unconfigured automation.
-  Whatever gets picked must apply IDENTICALLY to both compile targets so they agree with
-  each other. Do not silently default to one — this needs one explicit line in the v2
-  compiler spec, decided once by Jeremy.
+- **Execution-mode default — DECIDED (Jeremy, 2026-07-18): `queued`, webCoRE's own
+  behavior** (its per-piston semaphore serializes executions — §2.5 point 1). Applies
+  identically to both compile targets (`mode: queued` on YAML; `asyncio.Lock`-held body on
+  PyScript). **Precedence note:** TCP-default branches that carry a cancelable pending
+  task (a wait) still emit `mode: restart` + cancel-triggers — that IS the TCP
+  cancellation mechanism (§2.5 point 4, and the approved Cave Motion fixture) and it
+  outranks the queued default on those specific automations; `queued` governs wherever
+  TCP semantics don't force restart.
 - **Command classification is a PENDING research deliverable.** The full WebCoRE command
   menu (device / emulated / location — see WITH_BLOCK_TASK_FRAMEWORK.md §5.4) must be sorted
   by the **reproduce-cleanly test** against CURRENT HA: can HA cleanly reproduce the action

@@ -3,3 +3,4 @@ uvicorn[standard]
 websockets
 jinja2
 smbprotocol
+pyyaml

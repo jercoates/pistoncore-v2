@@ -426,10 +426,16 @@ before assuming the pattern needs compiler support at v1.
 
 ### 3.3 EMIT — the two bands
 **YAML band (primary):**
-- **Classic primitives ONLY — never purpose-specific triggers/conditions (DECISION,
-  pending Jeremy's one-word confirm; evidence: purpose-specific YAML keys were renamed
-  breaking in 2026.7 itself, while classic primitives carry an explicit stability
-  promise).** [VERIFIED — HA_YAML_COMPILER_RESEARCH §0/§3]
+- **Classic primitives are the DEFAULT emission; a purpose-specific template band exists
+  as the FALLBACK (DECIDED, Jeremy 2026-07-18: "default to primitive but add all — I want
+  a fallback in the templates in case they retire the primitives").** Evidence for the
+  default: purpose-specific YAML keys were renamed breaking in 2026.7 itself, while
+  classic primitives carry an explicit stability promise [VERIFIED —
+  HA_YAML_COMPILER_RESEARCH §0/§3]. The fallback is a TEMPLATE-BAND concern, not a
+  compiler-code concern: `templates/compiler/yaml/classic/` is the active band;
+  a `.../purpose/` band gets authored when needed (or preemptively); switching bands is a
+  data/settings change + Recompile All — zero compiler edits. This is the same insurance
+  pattern as the PyScript band versioning.
 - Modern key schema (`triggers:`/`conditions:`/`actions:`, `trigger:` type key) per
   HA_YAML_COMPILER_RESEARCH §1. **Emission baseline VERIFIED:** modern key schema ONLY —
   `triggers:` list (`- trigger: <type>`), `conditions:` list (`- condition: <type>`),
