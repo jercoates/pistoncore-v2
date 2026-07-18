@@ -16,6 +16,7 @@ COPY templates/ templates/
 COPY static/ static/
 COPY webcore_vocab.json .
 COPY picker_capability_map.json .
+COPY routing_table.json .
 
 ENV PISTONCORE_DATA_DIR=/data
 VOLUME ["/data"]
