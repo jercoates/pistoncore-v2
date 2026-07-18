@@ -39,7 +39,10 @@ class Resolver:
             g = self.globals_map.get(dref)
             if not g:
                 raise UnresolvableDevice(f"global device variable '{dref}' not found", **ctx)
-            return (g.get("v") or {}).get("d") or g.get("d") or []
+            v = g.get("v")
+            if isinstance(v, list):
+                return v
+            return (v or {}).get("d") or g.get("d") or []
         if dref in self.local_device_vars:
             return self.local_device_vars[dref]
         raise UnresolvableDevice(f"device reference '{dref}' is neither a hash, a local "

@@ -49,6 +49,12 @@
             {% if tile.description %}<span class="piston-desc">{{ tile.description }}</span>{% endif %}
             <span class="piston-meta">Modified {{ tile.modified }}</span>
           </div>
+          <span class="compile-pill compile-{{ tile.compile.status }}"
+                title="{{ tile.compile.message or tile.compile.file or tile.compile.status }}">
+            {{ {'deployed': 'deployed', 'error': 'compile error', 'pyscript': 'needs PyScript',
+                'paused': 'paused', 'pending': 'not compiled'}[tile.compile.status]
+               if tile.compile.status in ('deployed','error','pyscript','paused','pending')
+               else tile.compile.status }}</span>
           <button class="btn btn-sm btn-ghost piston-toggle"
                   data-active="{{ '1' if tile.active else '0' }}">
             {{ 'Pause' if tile.active else 'Enable' }}

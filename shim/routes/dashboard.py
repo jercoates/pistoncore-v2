@@ -12,6 +12,7 @@ import json
 from fastapi import APIRouter, Request
 
 from .. import device_pipeline, fixtures, ha_client, storage
+from ..compiler import deploy as compiler_deploy
 from ..jsonp import jsonp
 
 router = APIRouter(prefix="/intf/dashboard")
@@ -155,11 +156,12 @@ def _save_response(entry: dict) -> dict:
 
 
 @router.get("/piston/set")
-def piston_set(request: Request):
+async def piston_set(request: Request):
     piston_id = request.query_params.get("id", "")
     data = request.query_params.get("data", "")
     piston_json = storage.decode_piston_data(data)
     entry = storage.save_piston(piston_id, piston_json)
+    await compiler_deploy.compile_and_deploy(piston_id)  # compile-on-save (§1)
     return jsonp(request, _save_response(entry))
 
 
@@ -182,32 +184,36 @@ def piston_set_chunk(request: Request):
 
 
 @router.get("/piston/set.end")
-def piston_set_end(request: Request):
+async def piston_set_end(request: Request):
     global _pending_save
     if _pending_save is None:
         return jsonp(request, {"error": "ERR_NO_PENDING_SAVE"})
     reassembled = "".join(_pending_save["chunks"])
     piston_json = storage.decode_piston_data(reassembled)
-    entry = storage.save_piston(_pending_save["piston_id"], piston_json)
+    piston_id = _pending_save["piston_id"]
+    entry = storage.save_piston(piston_id, piston_json)
     _pending_save = None
+    await compiler_deploy.compile_and_deploy(piston_id)  # compile-on-save (§1)
     return jsonp(request, _save_response(entry))
 
 
 @router.get("/piston/pause")
-def piston_pause(request: Request):
+async def piston_pause(request: Request):
     piston_id = request.query_params.get("id", "")
     entry = storage.set_piston_active(piston_id, False)
     if entry is None:
         return jsonp(request, {"error": "ERR_INVALID_ID"})
+    await compiler_deploy.compile_and_deploy(piston_id)  # paused -> undeploy
     return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"]})
 
 
 @router.get("/piston/resume")
-def piston_resume(request: Request):
+async def piston_resume(request: Request):
     piston_id = request.query_params.get("id", "")
     entry = storage.set_piston_active(piston_id, True)
     if entry is None:
         return jsonp(request, {"error": "ERR_INVALID_ID"})
+    await compiler_deploy.compile_and_deploy(piston_id)  # resume -> redeploy
     return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"]})
 
 

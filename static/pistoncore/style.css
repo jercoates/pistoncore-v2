@@ -376,3 +376,12 @@ button {
 .header-icon-btn svg { width: 20px; height: 20px; display: block; }
 .header-status { font-size: 13px; }
 .header-icon-btn { padding: 0; justify-content: center; }
+
+/* compile/deploy status pill (the front-door announcement surface) */
+.compile-pill {
+  flex-shrink: 0; font-size: 11px; padding: 2px 10px; border-radius: 999px;
+  border: 1px solid var(--border-subtle); color: var(--text-muted);
+}
+.compile-deployed { color: var(--green); border-color: var(--green); }
+.compile-error { color: var(--red); border-color: var(--red); }
+.compile-pyscript { color: var(--yellow); border-color: var(--yellow); }

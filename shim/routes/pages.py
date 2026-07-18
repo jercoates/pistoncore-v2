@@ -37,8 +37,8 @@ def _tile_view(entry: dict) -> dict:
         "description": meta["z"],
         "modified": modified,
         "category": str(meta.get("c", "0") or "0"),
-        "compile_status": "no compiler yet",
-        "deploy_status": "no compiler yet",
+        "compile": meta.get("compile") or {"status": "pending",
+                                           "message": "not compiled yet — save the piston to compile"},
     }
 
 
@@ -220,6 +220,8 @@ async def import_piston(request: Request):
     entry["name"] = name
     entry["meta"]["active"] = False                  # imported pistons land paused
     storage._save_piston_file(entry)
+    from ..compiler import deploy as compiler_deploy
+    await compiler_deploy.compile_and_deploy(piston_id)
     return {"id": piston_id, "name": name,
             "statements": len(entry["piston"].get("s", []))}
 
