@@ -563,9 +563,19 @@ class _PyEmitter:
             elif t == "if":
                 triggers = [c for c in stmt.get("c", [])
                             if c.get("t") == "condition" and c.get("co") in _TRIGGER_COS]
+                has_else = bool(stmt.get("e") or stmt.get("ei"))
                 if triggers:
                     for trig in triggers:
-                        self._trigger_decorator(trig, sid, ctx)
+                        if has_else and trig.get("co") in ("changes_to", "changes_away_from"):
+                            # else must run on the OPPOSITE transition too —
+                            # subscribe to any change; the body's condition
+                            # check routes then/else (semantic-audit find)
+                            lo = trig.get("lo") or {}
+                            ents = self.resolver.entities_for_attr(
+                                lo.get("d", []), lo.get("a"), ctx)
+                            self._add_state_trigger(list(ents), sid, False)
+                        else:
+                            self._trigger_decorator(trig, sid, ctx)
                 else:
                     self._promote_triggers(stmt, sid, ctx)
                 event_body.extend(self._stmt_nodes(stmt, ctx, top=True))

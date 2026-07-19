@@ -351,12 +351,15 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         # at automation level.
         actions = [{"kind": "if", "conditions": cond_nodes,
                     "then": then_actions, "else": else_actions}]
+    elif else_actions:
+        # Trigger-only if WITH an else: webCoRE subscribes to the ATTRIBUTE,
+        # so the opposite transition wakes the piston and runs the else —
+        # a to:-filtered trigger can't express that (semantic-audit find,
+        # 2026-07-19). PyScript band handles it faithfully.
+        raise NotYetImplemented(
+            "else-branch on a trigger-only if needs any-change wake — "
+            "requires PyScript", **ctx)
     else:
-        # No non-trigger conditions: this automation only fires when its own
-        # trigger comparison is true, so an else/else-if chain is unreachable
-        # here — exactly webCoRE's behavior for a trigger-only if (the else
-        # path only ran on OTHER subscriptions, which this statement has none
-        # of). Emit the then-branch flat.
         conditions.extend(cond_nodes)
         actions = then_actions
 
