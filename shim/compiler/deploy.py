@@ -4,15 +4,28 @@ write through the configured write target, reload HA, record the result.
 Rules honored here:
 - A failed compile NEVER blocks the save and NEVER touches the previously
   deployed artifact (§1) — it only records the error for the two UI surfaces.
-- Paused piston -> its automation file is removed (v1 pause mechanism; the
-  spec's initial_state/disable variant can replace this later without moving
-  the hook points).
+- Pause is HA-NATIVE (DECISION Jeremy 2026-07-18): automation.turn_off/turn_on,
+  matching webCoRE semantics (pause = stop firing, piston persists) — the file
+  stays deployed but disabled, entity + trace history survive, and it's the
+  same mechanism a future in-piston "Pause piston" command must use anyway.
+  Safety fallback (Jeremy's condition): if HA can't find/disable the
+  automations (broken compile, dead connection), pause removes the file
+  instead — Pause always works. File deletion otherwise remains only for
+  piston deletion, pyscript routing, and rename cleanup.
 - Rename-safe (§4): the deployed filename is recorded per piston; a rename
   deletes the old file before writing the new one.
 - Reload (§5): automation.reload first, homeassistant.reload_all as fallback
   — this doubles as the open dev-HA test for new-file pickup.
+- Debug evidence (Jeremy, 2026-07-18 — compiler-tuning infrastructure): every
+  emitted artifact (including partial output from a mid-emit crash) is kept
+  timestamped in data/compile_debug/<piston_id>/, and a deploy is only
+  "deployed" once the emitted automations verifiably appear in HA after the
+  reload — HA silently skips malformed files while its reload call still
+  reports success, so absence => status "error: HA rejected the compiled
+  YAML" with HA's own log lines attached.
 """
 
+import asyncio
 import json
 import re
 import time
@@ -23,6 +36,43 @@ from .errors import CompilerError
 
 _AUTOMATIONS_DIR = "pistoncore/automations"
 _STATUS_FILE = storage.DATA_DIR / "compile_status.json"
+_DEBUG_DIR = storage.DATA_DIR / "compile_debug"
+_DEBUG_KEEP = 25  # newest artifacts kept per piston
+
+
+def _keep_artifact(piston_id: str, text: str, suffix: str) -> str:
+    """Compiler-tuning evidence (Jeremy, 2026-07-18): EVERY output the
+    compiler produces — good, malformed, or half-finished — is preserved
+    here, timestamped, untouched by recompiles/pause/rename cleanup. When a
+    compile misbehaves, the actual emitted code (and its history, for
+    diffing good vs bad) is the primary clue."""
+    d = _DEBUG_DIR / piston_id
+    d.mkdir(parents=True, exist_ok=True)
+    name = f"{time.strftime('%Y%m%d-%H%M%S')}-{int(time.time() * 1000) % 1000:03d}{suffix}"
+    (d / name).write_text(text, encoding="utf-8")
+    for old in sorted(d.iterdir())[:-_DEBUG_KEEP]:
+        try:
+            old.unlink()
+        except OSError:
+            pass
+    return f"compile_debug/{piston_id}/{name}"
+
+
+async def _ha_log_excerpt(filename: str) -> str:
+    """HA's own words about why it rejected our file — pulled from its
+    system log right after a failed pickup."""
+    try:
+        entries = await ha_client.get_system_log()
+    except Exception as exc:
+        return f"(could not read HA's error log: {exc})"
+    needle = filename.rsplit("/", 1)[-1]
+    hits = []
+    for e in entries:
+        text = " ".join(str(m) for m in e.get("message", []))
+        blob = f"{text} {e.get('source') or ''} {e.get('exception') or ''}"
+        if needle in blob or "pistoncore" in blob.lower():
+            hits.append(text[:300])
+    return "; ".join(hits[-3:]) or "(no matching entries in HA's error log)"
 
 
 def load_statuses() -> dict:
@@ -60,6 +110,45 @@ def _record(piston_id: str, **fields) -> dict:
     return rec
 
 
+async def _automation_entities(auto_ids: list) -> list[str]:
+    """entity_ids HA assigned to our emitted automations — matched via each
+    automation state's attributes.id (== the YAML `id:` field we emit),
+    never by guessing the alias slug."""
+    wanted = set(auto_ids)
+    states = await ha_client.get_states()
+    return [s["entity_id"] for s in states
+            if s["entity_id"].startswith("automation.")
+            and s.get("attributes", {}).get("id") in wanted]
+
+
+async def _verify_and_enable(auto_ids: list) -> tuple[str, str]:
+    """After writing + reloading, PROVE HA actually swallowed the file —
+    "reload succeeded" alone is a lie of omission: HA skips a malformed file,
+    logs the problem, and the reload call still reports success. Returns
+    (verdict, note): "ok" all automations present + turned on; "rejected"
+    some/all missing after retries (compiled YAML presumed bad); "unverified"
+    couldn't check (HA unreachable — NOT evidence the YAML is bad).
+    turn_on is explicit because HA restores disabled state across reloads."""
+    if not auto_ids:
+        return "unverified", "no automation ids"
+    entities: list = []
+    try:
+        for _ in range(4):
+            entities = await _automation_entities(auto_ids)
+            if len(entities) >= len(set(auto_ids)):
+                break
+            await asyncio.sleep(1)
+    except Exception as exc:
+        return "unverified", f"could not verify (HA states unavailable: {exc})"
+    if len(entities) < len(set(auto_ids)):
+        return "rejected", f"{len(entities)}/{len(set(auto_ids))} automations appeared after reload"
+    try:
+        await ha_client.call_service("automation", "turn_on", {"entity_id": entities})
+    except Exception as exc:
+        return "unverified", f"present but turn_on failed: {exc}"
+    return "ok", "on"
+
+
 async def _reload_ha() -> str:
     try:
         await ha_client.call_service("automation", "reload")
@@ -90,25 +179,57 @@ async def compile_and_deploy(piston_id: str) -> dict:
                 pass
         return why
 
+    # Paused -> HA-native disable first (see module docstring). No writer
+    # needed on this path, so a broken write target can't block a pause.
+    if not entry["meta"].get("active", True):
+        auto_ids = prev.get("auto_ids") or []
+        why = "no deployed automation on record"
+        if auto_ids:
+            try:
+                entities = await _automation_entities(auto_ids)
+                if entities:
+                    await ha_client.call_service("automation", "turn_off",
+                                                 {"entity_id": entities})
+                    return _record(piston_id, status="paused",
+                                   message="paused — automation disabled in HA",
+                                   file=prev.get("file"), auto_ids=auto_ids)
+                why = "automation entities not found in HA"
+            except Exception as exc:
+                why = str(exc)
+        # Safety fallback: Pause must always work — remove the file instead.
+        try:
+            writer = deploy_writer.get_writer()
+        except deploy_writer.WriteTargetError as exc:
+            return _record(piston_id, status="error",
+                           message=f"pause failed: {why}; file fallback also failed — write target: {exc}")
+        _remove_deployed(writer, "paused")
+        reload_note = await _reload_ha()
+        return _record(piston_id, status="paused",
+                       message=f"paused — automation removed from HA (disable unavailable: {why})",
+                       reload=reload_note)
+
     try:
         writer = deploy_writer.get_writer()
     except deploy_writer.WriteTargetError as exc:
         return _record(piston_id, status="error", message=f"write target: {exc}")
-
-    # Paused -> not deployed (v1 pause mechanism)
-    if not entry["meta"].get("active", True):
-        _remove_deployed(writer, "paused")
-        reload_note = await _reload_ha()
-        return _record(piston_id, status="paused", message="paused — not deployed", reload=reload_note)
 
     try:
         resolution_map = await _resolution_map()
         result = compile_piston(entry["piston"], piston_id, name, resolution_map,
                                 storage.load_globals())
     except CompilerError as exc:
-        return _record(piston_id, status="error", **exc.record())
+        fields = exc.record()
+        fields.pop("piston_id", None)  # already _record()'s key
+        partial = getattr(exc, "partial_yaml", None)
+        if partial:
+            fields["partial_artifact"] = _keep_artifact(piston_id, partial, ".partial.yaml")
+        return _record(piston_id, status="error", **fields)
     except Exception as exc:
-        return _record(piston_id, status="error", message=f"internal compiler error: {exc}")
+        fields = {"message": f"internal compiler error: {exc}"}
+        partial = getattr(exc, "partial_yaml", None)
+        if partial:
+            fields["partial_artifact"] = _keep_artifact(piston_id, partial, ".partial.yaml")
+        return _record(piston_id, status="error", **fields)
 
     if result["target"] == "pyscript":
         _remove_deployed(writer, "pyscript")
@@ -116,12 +237,23 @@ async def compile_and_deploy(piston_id: str) -> dict:
                        message="requires PyScript — that band isn't built yet: " +
                                "; ".join(result["reasons"][:3]))
 
+    artifact = _keep_artifact(piston_id, result["yaml"], ".yaml")
+
     try:
         if prev.get("file") and prev["file"] != filename:
             writer.delete(prev["file"])
         writer.write(filename, result["yaml"])
     except Exception as exc:
-        return _record(piston_id, status="error", message=f"deploy write failed: {exc}")
+        return _record(piston_id, status="error", artifact=artifact,
+                       message=f"deploy write failed: {exc}")
 
     reload_note = await _reload_ha()
-    return _record(piston_id, status="deployed", file=filename, reload=reload_note)
+    auto_ids = result.get("auto_ids", [])
+    verdict, note = await _verify_and_enable(auto_ids)
+    if verdict == "rejected":
+        ha_says = await _ha_log_excerpt(filename)
+        return _record(piston_id, status="error", file=filename, auto_ids=auto_ids,
+                       artifact=artifact, reload=reload_note,
+                       message=f"HA rejected the compiled YAML ({note}) — HA's log: {ha_says}")
+    return _record(piston_id, status="deployed", file=filename, reload=reload_note,
+                   auto_ids=auto_ids, enabled=note, artifact=artifact)

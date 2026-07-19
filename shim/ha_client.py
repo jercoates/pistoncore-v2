@@ -157,6 +157,29 @@ async def call_service(domain: str, service: str, service_data: dict | None = No
     return result
 
 
+async def get_states() -> list:
+    """Current entity states only — compiler deploy's automation lookup
+    (pause/enable via automation.turn_off/turn_on needs the entity_ids HA
+    assigned to our emitted automations). Cheaper than fetch_registries'
+    six-call snapshot."""
+    results = await _ws_call([{"id": 1, "type": "get_states"}])
+    result = results[1]
+    if not result.get("success"):
+        raise HAClientError(f"get_states failed: {result.get('error')}")
+    return result["result"]
+
+
+async def get_system_log() -> list:
+    """HA's recent warning/error log entries (websocket system_log/list) —
+    when a compiled YAML file is rejected on reload, HA says exactly what's
+    malformed and where; deploy grabs those lines as debug evidence."""
+    results = await _ws_call([{"id": 1, "type": "system_log/list"}])
+    result = results[1]
+    if not result.get("success"):
+        raise HAClientError(f"system_log/list failed: {result.get('error')}")
+    return result["result"]
+
+
 async def fetch_registries() -> dict:
     """
     Fetch device registry, entity registry, area registry, core config, and

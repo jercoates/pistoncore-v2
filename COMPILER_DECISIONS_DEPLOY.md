@@ -16,8 +16,16 @@ separate compile button; no separate deploy step. This matches webCoRE (save = l
 - A piston's `active`/paused state is owned by the piston (webCoRE's own status page owns
   the pause/resume UI). New pistons land paused by default (build 0) — the compiler simply
   reflects that; it is not a PistonCore-invented state.
-- Paused piston → deployed automation is disabled (`initial_state: false` / not enabled).
-  Active piston → enabled. Set at compile; updated on pause/resume.
+- Paused piston → deployed automation is disabled — DECISION (Jeremy, 2026-07-18):
+  HA-native `automation.turn_off` on pause / `turn_on` on resume+deploy, file left in
+  place. Matches webCoRE pause semantics (stop firing, piston persists), instant (no
+  reload), keeps entity + trace history, survives HA restarts, and is the same
+  mechanism an in-piston "Pause piston" command uses by nature (it runs inside HA).
+  Entity lookup is by the automation state's `attributes.id` == our emitted `id:`
+  (never alias-slug guessing); ids recorded per piston in compile_status.json.
+  Safety fallback (Jeremy's condition for approving): if HA can't find/disable the
+  automations, pause removes the file instead — Pause always works. Resume always
+  turn_ons explicitly because HA restores disabled state across reloads.
 - **One direction only: PistonCore → HA.** If a user toggles the automation in HA's UI,
   PistonCore overwrites it on next compile. Predictable beats clever.
 

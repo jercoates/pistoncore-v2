@@ -47,7 +47,7 @@ document.querySelectorAll(".piston-toggle").forEach((btn) => {
           const text = ok
             ? "Compiled & deployed \"" + name + "\" -> " + rec.file + " (" + (rec.reload || "") + ")"
             : rec.status === "paused"
-              ? "\"" + name + "\" paused - automation removed from HA"
+              ? "\"" + name + "\": " + (rec.message || "paused")
               : "\"" + name + "\": " + (rec.message || rec.status);
           banner.innerHTML = '<div class="banner ' + cls + '"></div>';
           banner.firstChild.textContent = text;
