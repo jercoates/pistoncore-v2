@@ -259,10 +259,32 @@
                 link.href = '/help/compiler-debug';
                 link.className = 'alert-link';
                 link.textContent = 'Help →';
+                // real browser navigation — Angular's router otherwise hijacks
+                // the click and dumps the user on its own default list page
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = '/help/compiler-debug';
+                }, true);
                 div.appendChild(link);
             }
             if (old && old.parentNode) old.parentNode.removeChild(old);
             container.insertBefore(div, container.firstChild);
+
+            // TRUTH FIX: the sealed Status card's "active and humming happily"
+            // only knows webCoRE save-state, not HA reality — override the
+            // sentence while the compile is failed, restore it once fixed.
+            var statusP = document.querySelector('#collapseCards div[ng-if="meta.active"] > p');
+            if (statusP) {
+                if (!statusP.dataset.pistoncoreOriginal) {
+                    statusP.dataset.pistoncoreOriginal = statusP.textContent;
+                }
+                statusP.textContent = isError
+                    ? 'This piston is saved and active, but its compile to Home ' +
+                      'Assistant FAILED — it is NOT currently running. See the ' +
+                      'error above.'
+                    : statusP.dataset.pistoncoreOriginal;
+            }
         }
         $rootScope.$on('$routeChangeSuccess', function (event, current) {
             clearCompileBanner();
