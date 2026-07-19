@@ -30,7 +30,20 @@ class Resolver:
         maps = _load_band_json("value_maps.json")
         self.value_maps = maps["attribute_values"]
         self.binary_opposites = maps["binary_opposites"]
+        self.system_values = maps.get("system_values", {})
         self.command_maps = _load_band_json("command_maps.json")
+        self.local_var_names = {v.get("n") for v in piston.get("v", [])}
+        sys_ent = resolution_map.get("$system")
+        self.system_entities = sys_ent if isinstance(sys_ent, dict) else {}
+
+    def system_entity(self, var: str) -> str | None:
+        """HA entity backing a webCoRE system variable ($mode,
+        $alarmSystemStatus, ...) — from the resolution map's $system entry."""
+        v = self.system_entities.get(var)
+        return v if isinstance(v, str) else None
+
+    def system_value(self, var: str, value):
+        return self.system_values.get(var, {}).get(value, value)
 
     def _hashes(self, dref: str, ctx: dict) -> list[str]:
         if dref.startswith(":") and dref.endswith(":"):

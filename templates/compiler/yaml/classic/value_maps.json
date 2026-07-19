@@ -6,5 +6,10 @@
     "presence": {"present": "home", "not present": "not_home"},
     "switch": {"on": "on", "off": "off"}
   },
-  "binary_opposites": {"on": "off", "off": "on"}
+  "binary_opposites": {"on": "off", "off": "on"},
+  "system_values": {
+    "alarmSystemStatus": {"armedAway": "armed_away", "armedHome": "armed_home",
+                          "armedNight": "armed_night", "disarmed": "disarmed",
+                          "allDisarmed": "disarmed"}
+  }
 }

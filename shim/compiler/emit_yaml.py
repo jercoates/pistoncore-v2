@@ -86,16 +86,22 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     co = cond["co"]
 
     if cond.get("lo_type") == "v":
-        # piston variable on the left side — only the $time between-window
-        # compiles to YAML (HA's native time condition); the rest is PyScript.
-        if (cond.get("lo_var") == "time" and co == "is_between"
+        var = cond.get("lo_var")
+        # $time between-window -> HA's native time condition
+        if (var == "time" and co == "is_between"
                 and cond.get("value_vt") == "time" and cond.get("value2_vt") == "time"
                 and _is_number(cond["value"]) and _is_number(cond["value2"])):
             return {"kind": "time",
                     "after": _minutes_hms(int(cond["value"])),
                     "before": _minutes_hms(int(cond["value2"]))}
+        # entity-backed system variables ($alarmSystemStatus, $mode, ...)
+        sysent = resolver.system_entity(var) if var else None
+        if sysent and co in _EQUALITY_OPS:
+            mapped = resolver.system_value(var, cond["value"])
+            return {"kind": "template", "template":
+                    f"{{{{ states('{sysent}') {_EQUALITY_OPS[co]} '{mapped}' }}}}"}
         raise NotYetImplemented(
-            f"condition on variable '{cond.get('lo_var')}' ({co}) requires PyScript", **ctx)
+            f"condition on variable '{var}' ({co}) requires PyScript", **ctx)
 
     entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
     joiner = " and " if cond.get("aggregation") == "all" else " or "
@@ -128,8 +134,15 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
 def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     co = trig["co"]
     if trig.get("lo_type") == "v":
+        var = trig.get("lo_var")
+        sysent = resolver.system_entity(var) if var else None
+        if sysent and co == "changes_to":
+            return {"kind": "state", "entities": [sysent],
+                    "to": resolver.system_value(var, trig["value"]), "id": trig_id}
+        if sysent and co == "changes":
+            return {"kind": "state", "entities": [sysent], "id": trig_id}
         raise NotYetImplemented(
-            f"trigger on variable '{trig.get('lo_var')}' ({co}) requires PyScript", **ctx)
+            f"trigger on variable '{var}' ({co}) requires PyScript", **ctx)
     entities = resolver.entities_for_attr(trig["devices"], trig["attr"], ctx)
     if co == "changes_to":
         to_value = resolver.ha_state_value(trig["attr"], trig["value"])

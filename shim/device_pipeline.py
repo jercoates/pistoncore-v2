@@ -99,13 +99,19 @@ def _custom_attribute_key(entity: dict, entity_id: str) -> str:
 
 
 def _custom_attribute(entity_id: str, entity: dict, state: dict | None) -> dict | None:
-    """Generic fallback attribute for an entity with live data but no
-    picker_capability_map rule — never silently drop what HA exposes."""
+    """Generic fallback attribute for an entity with no picker_capability_map
+    rule — never silently drop what HA exposes.
+
+    Binds on EXISTENCE (loaded entity), not on current value: an entity whose
+    state happens to read unknown/unavailable at scan time is still real and
+    will produce values (found live 2026-07-19 — a camera's smart_detect_type
+    sensor read 'unknown' because it hadn't detected anything recently, and
+    the whole attribute vanished from that camera's bindings while its twin
+    on another camera worked). Type falls back to string when there's no
+    numeric value to sniff."""
     if state is None:
         return None
     value = state.get("state")
-    if value in (None, "unknown", "unavailable"):
-        return None
     key = _custom_attribute_key(entity, entity_id)
     try:
         float(value)
@@ -560,6 +566,17 @@ def build_device_payload(registries: dict) -> dict:
         hashed_id, device_obj, resolution_entry = _build_notify_device(service_key, vocab)
         devices[hashed_id] = device_obj
         resolution_map[hashed_id] = resolution_entry
+
+    # "$system" — webCoRE system variables that resolve to HA entities.
+    # Reserved key, can't collide with device hashes (those are :hex:).
+    # alarmSystemStatus binds only when exactly ONE alarm panel exists —
+    # ambiguity is a settings question, never a guess.
+    system_entities = {"mode": "input_select.pistoncore_location_mode"}
+    alarm_panels = [s["entity_id"] for s in registries["states"]
+                    if s["entity_id"].startswith("alarm_control_panel.")]
+    if len(alarm_panels) == 1:
+        system_entities["alarmSystemStatus"] = alarm_panels[0]
+    resolution_map["$system"] = system_entities
 
     return {
         "devices": devices,

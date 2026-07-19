@@ -66,6 +66,19 @@ class _PyEmitter:
         return {"piston_id": self.piston_id, "piston_name": self.piston_name,
                 "stmt_id": sid}
 
+    def _var_expr(self, name, ctx: dict) -> str:
+        """Variable operand: declared piston locals read from pv; entity-backed
+        system variables read their HA entity. Anything else is an unknown
+        system variable — hard NotYetImplemented, NEVER a silent pv.get(None)
+        that would make conditions quietly false forever."""
+        sysent = self.resolver.system_entity(name) if name else None
+        if sysent:
+            return f"_s({_q(sysent)})"
+        if name in self.resolver.local_var_names:
+            return f"pv.get({_q(name)})"
+        raise NotYetImplemented(
+            f"system variable '{name}' not compiled yet", **ctx)
+
     # ── operands ───────────────────────────────────────────────────────────
 
     def _operand_expr(self, op: dict, ctx: dict) -> str:
@@ -78,10 +91,7 @@ class _PyEmitter:
             entities = self.resolver.entities_for_attr(op.get("d", []), op.get("a"), ctx)
             return f"_s({_q(entities[0])})"
         if t == "v":
-            name = op.get("v")
-            if name == "mode":
-                return f"_s({_q(MODE_ENTITY)})"
-            return f"pv.get({_q(name)})"
+            return self._var_expr(op.get("v"), ctx)
         if t == "x":
             x = op.get("x")
             if x == "$currentEventDevice":
@@ -114,11 +124,11 @@ class _PyEmitter:
                     return f"_time_between({int(a)}, {int(b)})"
                 raise NotYetImplemented("time window with non-fixed bounds requires "
                                         "the expression engine", **ctx)
-            if var == "mode":
-                left = f"_s({_q(MODE_ENTITY)})"
-            else:
-                left = f"pv.get({_q(var)})"
+            left = self._var_expr(var, ctx)
             if co in _EQUALITY_OPS:
+                if self.resolver.system_entity(var) and (ro.get("t") == "c"):
+                    mapped = self.resolver.system_value(var, ro.get("c"))
+                    return f"{left} {_EQUALITY_OPS[co]} {_q(mapped)}"
                 return f"{left} {_EQUALITY_OPS[co]} {self._operand_expr(ro, ctx)}"
             raise NotYetImplemented(
                 f"comparison '{co}' on variable '{var}' not compiled yet", **ctx)
