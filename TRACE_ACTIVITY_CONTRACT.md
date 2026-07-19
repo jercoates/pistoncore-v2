@@ -1,6 +1,7 @@
 # TRACE_ACTIVITY_CONTRACT.md — What the shim must fabricate for trace/console
 
-**Status:** Draft 1 — research session, 2026-07-10, mining `reference/webCoRE-hubitat-patches-extracted/`
+**Status:** Draft 2 — ALL §1-§5 TO-VERIFY items resolved 2026-07-19 (verification
+pass; every claim now cited). Originally Draft 1 2026-07-10, mining `reference/webCoRE-hubitat-patches-extracted/`
 (the ady624 Hubitat fork, "Last update July 5, 2026 for Hubitat" — confirmed correct fork
 per `SESSION_BRIEF_HUBITAT_MINING.md` Step 0).
 **Scope:** the DATA CONTRACT the dashboard's piston view consumes for its trace/console —
@@ -36,12 +37,15 @@ to `localVars` — global/system variable CHANGES are deliberately excluded from
 poll payloads; only piston-LOCAL variable state is included here. (Globals are fetched via
 `load`'s `instance.globalVars`, not via `activity`.)
 
-`lastLogTimestamp` semantics (`webcore-piston.groovy:1196-1199`): if the client passes a
-valid timestamp, the function finds the log entry with a matching `t` and returns only logs
-AFTER it (or all logs if no match/first call with `lastLogTimestamp=0`). **TO VERIFY**: the
-log-push site found (§2) does not set a `t` field on the entry — likely added by a
-transformation step between execution-time logging and the cached `activity` map this
-function reads (`getCachedMaps('activity')`); not traced further this session.
+`lastLogTimestamp` semantics — **VERIFIED-HE-GROOVY :1196-1204, RESOLVED:** the `t`
+field lives on RUN-HEADER entries, not message entries. Every execution seeds its log
+buffer with `[[t: <runStartTime>]]` (:2567, re-seeded :2608), then pushes `{o,p,m,c}`
+message entries after it. Pagination is therefore per-RUN: `activity()` finds the header
+whose `t` == lastLogTimestamp and returns `logs[0..idx-1]` — everything BEFORE the match
+in a newest-first list, i.e. all runs newer than the client's last-seen run.
+`lastLogTimestamp=0` returns the whole buffer (idx=size); non-zero with no match returns
+`[]`. The shim replicates this by stamping one `{t}` header per compiled-piston
+execution — the shim owns the timestamp, nothing to copy from Hubitat internals.
 
 ## 2. Log entry shape
 
@@ -61,36 +65,44 @@ Entries are capped per-piston at a configurable limit (`sMLOGS`, minimum 50) —
 entries silently stop accumulating once the cap is hit for that execution's log buffer, not
 a rolling window (`webcore-piston.groovy:13282-13291`).
 
-**TO VERIFY:** the `t` (absolute timestamp) field `activity()`'s pagination logic depends on
-(§1) — not present at the push site; likely populated when the log buffer is written into
-the cached `activity` map. Needs a further trace before the shim can replicate log
-pagination correctly.
+**RESOLVED (see §1):** `t` never appears on message entries — it is the per-run header
+entry's key. Two entry shapes total: `{t}` (run header) and `{o,p,m,c}` (message).
 
 ## 3. Piston state blob (`state` / `sST`)
 
-Referenced but not fully traced this session (`mMs(t0,sST)` in `activity()`,
-`curPState()`'s `s: st` with `st.remove(sOLD)` — a stale/previous-value key gets stripped
-before serving). **TO VERIFY**: full key set of this map. `curPState()`'s removal of an
-"old" key suggests the live runtime state tracks both current AND previous values
-internally, and only current is served.
+**VERIFIED-HE-GROOVY :1219-1237 (`curPState()`, the parent-served per-piston meta):**
+`{a: active, c: category, t: lastExecuted, m: modified, b: bin, n: nextSchedule,
+z: description, s: <state map minus its 'old' key>, heCached}` — the meta shape the shim
+already fabricates for the piston list, plus `s`. The `s`/`sST` blob is a pass-through
+map (the piston-state display setState writes); the runtime keeps current+previous
+internally and strips `old` before serving — the shim serves current-only. PistonCore
+source: the compiled piston's persisted `pyscript.pistoncore_<id>_state` entity
+(setState already writes it today).
 
 ## 4. Trace storage (`trace` / `sTRC`)
 
-Referenced (`mMs(mst,sTRC)` at both `activity()` and `piston.get()`) but not traced to its
-write site this session. **TO VERIFY**: exact per-node record shape, whether keyed by the
-`$` node id (PISTON_JSON_REFERENCE.md §8 — confirmed this session that `$` ids are stable,
-assigned only to nodes missing one, never renumbered — see PISTON_JSON_REFERENCE.md §8
-update), and what per-node fields it carries (last-evaluated value, timing, hit count,
-etc.). Needs a dedicated follow-up trace of wherever `sTRC` gets written during piston
-execution (not reached in this session's time budget).
+**VERIFIED-HE-GROOVY — write sites found and traced:**
+- Init per run (:2611): `trace = {t: <run timestamp>, points: {}}`
+- Total duration added at run end (:3531): `trace.d = <elapsed ms>`
+- Per-node writes via `tracePoint(r9, oId, duration, value)` (:13388-13394):
+  `points[<oId>] = {o: <ms offset from run start, minus duration>, d: <duration ms>,
+  v: <evaluated value>}` — **keyed by the node's `$` id** (oId is the statement/
+  condition id; ids confirmed stable per PISTON_JSON_REFERENCE §8).
+Full contract: `{t, d, points: {"<$id>": {o, d, v}, ...}}` — this is what paints the
+dashboard's per-statement trace overlay (evaluation dots/timings on the piston code).
+A compiled PyScript piston can emit exactly this: stamp t at wake, collect
+(id, offset, duration, value) per executed statement, hand the blob to the shim.
 
 ## 5. Cross-check against the dashboard consumer
 
-Not completed this session (piston.module.js's activity-polling/trace-rendering code was
-not re-read against these specific fields this pass — prior sessions already read
-`piston.module.js:234-290`'s `init()` for the adjacent `piston/get` fields, see
-SHIM_API_SPEC.md §4.5). **TO VERIFY** next: which of §1's response keys the dashboard's
-activity poller actually reads vs. ignores, to scope the minimum viable contract.
+**VERIFIED-JS — piston.module.js:164-181, the activity poll handler consumes:**
+`state, logs, trace, localVars, memory, lastExecuted, nextSchedule, schedules, name,
+globalVars, systemVars` — a 1:1 match with §1's keys plus `globalVars`/`systemVars`,
+which are OPTIONAL (guarded ifs; the Hubitat backend does not send globalVars in
+activity and the dashboard tolerates absence). Log delivery detail (:167): new logs are
+**prepended** (`concat($scope.logs)`) — confirms newest-first ordering end to end.
+Minimum viable contract for a live status page: `state, logs, lastExecuted,
+nextSchedule` — everything else can arrive incrementally.
 
 ## 6. Feasibility for compiled PyScript (facts only, no design decisions)
 
@@ -104,19 +116,24 @@ activity poller actually reads vs. ignores, to scope the minimum viable contract
 - `localVars`/`systemVars`/`schedules`/`lastExecuted`/`nextSchedule`/`memory`: all facts a
   compiled automation's own execution context could report if the compiler/runtime chooses
   to track them; no blocker identified this session.
-- **Bottom line:** logs are ready to design now; state/trace need one more focused
-  extraction pass (their write sites, not just their read/serve sites) before the compiler
-  can commit to a trace strategy.
+- **Bottom line (updated 2026-07-19): every shape is verified — the implementation
+  session can be brief-driven on cheap tokens.** PistonCore data sources per key:
+  `state` from the persisted `pyscript.pistoncore_<id>_state` entity (setState writes it
+  today); `lastExecuted`/`logs` from a per-piston shim-readable log the PyScript band's
+  existing log.info breadcrumbs graduate into (`{t}` header + `{o,p,m,c}` entries, shim
+  owns `t`); YAML-band `lastExecuted` from the automation entity's `last_triggered`;
+  `nextSchedule` from HA's next trigger time where derivable (timers), else 0;
+  `trace.points` from a tracePoint-equivalent helper the piston template already has
+  hooks for (stmt ids ride the kwargs today); `memory` cosmetic, serve "unknown".
 
 ## 7. Summary for Jeremy (plain language)
 
-- Fully nailed down: what `piston/activity` returns overall, and the shape of one log line
-  (indentation, message, truncation-at-1024-chars, category). Good enough to build the logs
-  half of a status page against real data shapes, not guesses.
-- Not yet nailed down: the exact "state" and "trace" blobs — I found where they're *read*
-  from but not where they get *written* during execution, which is the half that actually
-  matters for designing what compiled PyScript needs to emit. That's real, scoped follow-up
-  work, not a blocker discovered in what's already built.
+- Fully nailed down as of 2026-07-19: EVERYTHING. The activity response, both log entry
+  shapes (run header + message), the per-run pagination trick, the piston-state blob, the
+  full trace format (per-statement `{o,d,v}` keyed by the same `$` ids the compiler
+  already stamps on triggers), and exactly which keys the dashboard reads. The status
+  screen's live half (Quick Facts + logs + trace overlay) can now be built against
+  verified shapes with zero guessing — and it does NOT need a top-tier model session.
 - Nothing here contradicts anything already shipped (milestones 1-3). No shim bugs found in
   this pass — this was purely additive research.
 - `openWebSocket` (a separate open item, §B3 below): confirmed dead — the self-hosted
