@@ -576,6 +576,15 @@ def build_device_payload(registries: dict) -> dict:
                     if s["entity_id"].startswith("alarm_control_panel.")]
     if len(alarm_panels) == 1:
         system_entities["alarmSystemStatus"] = alarm_panels[0]
+    # TTS engine for Speak (SPEAK_ACTION_SPEC §5.4: engine resolved at compile
+    # time from a global setting; auto-pick only when unambiguous)
+    from . import storage as _storage
+    engines = extract_tts_engines(registries)
+    configured = _storage.load_settings().get("tts_engine")
+    if configured and any(e["entity_id"] == configured for e in engines):
+        system_entities["tts"] = configured
+    elif len(engines) == 1:
+        system_entities["tts"] = engines[0]["entity_id"]
     resolution_map["$system"] = system_entities
 
     return {

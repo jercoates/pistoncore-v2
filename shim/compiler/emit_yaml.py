@@ -215,6 +215,9 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "sendNotification":
                 out.append(_send_notification(n["params"], ctx))
                 continue
+            if n["command"] in ("speak", "playText", "playTextAndResume", "playTextAndRestore"):
+                out.append(_speak(n, resolver, ctx))
+                continue
             if not n["devices"] or n["command"] in resolver.command_maps.get("_piston_scope", []):
                 # piston-scope command (setVariable, log, setState, tiles, ...)
                 # — piston state has no YAML equivalent, whatever devices the
@@ -236,6 +239,29 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
     return out
+
+
+def _speak(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """SPEAK_ACTION_SPEC §5.4: tts.speak — target = the engine entity (global
+    setting / sole engine), media players + message + cache in data. Constant
+    messages only on this band; computed messages route to PyScript."""
+    import json as _json
+    engine = resolver.system_entity("tts")
+    if not engine:
+        raise NotYetImplemented(
+            "Speak needs a TTS engine — pick one in PistonCore Settings "
+            "(several tts.* engines exist in HA)", **ctx)
+    if not n["devices"]:
+        raise NotYetImplemented("Speak with no speaker devices", **ctx)
+    players = resolver.entities_for_command(n["devices"], n["command"], ctx)
+    p0 = n["params"][0] if n["params"] else {}
+    text = p0.get("c") if p0.get("t") == "c" else None
+    if not isinstance(text, str) or "{" in text:
+        raise NotYetImplemented(
+            "Speak with a computed message requires PyScript", **ctx)
+    return {"kind": "service", "service": "tts.speak", "entities": [engine],
+            "data": {"media_player_entity_id": players,
+                     "message": _json.dumps(text), "cache": "true"}}
 
 
 def _send_notification(params: list, ctx: dict) -> dict:

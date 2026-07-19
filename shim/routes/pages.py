@@ -111,13 +111,25 @@ async def settings_page(request: Request):
     config = ha_client.get_config_for_display()
     config["first_run"] = request.query_params.get("first_run") == "1"
     config["saved"] = request.query_params.get("saved") == "1"
+    # TTS engine picker (SPEAK_ACTION_SPEC: engine is a global setting) —
+    # best-effort live enumeration; page still renders when HA is down
+    config["tts_engine"] = storage.load_settings().get("tts_engine", "")
+    try:
+        regs = await ha_client.fetch_registries()
+        from .. import device_pipeline
+        config["tts_engines"] = device_pipeline.extract_tts_engines(regs)
+    except Exception:
+        config["tts_engines"] = []
     return templates.TemplateResponse(request, "settings.html", config)
 
 
 @router.post("/api/settings")
 async def save_settings(ha_url: str = "", ha_token: str = "", write_mode: str = "local",
                         ha_config_path: str = "", smb_host: str = "", smb_share: str = "config",
-                        smb_username: str = "", smb_password: str = ""):
+                        smb_username: str = "", smb_password: str = "", tts_engine: str = ""):
+    settings = storage.load_settings()
+    settings["tts_engine"] = tts_engine.strip()
+    storage.save_settings(settings)
     ha_client.save_config(
         ha_url.strip(), ha_token.strip() or None,
         write_mode=write_mode.strip() or "local",

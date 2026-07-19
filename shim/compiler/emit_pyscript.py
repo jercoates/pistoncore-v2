@@ -408,6 +408,20 @@ class _PyEmitter:
                 out.append({"kind": "raw", "code":
                             f"state.setattr('pyscript.pistoncore_{self.piston_id}_state."
                             f"{cmd.lower()}', {{{kv}}})"})
+            elif cmd in ("speak", "playText", "playTextAndResume", "playTextAndRestore"):
+                engine = self.resolver.system_entity("tts")
+                if not engine:
+                    raise NotYetImplemented(
+                        "Speak needs a TTS engine — pick one in PistonCore "
+                        "Settings (several tts.* engines exist in HA)", **ctx)
+                if not devices:
+                    raise NotYetImplemented("Speak with no speaker devices", **ctx)
+                players = self.resolver.entities_for_command(devices, cmd, ctx)
+                msg = self._string_param(params[0] if params else {"t": "c", "c": ""}, ctx)
+                out.append({"kind": "service", "domain": "tts", "service": "speak",
+                            "entities": [engine],
+                            "data": {"media_player_entity_id": repr(players),
+                                     "message": f"str({msg})", "cache": "True"}})
             elif cmd == "setLocationMode":
                 mode = (params[0] or {}).get("c") if params else None
                 if not isinstance(mode, str):
