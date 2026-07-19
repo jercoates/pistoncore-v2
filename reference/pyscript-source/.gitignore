@@ -1,0 +1,9 @@
+__pycache__
+icon
+venv
+hass-custom-pyscript.zip
+docs/_build
+.coverage
+.vscode
+.*.swp
+.idea

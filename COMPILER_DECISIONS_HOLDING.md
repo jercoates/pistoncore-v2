@@ -64,6 +64,14 @@ per-piston execute service, setLocationMode/setAlarmSystemStatus (band maps
 in value_maps.json: alarm_commands, color_names), preset operands (t:"s",
 field `s` — answers PISTON_JSON_REFERENCE §10.5), array vars ([i] indexing
 + xi writes), nested-condition promotion incl. $time window edge timers.
+**PyScript source vendored as reference (2026-07-19):**
+reference/pyscript-source/ (Apache-2.0, read-only, cite by line like the
+groovy). Every emitted trigger form VERIFIED against its real parser
+(trigger.py: period split :770, time-offset units :39-57, cron/croniter
+:768, state_hold_false :235, decorator kwargs :875). FAR-FUTURE idea
+(Jeremy, explicitly out of scope now): if upstream PyScript ever loses
+support, vendor/bake a maintained copy into PistonCore — Apache-2.0 permits
+it and the self-contained custom_components folder makes it feasible.
 **Corpus: 10/14 compile (5 YAML + 5 PyScript). Remaining 4 (all honest):**
 $weather/$twcweather external feeds (3) and httpRequest (1) — the HA-native
 answer is weather/REST sensor entities; needs a mapping decision + help doc,
