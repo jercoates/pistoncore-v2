@@ -29,7 +29,12 @@ _EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
 
 
 def _hex_rgb(value):
-    v = str(value).lstrip("#")
+    v = str(value)
+    if not v.startswith("#"):
+        import json as _json
+        maps = _json.load(open(_BAND_DIR / "value_maps.json", encoding="utf-8"))
+        v = maps.get("color_names", {}).get(v.strip().lower(), v)
+    v = v.lstrip("#")
     return [int(v[0:2], 16), int(v[2:4], 16), int(v[4:6], 16)]
 
 
@@ -264,7 +269,8 @@ def _param_value(token: str, params: list, ctx: dict):
         idx = int(raw[1:]) - 1
         if idx >= len(params):
             raise NotYetImplemented(f"command param {raw} missing", **ctx)
-        value = params[idx].get("c")
+        prm = params[idx]
+        value = prm.get("c") if prm.get("c") is not None else prm.get("s")
     else:
         value = raw
     return transform(value) if transform else value

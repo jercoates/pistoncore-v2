@@ -45,11 +45,29 @@ deploys to pyscript/scripts/pistoncore/ with per-context reload + @service
 load verification. Routing: routing_table signatures OR any YAML
 NotYetImplemented falls through to PyScript (dispatcher in
 shim/compiler/__init__.py); UnresolvableDevice never falls through.
-**Ranked remaining (all honest NotYetImplemented):** (1) webCoRE expression
-engine (`t:"e"`/`x` operands — blocks 4 corpus pistons), (2) executePiston
-cross-piston bridge, (3) @global variable writes from compiled pistons,
-(4) setAlarmSystemStatus→alarm_control_panel mapping (needs a configured
-alarm entity), (5) array variables (`xi` indexing).
+**SESSION-4 (2026-07-19) — EXPRESSION ENGINE BUILT.** shim/compiler/
+expression.py: line-faithful port of the dashboard's own parser
+(piston.module.js:5226-5512; live saves embed the parsed `exp` tree at
+serialize :4799-4808 and it's preferred when present — anonymized bins strip
+it, hence the port). Semantics per engine evaluateExpression: exact
+opPriorityFLD precedence (groovy :10449, leftmost-in-tier => LEFT-assoc
+`**`), implicit-zero unary + adjacent-operand defaults (:10700-24), ternary
+3-item case. Transpiles to python over a RUNTIME with webCoRE dynamic
+coercion (templates/compiler/pyscript/2.x/expr_runtime.py.j2 — band-editable
+function library, ~60 functions; add there AND to _FUNCTIONS). String
+constants get {expr} interpolation (parseString). Also implemented this
+session: switch/for/do/while/exit/break, was/was_not via last_changed age,
+setState + setTile -> persisted pyscript state entity (+attributes),
+@global runtime bridge (write -> persisted pyscript.pistoncore_global_*,
+read prefers runtime entity over compile-time gv snapshot), executePiston ->
+per-piston execute service, setLocationMode/setAlarmSystemStatus (band maps
+in value_maps.json: alarm_commands, color_names), preset operands (t:"s",
+field `s` — answers PISTON_JSON_REFERENCE §10.5), array vars ([i] indexing
++ xi writes), nested-condition promotion incl. $time window edge timers.
+**Corpus: 10/14 compile (5 YAML + 5 PyScript). Remaining 4 (all honest):**
+$weather/$twcweather external feeds (3) and httpRequest (1) — the HA-native
+answer is weather/REST sensor entities; needs a mapping decision + help doc,
+not more compiler.
 
 ---
 

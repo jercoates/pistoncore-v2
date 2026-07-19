@@ -8,7 +8,7 @@
                     "setLocationMode", "sendPushNotification",
                     "sendSMSNotification", "storeMedia", "wolRequest", "iftttMaker",
                     "writeToFuelStream", "comment", "waitForTime", "waitForDateTime",
-                    "repeatAction", "followUp", "setAlarmSystemStatus", "setHSMStatus"],
+                    "repeatAction", "followUp", "setHSMStatus"],
   "on":  {"light": "light.turn_on",  "switch": "switch.turn_on",  "fan": "fan.turn_on"},
   "off": {"light": "light.turn_off", "switch": "switch.turn_off", "fan": "fan.turn_off"},
   "toggle": {"light": "light.toggle", "switch": "switch.toggle", "fan": "fan.toggle"},

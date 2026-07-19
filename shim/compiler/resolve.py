@@ -22,7 +22,7 @@ def _load_band_json(name: str) -> dict:
 class Resolver:
     def __init__(self, piston: dict, resolution_map: dict, globals_map: dict | None = None):
         self.resolution_map = resolution_map
-        self.globals_map = globals_map or {}
+        self.globals_map = globals_map if globals_map is not None else {}
         self.local_device_vars = {
             v["n"]: ((v.get("v") or {}).get("d") or [])
             for v in piston.get("v", []) if v.get("t") == "device"
@@ -31,6 +31,7 @@ class Resolver:
         self.value_maps = maps["attribute_values"]
         self.binary_opposites = maps["binary_opposites"]
         self.system_values = maps.get("system_values", {})
+        self.alarm_commands = maps.get("alarm_commands", {})
         self.command_maps = _load_band_json("command_maps.json")
         self.local_var_names = {v.get("n") for v in piston.get("v", [])}
         sys_ent = resolution_map.get("$system")

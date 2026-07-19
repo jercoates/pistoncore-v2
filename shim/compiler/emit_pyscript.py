@@ -25,6 +25,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from .errors import NotYetImplemented
+from .expression import ExprTranspiler
 from .resolve import Resolver
 
 _BAND_DIR = Path(__file__).resolve().parent.parent.parent / "templates" / "compiler" / "pyscript" / "2.x"
@@ -61,10 +62,28 @@ class _PyEmitter:
         self.piston_name = piston_name
         self.resolver = resolver
         self.decorators: list[dict] = []
+        array_vars = {v.get("n") for v in piston.get("v", [])
+                      if str(v.get("t", "")).endswith("]")}
+        self.expr = ExprTranspiler(resolver.local_var_names, resolver.globals_map,
+                                   resolver, self._ctx(None), MODE_ENTITY,
+                                   array_vars=array_vars)
 
     def _ctx(self, sid) -> dict:
         return {"piston_id": self.piston_id, "piston_name": self.piston_name,
                 "stmt_id": sid}
+
+    def _string_param(self, op: dict, ctx: dict) -> str:
+        """String-typed task param: constants go through webCoRE's
+        string-interpolation grammar ({expr} blocks — the dashboard's own
+        parseString path, run on EVERY string constant at save); expression
+        operands through the full expression grammar."""
+        self.expr.ctx = ctx
+        if op.get("t") == "c":
+            text = op.get("c")
+            if isinstance(text, str) and "{" in text:
+                return self.expr.transpile_string(text)
+            return repr("" if text is None else str(text))
+        return self._operand_expr(op, ctx)
 
     def _var_expr(self, name, ctx: dict) -> str:
         """Variable operand: declared piston locals read from pv; entity-backed
@@ -90,22 +109,18 @@ class _PyEmitter:
         if t == "p":
             entities = self.resolver.entities_for_attr(op.get("d", []), op.get("a"), ctx)
             return f"_s({_q(entities[0])})"
+        if t == "s":
+            # preset operand (color names etc.) — value lives in the s field
+            return repr(op.get("s"))
         if t == "v":
             return self._var_expr(op.get("v"), ctx)
         if t == "x":
-            x = op.get("x")
-            if x == "$currentEventDevice":
-                return "var_name"
-            if x == "$currentEventValue":
-                return "value"
-            if x == "$previousEventValue":
-                return "old_value"
-            raise NotYetImplemented(
-                f"webCoRE expression '{x}' — the expression engine isn't built yet", **ctx)
+            # bare variable/system-var reference — same grammar, tiny source
+            self.expr.ctx = ctx
+            return self.expr.transpile_operand({"e": op.get("x"), "exp": op.get("exp")})
         if t == "e":
-            raise NotYetImplemented(
-                f"webCoRE expression \"{str(op.get('e'))[:60]}\" — the expression "
-                f"engine isn't built yet", **ctx)
+            self.expr.ctx = ctx
+            return self.expr.transpile_operand(op)
         raise NotYetImplemented(f"operand type '{t}' not compiled yet", **ctx)
 
     # ── conditions ─────────────────────────────────────────────────────────
@@ -135,10 +150,7 @@ class _PyEmitter:
 
         if lo.get("t") == "x":
             left = self._operand_expr(lo, ctx)
-            if co in _EQUALITY_OPS:
-                return f"{left} {_EQUALITY_OPS[co]} {self._operand_expr(ro, ctx)}"
-            raise NotYetImplemented(
-                f"comparison '{co}' on expression operand not compiled yet", **ctx)
+            return self._compare(left, co, ro, ro2, ctx)
 
         entities = self.resolver.entities_for_attr(lo.get("d", []), lo.get("a"), ctx)
         joiner = " and " if lo.get("g") == "all" else " or "
@@ -170,10 +182,52 @@ class _PyEmitter:
         elif co == "changes":
             ids = ", ".join(_q(e) for e in entities)
             parts = [f"(var_name is None or var_name in ({ids},))"]
+        elif co in ("was", "was_not"):
+            # "was (not) X for T": exact via last_changed — the state has been
+            # its CURRENT value since last_changed, so current-check + age
+            # covers the whole window (webCoRE history semantics for the
+            # constant-state case; sub-window flapping shows as a younger age
+            # -> fail-closed false)
+            dur = self._duration_ms(cond.get("to"))
+            if dur is None:
+                raise NotYetImplemented(
+                    f"'{co}' without a fixed duration not compiled yet", **ctx)
+            qual = ">=" if (cond.get("to") or {}).get("f", "g") == "g" else "<"
+            mapped = self.resolver.ha_state_value(attr, value)
+            eq = "==" if co == "was" else "!="
+            parts = [f"(_s({_q(e)}) {eq} {_q(mapped)} and "
+                     f"(_fn_age({_q(e)}) or 0) {qual} {dur})" for e in entities]
         else:
             raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
 
         return parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
+
+    def _compare(self, left: str, co: str, ro: dict, ro2: dict, ctx: dict) -> str:
+        """Generic comparison against an already-transpiled left expression —
+        used for variable/expression left sides."""
+        if co in _EQUALITY_OPS:
+            return f"_op({left}, {_EQUALITY_OPS[co]!r}, {self._operand_expr(ro, ctx)})"
+        if co in _NUMERIC_OPS:
+            return f"_op({left}, {_NUMERIC_OPS[co]!r}, {self._operand_expr(ro, ctx)})"
+        if co in ("is_between", "is_inside_of_range", "is_outside_of_range"):
+            a = self._operand_expr(ro, ctx)
+            b = self._operand_expr(ro2, ctx)
+            body = f"_fn_isbetween({left}, {a}, {b})"
+            return body if co != "is_outside_of_range" else f"(not {body})"
+        if co in ("is_true",):
+            return f"_truthy({left})"
+        if co in ("is_false", "is_not_true"):
+            return f"(not _truthy({left}))"
+        raise NotYetImplemented(
+            f"comparison '{co}' on expression operand not compiled yet", **ctx)
+
+    @staticmethod
+    def _duration_ms(op: dict) -> int | None:
+        n = (op or {}).get("c")
+        if not isinstance(n, (int, float)):
+            return None
+        return int(n * {"s": 1, "m": 60, "h": 3600, "d": 86400}
+                   .get((op or {}).get("vt", "s"), 1) * 1000)
 
     def _group_expr(self, conds: list, operator: str, ctx: dict) -> str:
         exprs = []
@@ -218,19 +272,41 @@ class _PyEmitter:
         else:
             raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
 
-    def _promote_triggers(self, conds: list, sid, ctx: dict) -> bool:
-        """Condition-only statement: subscribe to its device conditions
-        (promotion, webcore-piston.groovy :9242). Any state change of the
-        referenced entities wakes the piston; the condition body decides."""
+    def _promote_triggers(self, stmt: dict, sid, ctx: dict) -> bool:
+        """Condition-only statement: webCoRE subscribes to its conditions
+        (promotion, webcore-piston.groovy :9242) — INCLUDING conditions inside
+        nested ifs, and $time windows schedule wakeups at their edges
+        (scheduleTimer for time conditions). Any of those wakes the piston;
+        condition evaluation in the body decides what runs."""
         entities = []
-        for c in conds:
-            lo = c.get("lo") or {}
-            if lo.get("t") == "p" and lo.get("d"):
-                entities.extend(self.resolver.entities_for_attr(lo.get("d"), lo.get("a"), ctx))
+        time_edges = []
+
+        def collect(s):
+            for c in s.get("c", []):
+                lo = c.get("lo") or {}
+                if lo.get("t") == "p" and lo.get("d"):
+                    entities.extend(
+                        self.resolver.entities_for_attr(lo.get("d"), lo.get("a"), ctx))
+                elif (lo.get("t") == "v" and lo.get("v") == "time"
+                        and c.get("co") == "is_between"):
+                    for op in (c.get("ro"), c.get("ro2")):
+                        v = (op or {}).get("c")
+                        if (op or {}).get("vt") == "time" and isinstance(v, (int, float)):
+                            time_edges.append(int(v))
+            for sub in list(s.get("s", [])) + list(s.get("e", [])):
+                if sub.get("t") == "if":
+                    collect(sub)
+            for ei in s.get("ei") or []:
+                collect(ei)
+
+        collect(stmt)
         if entities:
             self._add_state_trigger(sorted(set(entities)), sid, False)
-            return True
-        return False
+        for at in sorted(set(time_edges)):
+            self.decorators.append({"kind": "time_trigger",
+                                    "spec": f"cron({at % 60} {at // 60} * * *)",
+                                    "stmt_id": sid})
+        return bool(entities or time_edges)
 
     def _every_decorator(self, stmt: dict, sid, ctx: dict):
         lo = stmt.get("lo") or {}
@@ -279,31 +355,38 @@ class _PyEmitter:
             params = task.get("p", [])
             if cmd == "wait":
                 out.append({"kind": "sleep", "seconds": _wait_seconds(params)})
-            elif cmd == "sendNotification":
+            elif cmd in ("sendNotification", "sendNotificationToContacts"):
                 p0 = params[0] if params else {}
-                if p0.get("t") != "c" or not isinstance(p0.get("c"), str):
-                    raise NotYetImplemented(
-                        "sendNotification with a non-constant message — the "
-                        "expression engine isn't built yet", **ctx)
                 # in-app notification == HA notifications panel (NOTIFY_ACTION_SPEC)
                 out.append({"kind": "service", "domain": "notify",
                             "service": "persistent_notification",
-                            "entities": [], "data": {"message": repr(p0["c"])}})
+                            "entities": [],
+                            "data": {"message": f"str({self._string_param(p0, ctx)})"}})
             elif cmd == "setVariable":
                 p0 = params[0] if params else {}
                 name = p0.get("x") or p0.get("c")
                 if not name:
                     raise NotYetImplemented("setVariable without a variable name", **ctx)
                 if p0.get("xi"):
-                    raise NotYetImplemented(
-                        f"setVariable into array element '{name}[{p0.get('xi')}]' "
-                        f"not compiled yet", **ctx)
-                if str(name).startswith("@"):
-                    raise NotYetImplemented(
-                        f"writing @global variable '{name}' from a compiled piston "
-                        f"isn't wired yet", **ctx)
+                    self.expr.ctx = ctx
+                    idx = self.expr.transpile_operand({"e": p0["xi"]})
+                    if str(name).startswith("@"):
+                        raise NotYetImplemented(
+                            f"writing @global array '{name}' isn't wired yet", **ctx)
+                    value_expr = self._operand_expr(
+                        params[1] if len(params) > 1 else {"t": "c", "c": None}, ctx)
+                    out.append({"kind": "setvar_index", "name": _q(name),
+                                "index": idx, "value": value_expr})
+                    continue
                 value_expr = self._operand_expr(params[1] if len(params) > 1 else {"t": "c", "c": None}, ctx)
-                out.append({"kind": "setvar", "name": _q(name), "value": value_expr})
+                if str(name).startswith("@"):
+                    # runtime global write: persisted pyscript entity
+                    # (research §7 namespace) + local cache for same-run reads
+                    self.expr.used_globals.add(str(name))
+                    out.append({"kind": "raw", "code":
+                                f"gv[{_q(name)}] = _gv_set({_q(name)}, {value_expr})"})
+                else:
+                    out.append({"kind": "setvar", "name": _q(name), "value": value_expr})
             elif cmd == "log":
                 msg = next((str(p.get("c")) for p in params if p.get("c")), "log")
                 out.append({"kind": "log", "msg": _q(f"[{self.piston_id}] {msg}")})
@@ -311,6 +394,52 @@ class _PyEmitter:
                 out.append({"kind": "return"})
             elif cmd == "break":
                 out.append({"kind": "break"})
+            elif cmd == "setState":
+                val = self._string_param(params[0] if params else {"t": "c", "c": ""}, ctx)
+                out.append({"kind": "raw", "code":
+                            f"state.set('pyscript.pistoncore_{self.piston_id}_state', str({val}))"})
+            elif cmd in ("setTile", "setTileTitle", "setTileText", "setTileColor", "clearTile"):
+                # webCoRE dashboard tiles have no PistonCore surface yet —
+                # persist the values as attributes on the piston state entity
+                # so nothing is lost and a future tile renderer can read them
+                exprs = [self._string_param(prm, ctx) if prm.get("t") == "c"
+                         else self._operand_expr(prm, ctx) for prm in params]
+                kv = ", ".join(f"'p{i}': str({e})" for i, e in enumerate(exprs))
+                out.append({"kind": "raw", "code":
+                            f"state.setattr('pyscript.pistoncore_{self.piston_id}_state."
+                            f"{cmd.lower()}', {{{kv}}})"})
+            elif cmd == "setLocationMode":
+                mode = (params[0] or {}).get("c") if params else None
+                if not isinstance(mode, str):
+                    raise NotYetImplemented("setLocationMode with non-constant mode", **ctx)
+                mode_ent = self.resolver.system_entity("mode") or MODE_ENTITY
+                out.append({"kind": "service", "domain": "input_select",
+                            "service": "select_option", "entities": [mode_ent],
+                            "data": {"option": repr(mode)}})
+            elif cmd == "setAlarmSystemStatus":
+                alarm = self.resolver.system_entity("alarmSystemStatus")
+                if not alarm:
+                    raise NotYetImplemented(
+                        "setAlarmSystemStatus needs exactly one alarm_control_panel "
+                        "in HA (none found, or several — ambiguous)", **ctx)
+                status = (params[0] or {}).get("c") if params else None
+                service = self.resolver.alarm_commands.get(str(status))
+                if not service:
+                    raise NotYetImplemented(
+                        f"alarm status '{status}' has no service mapping "
+                        f"(value_maps.json alarm_commands)", **ctx)
+                out.append({"kind": "service", "domain": "alarm_control_panel",
+                            "service": service, "entities": [alarm], "data": {}})
+            elif cmd == "executePiston":
+                target = (params[0] or {}).get("c") if params else None
+                if not isinstance(target, str) or not target.strip(":"):
+                    raise NotYetImplemented("executePiston without a piston target", **ctx)
+                # every compiled PyScript piston registers
+                # pyscript.pistoncore_<id>_execute (research §8) — YAML-band
+                # targets have no service; the call logs a runtime error then
+                out.append({"kind": "service", "domain": "pyscript",
+                            "service": f"pistoncore_{target.strip(':')}_execute",
+                            "entities": [], "data": {}})
             elif cmd in ("cancelTasks", "cancelPendingTasks"):
                 # restart execution model already kills pending waits on
                 # retrigger (research §6) — breadcrumb only (Tier-3 caveat)
@@ -383,6 +512,14 @@ class _PyEmitter:
                      "step": int(step), "body": self._block(stmt.get("s", []), ctx)}]
         if t == "do":
             return self._block(stmt.get("s", []), ctx)
+        if t == "while":
+            expr = self._group_expr(stmt.get("c", []), stmt.get("o", "and"), ctx)
+            return [{"kind": "while", "expr": expr,
+                     "body": self._block(stmt.get("s", []), ctx)}]
+        if t == "exit":
+            return [{"kind": "return"}]
+        if t == "break":
+            return [{"kind": "break"}]
         raise NotYetImplemented(f"statement type '{t}' (statement ${sid}) not compiled yet", **ctx)
 
     def _block(self, stmts: list, ctx: dict) -> list:
@@ -416,7 +553,7 @@ class _PyEmitter:
                     for trig in triggers:
                         self._trigger_decorator(trig, sid, ctx)
                 else:
-                    self._promote_triggers(stmt.get("c", []), sid, ctx)
+                    self._promote_triggers(stmt, sid, ctx)
                 event_body.extend(self._stmt_nodes(stmt, ctx, top=True))
             else:
                 event_body.extend(self._stmt_nodes(stmt, ctx, top=True))
@@ -435,8 +572,21 @@ class _PyEmitter:
                 init = init.get("c")
             variables[v["n"]] = init if isinstance(init, (str, int, float, bool)) else None
 
+        # compile-time snapshot of every @global the expressions read
+        global_values = {}
+        for name in sorted(self.expr.used_globals):
+            g = self.globals_map_value(name)
+            global_values[name] = g
         return {"decorators": self.decorators, "event_body": event_body,
-                "guarded": guarded, "variables": variables}
+                "guarded": guarded, "variables": variables,
+                "global_values": global_values}
+
+    def globals_map_value(self, name: str):
+        g = (self.resolver.globals_map or {}).get(name) or {}
+        v = g.get("v")
+        if isinstance(v, dict):
+            v = v.get("c") if "c" in v else v.get("d")
+        return v if isinstance(v, (str, int, float, bool, list)) else None
 
 
 def compile_pyscript(piston: dict, piston_id: str, piston_name: str,
