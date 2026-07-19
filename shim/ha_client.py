@@ -197,6 +197,16 @@ async def check_config() -> dict:
         raise HAClientError(f"check_config failed: {exc}") from exc
 
 
+async def get_services() -> dict:
+    """HA's registered services (websocket get_services) — deploy verifies a
+    freshly loaded PyScript piston by its @service registration appearing."""
+    results = await _ws_call([{"id": 1, "type": "get_services"}])
+    result = results[1]
+    if not result.get("success"):
+        raise HAClientError(f"get_services failed: {result.get('error')}")
+    return result["result"]
+
+
 async def get_system_log() -> list:
     """HA's recent warning/error log entries (websocket system_log/list) —
     when a compiled YAML file is rejected on reload, HA says exactly what's

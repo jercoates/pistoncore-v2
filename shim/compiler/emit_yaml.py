@@ -1,9 +1,15 @@
 """EMIT (YAML/classic band) — branch IR -> HA automation YAML via the Jinja2
-band templates (COMPILER_SPEC §3.3). One automation per top-level if statement
-(§2.5 point 4 TCP scoping). TCP-default branches emit mode: restart +
-auxiliary cancel-triggers gated by `condition: trigger` — the approved Cave
-Motion fixture idiom; `queued` (Jeremy's default) governs where TCP doesn't
-force restart."""
+band templates (COMPILER_SPEC §3.3). One automation per top-level statement
+(§2.5 point 4 TCP scoping).
+
+Session-3 coverage: if-branches with else / else-if / nested ifs (emitted as
+HA's native if/then/else action blocks), `every` timers (time / time_pattern
+triggers), trigger promotion for condition-only pistons, equality + between +
+numeric comparisons with any/all aggregation, the $time is_between window
+(HA time condition), and command data params (setLevel/setColor via
+command_maps.json $-tokens). TCP-default branches emit mode: restart +
+auxiliary cancel-triggers gated by `condition: trigger`; `queued` (Jeremy's
+default) governs where TCP doesn't force restart."""
 
 from pathlib import Path
 
@@ -12,13 +18,22 @@ from jinja2 import Environment, FileSystemLoader
 from .analyze import analyze
 from .errors import NotYetImplemented
 from .resolve import Resolver
-from .routing import pyscript_reasons
 
 _BAND_DIR = Path(__file__).resolve().parent.parent.parent / "templates" / "compiler" / "yaml" / "classic"
 _env = Environment(loader=FileSystemLoader(str(_BAND_DIR)), trim_blocks=False, lstrip_blocks=False)
 
-_TEMPLATE_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
-                 "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
+_NUMERIC_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
+                "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
+_EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
+                 "is_not": "!=", "is_not_equal_to": "!="}
+
+
+def _hex_rgb(value):
+    v = str(value).lstrip("#")
+    return [int(v[0:2], 16), int(v[2:4], 16), int(v[4:6], 16)]
+
+
+_PARAM_TRANSFORMS = {"hex_rgb": _hex_rgb}
 
 
 def _delay_hms(params: list) -> str:
@@ -29,14 +44,19 @@ def _delay_hms(params: list) -> str:
     return f"{seconds // 3600:02d}:{(seconds % 3600) // 60:02d}:{seconds % 60:02d}"
 
 
-def compile_piston(piston: dict, piston_id: str, piston_name: str,
-                   resolution_map: dict, globals_map: dict | None = None) -> dict:
-    """Returns {"target": "yaml"|"pyscript", "yaml": str|None, "reasons": [...],
-    "auto_ids": [...]}."""
-    reasons = pyscript_reasons(piston)
-    if reasons:
-        return {"target": "pyscript", "yaml": None, "reasons": reasons}
+def _minutes_hms(minutes: int) -> str:
+    return f"{minutes // 60:02d}:{minutes % 60:02d}:00"
 
+
+def _is_number(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def compile_yaml(piston: dict, piston_id: str, piston_name: str,
+                 resolution_map: dict, globals_map: dict | None = None) -> dict:
+    """Returns {"target": "yaml", "yaml": str, "reasons": [], "auto_ids": [...]}.
+    Routing lives in the package dispatcher (__init__.compile_piston) — a
+    NotYetImplemented raised here falls through to the PyScript band there."""
     branches = analyze(piston, piston_id, piston_name)
     resolver = Resolver(piston, resolution_map, globals_map)
     blocks = []
@@ -59,54 +79,218 @@ def compile_piston(piston: dict, piston_id: str, piston_name: str,
             "auto_ids": auto_ids}
 
 
+# ── conditions ──────────────────────────────────────────────────────────────
+
+def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
+    """Condition IR node -> template/time condition dict for the template."""
+    co = cond["co"]
+
+    if cond.get("lo_type") == "v":
+        # piston variable on the left side — only the $time between-window
+        # compiles to YAML (HA's native time condition); the rest is PyScript.
+        if (cond.get("lo_var") == "time" and co == "is_between"
+                and cond.get("value_vt") == "time" and cond.get("value2_vt") == "time"
+                and _is_number(cond["value"]) and _is_number(cond["value2"])):
+            return {"kind": "time",
+                    "after": _minutes_hms(int(cond["value"])),
+                    "before": _minutes_hms(int(cond["value2"]))}
+        raise NotYetImplemented(
+            f"condition on variable '{cond.get('lo_var')}' ({co}) requires PyScript", **ctx)
+
+    entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
+    joiner = " and " if cond.get("aggregation") == "all" else " or "
+
+    if co in _NUMERIC_OPS:
+        op = _NUMERIC_OPS[co]
+        # fail-closed default: unavailable sensor -> condition false (fixture rule)
+        parts = [f"states('{e}') | float(default=1.0e9) {op} {cond['value']}"
+                 for e in entities]
+    elif co == "is_between" and _is_number(cond["value"]) and _is_number(cond["value2"]):
+        parts = [f"{cond['value']} <= states('{e}') | float(default=1.0e9) <= {cond['value2']}"
+                 for e in entities]
+    elif co in _EQUALITY_OPS:
+        op = _EQUALITY_OPS[co]
+        value = cond["value"]
+        if _is_number(value):
+            parts = [f"states('{e}') | float(default=1.0e9) {op} {value}" for e in entities]
+        else:
+            mapped = resolver.ha_state_value(cond["attr"], value)
+            parts = [f"states('{e}') {op} '{mapped}'" for e in entities]
+    else:
+        raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
+
+    body = parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
+    return {"kind": "template", "template": "{{ " + body + " }}"}
+
+
+# ── triggers ────────────────────────────────────────────────────────────────
+
+def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
+    co = trig["co"]
+    if trig.get("lo_type") == "v":
+        raise NotYetImplemented(
+            f"trigger on variable '{trig.get('lo_var')}' ({co}) requires PyScript", **ctx)
+    entities = resolver.entities_for_attr(trig["devices"], trig["attr"], ctx)
+    if co == "changes_to":
+        to_value = resolver.ha_state_value(trig["attr"], trig["value"])
+        return {"kind": "state", "entities": entities, "to": to_value, "id": trig_id}
+    if co == "changes":
+        return {"kind": "state", "entities": entities, "id": trig_id}
+    if co == "changes_away_from":
+        from_value = resolver.ha_state_value(trig["attr"], trig["value"])
+        return {"kind": "state", "entities": entities, "from": from_value, "id": trig_id}
+    if co == "rises_above":
+        return {"kind": "numeric_state", "entities": entities,
+                "above": trig["value"], "id": trig_id}
+    if co == "drops_below":
+        return {"kind": "numeric_state", "entities": entities,
+                "below": trig["value"], "id": trig_id}
+    raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
+
+
+def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | None:
+    """Condition-only piston: webCoRE subscribes to its conditions (promotion,
+    webcore-piston.groovy :9242) — the HA equivalent is a trigger built from
+    the condition itself. Unpromotable shapes (time windows, variables)
+    contribute no trigger; they stay as conditions."""
+    co = cond["co"]
+    if cond.get("lo_type") == "v":
+        return None
+    if co in ("is", "is_equal_to"):
+        value = cond["value"]
+        if _is_number(value):
+            return None
+        entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
+        return {"kind": "state", "entities": entities,
+                "to": resolver.ha_state_value(cond["attr"], value), "id": trig_id}
+    if co in ("is_less_than", "is_less_than_or_equal_to"):
+        entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
+        return {"kind": "numeric_state", "entities": entities,
+                "below": cond["value"], "id": trig_id}
+    if co in ("is_greater_than", "is_greater_than_or_equal_to"):
+        entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
+        return {"kind": "numeric_state", "entities": entities,
+                "above": cond["value"], "id": trig_id}
+    return None
+
+
+# ── actions ─────────────────────────────────────────────────────────────────
+
+def _has_wait(nodes: list) -> bool:
+    for n in nodes:
+        if n["kind"] == "task" and n["command"] == "wait":
+            return True
+        if n["kind"] == "if" and (_has_wait(n["then"]) or _has_wait(n["else"])):
+            return True
+    return False
+
+
+def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
+    out = []
+    for n in nodes:
+        if n["kind"] == "task":
+            if n["command"] == "wait":
+                out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
+                continue
+            if not n["devices"] or n["command"] in resolver.command_maps.get("_piston_scope", []):
+                # piston-scope command (setVariable, log, setState, tiles, ...)
+                # — piston state has no YAML equivalent, whatever devices the
+                # surrounding action block targets.
+                raise NotYetImplemented(
+                    f"piston-scope command '{n['command']}' requires PyScript", **ctx)
+            entities = resolver.entities_for_command(n["devices"], n["command"], ctx)
+            service, data_spec = resolver.service_spec(n["command"], entities[0], ctx)
+            data = None
+            if data_spec:
+                data = {k: _param_value(v, n["params"], ctx) for k, v in data_spec.items()}
+            out.append({"kind": "service", "service": service,
+                        "entities": entities, "data": data})
+        elif n["kind"] == "if":
+            out.append({"kind": "if",
+                        "conditions": [_condition(c, resolver, ctx) for c in n["conditions"]],
+                        "then": _resolve_actions(n["then"], resolver, ctx),
+                        "else": _resolve_actions(n["else"], resolver, ctx)})
+        else:
+            raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
+    return out
+
+
+def _param_value(token: str, params: list, ctx: dict):
+    """$1/$2 (+|transform) tokens from command_maps.json data specs."""
+    raw = str(token)
+    transform = None
+    if "|" in raw:
+        raw, tname = raw.split("|", 1)
+        transform = _PARAM_TRANSFORMS.get(tname)
+        if transform is None:
+            raise NotYetImplemented(f"unknown command param transform '{tname}'", **ctx)
+    if raw.startswith("$"):
+        idx = int(raw[1:]) - 1
+        if idx >= len(params):
+            raise NotYetImplemented(f"command param {raw} missing", **ctx)
+        value = params[idx].get("c")
+    else:
+        value = raw
+    return transform(value) if transform else value
+
+
+# ── branch emission ─────────────────────────────────────────────────────────
+
 def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                  blocks: list, auto_ids: list) -> None:
     ctx = {"piston_id": piston_id, "piston_name": piston_name, "stmt_id": br["stmt_id"]}
-    has_wait = any(a["command"] == "wait" for a in br["then"] + br["else"])
+    has_wait = _has_wait(br["then"]) or _has_wait(br["else"])
+    trig_id = "fire" if has_wait else None
 
     triggers = []
     cancel_triggers = []
-    for trig in br["triggers"]:
-        if trig["co"] != "changes_to":
-            raise NotYetImplemented(
-                f"trigger comparison '{trig['co']}' not compiled yet", **ctx)
-        entities = resolver.entities_for_attr(trig["devices"], trig["attr"], ctx)
-        to_value = resolver.ha_state_value(trig["attr"], trig["value"])
-        triggers.append({"entities": entities, "to": to_value,
-                         "id": "fire" if has_wait else None})
-        if has_wait and br["tcp"] == "c":
-            opposite = resolver.opposite_state(to_value)
-            if opposite is not None:
-                cancel_triggers.append({"entities": entities, "to": opposite,
-                                        "id": "tcp_cancel"})
-
     conditions = []
+
+    if br["kind"] == "timer":
+        t = dict(br["timer"])
+        t["id"] = trig_id
+        triggers.append(t)
+    else:
+        for trig in br["triggers"]:
+            node = _trigger(trig, resolver, ctx, trig_id)
+            triggers.append(node)
+            if has_wait and br["tcp"] == "c" and node["kind"] == "state" and node.get("to"):
+                opposite = resolver.opposite_state(node["to"])
+                if opposite is not None:
+                    cancel_triggers.append({"kind": "state", "entities": node["entities"],
+                                            "to": opposite, "id": "tcp_cancel"})
+        if not triggers:
+            # condition-only statement -> promote (subscription equivalence)
+            for cond in br["conditions"]:
+                node = _promote(cond, resolver, ctx, trig_id)
+                if node:
+                    triggers.append(node)
+            if not triggers:
+                raise NotYetImplemented(
+                    "statement has no triggers and no promotable conditions "
+                    "— requires PyScript", **ctx)
+
     if cancel_triggers:
         conditions.append({"kind": "trigger", "id": "fire"})
-    for cond in br["conditions"]:
-        op = _TEMPLATE_OPS.get(cond["co"])
-        if op is None:
-            raise NotYetImplemented(
-                f"condition comparison '{cond['co']}' not compiled yet", **ctx)
-        entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
-        if len(entities) != 1:
-            raise NotYetImplemented(
-                f"multi-entity numeric condition aggregation not compiled yet", **ctx)
-        # fail-closed default: unavailable sensor -> condition false (fixture rule)
-        conditions.append({"kind": "template", "template":
-            f"{{{{ states('{entities[0]}') | float(default=1.0e9) {op} {cond['value']} }}}}"})
 
-    if br["else"]:
-        raise NotYetImplemented("else-branch emission not compiled yet", **ctx)
+    cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]]
+    then_actions = _resolve_actions(br["then"], resolver, ctx)
+    else_actions = _resolve_actions(br["else"], resolver, ctx)
 
-    actions = []
-    for task in br["then"]:
-        if task["command"] == "wait":
-            actions.append({"kind": "delay", "delay": _delay_hms(task["params"])})
-        else:
-            entities = resolver.entities_for_command(task["devices"], task["command"], ctx)
-            service = resolver.service_for(task["command"], entities[0], ctx)
-            actions.append({"kind": "service", "service": service, "entities": entities})
+    if else_actions and cond_nodes:
+        # else must NOT run on a cancel-trigger pass, so the template
+        # conditions move inside an if-action; only the trigger gate stays
+        # at automation level.
+        actions = [{"kind": "if", "conditions": cond_nodes,
+                    "then": then_actions, "else": else_actions}]
+    else:
+        # No non-trigger conditions: this automation only fires when its own
+        # trigger comparison is true, so an else/else-if chain is unreachable
+        # here — exactly webCoRE's behavior for a trigger-only if (the else
+        # path only ran on OTHER subscriptions, which this statement has none
+        # of). Emit the then-branch flat.
+        conditions.extend(cond_nodes)
+        actions = then_actions
 
     auto_id = f"pistoncore_{piston_id}_s{br['stmt_id']}"
     auto_ids.append(auto_id)

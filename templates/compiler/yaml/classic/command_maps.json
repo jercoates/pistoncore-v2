@@ -1,5 +1,23 @@
 {
-  "_comment": "webCoRE command -> HA service per target domain. Editable data (template band).",
+  "_comment": "webCoRE command -> HA service per target domain. Editable data (template band). A value is either a service string, or {service, data} where data values may use $1/$2 (first/second task param) with optional |transform — transforms live in emit_yaml.py (_PARAM_TRANSFORMS): hex_rgb turns '#rrggbb' into [r, g, b].",
+  "_piston_scope": ["setVariable", "setState", "saveStateLocally", "saveState",
+                    "loadStateLocally", "loadState", "log", "setPistonState",
+                    "setTileColor", "setTileTitle", "setTileText", "setTile",
+                    "clearTile", "exit", "break", "cancelTasks", "cancelPendingTasks",
+                    "executePiston", "pausePiston", "resumePiston", "httpRequest",
+                    "setLocationMode", "sendNotification", "sendPushNotification",
+                    "sendSMSNotification", "storeMedia", "wolRequest", "iftttMaker",
+                    "writeToFuelStream", "comment", "waitForTime", "waitForDateTime",
+                    "repeatAction", "followUp", "setAlarmSystemStatus", "setHSMStatus"],
   "on":  {"light": "light.turn_on",  "switch": "switch.turn_on",  "fan": "fan.turn_on"},
-  "off": {"light": "light.turn_off", "switch": "switch.turn_off", "fan": "fan.turn_off"}
+  "off": {"light": "light.turn_off", "switch": "switch.turn_off", "fan": "fan.turn_off"},
+  "toggle": {"light": "light.toggle", "switch": "switch.toggle", "fan": "fan.toggle"},
+  "setLevel": {"light": {"service": "light.turn_on", "data": {"brightness_pct": "$1"}},
+               "fan": {"service": "fan.set_percentage", "data": {"percentage": "$1"}}},
+  "setColor": {"light": {"service": "light.turn_on", "data": {"rgb_color": "$1|hex_rgb"}}},
+  "setColorTemperature": {"light": {"service": "light.turn_on", "data": {"color_temp_kelvin": "$1"}}},
+  "lock": {"lock": "lock.lock"},
+  "unlock": {"lock": "lock.unlock"},
+  "open": {"cover": "cover.open_cover", "garageDoorControl": "cover.open_cover"},
+  "close": {"cover": "cover.close_cover", "garageDoorControl": "cover.close_cover"}
 }

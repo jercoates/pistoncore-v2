@@ -85,10 +85,19 @@ class Resolver:
         return self.binary_opposites.get(value)
 
     def service_for(self, command: str, entity_id: str, ctx: dict) -> str:
+        service, _ = self.service_spec(command, entity_id, ctx)
+        return service
+
+    def service_spec(self, command: str, entity_id: str, ctx: dict) -> tuple[str, dict | None]:
+        """(service, data-template-or-None). command_maps.json values are a
+        plain service string or {service, data} — data values carry $1/$2
+        param tokens the emitter substitutes (see the map's _comment)."""
         domain = entity_id.split(".", 1)[0]
-        service = (self.command_maps.get(command) or {}).get(domain)
-        if not service:
+        spec = (self.command_maps.get(command) or {}).get(domain)
+        if not spec:
             raise UnresolvableDevice(
                 f"no HA service mapping for command '{command}' on domain '{domain}' "
                 f"(command_maps.json)", ha_domain=domain, **ctx)
-        return service
+        if isinstance(spec, str):
+            return spec, None
+        return spec["service"], spec.get("data")

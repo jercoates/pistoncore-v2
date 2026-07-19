@@ -30,6 +30,27 @@ Jinja2-everywhere).
 v1 field names appearing below are NOT contracts — they re-key against
 PISTON_JSON_REFERENCE.md (webCoRE format) at coding time.
 
+**SESSION-3 STATUS (2026-07-19):** both bands emit. YAML band covers: nested
+ifs/else/else-if (HA if/then/else actions), equality + numeric + is_between
+comparisons with any/all aggregation, $time between (HA time condition),
+changes/changes_away_from/rises_above/drops_below triggers, condition
+promotion for trigger-less statements, `every` (time_pattern/time triggers),
+setLevel/setColor service data ($-token specs in command_maps.json).
+PyScript band (templates/compiler/pyscript/2.x/, shapes per
+PYSCRIPT_COMPILER_RESEARCH.md §4) covers: nested if/else-if, switch
+(ctp i + fallthrough), for (constant bounds), do, every (period/cron), `on`
+(location-mode + device events), wait/task.sleep, setVariable (non-expression
+values), log, exit/break, TCP via @task_unique + preamble task.unique;
+deploys to pyscript/scripts/pistoncore/ with per-context reload + @service
+load verification. Routing: routing_table signatures OR any YAML
+NotYetImplemented falls through to PyScript (dispatcher in
+shim/compiler/__init__.py); UnresolvableDevice never falls through.
+**Ranked remaining (all honest NotYetImplemented):** (1) webCoRE expression
+engine (`t:"e"`/`x` operands — blocks 4 corpus pistons), (2) executePiston
+cross-piston bridge, (3) @global variable writes from compiled pistons,
+(4) setAlarmSystemStatus→alarm_control_panel mapping (needs a configured
+alarm entity), (5) array variables (`xi` indexing).
+
 ---
 
 ## A. Cross-cutting compiler policy (applies to BOTH Speak and Notify, likely all actions)

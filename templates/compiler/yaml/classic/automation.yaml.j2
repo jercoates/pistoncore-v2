@@ -1,48 +1,120 @@
+{#- ─ entity_id block, single scalar or list, at a given indent ─ -#}
+{%- macro entity_ids(entities, pad) -%}
+{%- if entities|length == 1 %}
+{{ pad }}entity_id: {{ entities[0] }}
+{%- else %}
+{{ pad }}entity_id:
+{%- for e in entities %}
+{{ pad }}  - {{ e }}
+{%- endfor %}
+{%- endif %}
+{%- endmacro -%}
+
+{%- macro trigger_block(t) -%}
+{%- if t.kind == 'state' -%}
+- trigger: state
+{{- entity_ids(t.entities, '  ') }}
+{%- if t.get('to') %}
+  to: "{{ t.get('to') }}"
+{%- endif %}
+{%- if t.get('from') %}
+  from: "{{ t.get('from') }}"
+{%- endif %}
+{%- elif t.kind == 'numeric_state' -%}
+- trigger: numeric_state
+{{- entity_ids(t.entities, '  ') }}
+{%- if t.get('above') is not none %}
+  above: {{ t.get('above') }}
+{%- endif %}
+{%- if t.get('below') is not none %}
+  below: {{ t.get('below') }}
+{%- endif %}
+{%- elif t.kind == 'time' -%}
+- trigger: time
+  at: "{{ t.at }}"
+{%- elif t.kind == 'time_pattern' -%}
+- trigger: time_pattern
+{%- if t.get('hours') is not none %}
+  hours: "{{ t.get('hours') }}"
+{%- endif %}
+{%- if t.get('minutes') is not none %}
+  minutes: "{{ t.get('minutes') }}"
+{%- endif %}
+{%- if t.get('seconds') is not none %}
+  seconds: "{{ t.get('seconds') }}"
+{%- endif %}
+{%- endif %}
+{%- if t.get('id') %}
+  id: {{ t.get('id') }}
+{%- endif %}
+{%- endmacro -%}
+
+{%- macro cond_block(c) -%}
+{%- if c.kind == 'template' -%}
+- condition: template
+  value_template: "{{ c.template }}"
+{%- elif c.kind == 'time' -%}
+- condition: time
+  after: "{{ c.after }}"
+  before: "{{ c.before }}"
+{%- elif c.kind == 'trigger' -%}
+- condition: trigger
+  id: {{ c.id }}
+{%- endif %}
+{%- endmacro -%}
+
+{%- macro action_block(a) -%}
+{%- if a.kind == 'delay' -%}
+- delay: "{{ a.delay }}"
+{%- elif a.kind == 'service' -%}
+- action: {{ a.service }}
+{%- if a.get('data') %}
+  data:
+{%- for k, v in a.get('data').items() %}
+    {{ k }}: {{ v }}
+{%- endfor %}
+{%- endif %}
+  target:
+{{- entity_ids(a.entities, '    ') }}
+{%- elif a.kind == 'if' -%}
+- if:
+{%- for c in a.conditions %}
+{{ cond_block(c) | indent(4, true) }}
+{%- endfor %}
+{%- if a.get('then') %}
+  then:
+{%- for x in a.get('then') %}
+{{ action_block(x) | indent(4, true) }}
+{%- endfor %}
+{%- else %}
+  then: []
+{%- endif %}
+{%- if a.get('else') %}
+  else:
+{%- for x in a.get('else') %}
+{{ action_block(x) | indent(4, true) }}
+{%- endfor %}
+{%- endif %}
+{%- endif %}
+{%- endmacro -%}
 - id: {{ auto_id }}
   alias: "{{ alias }}"
   mode: {{ mode }}
   triggers:
 {%- for t in triggers %}
-    - trigger: state
-{%- if t.entities|length == 1 %}
-      entity_id: {{ t.entities[0] }}
-{%- else %}
-      entity_id:
-{%- for e in t.entities %}
-        - {{ e }}
-{%- endfor %}
-{%- endif %}
-      to: "{{ t.to }}"
-{%- if t.id %}
-      id: {{ t.id }}
-{%- endif %}
+{{ trigger_block(t) | indent(4, true) }}
 {%- endfor %}
 {%- if conditions %}
   conditions:
 {%- for c in conditions %}
-{%- if c.kind == 'template' %}
-    - condition: template
-      value_template: "{{ c.template }}"
-{%- elif c.kind == 'trigger' %}
-    - condition: trigger
-      id: {{ c.id }}
-{%- endif %}
+{{ cond_block(c) | indent(4, true) }}
 {%- endfor %}
 {%- endif %}
+{%- if actions %}
   actions:
 {%- for a in actions %}
-{%- if a.kind == 'delay' %}
-    - delay: "{{ a.delay }}"
-{%- elif a.kind == 'service' %}
-    - action: {{ a.service }}
-      target:
-{%- if a.entities|length == 1 %}
-        entity_id: {{ a.entities[0] }}
+{{ action_block(a) | indent(4, true) }}
+{%- endfor %}
 {%- else %}
-        entity_id:
-{%- for e in a.entities %}
-          - {{ e }}
-{%- endfor %}
+  actions: []
 {%- endif %}
-{%- endif %}
-{%- endfor %}

@@ -35,6 +35,7 @@ from . import compile_piston
 from .errors import CompilerError
 
 _AUTOMATIONS_DIR = "pistoncore/automations"
+_PYSCRIPT_DIR = "pyscript/scripts/pistoncore"  # research §2: only sanctioned autoload subdir
 _STATUS_FILE = storage.DATA_DIR / "compile_status.json"
 _DEBUG_DIR = storage.DATA_DIR / "compile_debug"
 _DEBUG_KEEP = 25  # newest artifacts kept per piston
@@ -140,6 +141,54 @@ async def _automation_entities(auto_ids: list) -> list[str]:
     return [s["entity_id"] for s in states
             if s["entity_id"].startswith("automation.")
             and s.get("attributes", {}).get("id") in wanted]
+
+
+async def _deploy_pyscript(piston_id: str, name: str, prev: dict, writer,
+                           result: dict) -> dict:
+    """PyScript-band deploy: write the module into pyscript's autoloaded
+    scripts/pistoncore/ folder (research §2), reload just that piston's
+    global context, then PROVE the module loaded by its @service registration
+    (pyscript.pistoncore_<id>_execute) appearing — a module with a runtime
+    load error is silently skipped otherwise, same trap as YAML reload."""
+    filename = f"{_PYSCRIPT_DIR}/{_slug(name)}_{piston_id[:8]}.py"
+    artifact = _keep_artifact(piston_id, result["code"], ".py")
+    try:
+        if prev.get("file") and prev["file"] != filename:
+            writer.delete(prev["file"])  # rename- AND band-switch-safe cleanup
+        writer.write(filename, result["code"])
+    except Exception as exc:
+        return _record(piston_id, status="error", artifact=artifact,
+                       message=f"deploy write failed: {exc}")
+
+    stem = filename.rsplit("/", 1)[-1][:-3]
+    try:
+        await ha_client.call_service(
+            "pyscript", "reload", {"global_ctx": f"scripts.pistoncore.{stem}"})
+    except Exception as exc:
+        return _record(piston_id, status="error", file=filename, artifact=artifact,
+                       message=("this piston needs PyScript, and reloading it failed — "
+                                f"is the PyScript integration installed (HACS)? {exc}"))
+
+    service_name = f"pistoncore_{piston_id}_execute"
+    present = False
+    try:
+        for _ in range(4):
+            services = await ha_client.get_services()
+            if service_name in (services.get("pyscript") or {}):
+                present = True
+                break
+            await asyncio.sleep(1)
+    except Exception:
+        pass  # verification unavailable is not proof of failure
+    if not present:
+        ha_says = await _ha_log_excerpt(filename)
+        return _record(piston_id, status="error", file=filename, artifact=artifact,
+                       message=f"PyScript did not load the module — HA's log: {ha_says}")
+
+    return _record(piston_id, status="deployed", file=filename, band="pyscript",
+                   reload="pyscript.reload", artifact=artifact, auto_ids=[],
+                   config_check="n/a (pyscript module)",
+                   reasons=result.get("reasons", [])[:3])
 
 
 async def _verify_and_enable(auto_ids: list) -> tuple[str, str]:
@@ -253,10 +302,7 @@ async def compile_and_deploy(piston_id: str) -> dict:
         return _record(piston_id, status="error", **fields)
 
     if result["target"] == "pyscript":
-        _remove_deployed(writer, "pyscript")
-        return _record(piston_id, status="pyscript",
-                       message="requires PyScript — that band isn't built yet: " +
-                               "; ".join(result["reasons"][:3]))
+        return await _deploy_pyscript(piston_id, name, prev, writer, result)
 
     artifact = _keep_artifact(piston_id, result["yaml"], ".yaml")
 
