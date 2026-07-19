@@ -51,11 +51,20 @@ class Resolver:
         if dref.startswith("@"):
             g = self.globals_map.get(dref)
             if not g:
-                raise UnresolvableDevice(f"global device variable '{dref}' not found", **ctx)
+                # exact-name miss: help the user spot case mismatches
+                # (@Speakers_All vs @speakers_all are different globals)
+                close = [n for n in self.globals_map if n.lower() == dref.lower()]
+                hint = f" (did you mean '{close[0]}'? names are case-sensitive)" if close else \
+                       " — create it in the Global variables panel"
+                raise UnresolvableDevice(
+                    f"global device variable '{dref}' not found{hint}", **ctx)
             v = g.get("v")
-            if isinstance(v, list):
-                return v
-            return (v or {}).get("d") or g.get("d") or []
+            hashes = v if isinstance(v, list) else ((v or {}).get("d") or g.get("d") or [])
+            if not hashes:
+                raise UnresolvableDevice(
+                    f"global device variable '{dref}' has no devices assigned — "
+                    f"click it in the Global variables panel and add devices", **ctx)
+            return hashes
         if dref in self.local_device_vars:
             return self.local_device_vars[dref]
         raise UnresolvableDevice(f"device reference '{dref}' is neither a hash, a local "

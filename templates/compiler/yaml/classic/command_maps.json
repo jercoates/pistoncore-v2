@@ -13,11 +13,20 @@
   "off": {"light": "light.turn_off", "switch": "switch.turn_off", "fan": "fan.turn_off"},
   "toggle": {"light": "light.toggle", "switch": "switch.toggle", "fan": "fan.toggle"},
   "setLevel": {"light": {"service": "light.turn_on", "data": {"brightness_pct": "$1"}},
-               "fan": {"service": "fan.set_percentage", "data": {"percentage": "$1"}}},
+               "fan": {"service": "fan.set_percentage", "data": {"percentage": "$1"}},
+               "media_player": {"service": "media_player.volume_set", "data": {"volume_level": "$1|pct_float"}}},
   "setColor": {"light": {"service": "light.turn_on", "data": {"rgb_color": "$1|hex_rgb"}}},
   "setColorTemperature": {"light": {"service": "light.turn_on", "data": {"color_temp_kelvin": "$1"}}},
   "lock": {"lock": "lock.lock"},
   "unlock": {"lock": "lock.unlock"},
   "open": {"cover": "cover.open_cover", "garageDoorControl": "cover.open_cover"},
-  "close": {"cover": "cover.close_cover", "garageDoorControl": "cover.close_cover"}
+  "close": {"cover": "cover.close_cover", "garageDoorControl": "cover.close_cover"},
+  "setVolume": {"media_player": {"service": "media_player.volume_set", "data": {"volume_level": "$1|pct_float"}}},
+  "playTrack": {"media_player": {"service": "media_player.play_media",
+                                 "data": {"media_content_id": "$1", "media_content_type": "music"}}},
+  "stop": {"media_player": "media_player.media_stop"},
+  "pause": {"media_player": "media_player.media_pause"},
+  "play": {"media_player": "media_player.media_play"},
+  "mute": {"media_player": {"service": "media_player.volume_mute", "data": {"is_volume_muted": "true"}}},
+  "unmute": {"media_player": {"service": "media_player.volume_mute", "data": {"is_volume_muted": "false"}}}
 }

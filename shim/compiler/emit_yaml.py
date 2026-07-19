@@ -33,7 +33,9 @@ def _hex_rgb(value):
     return [int(v[0:2], 16), int(v[2:4], 16), int(v[4:6], 16)]
 
 
-_PARAM_TRANSFORMS = {"hex_rgb": _hex_rgb}
+_PARAM_TRANSFORMS = {"hex_rgb": _hex_rgb,
+                     # webCoRE volume/level 0-100 -> HA volume_level 0.0-1.0
+                     "pct_float": lambda v: round(float(v) / 100.0, 2)}
 
 
 def _delay_hms(params: list) -> str:
