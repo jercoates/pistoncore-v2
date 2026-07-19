@@ -174,8 +174,16 @@ async def test_write_target():
 
 
 @router.get("/help")
-async def help_stub(request: Request):
-    return _stub(request, "Help", "Documentation isn't written yet.")
+async def help_index(request: Request):
+    """Help index — articles listed in help_index.html. Per the CLAUDE.md UI
+    split, help is drill-in only: linked from Settings and from error
+    surfaces, never a place problems announce themselves."""
+    return templates.TemplateResponse(request, "help_index.html", {})
+
+
+@router.get("/help/compiler-debug")
+async def help_compiler_debug(request: Request):
+    return templates.TemplateResponse(request, "help_compiler_debug.html", {})
 
 
 @router.get("/backup")

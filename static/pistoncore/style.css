@@ -387,3 +387,29 @@ button {
 .compile-pyscript { color: var(--yellow); border-color: var(--yellow); }
 .banner-error { border: 1px solid var(--red); color: var(--red); }
 #fd-banner .banner { margin-bottom: var(--space-3); }
+
+/* help pages (/help — drill-in only, per the UI split) */
+.help-list .help-row {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  text-decoration: none;
+}
+.help-article { max-width: 760px; }
+.help-article p, .help-article ul, .help-article ol { margin: 0 0 var(--space-3); line-height: 1.55; }
+.help-article ul, .help-article ol { padding-left: 22px; }
+.help-article li { margin-bottom: 6px; }
+.help-article h2 { margin: var(--space-4) 0 var(--space-2); font-size: 16px; }
+.help-article code {
+  font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+  background: var(--bg-tertiary, rgba(128,128,128,.15));
+  padding: 1px 5px; border-radius: 4px;
+}
+.help-table { width: 100%; border-collapse: collapse; margin: 0 0 var(--space-3); }
+.help-table th {
+  text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-muted); padding: 6px 10px; border-bottom: 1px solid var(--border-subtle);
+}
+.help-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top; font-size: 13px; line-height: 1.5;
+}
+.help-table .compile-pill { white-space: nowrap; }
