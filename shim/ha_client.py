@@ -8,8 +8,10 @@ v1 fetched entities only; DEVICE_PAYLOAD_SPEC.md Stage 1 needs the device
 registry too, to group entities by their physical device.
 """
 
+import asyncio
 import json
 import os
+import urllib.request
 from pathlib import Path
 
 import websockets
@@ -167,6 +169,32 @@ async def get_states() -> list:
     if not result.get("success"):
         raise HAClientError(f"get_states failed: {result.get('error')}")
     return result["result"]
+
+
+async def check_config() -> dict:
+    """REST POST /api/config/core/check_config — HA validates its entire
+    ON-DISK configuration (including a just-written automation file) without
+    touching the running system. Returns {"result": "valid"|"invalid",
+    "errors": str|None, ...}. The deploy flow gates its reload on this
+    (DECISION Jeremy 2026-07-18: collect problems from HA BEFORE going live).
+    stdlib urllib in a thread — this is the only REST call in the shim, not
+    worth a new HTTP dependency."""
+    ha_url, token = _load_auth()
+    if not (ha_url and token):
+        raise HAClientError("No HA credentials configured.")
+    url = ha_url.rstrip("/") + "/api/config/core/check_config"
+
+    def _post():
+        req = urllib.request.Request(
+            url, method="POST", data=b"",
+            headers={"Authorization": f"Bearer {token}"})
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+
+    try:
+        return await asyncio.to_thread(_post)
+    except Exception as exc:
+        raise HAClientError(f"check_config failed: {exc}") from exc
 
 
 async def get_system_log() -> list:

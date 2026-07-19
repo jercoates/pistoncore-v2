@@ -58,6 +58,27 @@ def _keep_artifact(piston_id: str, text: str, suffix: str) -> str:
     return f"compile_debug/{piston_id}/{name}"
 
 
+def _rollback(writer, prev: dict, filename: str) -> str:
+    """A new file failed HA's config check AFTER overwriting the old one —
+    restore the previous good compile from its kept debug artifact so the
+    on-disk config is valid again (§1: a failed compile never costs the user
+    the previously deployed artifact). No prior good version -> just retract
+    the bad file."""
+    try:
+        prev_art = prev.get("artifact")
+        if (prev.get("status") == "deployed" and prev.get("file") and prev_art
+                and (storage.DATA_DIR / prev_art).exists()):
+            writer.write(prev["file"],
+                         (storage.DATA_DIR / prev_art).read_text(encoding="utf-8"))
+            if filename != prev["file"]:
+                writer.delete(filename)
+            return f"previous good version restored ({prev['file']})"
+        writer.delete(filename)
+        return "bad file removed, no previous version to restore"
+    except Exception as exc:
+        return f"ROLLBACK FAILED: {exc} — fix {filename} by hand or re-save the piston"
+
+
 async def _ha_log_excerpt(filename: str) -> str:
     """HA's own words about why it rejected our file — pulled from its
     system log right after a failed pickup."""
@@ -247,13 +268,38 @@ async def compile_and_deploy(piston_id: str) -> dict:
         return _record(piston_id, status="error", artifact=artifact,
                        message=f"deploy write failed: {exc}")
 
+    # Config-check gate (DECISION Jeremy 2026-07-18): before any reload, HA
+    # validates its whole on-disk config without touching the running system.
+    # check_config sees EVERYTHING, so an invalid verdict is only ours if the
+    # errors mention our file/folder — a pre-existing problem elsewhere in the
+    # user's config must not brick piston deploys. Check unreachable never
+    # blocks either (the post-reload verify below stays as the backstop).
+    check_note = "unavailable"
+    try:
+        check = await ha_client.check_config()
+    except Exception as exc:
+        check = None
+        check_note = f"unavailable ({exc})"
+    if check:
+        check_note = check.get("result", "unknown")
+        errors = str(check.get("errors") or "")
+        ours = filename.rsplit("/", 1)[-1] in errors or "pistoncore" in errors.lower()
+        if check_note == "invalid" and ours:
+            rollback = _rollback(writer, prev, filename)
+            return _record(piston_id, status="error", artifact=artifact,
+                           message=f"HA config check rejected the compiled YAML — "
+                                   f"{errors[:400]} ({rollback}; nothing was reloaded)")
+        if check_note == "invalid":
+            check_note = "invalid elsewhere in HA config (not this piston) — proceeding"
+
     reload_note = await _reload_ha()
     auto_ids = result.get("auto_ids", [])
     verdict, note = await _verify_and_enable(auto_ids)
     if verdict == "rejected":
         ha_says = await _ha_log_excerpt(filename)
         return _record(piston_id, status="error", file=filename, auto_ids=auto_ids,
-                       artifact=artifact, reload=reload_note,
+                       artifact=artifact, reload=reload_note, config_check=check_note,
                        message=f"HA rejected the compiled YAML ({note}) — HA's log: {ha_says}")
     return _record(piston_id, status="deployed", file=filename, reload=reload_note,
-                   auto_ids=auto_ids, enabled=note, artifact=artifact)
+                   auto_ids=auto_ids, enabled=note, artifact=artifact,
+                   config_check=check_note)

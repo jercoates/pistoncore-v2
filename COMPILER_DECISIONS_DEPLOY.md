@@ -26,6 +26,17 @@ separate compile button; no separate deploy step. This matches webCoRE (save = l
   Safety fallback (Jeremy's condition for approving): if HA can't find/disable the
   automations, pause removes the file instead — Pause always works. Resume always
   turn_ons explicitly because HA restores disabled state across reloads.
+- Config-check gate — DECISION (Jeremy, 2026-07-18): after writing a compiled file and
+  BEFORE any reload, HA's `check_config` (REST /api/config/core/check_config) validates
+  the whole on-disk config without touching the running system. If it rejects OUR file,
+  the previous good compile is restored from its compile_debug artifact (rollback), the
+  error + HA's objections go to the two UI surfaces, and nothing reloads. An invalid
+  verdict whose errors don't mention our file/folder is a pre-existing user-config
+  problem — noted, never blocks piston deploys. Check unreachable never blocks either.
+  KNOWN GAPS (accepted): check_config validates schema only — Jinja2 templates that
+  error at render, and semantically-wrong triggers, pass the check and only fail at
+  runtime (mitigated by fail-closed template defaults + the post-reload entity
+  verification backstop + trace-based debugging later).
 - **One direction only: PistonCore → HA.** If a user toggles the automation in HA's UI,
   PistonCore overwrites it on next compile. Predictable beats clever.
 
