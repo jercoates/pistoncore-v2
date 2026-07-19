@@ -62,7 +62,7 @@ for _index in range({{ n.start }}, {{ n.stop }} + (1 if {{ n.step }} > 0 else -1
     pass
 {%- endif %}
 {%- elif n.kind == 'service' -%}
-service.call({{ "'" + n.domain + "'" }}, {{ "'" + n.service + "'" }}, entity_id={{ n.entities }}{% for k, v in (n.get('data') or {}).items() %}, {{ k }}={{ v }}{% endfor %})
+service.call({{ "'" + n.domain + "'" }}, {{ "'" + n.service + "'" }}{% if n.entities %}, entity_id={{ n.entities }}{% endif %}{% for k, v in (n.get('data') or {}).items() %}, {{ k }}={{ v }}{% endfor %})
 {%- elif n.kind == 'sleep' -%}
 task.sleep({{ n.seconds }})
 {%- elif n.kind == 'setvar' -%}

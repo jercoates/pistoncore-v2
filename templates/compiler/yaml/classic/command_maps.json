@@ -5,7 +5,7 @@
                     "setTileColor", "setTileTitle", "setTileText", "setTile",
                     "clearTile", "exit", "break", "cancelTasks", "cancelPendingTasks",
                     "executePiston", "pausePiston", "resumePiston", "httpRequest",
-                    "setLocationMode", "sendNotification", "sendPushNotification",
+                    "setLocationMode", "sendPushNotification",
                     "sendSMSNotification", "storeMedia", "wolRequest", "iftttMaker",
                     "writeToFuelStream", "comment", "waitForTime", "waitForDateTime",
                     "repeatAction", "followUp", "setAlarmSystemStatus", "setHSMStatus"],

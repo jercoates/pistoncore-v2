@@ -279,6 +279,16 @@ class _PyEmitter:
             params = task.get("p", [])
             if cmd == "wait":
                 out.append({"kind": "sleep", "seconds": _wait_seconds(params)})
+            elif cmd == "sendNotification":
+                p0 = params[0] if params else {}
+                if p0.get("t") != "c" or not isinstance(p0.get("c"), str):
+                    raise NotYetImplemented(
+                        "sendNotification with a non-constant message — the "
+                        "expression engine isn't built yet", **ctx)
+                # in-app notification == HA notifications panel (NOTIFY_ACTION_SPEC)
+                out.append({"kind": "service", "domain": "notify",
+                            "service": "persistent_notification",
+                            "entities": [], "data": {"message": repr(p0["c"])}})
             elif cmd == "setVariable":
                 p0 = params[0] if params else {}
                 name = p0.get("x") or p0.get("c")

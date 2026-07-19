@@ -205,6 +205,9 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "wait":
                 out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
                 continue
+            if n["command"] == "sendNotification":
+                out.append(_send_notification(n["params"], ctx))
+                continue
             if not n["devices"] or n["command"] in resolver.command_maps.get("_piston_scope", []):
                 # piston-scope command (setVariable, log, setState, tiles, ...)
                 # — piston state has no YAML equivalent, whatever devices the
@@ -226,6 +229,24 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
     return out
+
+
+def _send_notification(params: list, ctx: dict) -> dict:
+    """webCoRE 'Send notification' == Hubitat's in-app notification, not push
+    — HA's exact equivalent is the notifications panel (persistent
+    notification), which exists in every HA with zero setup
+    (NOTIFY_ACTION_SPEC: notify.persistent_notification). Push
+    (sendPushNotification) stays NotYetImplemented until real mobile targets
+    exist. Message must be a constant — expressions need the expression
+    engine."""
+    import json as _json
+    p = params[0] if params else {}
+    if p.get("t") != "c" or not isinstance(p.get("c"), str):
+        raise NotYetImplemented(
+            "sendNotification with a non-constant message — the expression "
+            "engine isn't built yet", **ctx)
+    return {"kind": "service", "service": "notify.persistent_notification",
+            "entities": [], "data": {"message": _json.dumps(p["c"])}}
 
 
 def _param_value(token: str, params: list, ctx: dict):

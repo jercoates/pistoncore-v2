@@ -74,8 +74,10 @@
     {{ k }}: {{ v }}
 {%- endfor %}
 {%- endif %}
+{%- if a.entities %}
   target:
 {{- entity_ids(a.entities, '    ') }}
+{%- endif %}
 {%- elif a.kind == 'if' -%}
 - if:
 {%- for c in a.conditions %}
