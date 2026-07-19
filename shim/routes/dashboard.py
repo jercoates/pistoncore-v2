@@ -138,7 +138,15 @@ def piston_get(request: Request):
     # banner, piston.module.html:133). Counted from the ct/s stamps the save
     # flow writes (storage.classify_conditions — engine-equivalent behavior).
     subscriptions = {"events": storage.count_subscriptions(piston), "controls": 0}
-    response: dict = {"data": {"piston": piston, "meta": meta, "subscriptions": subscriptions}}
+    # localVars: piston's stored runtime variable values (webcore-piston.groovy
+    # get() :1170 serves state.vars = {name: raw value}; empty until a piston
+    # has actually run — faithful here since no engine runs pistons). MUST be
+    # present even when empty: piston.module.js:724 does
+    # `variable.n in $scope.localVars` with no guard — absent map = TypeError
+    # on EVERY digest = all global-variable values silently render blank
+    # (found via live repro 2026-07-19, "@Speakers_All = ;" bug).
+    response: dict = {"data": {"piston": piston, "meta": meta,
+                               "subscriptions": subscriptions, "localVars": {}}}
     if client_db_version != fixtures.DB_VERSION:
         response["dbVersion"] = fixtures.DB_VERSION
         response["db"] = fixtures.get_db()
