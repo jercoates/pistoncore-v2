@@ -13,6 +13,9 @@
   {% if saved %}
   <div class="banner banner-success">Saved.</div>
   {% endif %}
+  {% if saved and tts_engines and not tts_engine %}
+  <div class="banner banner-info">HA is connected — pick your <strong>TTS engine</strong> below (Speech section) and Save, so Speak pistons know which voice to use.</div>
+  {% endif %}
 
   <form id="settings-form">
     <div class="form-group">
@@ -69,7 +72,13 @@
         <option value="{{ e.entity_id }}" {{ 'selected' if e.entity_id == tts_engine }}>{{ e.name }} ({{ e.entity_id }})</option>
         {% endfor %}
       </select>
-      <p class="field-hint">Pistons that Speak use this engine; the speakers come from the piston itself.</p>
+      <p class="field-hint">
+        {% if tts_engines %}
+        Pistons that Speak use this engine; the speakers come from the piston itself.
+        {% else %}
+        Engines load from Home Assistant — save your HA connection above first, then pick one here.
+        {% endif %}
+      </p>
     </div>
     <div id="write-test-banner"></div>
     <button type="submit" class="btn btn-primary">Save</button>

@@ -10,6 +10,7 @@ function settingsParams() {
     smb_share: form.smb_share.value,
     smb_username: form.smb_username.value,
     smb_password: form.smb_password.value,
+    tts_engine: form.tts_engine ? form.tts_engine.value : "",
   });
 }
 
