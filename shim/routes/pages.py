@@ -173,6 +173,15 @@ async def test_write_target():
         return JSONResponse({"error": str(exc)}, status_code=400)
 
 
+@router.get("/api/compile-status/{piston_id}")
+async def compile_status(piston_id: str):
+    """Latest compile/deploy record for one piston — the piston status
+    screen's banner (announcement surface #2, CLAUDE.md UI split) polls this
+    from dashboard/js/pistoncore-nav.js."""
+    from ..compiler import deploy as compiler_deploy
+    return compiler_deploy.load_statuses().get(piston_id) or {}
+
+
 @router.get("/help")
 async def help_index(request: Request):
     """Help index — articles listed in help_index.html. Per the CLAUDE.md UI

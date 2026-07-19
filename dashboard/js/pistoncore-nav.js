@@ -219,6 +219,66 @@
             }, 600);
         });
 
+        // COMPILE BANNER: the piston status screen is announcement surface #2
+        // (CLAUDE.md UI split — same screen as Status/Quick Facts, where a
+        // webCoRE user expects a piston's problems). Injected as a sibling of
+        // the template's own hardcoded .alert banners (piston.module.html
+        // :129-133) — additive DOM only, no sealed file touched. Polls while
+        // on the piston page so a save's compile result appears in seconds
+        // (and survives the view->edit->view mode switch, which rebuilds the
+        // container without a route change).
+        var compilePoll = null;
+        function clearCompileBanner() {
+            if (compilePoll) { clearInterval(compilePoll); compilePoll = null; }
+            var old = document.getElementById('pistoncore-compile-banner');
+            if (old && old.parentNode) old.parentNode.removeChild(old);
+        }
+        function renderCompileBanner(rec) {
+            var container = document.querySelector('div.container[ng-if="mode==\'view\'"]');
+            var old = document.getElementById('pistoncore-compile-banner');
+            if (!container) { if (old && old.parentNode) old.parentNode.removeChild(old); return; }
+            var isError = rec && rec.status === 'error';
+            var isDeployed = rec && rec.status === 'deployed';
+            if (!isError && !isDeployed) { if (old && old.parentNode) old.parentNode.removeChild(old); return; }
+            var div = document.createElement('div');
+            div.id = 'pistoncore-compile-banner';
+            div.className = 'alert ' + (isError ? 'alert-danger' : 'alert-success');
+            var strong = document.createElement('strong');
+            strong.textContent = isError ? 'PistonCore compile error: ' : 'PistonCore: ';
+            div.appendChild(strong);
+            var span = document.createElement('span');
+            span.textContent = isError
+                ? (rec.message || rec.code || 'compile failed')
+                : ('compiled & deployed to Home Assistant'
+                   + (rec.file ? ' (' + rec.file + ')' : '')
+                   + (rec.band === 'pyscript' ? ' [PyScript]' : ''));
+            div.appendChild(span);
+            if (isError) {
+                div.appendChild(document.createTextNode(' '));
+                var link = document.createElement('a');
+                link.href = '/help/compiler-debug';
+                link.className = 'alert-link';
+                link.textContent = 'Help →';
+                div.appendChild(link);
+            }
+            if (old && old.parentNode) old.parentNode.removeChild(old);
+            container.insertBefore(div, container.firstChild);
+        }
+        $rootScope.$on('$routeChangeSuccess', function (event, current) {
+            clearCompileBanner();
+            var onPiston = current && current.$$route && current.$$route.originalPath === '/piston/:pistonId';
+            if (!onPiston || !current.params) return;
+            var pid = current.params.pistonId;
+            function refresh() {
+                fetch('/api/compile-status/' + encodeURIComponent(pid))
+                    .then(function (r) { return r.json(); })
+                    .then(renderCompileBanner)
+                    .catch(function () {});
+            }
+            refresh();
+            compilePoll = setInterval(refresh, 5000);
+        });
+
         // IN: jump straight to a specific piston once the list route's own
         // session bootstrap has genuinely finished (see file header).
         $rootScope.$on('$routeChangeSuccess', function (event, current) {
