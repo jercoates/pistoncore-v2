@@ -97,14 +97,51 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
                 raise NotYetImplemented(
                     f"condition operator '{a.get('o')}' (nested statement "
                     f"${a.get('$')}) not compiled yet", **kwargs)
-            for c in conds:
-                if c["ct"] == "t":
-                    raise NotYetImplemented(
-                        f"trigger comparison '{c['co']}' nested inside another "
-                        f"statement (${a.get('$')}) requires PyScript", **kwargs)
+            # A trigger comparison nested inside an if evaluates as a
+            # CONDITION (current state) on both bands — webCoRE judges it
+            # against the waking event, which HA has no equivalent for inside
+            # a nested condition. Tier-3 approximation, not a reason to route
+            # the whole piston to PyScript.
             out.append({"kind": "if", "conditions": conds,
                         "then": _action_tree(a.get("s", []), where, kwargs),
                         "else": _fold_ei(a, where, kwargs)})
+        elif at == "switch":
+            lo = a.get("lo") or {}
+            cases = []
+            default = []
+            for cs in a.get("cs", []):
+                body = _action_tree(cs.get("s", []), where, kwargs)
+                if cs.get("t") == "d":
+                    default = body
+                else:
+                    cases.append({"ro": cs.get("ro") or {}, "body": body})
+            if a.get("ctp") in ("f", "e"):
+                raise NotYetImplemented(
+                    "switch with fall-through has no HA equivalent "
+                    "(choose always exits after the first match)", **kwargs)
+            out.append({"kind": "switch", "lo": lo, "cases": cases,
+                        "default": default})
+        elif at in ("repeat", "while"):
+            body = _action_tree(a.get("s", []), where, kwargs)
+            conds = [_cond_node(c, kwargs) for c in a.get("c", [])]
+            count = (a.get("lo") or {}).get("c")
+            out.append({"kind": "loop", "conditions": conds, "body": body,
+                        "count": count if isinstance(count, int) else None,
+                        "until": at == "repeat" and bool(conds)})
+        elif at == "for":
+            lo, lo2, lo3 = (a.get(k) or {} for k in ("lo", "lo2", "lo3"))
+            if not all(isinstance(x.get("c"), (int, float)) for x in (lo, lo2)):
+                raise NotYetImplemented(
+                    "'for' with non-constant bounds not compiled yet", **kwargs)
+            step = lo3.get("c") if isinstance(lo3.get("c"), (int, float)) and lo3.get("c") else 1
+            span = int(abs(int(lo2["c"]) - int(lo["c"])) / abs(int(step) or 1)) + 1
+            out.append({"kind": "loop", "conditions": [], "body": body if False else
+                        _action_tree(a.get("s", []), where, kwargs),
+                        "count": span, "until": False})
+        elif at == "do":
+            out.extend(_action_tree(a.get("s", []), where, kwargs))
+        elif at == "exit":
+            out.append({"kind": "stop"})
         else:
             raise NotYetImplemented(
                 f"nested statement type '{at}' in {where} not compiled yet", **kwargs)
@@ -117,11 +154,6 @@ def _fold_ei(stmt: dict, where: str, kwargs: dict) -> list:
     els = _action_tree(stmt.get("e", []), where, kwargs)
     for ei in reversed(stmt.get("ei") or []):
         conds = [_cond_node(c, kwargs) for c in ei.get("c", [])]
-        for c in conds:
-            if c["ct"] == "t":
-                raise NotYetImplemented(
-                    f"trigger comparison '{c['co']}' in an else-if chain "
-                    f"requires PyScript", **kwargs)
         els = [{"kind": "if", "conditions": conds,
                 "then": _action_tree(ei.get("s", []), where, kwargs),
                 "else": els}]

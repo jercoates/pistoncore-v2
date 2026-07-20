@@ -127,6 +127,55 @@
 {%- for k, v in a.vars.items() %}
     {{ k }}: {{ v }}
 {%- endfor %}
+{%- elif a.kind == 'choose' -%}
+- choose:
+{%- for o in a.options %}
+    - conditions:
+{%- for c in o.conditions %}
+{{ cond_block(c) | indent(8, true) }}
+{%- endfor %}
+      sequence:
+{%- if o.sequence %}
+{%- for x in o.sequence %}
+{{ action_block(x) | indent(8, true) }}
+{%- endfor %}
+{%- else %}
+        []
+{%- endif %}
+{%- endfor %}
+{%- if a.get('default') %}
+  default:
+{%- for x in a.get('default') %}
+{{ action_block(x) | indent(4, true) }}
+{%- endfor %}
+{%- endif %}
+{%- elif a.kind == 'repeat' -%}
+- repeat:
+{%- if a.get('count') is not none %}
+    count: {{ a.get('count') }}
+{%- endif %}
+{%- if a.get('while') %}
+    while:
+{%- for c in a.get('while') %}
+{{ cond_block(c) | indent(6, true) }}
+{%- endfor %}
+{%- endif %}
+{%- if a.get('until') %}
+    until:
+{%- for c in a.get('until') %}
+{{ cond_block(c) | indent(6, true) }}
+{%- endfor %}
+{%- endif %}
+    sequence:
+{%- if a.body %}
+{%- for x in a.body %}
+{{ action_block(x) | indent(6, true) }}
+{%- endfor %}
+{%- else %}
+      []
+{%- endif %}
+{%- elif a.kind == 'stop' -%}
+- stop: "piston exited"
 {%- elif a.kind == 'if' -%}
 - if:
 {%- for c in a.conditions %}

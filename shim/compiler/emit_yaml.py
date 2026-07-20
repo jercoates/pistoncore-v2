@@ -11,8 +11,13 @@ command_maps.json $-tokens). TCP-default branches emit mode: restart +
 auxiliary cancel-triggers gated by `condition: trigger`; `queued` (Jeremy's
 default) governs where TCP doesn't force restart."""
 
+import json as _json_mod
 import re
 from pathlib import Path
+
+
+def _json_dumps(v):
+    return _json_mod.dumps(v)
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -123,6 +128,10 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
     try:
         for br in branches:
             _emit_branch(br, resolver, piston_id, piston_name, blocks, auto_ids)
+    except _NoSubscriptions:
+        # promotion found nothing subscribable after all — same conclusion,
+        # reached later: this piston is a script.
+        return _compile_script(branches, resolver, piston_id, piston_name, header)
     except Exception as exc:
         # Half-finished output holds clues to compiler bugs (Jeremy, 2026-07-18:
         # the compiler, not the battle-tested webCoRE JSON, is the likely
@@ -133,6 +142,11 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
 
     return {"target": "yaml", "yaml": header + "\n".join(blocks) + "\n", "reasons": [],
             "auto_ids": auto_ids}
+
+
+class _NoSubscriptions(Exception):
+    """Internal signal: nothing in this piston can wake it, so it compiles to
+    a script rather than an automation."""
 
 
 def _has_no_subscriptions(branches: list) -> bool:
@@ -242,6 +256,27 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
             mapped = resolver.system_value(var, cond["value"])
             return {"kind": "template", "template":
                     f"{{{{ states('{sysent}') {_EQUALITY_OPS[co]} '{mapped}' }}}}"}
+        if var in ("time", "datetime") and co in ("is_between", "is_not_between"):
+            # a computed bound (sunrise variable, expression) — compare
+            # minutes-since-midnight in a template rather than giving up
+            jt = _jinja(resolver, ctx, _PISTON.get("cur"))
+
+            def _bound(num, expr):
+                if _is_number(num):
+                    return str(int(num))
+                if not expr:
+                    raise NotYetImplemented("time bound is not expressible", **ctx)
+                return ("((" + jt.transpile_operand({"e": str(expr).rstrip("; ")})
+                        + ") | int)")
+
+            lo_b = _bound(cond.get("value"), cond.get("value_expr"))
+            hi_b = _bound(cond.get("value2"), cond.get("value2_expr"))
+            mins = "(now().hour * 60 + now().minute)"
+            body = (f"({lo_b} <= {mins} <= {hi_b}) if {lo_b} <= {hi_b} "
+                    f"else ({mins} >= {lo_b} or {mins} <= {hi_b})")
+            if co == "is_not_between":
+                body = "not (" + body + ")"
+            return {"kind": "template", "template": "{{ " + body + " }}"}
         raise NotYetImplemented(
             f"condition on variable '{var}' ({co}) requires PyScript", **ctx)
 
@@ -304,6 +339,34 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         parts = [f"({neg}states('{e}') in {mapped!r} and "
                  f"(as_timestamp(now()) - as_timestamp(states.{e}.last_changed)) >= {secs})"
                  for e in entities]
+    elif co in ("changes_to", "gets", "arrives", "stays", "stays_equal_to"):
+        mapped = resolver.ha_state_value(cond["attr"], cond["value"])
+        parts = [f"states('{e}') == '{mapped}'" for e in entities]
+    elif co in ("changes_away_from", "stays_away_from"):
+        mapped = resolver.ha_state_value(cond["attr"], cond["value"])
+        parts = [f"states('{e}') != '{mapped}'" for e in entities]
+    elif co in ("changes_to_any_of", "stays_any_of"):
+        vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        parts = [f"states('{e}') in {mapped!r}" for e in entities]
+    elif co in ("changes", "changed"):
+        parts = ["true"]      # the automation only ran because something changed
+    elif co in ("rises_above", "rises", "rises_to_or_above"):
+        parts = [f"states('{e}') | float(default=-1.0e9) > {cond['value']}"
+                 for e in entities]
+    elif co in ("drops_below", "drops", "drops_to_or_below"):
+        parts = [f"states('{e}') | float(default=1.0e9) < {cond['value']}"
+                 for e in entities]
+    elif co in ("was_greater_than", "was_greater_than_or_equal_to",
+                "was_less_than", "was_less_than_or_equal_to"):
+        OPS = {"was_greater_than": ">", "was_greater_than_or_equal_to": ">=",
+               "was_less_than": "<", "was_less_than_or_equal_to": "<="}
+        parts = [f"states('{e}') | float(default=1.0e9) {OPS[co]} {cond['value']}"
+                 for e in entities]
+    elif co in ("was_equal_to", "was_any_of"):
+        vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        parts = [f"states('{e}') in {mapped!r}" for e in entities]
     elif co == "is_different_than":
         mapped = resolver.ha_state_value(cond["attr"], cond["value"])
         parts = [f"states('{e}') != '{mapped}'" for e in entities]
@@ -347,6 +410,12 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
                 return {"kind": "time", "at": _minutes_hms(int(trig["value"])),
                         "id": trig_id}
         sysent = resolver.system_entity(var) if var else None
+        if sysent and co in ("executes", "changes_to_any_of", "is_any_of"):
+            raw = trig["value"]
+            vals = raw if isinstance(raw, list) else [raw]
+            mapped = [str(resolver.system_value(var, v)) for v in vals]
+            return {"kind": "state", "entities": [sysent],
+                    "to": mapped if len(mapped) > 1 else mapped[0], "id": trig_id}
         if sysent and co == "changes_to":
             return {"kind": "state", "entities": [sysent],
                     "to": resolver.system_value(var, trig["value"]), "id": trig_id}
@@ -472,6 +541,34 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "wait":
                 out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
                 continue
+            if n["command"] == "setLocationMode":
+                mode = (n["params"][0] or {}).get("c") if n["params"] else None
+                if not isinstance(mode, str):
+                    raise NotYetImplemented("setLocationMode with a computed mode", **ctx)
+                ent = resolver.system_entity("mode") or                     "input_select.pistoncore_location_mode"
+                out.append({"kind": "service", "service": "input_select.select_option",
+                            "entities": [ent], "data": {"option": _json_dumps(mode)}})
+                continue
+            if n["command"] == "sendNotificationToContacts":
+                out.append(_send_notification(n["params"], resolver, ctx,
+                                              _PISTON.get("cur")))
+                continue
+            if n["command"] in ("setAlarmSystemStatus", "setHSMStatus"):
+                alarm = resolver.system_entity("alarmSystemStatus")
+                if not alarm:
+                    raise NotYetImplemented(
+                        "setting the alarm needs exactly one alarm_control_panel "
+                        "in HA (none found, or several — ambiguous)", **ctx)
+                status = (n["params"][0] or {}).get("c") if n["params"] else None
+                service = resolver.alarm_commands.get(str(status))
+                if not service:
+                    raise NotYetImplemented(
+                        f"alarm status '{status}' has no service mapping "
+                        f"(value_maps.json alarm_commands)", **ctx)
+                out.append({"kind": "service",
+                            "service": f"alarm_control_panel.{service}",
+                            "entities": [alarm], "data": None})
+                continue
             if n["command"] == "setVariable":
                 out.append(_set_variable(n, resolver, ctx))
                 continue
@@ -503,6 +600,34 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 data = {k: _param_value(v, n["params"], ctx) for k, v in data_spec.items()}
             out.append({"kind": "service", "service": service,
                         "entities": entities, "data": data})
+        elif n["kind"] == "switch":
+            # HA's choose: first matching branch wins, then the sequence exits
+            # (HA_YAML_COMPILER_RESEARCH §2). Fall-through is refused upstream.
+            lo = n["lo"]
+            subject = _switch_subject(lo, resolver, ctx)
+            options = []
+            for case in n["cases"]:
+                value = (case["ro"] or {}).get("c")
+                options.append({
+                    "conditions": [{"kind": "template", "template":
+                                    "{{ " + subject + " == " + _lit(value) + " }}"}],
+                    "sequence": _resolve_actions(case["body"], resolver, ctx)})
+            out.append({"kind": "choose", "options": options,
+                        "default": _resolve_actions(n["default"], resolver, ctx)})
+        elif n["kind"] == "loop":
+            node = {"kind": "repeat",
+                    "body": _resolve_actions(n["body"], resolver, ctx)}
+            if n.get("count") is not None:
+                node["count"] = int(n["count"])
+            elif n["conditions"]:
+                key = "until" if n.get("until") else "while"
+                node[key] = [_condition(c, resolver, ctx) for c in n["conditions"]]
+            else:
+                raise NotYetImplemented(
+                    "loop with neither a count nor a condition", **ctx)
+            out.append(node)
+        elif n["kind"] == "stop":
+            out.append({"kind": "stop"})
         elif n["kind"] == "if":
             out.append({"kind": "if",
                         "conditions": [_condition(c, resolver, ctx) for c in n["conditions"]],
@@ -628,6 +753,33 @@ def _send_notification(params: list, resolver: Resolver, ctx: dict,
             "data": {"message": _text_param(p, resolver, ctx, piston)}}
 
 
+def _lit(value) -> str:
+    """A webCoRE case value as a Jinja literal."""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    return "'" + str(value).replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
+def _switch_subject(lo: dict, resolver: Resolver, ctx: dict) -> str:
+    """The value a switch statement compares its cases against."""
+    t = lo.get("t")
+    if t == "p" and lo.get("d"):
+        entities = resolver.entities_for_attr(lo["d"], lo.get("a"), ctx)
+        return "states('" + entities[0] + "')"
+    if t == "x" and lo.get("x") == "$currentEventDevice":
+        return "trigger.entity_id"
+    if t == "v":
+        sysent = resolver.system_entity(lo.get("v"))
+        if sysent:
+            return "states('" + sysent + "')"
+    if t == "c":
+        return _lit(lo.get("c"))
+    raise NotYetImplemented(
+        f"switch on operand type '{t}' not compiled yet", **ctx)
+
+
 def _param_value(token: str, params: list, ctx: dict):
     """$1/$2 (+|transform) tokens from command_maps.json data specs."""
     raw = str(token)
@@ -680,9 +832,9 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                 if node:
                     triggers.append(node)
             if not triggers:
-                raise NotYetImplemented(
-                    "statement has no triggers and no promotable conditions "
-                    "— requires PyScript", **ctx)
+                # nothing here can wake the piston: it is a runnable sequence,
+                # not an automation. Signal the script path.
+                raise _NoSubscriptions()
 
     if cancel_triggers:
         conditions.append({"kind": "trigger", "id": "fire"})

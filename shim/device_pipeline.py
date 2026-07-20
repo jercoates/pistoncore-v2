@@ -576,6 +576,8 @@ def build_device_payload(registries: dict) -> dict:
                     if s["entity_id"].startswith("alarm_control_panel.")]
     if len(alarm_panels) == 1:
         system_entities["alarmSystemStatus"] = alarm_panels[0]
+        # webCoRE's "alarm system alert" is the same panel reporting triggered
+        system_entities["alarmSystemAlert"] = alarm_panels[0]
     # TTS engine for Speak (SPEAK_ACTION_SPEC §5.4: engine resolved at compile
     # time from a global setting; auto-pick only when unambiguous)
     from . import storage as _storage
