@@ -101,9 +101,11 @@ def _stub(request: Request, title: str, message: str):
 @router.get("/test-devices")
 async def test_devices_stub(request: Request):
     return _stub(request, "Test Devices", (
-        "Virtual test devices (switch/light/alarm/smoke/water, etc.) for "
-        "quickly exercising compiler output without real hardware — not "
-        "built yet. Planned alongside the compiler (milestone 5)."
+        "Test devices — controllable dummy Home Assistant entities (motion, "
+        "light, alarm, smoke, water, etc.) for exercising a COMPILED piston "
+        "without real hardware, so you can see it fire and check it behaves. "
+        "Not built yet; designed in VIRTUAL_DEVICES_SPEC.md (faithful twins: "
+        "template entities of the real domain, driven by input helpers)."
     ))
 
 

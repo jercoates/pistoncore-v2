@@ -33,7 +33,7 @@ Nothing on this list is drifted. You are not building on a cracked foundation.
 |---|---|
 | **Debug/help screen** — link on errors + from Settings | ✅ BUILT. `/diagnostics` (Settings → Diagnostics button) + the piston-status error banner links to `/help/compiler-debug`. Drill-in only, never a third announcement surface. |
 | **Compiler (YAML + PyScript bands)** | ✅ BUILT. 73/98 real pistons native, 0 crashes, fixtures + regression green. Remaining gaps are named data-file additions (device commands) + the deprecation-scanner brief. |
-| **Virtual devices for testing** | ⏳ STUB. `/test-devices` returns a "not built yet" page (`shim/routes/pages.py:101`). This is the next build — and the strongest one, because behavioral testing against faithful twins is exactly what surfaces any remaining spec-drift. |
+| **Virtual devices for testing** | ⏳ STUB, now SPEC'D. `/test-devices` returns a "not built yet" page (`shim/routes/pages.py:101`); design is `VIRTUAL_DEVICES_SPEC.md` (Draft 1, research-backed). Next build — the strongest one, because behavioral testing against faithful twins is exactly what surfaces any remaining spec-drift. |
 | **Trace / activity console** | 📋 SPEC-READY, not built. `TRACE_ACTIVITY_CONTRACT.md` is Draft 2 — every data shape verified with citations. Cheap implementation session; its default-vs-forced behavior assumes YAML-primary, which item #1 confirms holds. |
 
 ## The reframe worth keeping

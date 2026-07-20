@@ -98,6 +98,14 @@ switch (`choose:`), loops (`repeat:`), exit (`stop:`), executePiston
 That doc had never been applied. Scoped in SESSION_BRIEF_YAML_BAND_EXPANSION.md
 — needs a Jinja emitter for the existing expression AST + a script emission
 target. Expect the band split to invert.
+**ROADMAP (Jeremy, "after compiler → virtual devices → trace"):** virtual
+TEST devices are spec'd in VIRTUAL_DEVICES_SPEC.md (Draft 1) — faithful
+controllable twins (template entities of the real domain + input helpers) so a
+COMPILED piston can be driven and observed without hardware; distinct from
+webCoRE's own `virtualDevices` (mode/HSM, already served). Trace
+(TRACE_ACTIVITY_CONTRACT Draft 2) is the observe half. RECONCILIATION.md
+confirms the load-bearing rules survived the context-overload episode.
+
 **REFERENCE MATERIAL Jeremy brought back (2026-07-20) — peer references, NOT
 authority over the specs:**
 - `COMPILER_SOURCE_MINING.md` — distilled facts from adjacent visual→HA-YAML
