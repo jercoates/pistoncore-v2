@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}PistonCore — Diagnostics{% endblock %}
+
+{% block content %}
+<div class="page active">
+  <div class="list-header">
+    <h1>Diagnostics</h1>
+    <button type="button" class="btn" id="diag-refresh">Re-run checks</button>
+  </div>
+
+  <h2>System</h2>
+  <p class="field-hint">Live checks against this instance — each failure says how to fix it.</p>
+  <div id="diag-checks" class="diag-checks">
+    <div class="field-hint">Running checks…</div>
+  </div>
+
+  <h2>Pistons</h2>
+  <p class="field-hint">
+    Every piston's real compile result. Open one to read the exact error, view
+    the code PistonCore generated, and copy the full evidence for a bug report
+    or an AI chat.
+  </p>
+  <div id="diag-pistons"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/pistoncore/diagnostics.js"></script>
+{% endblock %}

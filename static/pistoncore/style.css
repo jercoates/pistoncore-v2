@@ -438,3 +438,33 @@ button {
 .setup-sub { font-size: 14px; margin: var(--space-4) 0 var(--space-2); }
 .setup-body .btn { margin-right: 8px; }
 .banner-error { border: 1px solid var(--red); color: var(--red); }
+
+/* diagnostics (the compiler debug tool) */
+.settings-tools { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: var(--space-2); }
+.diag-checks { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--space-4); }
+.diag-check { display: flex; gap: 12px; align-items: flex-start;
+  border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 14px; }
+.diag-mark { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+  border: 1px solid var(--border-subtle); }
+.diag-check.ok .diag-mark { color: var(--green); border-color: var(--green); }
+.diag-check.bad .diag-mark { color: var(--red); border-color: var(--red); }
+.diag-check.unknown .diag-mark { color: var(--yellow); border-color: var(--yellow); }
+.diag-name { font-weight: 600; font-size: 14px; }
+.diag-fix { font-size: 13px; margin-top: 4px; color: var(--accent, #4a9eff); }
+.diag-piston { border: 1px solid var(--border-subtle); border-radius: 8px;
+  margin-bottom: 8px; overflow: hidden; }
+.diag-piston-head { display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; cursor: pointer; }
+.diag-piston-head .piston-name { flex: 1; }
+.diag-piston-body { display: none; padding: 0 14px 14px; }
+.diag-piston.open .diag-piston-body { display: block; }
+.diag-error-msg { color: var(--red); font-size: 13px; line-height: 1.5; margin: 0 0 8px; }
+.diag-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  margin-top: 10px; }
+.diag-code { margin-top: 12px; padding: 12px; border-radius: 6px; max-height: 420px;
+  overflow: auto; background: var(--bg-tertiary, rgba(128,128,128,.12));
+  font-family: ui-monospace, Consolas, monospace; font-size: 12px; line-height: 1.45;
+  white-space: pre; }
+.compile-paused { color: var(--text-muted); }
+.compile-pending { color: var(--text-muted); }

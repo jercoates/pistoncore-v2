@@ -41,15 +41,16 @@
           <em>compiler or template bug</em>, not a mistake in your piston. HA's own
           error text is quoted in the message. The previous good version was
           automatically restored, so nothing broke.</td>
-      <td>This is exactly the case the evidence folder below exists for. Collect the
-          evidence package and get it fixed (bottom of this page).</td>
+      <td>Open <a href="/diagnostics">Diagnostics</a>, click <strong>Copy debug
+          info</strong> on that piston, and report it — nothing else to collect.</td>
     </tr>
     <tr>
       <td><span class="compile-pill compile-pyscript">needs PyScript</span></td>
-      <td>The piston is valid but uses features beyond plain HA automations. It's
-          routed to the PyScript compiler, which isn't built yet.</td>
-      <td>Wait for the PyScript band, or simplify the piston if you want it live now.
-          The reasons listed name the specific features responsible.</td>
+      <td>The piston is valid but uses features beyond plain HA automations, so it
+          compiles to a PyScript module instead — which needs the PyScript
+          integration installed in HA.</td>
+      <td>Install PyScript from HACS, then re-save the piston. Diagnostics tells
+          you whether it's installed.</td>
     </tr>
     <tr>
       <td><span class="compile-pill compile-paused">paused</span></td>
@@ -59,37 +60,75 @@
     </tr>
   </table>
 
-  <h2>The evidence folder</h2>
+  <h2>Start here: the Diagnostics page</h2>
   <p>
-    Every compile keeps a timestamped copy of exactly what it produced, in the PistonCore
-    data folder (on the machine running PistonCore — the folder you mapped to
-    <code>/data</code>):
+    <a href="/diagnostics"><strong>Diagnostics</strong></a> (also linked from
+    Settings) does the digging for you. It checks this instance end to end —
+    Home Assistant connection, write access, PyScript, the
+    <code>configuration.yaml</code> lines — and tells you the fix for anything
+    failing. Below that, every piston is listed with its real compile result;
+    failing ones are already expanded.
   </p>
+  <p>For any piston you can, without leaving the browser:</p>
+  <ul>
+    <li><strong>Read the exact error</strong> — the same message the banner
+        shows, with the statement number it came from.</li>
+    <li><strong>View the generated code</strong> — the actual YAML or Python
+        PistonCore produced, plus the last several versions it kept, so you can
+        compare a working compile against a broken one.</li>
+    <li><strong>Copy debug info</strong> — one click puts the complete evidence
+        package on your clipboard: the compile status, the generated code, and
+        the piston's own JSON. Paste it into an AI chat or a bug report and
+        nothing else is needed.</li>
+  </ul>
+
+  <h2>Fixing the common errors</h2>
   <table class="help-table">
-    <tr><th>Path</th><th>What's in it</th></tr>
+    <tr><th>What the message says</th><th>What to do</th></tr>
     <tr>
-      <td><code>compile_debug/&lt;piston-id&gt;/</code></td>
-      <td>One <code>.yaml</code> per compile, newest 25 kept. If a compile crashed
-          partway, a <code>.partial.yaml</code> holds whatever it built before dying —
-          half-finished output is a clue, not garbage. Nothing here is ever deleted by
-          pausing or recompiling.</td>
+      <td>“…not compiled yet” / “requires PyScript”</td>
+      <td>The construct is real but this band can't build it. If PyScript isn't
+          installed, install it (HACS → “pyscript”) and re-save — most of these
+          disappear. If it is installed, the message names a construct that
+          genuinely isn't built yet; simplify that statement or wait for it.</td>
     </tr>
     <tr>
-      <td><code>compile_status.json</code></td>
-      <td>The latest full status record for every piston — the same message the banner
-          shows, plus the file it deployed, the automation ids, and how far the deploy
-          got (config check, reload, verification).</td>
+      <td>“global device variable '@X' not found” or “has no devices assigned”</td>
+      <td>Open the piston, and in the editor's <em>Global variables</em> panel
+          create/assign that variable's devices. Names are case-sensitive —
+          <code>@Speakers_All</code> and <code>@speakers_all</code> are
+          different variables. The message suggests a near-match when it finds
+          one.</td>
     </tr>
     <tr>
-      <td><code>pistoncore/automations/</code> <em>(inside HA's config folder)</em></td>
-      <td>The live compiled files HA actually runs. Overwritten on every recompile —
-          history lives in <code>compile_debug/</code>, not here.</td>
+      <td>“device … has no binding for attribute 'X'”</td>
+      <td>The device you picked doesn't expose that attribute in Home
+          Assistant. Open the piston and re-pick the device (or the attribute)
+          from the editor's list — the picker only offers what really
+          exists.</td>
+    </tr>
+    <tr>
+      <td>“HA rejected the compiled YAML” / “PyScript did not load the module”</td>
+      <td>A compiler bug, not your piston — and the previous working version
+          was restored automatically. Home Assistant's own complaint is quoted
+          in the message. Use <strong>Copy debug info</strong> on the
+          Diagnostics page and report it; that bundle contains everything
+          needed to fix it.</td>
+    </tr>
+    <tr>
+      <td>“no HA service mapping for command 'X' on domain 'Y'”</td>
+      <td>That webCoRE command has no Home Assistant equivalent wired yet for
+          that kind of device. The mappings live in editable data files, so
+          this is usually a small addition rather than a code change — worth
+          reporting with the bundle.</td>
+    </tr>
+    <tr>
+      <td>“system variable '$X' has no HA equivalent (external data feed)”</td>
+      <td>The piston reads a SmartThings-era weather/HTTP feed that doesn't
+          exist in HA. Replace it with a Home Assistant sensor (weather
+          integration, REST sensor) and reference that device instead.</td>
     </tr>
   </table>
-  <p>
-    The folder name is the piston's internal id; the deployed filename in the banner
-    ends with the first 8 characters of it, which is how you match them up.
-  </p>
 
   <h2>When it compiles fine and still misbehaves</h2>
   <p>
@@ -103,28 +142,21 @@
     thing HA has to webCoRE's own trace screen.
   </p>
   <p>
-    Then compare what the trace did against the newest file in that piston's
-    <code>compile_debug/</code> folder. If an older compile behaved correctly, comparing
-    the two files usually points straight at what changed.
+    Then compare what the trace did against the generated code —
+    <a href="/diagnostics">Diagnostics</a> → that piston → <strong>View generated
+    code</strong>. Older versions are kept in the same dropdown, so if it worked
+    last week, comparing the two usually points straight at what changed.
   </p>
 
-  <h2>Getting it fixed: the evidence package</h2>
+  <h2>Getting help on something specific</h2>
   <p>
-    Three things make any bad compile diagnosable — by an AI chat, a bug report, or
-    future-you. Collect all three:
-  </p>
-  <ol>
-    <li><strong>The piston JSON</strong> — Import/Export page → Export → copy. This is
-        the compiler's exact input.</li>
-    <li><strong>The newest artifact</strong> from <code>compile_debug/&lt;piston-id&gt;/</code>
-        (the <code>.yaml</code> or <code>.partial.yaml</code>). This is the compiler's
-        exact output.</li>
-    <li><strong>The banner message</strong>, word for word — when HA rejected the file,
-        it contains HA's own objection, down to the line number.</li>
-  </ol>
-  <p>
-    Paste all three into a chat and say what the piston was supposed to do. Input,
-    output, and the verdict — that's everything a compiler bug needs to be found.
+    Use <strong>Copy debug info</strong> on the
+    <a href="/diagnostics">Diagnostics</a> page, paste the result into a chat
+    or issue, and say what the piston was supposed to do. That bundle already
+    contains the compiler's input (your piston JSON), its output (the generated
+    code), and the verdict (the status record with any Home Assistant
+    complaint) — input, output and error together, which is everything a
+    diagnosis needs.
   </p>
 
   <h2>Safety facts worth knowing</h2>

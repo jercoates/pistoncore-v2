@@ -239,6 +239,127 @@ async def setup_pyscript_check():
     return {"status": "installed" if "pyscript" in services else "missing"}
 
 
+@router.get("/diagnostics")
+async def diagnostics_page(request: Request):
+    """The compiler help/debug screen (CLAUDE.md UI split: drill-in only —
+    reached from Settings or from an error surface, never a place errors
+    announce themselves). A TOOL, not a document: live system checks, real
+    per-piston errors, the generated code itself, and a one-click evidence
+    bundle."""
+    return templates.TemplateResponse(request, "diagnostics.html", {})
+
+
+@router.get("/api/diagnostics")
+async def diagnostics_data():
+    """Everything the diagnostics page shows, computed live."""
+    from ..compiler import deploy as compiler_deploy
+    from .. import config_yaml, deploy_writer
+
+    checks = []
+
+    ok, msg = await ha_client.check_connection()
+    checks.append({"name": "Home Assistant connection", "ok": ok,
+                   "detail": msg,
+                   "fix": "" if ok else "Settings → Home Assistant URL and token."})
+
+    try:
+        probe = deploy_writer.probe()
+        checks.append({"name": "Write access to HA config", "ok": True,
+                       "detail": probe.get("target", "ok"), "fix": ""})
+    except Exception as exc:
+        checks.append({"name": "Write access to HA config", "ok": False,
+                       "detail": str(exc),
+                       "fix": "Settings → Compiled-file write target, then Test write target."})
+
+    try:
+        services = await ha_client.get_services()
+        has_py = "pyscript" in services
+        checks.append({"name": "PyScript integration", "ok": has_py,
+                       "detail": "installed" if has_py else "not installed",
+                       "fix": "" if has_py else
+                              "Install PyScript from HACS. Without it, pistons using "
+                              "formulas, loops, switches, variables or computed text "
+                              "cannot run (simple pistons are unaffected)."})
+    except Exception as exc:
+        checks.append({"name": "PyScript integration", "ok": None,
+                       "detail": f"could not check: {exc}", "fix": ""})
+
+    try:
+        cy = config_yaml.analyze()
+        cy_ok = cy.get("status") == "ok"
+        checks.append({"name": "configuration.yaml include lines", "ok": cy_ok,
+                       "detail": cy.get("message") or "changes needed",
+                       "fix": "" if cy_ok else
+                              "Settings → Check configuration.yaml, or re-run setup."})
+    except Exception as exc:
+        checks.append({"name": "configuration.yaml include lines", "ok": None,
+                       "detail": f"could not check: {exc}", "fix": ""})
+
+    tts = storage.load_settings().get("tts_engine")
+    checks.append({"name": "Speech engine", "ok": bool(tts) or None,
+                   "detail": tts or "none picked (only needed for Speak pistons)",
+                   "fix": "" if tts else "Settings → Speech (TTS)."})
+
+    statuses = compiler_deploy.load_statuses()
+    pistons = []
+    for entry in sorted(storage.list_pistons(), key=lambda e: e["name"].lower()):
+        rec = statuses.get(entry["id"]) or {}
+        pistons.append({
+            "id": entry["id"], "name": entry["name"],
+            "active": entry["meta"]["a"],
+            "status": rec.get("status", "pending"),
+            "message": rec.get("message", "not compiled yet — save the piston to compile"),
+            "file": rec.get("file"), "band": rec.get("band", "yaml" if rec.get("file") else ""),
+            "code": rec.get("code"), "stmt_id": rec.get("stmt_id"),
+            "artifacts": _artifact_list(entry["id"]),
+        })
+    return {"checks": checks, "pistons": pistons}
+
+
+def _artifact_list(piston_id: str) -> list:
+    from ..compiler import deploy as compiler_deploy
+    d = compiler_deploy._DEBUG_DIR / piston_id
+    if not d.is_dir():
+        return []
+    return sorted((f.name for f in d.iterdir() if f.is_file()), reverse=True)[:10]
+
+
+@router.get("/api/diagnostics/artifact/{piston_id}/{name}")
+async def diagnostics_artifact(piston_id: str, name: str):
+    """One kept compile artifact, read in the browser — no file-share digging."""
+    from ..compiler import deploy as compiler_deploy
+    if "/" in name or "\\" in name or ".." in name or "/" in piston_id:
+        return JSONResponse({"error": "bad path"}, status_code=400)
+    path = compiler_deploy._DEBUG_DIR / piston_id / name
+    if not path.is_file():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return {"name": name, "content": path.read_text(encoding="utf-8")}
+
+
+@router.get("/api/diagnostics/bundle/{piston_id}")
+async def diagnostics_bundle(piston_id: str):
+    """The complete evidence package as ONE block of text: status record,
+    newest generated artifact, and the piston's own JSON — the three things
+    that make any compile problem diagnosable, assembled for pasting."""
+    from ..compiler import deploy as compiler_deploy
+    entry = storage.load_piston(piston_id)
+    if entry is None:
+        return JSONResponse({"error": "no such piston"}, status_code=404)
+    rec = compiler_deploy.load_statuses().get(piston_id) or {}
+    parts = [f"PistonCore debug bundle — \"{entry['name']}\" ({piston_id})",
+             f"generated {datetime.now().isoformat(timespec='seconds')}",
+             "", "== COMPILE STATUS ==", json.dumps(rec, indent=1)]
+    names = _artifact_list(piston_id)
+    if names:
+        path = compiler_deploy._DEBUG_DIR / piston_id / names[0]
+        parts += ["", f"== GENERATED OUTPUT ({names[0]}) ==",
+                  path.read_text(encoding="utf-8")]
+    else:
+        parts += ["", "== GENERATED OUTPUT ==", "(none kept — this piston has not compiled)"]
+    parts += ["", "== PISTON JSON ==", json.dumps(entry["piston"], indent=1)]
+    return {"text": "\n".join(parts)}
+
+
 @router.get("/api/compile-status/{piston_id}")
 async def compile_status(piston_id: str):
     """Latest compile/deploy record for one piston — the piston status

@@ -99,19 +99,17 @@
     <button type="button" class="btn" id="config-yaml-check">Check configuration.yaml</button>
   </form>
 
-  <h2>Setup</h2>
+  <h2>Tools</h2>
+  <div class="settings-tools">
+    <a class="btn btn-primary" href="/diagnostics">Diagnostics</a>
+    <a class="btn" href="/setup">Run setup again</a>
+    <a class="btn" href="/help">Help</a>
+  </div>
   <p class="field-hint">
-    Walk through connection, write access, Home Assistant extras, and the
-    configuration.yaml lines again: <a href="/setup">Run setup again</a>.
-    Every control it shows also lives on this page.
-  </p>
-
-  <h2>Compiler help &amp; debugging</h2>
-  <p class="field-hint">
-    What the compile statuses mean, where every compile's output is kept, and how to
-    collect the evidence when a compile goes wrong:
-    <a href="/help/compiler-debug">Debugging a bad compile</a>. All help articles:
-    <a href="/help">Help</a>.
+    <strong>Diagnostics</strong> checks this instance end to end — connection,
+    write access, PyScript, configuration.yaml — and shows every piston's real
+    compile result, the code PistonCore generated for it, and a one-click copy
+    of everything needed to debug a problem.
   </p>
 
   <div class="mode-notice">
