@@ -22,14 +22,18 @@ the one honest hard boundary left."""
 
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import ChoiceLoader, Environment, FileSystemLoader
+
+from .. import customize
 
 from .errors import NotYetImplemented
 from .expression import ExprTranspiler
 from .resolve import Resolver
 
-_BAND_DIR = Path(__file__).resolve().parent.parent.parent / "templates" / "compiler" / "pyscript" / "2.x"
-_env = Environment(loader=FileSystemLoader(str(_BAND_DIR)), trim_blocks=False, lstrip_blocks=False)
+_BAND_REL = "templates/compiler/pyscript/2.x"
+_env = Environment(
+    loader=ChoiceLoader([FileSystemLoader(d) for d in customize.search_dirs(_BAND_REL)]),
+    trim_blocks=False, lstrip_blocks=False)
 
 MODE_ENTITY = "input_select.pistoncore_location_mode"
 

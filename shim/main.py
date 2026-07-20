@@ -21,6 +21,13 @@ INDEX_HTML = DASHBOARD_DIR / "index.html"
 
 app = FastAPI(title="PistonCore v2 shim")
 
+# Seed the editable compiler files (templates, maps, routing table, vocab)
+# onto the /data volume at startup so they exist and are findable before the
+# first compile — the compiler reads its knowledge from there, not the image,
+# so it stays editable and survives rebuilds (COMPILER_SPEC §1).
+from . import customize  # noqa: E402
+customize.ensure_seeded()
+
 # intf/dashboard/* and PistonCore's own pages (CLAUDE.md UI split) first so
 # they aren't shadowed by the dashboard's SPA fallback below. "/" now serves
 # the PistonCore front door, not the dashboard directly (CLAUDE.md: "Users

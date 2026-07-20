@@ -33,6 +33,38 @@ It replicates the **intent** of the piston, not webCoRE's architecture. There is
 - **YAML-native is the primary target; PyScript is the routed exception** (§5) plus an
   optional user preference ("prefer PyScript for fidelity", settings).
 
+
+## 1a. Compiler knowledge is EDITABLE DATA on the /data volume (LOAD-BEARING)
+
+**DECISION (Jeremy, 2026-07-20 — non-negotiable, this is the whole point of
+the product's maintainability model):** everything the compiler reads to make
+its decisions — the command/value maps, BOTH bands' emission templates
+(yaml/classic + pyscript/2.x incl. expr_runtime), webcore_vocab.json,
+picker_capability_map.json, AND routing_table.json (the "what needs PyScript"
+table) — is DATA, and MUST be loaded from the editable customize copy on the
+persistent `/data` volume, never hard-coded and never read only from the
+image.
+
+Why: the compiler is extended by EDITING DATA, not by a code change or a
+rebuild (§E1; the user-maintainability goal; the Diagnostics AI-repair
+workflow literally hands the user the file to edit). If these live only inside
+the container image, an edit is wiped on the next rebuild and unreachable in
+the add-on — which silently breaks the entire model.
+
+Mechanism (shim/customize.py): on startup the bundled copies are SEEDED into
+`<data>/customize/…` if absent (never overwriting user edits); every loader
+reads via `customize.path(rel)` / a Jinja `ChoiceLoader` whose first search
+dir is the customize copy, with per-file fallback to the bundled image copy.
+Files are re-read per compile (not cached) so an edit takes effect on the next
+compile with no restart.
+
+**Regression guard for future sessions:** any NEW compiler input (a new map, a
+new template, a new data file) MUST be added to `customize.CUSTOMIZABLE` and
+loaded through `customize.path`/`search_dirs`. A loader that opens a file via
+`Path(__file__)…` or `_REPO_ROOT/…` directly is a BUG — it re-bakes the file
+into the image and breaks editability. (This exact regression was found and
+fixed 2026-07-20: all loaders had drifted to image-relative paths.)
+
 ## 2. Input contract [pointer section — content lives elsewhere]
 
 - Format: PISTON_JSON_REFERENCE.md (certified against editor source + live captures).

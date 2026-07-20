@@ -11,11 +11,13 @@ from pathlib import Path
 
 from .errors import UnresolvableDevice
 
-_BAND = Path(__file__).resolve().parent.parent.parent / "templates" / "compiler" / "yaml" / "classic"
+from .. import customize
+
+_BAND_REL = "templates/compiler/yaml/classic"
 
 
 def _load_band_json(name: str) -> dict:
-    with open(_BAND / name, encoding="utf-8") as f:
+    with open(customize.path(_BAND_REL + "/" + name), encoding="utf-8") as f:
         return json.load(f)
 
 

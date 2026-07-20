@@ -19,15 +19,25 @@ from pathlib import Path
 def _json_dumps(v):
     return _json_mod.dumps(v)
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import ChoiceLoader, Environment, FileSystemLoader
+
+from .. import customize
 
 from .analyze import analyze
 from .errors import NotYetImplemented
 from .expression import JinjaTranspiler
 from .resolve import Resolver
 
-_BAND_DIR = Path(__file__).resolve().parent.parent.parent / "templates" / "compiler" / "yaml" / "classic"
-_env = Environment(loader=FileSystemLoader(str(_BAND_DIR)), trim_blocks=False, lstrip_blocks=False)
+_BAND_REL = "templates/compiler/yaml/classic"
+_env = Environment(
+    loader=ChoiceLoader([FileSystemLoader(d) for d in customize.search_dirs(_BAND_REL)]),
+    trim_blocks=False, lstrip_blocks=False)
+
+
+def _band_json(name):
+    import json as _json
+    with open(customize.path(_BAND_REL + "/" + name), encoding="utf-8") as f:
+        return _json.load(f)
 
 # the piston currently being compiled — the text/expression helpers need its
 # variable declarations, and threading it through every call site would touch
@@ -44,7 +54,7 @@ def _hex_rgb(value):
     v = str(value)
     if not v.startswith("#"):
         import json as _json
-        maps = _json.load(open(_BAND_DIR / "value_maps.json", encoding="utf-8"))
+        maps = _band_json("value_maps.json")
         v = maps.get("color_names", {}).get(v.strip().lower(), v)
     v = v.lstrip("#")
     try:
@@ -59,7 +69,7 @@ def _mode_value(kind):
     """webCoRE mode word -> HA mode word, via value_maps.mode_values."""
     def xform(v):
         import json as _json
-        maps = _json.load(open(_BAND_DIR / "value_maps.json", encoding="utf-8"))
+        maps = _band_json("value_maps.json")
         table = maps.get("mode_values", {}).get(kind, {})
         key = str(v).strip()
         return table.get(key, table.get(key.lower(), v))

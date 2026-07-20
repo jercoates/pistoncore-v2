@@ -55,7 +55,8 @@ _DECLARATION_ATTR_KEYS = [
 
 
 def _load_json(filename: str) -> dict:
-    with open(_REPO_ROOT / filename, encoding="utf-8") as f:
+    from . import customize
+    with open(customize.path(filename), encoding="utf-8") as f:
         return json.load(f)
 
 

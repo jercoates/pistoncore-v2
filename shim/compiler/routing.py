@@ -5,16 +5,17 @@ required (empty list = native)."""
 import json
 from pathlib import Path
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-_table: dict | None = None
+from .. import customize
 
 
 def _load() -> dict:
-    global _table
-    if _table is None:
-        with open(_REPO_ROOT / "routing_table.json", encoding="utf-8") as f:
-            _table = json.load(f)
-    return _table
+    # re-read every compile (not cached) so a user's edit to the routing table
+    # on the /data volume takes effect immediately, no restart — the routing
+    # table decides what needs PyScript, and it's meant to be editable like
+    # the maps and templates (Jeremy, 2026-07-20; COMPILER_DECISIONS_HOLDING
+    # §E1: "edit the table, never the code").
+    with open(customize.path("routing_table.json"), encoding="utf-8") as f:
+        return json.load(f)
 
 
 def pyscript_reasons(piston: dict) -> list[str]:

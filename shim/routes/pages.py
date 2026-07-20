@@ -296,6 +296,15 @@ async def diagnostics_data():
         checks.append({"name": "configuration.yaml include lines", "ok": None,
                        "detail": f"could not check: {exc}", "fix": ""})
 
+    from .. import customize
+    customize.ensure_seeded()
+    checks.append({"name": "Editable compiler files", "ok": True,
+                   "detail": f"You can extend the compiler by editing the maps, "
+                             f"templates and routing table under "
+                             f"{customize.CUSTOMIZE_DIR} — changes take effect on "
+                             f"the next compile, no rebuild.",
+                   "fix": ""})
+
     tts = storage.load_settings().get("tts_engine")
     checks.append({"name": "Speech engine", "ok": bool(tts) or None,
                    "detail": tts or "none picked (only needed for Speak pistons)",
@@ -467,9 +476,15 @@ async def diagnostics_repair(piston_id: str):
         parts.append(f"Statement id: ${rec['stmt_id']}")
 
     if target:
-        path = REPO_ROOT / target["path"]
+        from .. import customize
+        # read the LIVE editable copy (may hold the user's prior edits), and
+        # point them at the editable /data location — never the image copy,
+        # which is read-only and wiped on rebuild.
+        path = customize.path(target["path"])
         parts += ["", "== THE FILE THAT GOVERNS THIS ==",
-                  f"Path: {target['path']}",
+                  f"Edit this file (on your PistonCore data volume): "
+                  f"{customize.editable_location(target['path'])}",
+                  f"(bundled default: {target['path']})",
                   f"What to do: {target['guidance']}", "", "Current contents:"]
         try:
             text = path.read_text(encoding="utf-8")

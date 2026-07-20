@@ -21,7 +21,8 @@ _buckets: dict | None = None
 def _comparison_buckets() -> dict:
     global _buckets
     if _buckets is None:
-        with open(_REPO_ROOT / "webcore_vocab.json", encoding="utf-8") as f:
+        from .. import customize
+        with open(customize.path("webcore_vocab.json"), encoding="utf-8") as f:
             comp = json.load(f)["comparisons"]
         _buckets = {}
         for name in comp.get("conditions", {}):
