@@ -156,7 +156,10 @@ class Resolver:
             return None
         try:
             ents = self.entities_for_command(drefs, "speak", ctx)
-        except Exception:
+        except UnresolvableDevice:
+            # the device reference can't be resolved as a speaker — the
+            # expected "this isn't a media_player" signal. Any OTHER error is a
+            # real bug and must surface, not be swallowed (review 2026-07-20).
             return None
         return ents if ents and all(e.startswith("media_player.") for e in ents) else None
 

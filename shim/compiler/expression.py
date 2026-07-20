@@ -299,7 +299,6 @@ _SYSVARS = {
     "$sunsettime": "_sun_min('sunset')",
     "$currenteventdescription": "_event_description()",
     "$currenteventdevicephysical": "var_name",
-    "$currenteventattribute": "var_name",
     "$previousevent": "old_value",
     "$alarmsystemalert": "_s('alarm_control_panel_alert')",
     "$alarmsystemrules": "''",

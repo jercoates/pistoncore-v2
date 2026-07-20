@@ -114,6 +114,19 @@ target. Expect the band split to invert.
 - **Duplicated speaker-detection swallow** (deviceNotification-on-a-media_player
   is a spoken message) factored from both emitters into
   `Resolver.speaker_targets`.
+- **Silent swallow (finding C).** `Resolver.speaker_targets` (the shared
+  helper) caught bare `Exception`, absorbing genuine resolution bugs and
+  letting a spoken device-notification fall through to a plain notify with no
+  signal. Now catches only `UnresolvableDevice` (the expected "not a speaker")
+  — real errors surface.
+- **Dead self-reference guard (finding C-minor).** `_set_variable`'s
+  accumulator check had its `` word boundaries corrupted to literal
+  backspace bytes (0x08) — the guard NEVER matched, so `count = count + 1`
+  accumulators were wrongly compiling to YAML (HA sequence variables don't
+  persist between runs). Restored to real `` boundaries; verified
+  `count`+1 routes to PyScript while `count` inside `mycount` does not.
+- **Duplicate dict key (finding D).** `$currenteventattribute` was defined
+  twice in expression.py's _SYSVARS (same value) — removed.
 - The review's "no .j2 templates, nothing compiles" alarm was the
   unpushed-working-tree confusion again (GitHub main lagged local); templates
   exist and render, the reviewer retracted it on seeing the screenshot.

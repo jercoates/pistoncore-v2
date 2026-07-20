@@ -667,7 +667,10 @@ def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
         raise NotYetImplemented("setting one element of an array needs PyScript", **ctx)
     value_op = params[1] if len(params) > 1 else {"t": "c", "c": ""}
     source = str(value_op.get("e") or value_op.get("x") or "")
-    if re.search(r"" + re.escape(str(name)) + r"", source):
+    # only a WHOLE-WORD self-reference means an accumulator (count = count+1);
+    # word boundaries stop `count` matching inside `mycount`/`count2`,
+    # which would over-route unrelated pistons (review 2026-07-20).
+    if re.search(r"\b" + re.escape(str(name)) + r"\b", source):
         raise NotYetImplemented(
             f"'{name}' is built from its own previous value, which only "
             f"persists between runs under PyScript", **ctx)
