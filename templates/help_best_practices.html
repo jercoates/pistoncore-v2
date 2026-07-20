@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}PistonCore Help — Getting started{% endblock %}
+
+{% block content %}
+<div class="page active help-article">
+  <div class="list-header">
+    <h1>Getting started with PistonCore</h1>
+  </div>
+
+  <p>
+    PistonCore gives you the real webCoRE editor on top of Home Assistant. You
+    write pistons exactly the way you always have; PistonCore turns each saved
+    piston into native Home Assistant automations. This page covers the habits
+    that make that go smoothly.
+  </p>
+
+  <h2>Where things live</h2>
+  <p>
+    The <strong>front door</strong> (PistonCore's own list) is home base: every
+    piston, its compile status, whether it's running. Clicking a piston opens
+    the <strong>webCoRE editor</strong> — the same editor, unchanged — and
+    leaving it brings you back. Import/Export and Settings are PistonCore
+    pages; everything piston-shaped is webCoRE's.
+  </p>
+
+  <h2>Bringing pistons in</h2>
+  <ol>
+    <li><strong>Set up your global variables first.</strong> A piston that uses
+        <code>@Speakers</code> or similar refers to it <em>by name only</em> —
+        the devices live in your instance, not in the piston. Create the
+        globals with the same names (they're case-sensitive) and assign
+        devices before compiling, or the piston will report the missing
+        global.</li>
+    <li><strong>Import through the Import page</strong> (paste JSON) or the
+        <strong>+ New Piston</strong> dialog (restore code, backup file,
+        duplicate). Either way webCoRE's own device-matching step runs, so
+        imported pistons bind to your real devices — usually automatically,
+        by name.</li>
+    <li><strong>Save once, then check the front door.</strong> Compiling
+        happens on save; the status pill tells you what happened.</li>
+  </ol>
+
+  <h2>What the status pills mean</h2>
+  <table class="help-table">
+    <tr><th>Pill</th><th>Meaning</th></tr>
+    <tr><td><span class="compile-pill compile-deployed">deployed</span></td>
+        <td>Live in Home Assistant and verified present after the reload.</td></tr>
+    <tr><td><span class="compile-pill compile-error">compile error</span></td>
+        <td>Something in the piston can't be built yet, or a device/global is
+            missing. The message names the exact statement — and your piston
+            is safe; the previously working version keeps running.</td></tr>
+    <tr><td><span class="compile-pill compile-paused">paused</span></td>
+        <td>You paused it; its automation is disabled in HA.</td></tr>
+  </table>
+  <p>
+    Full detail, and what to collect when something goes wrong:
+    <a href="/help/compiler-debug">Debugging a bad compile</a>.
+  </p>
+
+  <h2>Install PyScript — recommended</h2>
+  <p>
+    Simple pistons become ordinary HA automations. Anything richer — formulas,
+    <code>switch</code>, loops, variables, event blocks, computed
+    notification or speech text — compiles to <strong>PyScript</strong>
+    instead. Without the PyScript integration those pistons will report that
+    they need it. Install it once from HACS (search “pyscript”) and every kind
+    of piston can run. PistonCore tells you which band each piston used.
+  </p>
+
+  <h2>Habits that keep things predictable</h2>
+  <ul>
+    <li><strong>Pause instead of deleting</strong> while experimenting — pausing
+        disables the automation in HA and keeps its history; enabling
+        recompiles it fresh.</li>
+    <li><strong>Let PistonCore own its files.</strong> Everything under
+        <code>pistoncore/automations/</code> and
+        <code>pyscript/scripts/pistoncore/</code> is regenerated on every
+        save — edit the piston, never the generated file.</li>
+    <li><strong>Rename freely.</strong> Renaming a piston moves its compiled
+        file cleanly; no orphans left behind.</li>
+    <li><strong>Use Home Assistant's own traces</strong> when a piston runs but
+        does the wrong thing: Settings → Automations → your piston → Traces
+        shows the exact path it took.</li>
+    <li><strong>Keep credentials current.</strong> If you regenerate your HA
+        token, update it in Settings — the front door's health badge is the
+        fastest way to spot a broken connection.</li>
+  </ul>
+
+  <h2>If you get stuck</h2>
+  <p>
+    Every compile keeps its output. The three things that make any problem
+    diagnosable — the piston's exported JSON, the newest file in its
+    <code>compile_debug</code> folder, and the banner message — are described
+    in <a href="/help/compiler-debug">Debugging a bad compile</a>. You can
+    re-run setup any time from <a href="/settings">Settings</a>.
+  </p>
+</div>
+{% endblock %}

@@ -413,3 +413,28 @@ button {
   vertical-align: top; font-size: 13px; line-height: 1.5;
 }
 .help-table .compile-pill { white-space: nowrap; }
+
+/* first-run setup wizard (/setup) */
+.setup-page { max-width: 780px; }
+.setup-intro { margin-bottom: var(--space-4); }
+.setup-steps { list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: var(--space-3); }
+.setup-step { border: 1px solid var(--border-subtle); border-radius: 10px;
+  overflow: hidden; background: var(--bg-secondary, transparent); }
+.setup-step-head { display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; }
+.setup-num { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; border: 1px solid var(--border-subtle); color: var(--text-muted); }
+.setup-step.done .setup-num { border-color: var(--green); color: var(--green); }
+.setup-step.blocked .setup-num { border-color: var(--red); color: var(--red); }
+.setup-title { font-weight: 600; flex: 1; }
+.setup-state { font-size: 12px; color: var(--text-muted); }
+.setup-state.done { color: var(--green); }
+.setup-state.blocked { color: var(--red); }
+.setup-state.skipped { color: var(--yellow); }
+.setup-body { display: none; padding: 0 16px 16px; }
+.setup-step.open .setup-body { display: block; }
+.setup-sub { font-size: 14px; margin: var(--space-4) 0 var(--space-2); }
+.setup-body .btn { margin-right: 8px; }
+.banner-error { border: 1px solid var(--red); color: var(--red); }

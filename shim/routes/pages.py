@@ -5,6 +5,7 @@ Vanilla HTML/CSS/JS + Jinja2, no frontend framework, no build step (CLAUDE.md).
 """
 
 import json
+import os
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -54,7 +55,7 @@ async def front_door(request: Request):
     # with no obvious next step. Once configured (even if currently wrong/
     # unreachable), this never fires again -- that's what the badge is for.
     if not ha_client.is_configured():
-        return RedirectResponse(url="/settings?first_run=1")
+        return RedirectResponse(url="/setup")
 
     from ..compiler import deploy as compiler_deploy
     statuses = compiler_deploy.load_statuses()
@@ -185,6 +186,59 @@ async def test_write_target():
         return JSONResponse({"error": str(exc)}, status_code=400)
 
 
+@router.get("/setup")
+async def setup_wizard(request: Request):
+    """First-run setup wizard (SESSION_BRIEF_FIRST_RUN.md). Guided path over
+    the SAME settings Settings owns — never a separate store, always
+    re-runnable, every step skippable."""
+    config = ha_client.get_config_for_display()
+    config["is_addon"] = bool(os.environ.get("SUPERVISOR_TOKEN"))
+    config["configured"] = ha_client.is_configured()
+    return templates.TemplateResponse(request, "setup.html", config)
+
+
+@router.get("/api/setup/detect")
+async def setup_detect():
+    """Step-0 deployment detection ladder (brief §Step 0): add-on ->
+    mounted-config Docker -> SMB. Picks DEFAULTS only; the write probe is
+    what actually gates progress."""
+    if os.environ.get("SUPERVISOR_TOKEN"):
+        return {"deployment": "addon", "write_mode": "local",
+                "ha_config_path": "/homeassistant",
+                "note": "Running as a Home Assistant add-on — connection and "
+                        "config folder are handled automatically."}
+    cfg = ha_client.get_config_for_display()
+    candidates = [cfg.get("ha_config_path"), "/ha-config", "/config",
+                  "/homeassistant", "/mnt/ha-config"]
+    for path in [c for c in candidates if c]:
+        try:
+            if (Path(path) / "configuration.yaml").is_file():
+                return {"deployment": "docker-mounted", "write_mode": "local",
+                        "ha_config_path": path,
+                        "note": f"Found Home Assistant's config folder mounted at {path}."}
+        except OSError:
+            continue
+    host = ""
+    url = cfg.get("ha_url") or ""
+    if url:
+        from urllib.parse import urlparse
+        host = urlparse(url).hostname or ""
+    return {"deployment": "docker-smb", "write_mode": "smb", "smb_host": host,
+            "note": "No mounted Home Assistant config folder found — PistonCore "
+                    "will write over the network using HA's Samba share add-on."}
+
+
+@router.get("/api/setup/pyscript-check")
+async def setup_pyscript_check():
+    """Step-2b: is the PyScript integration installed? Informational only —
+    never blocks setup (brief §Step 2b)."""
+    try:
+        services = await ha_client.get_services()
+    except Exception as exc:
+        return {"status": "unknown", "message": f"Could not ask HA: {exc}"}
+    return {"status": "installed" if "pyscript" in services else "missing"}
+
+
 @router.get("/api/compile-status/{piston_id}")
 async def compile_status(piston_id: str):
     """Latest compile/deploy record for one piston — the piston status
@@ -205,6 +259,11 @@ async def help_index(request: Request):
 @router.get("/help/compiler-debug")
 async def help_compiler_debug(request: Request):
     return templates.TemplateResponse(request, "help_compiler_debug.html", {})
+
+
+@router.get("/help/best-practices")
+async def help_best_practices(request: Request):
+    return templates.TemplateResponse(request, "help_best_practices.html", {})
 
 
 @router.get("/backup")
