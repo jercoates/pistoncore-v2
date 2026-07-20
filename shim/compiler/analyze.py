@@ -215,6 +215,14 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
             branches.append(_if_branch(stmt, sid, kwargs))
         elif t == "every":
             branches.append(_every_branch(stmt, sid, kwargs))
+        elif t == "action":
+            # a bare top-level action: no subscription, just steps to run
+            branches.append({
+                "stmt_id": sid, "kind": "actions", "tcp": stmt.get("tcp", "c") or "c",
+                "triggers": [], "conditions": [],
+                "then": _action_tree([stmt], f"statement ${sid}", kwargs),
+                "else": [],
+            })
         else:
             raise NotYetImplemented(
                 f"top-level statement type '{t}' (statement ${sid}) not compiled yet", **kwargs)

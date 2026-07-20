@@ -50,13 +50,37 @@ silently break a working automation. Failure surfaces as: banner on the piston s
 - **Unavailable** (entity known, currently offline/dead): PASS THROUGH. HA handles it —
   service calls skip unavailable entities and continue. Do not block compile.
 - **Unresolvable** (hashed id with no entity behind it — e.g. foreign/imported piston):
-  compile-time ERROR. Non-negotiable: an HA trigger referencing a nonexistent entity_id
-  **silently never fires**, and templates on missing entities throw at runtime. Silent dead
-  automations are the worst failure mode. [VERIFIED — HA trigger/template behavior]
-- **Multi-device statement** with some devices unresolvable: skip the bad ones, compile the
-  rest, and FLAG the skips on the debug page. Never silently drop.
-- **Single-device statement** whose only device is unresolvable: that statement errors →
-  piston flagged/paused, surfaced on the debug page.
+  ~~compile-time ERROR, non-negotiable~~ — SUPERSEDED by the ruling below (Jeremy,
+  2026-07-19). The concern that produced the original rule stands and is why the
+  outcome is REPORTED rather than silent: an HA trigger on a nonexistent entity_id
+  never fires, and templates on missing entities throw at runtime [VERIFIED — HA
+  trigger/template behavior]. The ruling accepts that for a device that is merely
+  absent-for-now, because the alternative (failing the piston, or quietly dropping the
+  device) is worse — and the compile record names the absent devices so it is never
+  silent.
+- **Unresolvable devices are KEPT in the compiled artifact** — RULING (Jeremy,
+  2026-07-19), superseding this section's earlier skip-and-flag rule. A device that
+  isn't in Home Assistant right now is usually one that is temporarily out of service,
+  and in his words "they will just work when they come back up". So:
+  - PistonCore REMEMBERS what each device hash last resolved to
+    (`data/device_bindings.json`, written on every successful resolve). An absent
+    device keeps its real entity_id in the automation and resumes working by itself
+    when the integration/hub returns — no recompile, no edit.
+  - A device this instance has NEVER resolved gets an inert placeholder
+    (`unknown.pistoncore_unresolved_<short>`). HA loads the automation and simply finds
+    nothing to act on; the dangling reference is visible in HA, which is the one place
+    device ids are allowed to appear (and mirrors webCoRE, where a broken device shows
+    its hash in the piston as the signal something is wrong).
+  - The piston still DEPLOYS. Other devices in the statement keep working. The compile
+    record carries the absent devices BY NAME and the banner says
+    "deployed — but X isn't in Home Assistant right now."
+  - Rationale for overriding skip-and-flag: skipping silently shrinks the automation
+    (four speakers instead of five, with nothing obviously wrong), and failing the
+    piston takes the working devices down with the broken one. Both are worse than
+    keeping the reference. Silent-wrong is the failure class to avoid.
+- **Single-device statement** whose only device is unresolvable: same rule — the
+  reference is kept and the piston deploys; it simply has nothing to act on until the
+  device returns.
 
 ## 2.5 Write transport — HOW compiled files reach HA's `/config`
 

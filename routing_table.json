@@ -1,9 +1,27 @@
 {
-  "_comment": "webCoRE-JSON signatures that FORCE the PyScript band (COMPILER_SPEC §3.2). YAML/classic is the default; these are the exceptions. Data-driven on purpose (COMPILER_DECISIONS_HOLDING §E1) - edit here, never in compiler code. Checked by shim/compiler/routing.py.",
-  "statement_types": ["on", "break"],
-  "task_commands": ["cancelTasks"],
-  "group_operators": ["xor"],
-  "condition_fields_present": ["wd"],
-  "switch_ctp_values": ["e"],
-  "statement_fields_nondefault": {"tep": ["c", "p", "b"], "tsp": ["a"]}
+ "_comment": "webCoRE-JSON signatures that FORCE the PyScript band (COMPILER_SPEC \u00a73.2). YAML/classic is the default; these are the exceptions. Data-driven on purpose (COMPILER_DECISIONS_HOLDING \u00a7E1) - edit here, never in compiler code. Checked by shim/compiler/routing.py. cancelTasks was removed 2026-07-20: mode:restart already cancels this automation's pending delays when it retriggers, so the YAML band expresses it natively (as a no-op).",
+ "statement_types": [
+  "on",
+  "break"
+ ],
+ "task_commands": [],
+ "group_operators": [
+  "xor"
+ ],
+ "condition_fields_present": [
+  "wd"
+ ],
+ "switch_ctp_values": [
+  "e"
+ ],
+ "statement_fields_nondefault": {
+  "tep": [
+   "c",
+   "p",
+   "b"
+  ],
+  "tsp": [
+   "a"
+  ]
+ }
 }

@@ -122,6 +122,11 @@
   target:
 {{- entity_ids(a.entities, '    ') }}
 {%- endif %}
+{%- elif a.kind == 'variables' -%}
+- variables:
+{%- for k, v in a.vars.items() %}
+    {{ k }}: {{ v }}
+{%- endfor %}
 {%- elif a.kind == 'if' -%}
 - if:
 {%- for c in a.conditions %}

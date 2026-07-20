@@ -35,6 +35,7 @@ from . import compile_piston
 from .errors import CompilerError
 
 _AUTOMATIONS_DIR = "pistoncore/automations"
+_SCRIPTS_DIR = "pistoncore/scripts"
 _PYSCRIPT_DIR = "pyscript/scripts/pistoncore"  # research §2: only sanctioned autoload subdir
 _STATUS_FILE = storage.DATA_DIR / "compile_status.json"
 _DEBUG_DIR = storage.DATA_DIR / "compile_debug"
@@ -214,10 +215,28 @@ async def _verify_and_enable(auto_ids: list) -> tuple[str, str]:
     return "ok", "on"
 
 
-async def _reload_ha() -> str:
+async def _verify_script(script_ids: list) -> tuple[str, str]:
+    """Prove HA picked up the script — script.<object_id> must exist after the
+    reload. Same trap as automations: a rejected file reloads 'successfully'."""
+    if not script_ids:
+        return "unverified", "no script ids"
+    wanted = {f"script.{s}" for s in script_ids}
     try:
-        await ha_client.call_service("automation", "reload")
-        return "automation.reload"
+        for _ in range(4):
+            states = await ha_client.get_states()
+            have = {s["entity_id"] for s in states} & wanted
+            if have == wanted:
+                return "ok", "loaded"
+            await asyncio.sleep(1)
+    except Exception as exc:
+        return "unverified", f"could not verify ({exc})"
+    return "rejected", f"{len(have)}/{len(wanted)} scripts appeared after reload"
+
+
+async def _reload_ha(script: bool = False) -> str:
+    try:
+        await ha_client.call_service("script" if script else "automation", "reload")
+        return "script.reload" if script else "automation.reload"
     except Exception:
         try:
             await ha_client.call_service("homeassistant", "reload_all")
@@ -235,6 +254,7 @@ async def compile_and_deploy(piston_id: str) -> dict:
     name = entry["name"]
     prev = load_statuses().get(piston_id, {})
     filename = f"{_AUTOMATIONS_DIR}/{_slug(name)}_{piston_id[:8]}.yaml"
+    _script_file = f"{_SCRIPTS_DIR}/{_slug(name)}_{piston_id[:8]}.yaml"
 
     def _remove_deployed(writer, why: str):
         for f in {prev.get("file"), filename} - {None}:
@@ -300,6 +320,11 @@ async def compile_and_deploy(piston_id: str) -> dict:
     if result["target"] == "pyscript":
         return await _deploy_pyscript(piston_id, name, prev, writer, result)
 
+    # a subscription-less piston compiles to a SCRIPT — different folder,
+    # different HA entity domain, same everything else
+    is_script = result.get("kind") == "script"
+    if is_script:
+        filename = _script_file
     artifact = _keep_artifact(piston_id, result["yaml"], ".yaml")
 
     try:
@@ -334,9 +359,12 @@ async def compile_and_deploy(piston_id: str) -> dict:
         if check_note == "invalid":
             check_note = "invalid elsewhere in HA config (not this piston) — proceeding"
 
-    reload_note = await _reload_ha()
+    reload_note = await _reload_ha(script=is_script)
     auto_ids = result.get("auto_ids", [])
-    verdict, note = await _verify_and_enable(auto_ids)
+    if is_script:
+        verdict, note = await _verify_script(result.get("script_ids", []))
+    else:
+        verdict, note = await _verify_and_enable(auto_ids)
     if verdict == "rejected":
         ha_says = await _ha_log_excerpt(filename)
         return _record(piston_id, status="error", file=filename, auto_ids=auto_ids,
@@ -352,6 +380,7 @@ async def compile_and_deploy(piston_id: str) -> dict:
                 "automation and will work again when they come back.")
     return _record(piston_id, status="deployed", file=filename, reload=reload_note,
                    auto_ids=auto_ids, enabled=note, artifact=artifact,
+                   band="script" if is_script else "yaml",
                    config_check=check_note,
                    unresolved=[u["label"] for u in unresolved],
                    message=warn or None)

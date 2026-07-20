@@ -606,11 +606,15 @@ to the actual PyScript 2.0.1 manual, not re-verified here — see that doc for s
 
 ### 3.5 LIFECYCLE (DECIDED — COMPILER_DECISIONS_DEPLOY §1, §8)
 - Compile on every successful save. Failed compile leaves the previous artifact RUNNING;
-  banner on the stock status page (link → debug page) + front-door flag.
+  banner on the stock status page (link → Diagnostics, where you resolve it) +
+  front-door flag. Those two are the only ANNOUNCEMENT surfaces.
 - Piston active/paused mirrors one-way PistonCore → HA (`initial_state`/enable);
   new pistons land paused (webCoRE build-0 behavior) — mirrored, not invented.
-- Device-global edits: targeted patch of deployed artifacts via `used_by`, never full
-  recompile (holding doc §H); piston JSON untouched (verified — names in JSON).
+- Device-global edits: the variable saves immediately, then the user is PROMPTED with
+  the pistons that use it — update them now, or leave them to update on their next save
+  (RULING Jeremy 2026-07-19: auto or manual, never silent). Holding doc §H's targeted
+  `group.set` patch would remove the need to recompile at all and remains the end goal;
+  until it exists, the prompt recompiles the `used_by` pistons. Piston JSON untouched.
 - Recompile All: settings button + stale-template front-door banner; artifacts record
   template-set version.
 

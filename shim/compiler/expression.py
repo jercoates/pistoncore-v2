@@ -547,3 +547,193 @@ _FUNCTIONS = {
     "adddays", "formatdatetime", "formatduration",
     "age",
 }
+
+
+# ── Jinja backend ───────────────────────────────────────────────────────────
+# Same parser, same AST, same precedence — a second EMITTER producing HA Jinja2
+# instead of Python, so the YAML band can express computed messages and
+# templated values natively instead of falling through to PyScript
+# (SESSION_BRIEF_YAML_BAND_EXPANSION; product intent: YAML-first, PyScript as
+# the valve). Anything this backend can't express raises NotYetImplemented,
+# which the dispatcher already turns into PyScript routing — so the fallback
+# stays correct while coverage grows.
+
+_JINJA_SYSVARS = {
+    # event context — HA exposes the triggering event as trigger.*
+    # (docs /docs/automation/templating/). webCoRE renders $currentEventDevice
+    # as the device NAME, so use friendly_name rather than the entity_id.
+    "$currenteventdevice": "state_attr(trigger.entity_id, 'friendly_name')",
+    "$currenteventvalue": "trigger.to_state.state",
+    "$previouseventvalue": "trigger.from_state.state",
+    "$now": "now().timestamp() * 1000",
+    "$time": "now().strftime('%I:%M %p')",
+    "$time24": "now().strftime('%H:%M')",
+    "$hour": "now().hour",
+    "$hour24": "now().hour",
+    "$minute": "now().minute",
+    "$second": "now().second",
+    "$day": "now().day",
+    "$month": "now().month",
+    "$year": "now().year",
+    "$monthname": "now().strftime('%B')",
+    "$dayofweekname": "now().strftime('%A')",
+    "$dayofweek": "now().weekday()",
+    "$date": "now().strftime('%x')",
+    "$sunrise": "state_attr('sun.sun', 'next_rising')",
+    "$sunset": "state_attr('sun.sun', 'next_setting')",
+}
+
+_DEFAULT_DT_FMT = "'%Y-%m-%d %H:%M'"
+
+# webCoRE function -> Jinja rendering. Callables receive rendered args.
+_JINJA_FUNCS = {
+    "lower": lambda a: "(" + a[0] + ") | lower",
+    "upper": lambda a: "(" + a[0] + ") | upper",
+    "trim": lambda a: "(" + a[0] + ") | trim",
+    "string": lambda a: "(" + a[0] + ") | string",
+    "int": lambda a: "(" + a[0] + ") | int(0)",
+    "integer": lambda a: "(" + a[0] + ") | int(0)",
+    "decimal": lambda a: "(" + a[0] + ") | float(0)",
+    "float": lambda a: "(" + a[0] + ") | float(0)",
+    "number": lambda a: "(" + a[0] + ") | float(0)",
+    "round": lambda a: "(" + a[0] + ") | round(" + (a[1] if len(a) > 1 else "0") + ") | int",
+    "abs": lambda a: "(" + a[0] + ") | abs",
+    "min": lambda a: "[" + ", ".join(a) + "] | min",
+    "max": lambda a: "[" + ", ".join(a) + "] | max",
+    "length": lambda a: "(" + a[0] + ") | length",
+    "count": lambda a: "(" + a[0] + ") | length",
+    "contains": lambda a: "((" + a[1] + ") in (" + a[0] + "))",
+    "replace": lambda a: "(" + a[0] + ") | replace(" + a[1] + ", " + a[2] + ")",
+    "left": lambda a: "(" + a[0] + ")[:(" + a[1] + ") | int]",
+    "right": lambda a: "(" + a[0] + ")[-((" + a[1] + ") | int):]",
+    "concat": lambda a: " ~ ".join("(" + x + ")" for x in a),
+    "isempty": lambda a: "((" + a[0] + ") | string | trim == '')",
+    "arrayitem": lambda a: "(" + a[1] + ")[(" + a[0] + ") | int]",
+    "formatdatetime": lambda a: ("((" + a[0] + ") / 1000) | timestamp_custom("
+                                 + (a[1] if len(a) > 1 else _DEFAULT_DT_FMT) + ")"),
+}
+
+
+class JinjaTranspiler(ExprTranspiler):
+    """Emits HA Jinja2 for the same AST the Python backend consumes."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.used_locals: set = set()
+
+    def _reduce(self, operands: list) -> str:
+        operands = [list(o) for o in operands]
+        while len(operands) > 1:
+            best, besti = 99, 0
+            for i in range(len(operands) - 1):
+                tier = _PRECEDENCE.get(operands[i][1], 99)
+                if tier < best:
+                    best, besti = tier, i
+            a, o, a_is_str = operands[besti]
+            b = operands[besti + 1]
+            if o is None or best == 99:
+                raise NotYetImplemented(
+                    "expression operator '%s' not supported in HA templates" % o,
+                    **self.ctx)
+            merged, is_str = self._binary(a, o, b[0], a_is_str or b[2])
+            operands[besti:besti + 2] = [[merged, b[1], is_str]]
+        return operands[0][0]
+
+    def _binary(self, a: str, o: str, b: str, str_context: bool):
+        """One binary operation in Jinja. '+' is the tricky one: webCoRE uses
+        it for both arithmetic and string joining, so when either side is
+        known-textual we emit Jinja's concat (~), which stringifies safely."""
+        if o == "+":
+            if str_context:
+                return a + " ~ " + b, True
+            return "(" + a + " | float(0)) + (" + b + " | float(0))", False
+        if o in ("-", "*", "/", "%"):
+            return "(" + a + " | float(0)) " + o + " (" + b + " | float(0))", False
+        if o == "**":
+            return "(" + a + " | float(0)) ** (" + b + " | float(0))", False
+        if o in ("==", "!=", "<", ">", "<=", ">="):
+            return "(" + a + ") " + o + " (" + b + ")", False
+        if o == "<>":
+            return "(" + a + ") != (" + b + ")", False
+        if o == "&&":
+            return "(" + a + ") and (" + b + ")", False
+        if o == "||":
+            return "(" + a + ") or (" + b + ")", False
+        raise NotYetImplemented(
+            "operator '%s' has no HA template equivalent" % o, **self.ctx)
+
+    def expression(self, node: dict, concat_strings: bool = False) -> str:
+        items = node.get("i") or []
+        if not items:
+            return "''" if concat_strings else "none"
+        return super().expression(node, concat_strings)
+
+    def value(self, item: dict) -> str:
+        t = item.get("t")
+        if t == "string":
+            v = item.get("v") if item.get("v") is not None else ""
+            return "'" + str(v).replace("\\", "\\\\").replace("'", "\\'") + "'"
+        if t == "boolean":
+            return "true" if item.get("v") == "true" else "false"
+        if t in ("integer", "decimal"):
+            return str(item.get("v"))
+        if t == "dynamic":
+            return "none"
+        return super().value(item)
+
+    def variable(self, name) -> str:
+        name = str(name or "")
+        low = name.lower()
+        if low in _JINJA_SYSVARS:
+            return _JINJA_SYSVARS[low]
+        if name.startswith("$"):
+            raise NotYetImplemented(
+                "system variable '%s' has no HA template equivalent" % name,
+                **self.ctx)
+        if name.startswith("@"):
+            raise NotYetImplemented(
+                "global variable '%s' in a template needs PyScript "
+                "(its value lives in a pyscript entity)" % name, **self.ctx)
+        if name in self.local_names:
+            # the caller emits these as automation-level `variables:` entries
+            self.used_locals.add(name)
+            return name
+        if name == "mode":
+            return "states('" + self.mode_entity + "')"
+        raise NotYetImplemented(
+            "variable '%s' is not a declared piston variable" % name, **self.ctx)
+
+    def device(self, item: dict) -> str:
+        attr = item.get("a") or ""
+        dref = item.get("id") or item.get("x")
+        if dref == "$currentEventDevice":
+            if not attr:
+                return "state_attr(trigger.entity_id, 'friendly_name')"
+            return "trigger.to_state.state"
+        if not attr or attr == "?":
+            if item.get("id"):
+                entry = self.resolver.resolution_map.get(item["id"]) or {}
+                return "'" + str(entry.get("name", "device")) + "'"
+            raise NotYetImplemented(
+                "device reference without an attribute in a template", **self.ctx)
+        entities = self.resolver.entities_for_attr([dref], attr, self.ctx)
+        if len(entities) == 1:
+            return "states('" + entities[0] + "')"
+        joined = ", ".join("states('" + e + "')" for e in entities)
+        return "[" + joined + "] | join(', ')"
+
+    def function(self, item: dict) -> str:
+        name = str(item.get("n") or "").lower()
+        args = [self.expression(sub) for sub in (item.get("i") or [])]
+        fn = _JINJA_FUNCS.get(name)
+        if fn is None:
+            raise NotYetImplemented(
+                "function '%s()' has no HA template equivalent yet "
+                "(add it to _JINJA_FUNCS, or this piston uses PyScript)" % name,
+                **self.ctx)
+        try:
+            return fn(args)
+        except IndexError:
+            raise NotYetImplemented(
+                "function '%s()' called with %d argument(s)" % (name, len(args)),
+                **self.ctx)

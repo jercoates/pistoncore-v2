@@ -1,0 +1,97 @@
+{#- Script band — a piston with no subscriptions is not an automation, it is a
+    runnable sequence (HA_YAML_COMPILER_RESEARCH §2: "execute piston with args,
+    wait/nowait" -> `action: script.X` waits, `script.turn_on` doesn't). This
+    is what webCoRE's Test button and executePiston target. Merged-named
+    include, so the top-level key IS the script's object_id. -#}
+{%- macro entity_ids(entities, pad) -%}
+{%- if entities|length == 1 %}
+{{ pad }}entity_id: {{ entities[0] }}
+{%- else %}
+{{ pad }}entity_id:
+{%- for e in entities %}
+{{ pad }}  - {{ e }}
+{%- endfor %}
+{%- endif %}
+{%- endmacro -%}
+
+{%- macro cond_block(c) -%}
+{%- if c.kind == 'template' -%}
+- condition: template
+  value_template: "{{ c.template }}"
+{%- elif c.kind == 'time' -%}
+- condition: time
+{%- if c.get('after') %}
+  after: "{{ c.get('after') }}"
+{%- endif %}
+{%- if c.get('before') %}
+  before: "{{ c.get('before') }}"
+{%- endif %}
+{%- elif c.kind == 'sun' -%}
+- condition: sun
+{%- if c.get('after') %}
+  after: {{ c.get('after') }}
+{%- endif %}
+{%- if c.get('before') %}
+  before: {{ c.get('before') }}
+{%- endif %}
+{%- elif c.kind in ('and', 'or') -%}
+- condition: {{ c.kind }}
+  conditions:
+{%- for k in c.conditions %}
+{{ cond_block(k) | indent(4, true) }}
+{%- endfor %}
+{%- endif %}
+{%- endmacro -%}
+
+{%- macro action_block(a) -%}
+{%- if a.kind == 'delay' -%}
+- delay: "{{ a.delay }}"
+{%- elif a.kind == 'variables' -%}
+- variables:
+{%- for k, v in a.vars.items() %}
+    {{ k }}: {{ v }}
+{%- endfor %}
+{%- elif a.kind == 'service' -%}
+- action: {{ a.service }}
+{%- if a.get('data') %}
+  data:
+{%- for k, v in a.get('data').items() %}
+    {{ k }}: {{ v }}
+{%- endfor %}
+{%- endif %}
+{%- if a.entities %}
+  target:
+{{- entity_ids(a.entities, '    ') }}
+{%- endif %}
+{%- elif a.kind == 'if' -%}
+- if:
+{%- for c in a.conditions %}
+{{ cond_block(c) | indent(4, true) }}
+{%- endfor %}
+{%- if a.get('then') %}
+  then:
+{%- for x in a.get('then') %}
+{{ action_block(x) | indent(4, true) }}
+{%- endfor %}
+{%- else %}
+  then: []
+{%- endif %}
+{%- if a.get('else') %}
+  else:
+{%- for x in a.get('else') %}
+{{ action_block(x) | indent(4, true) }}
+{%- endfor %}
+{%- endif %}
+{%- endif %}
+{%- endmacro -%}
+{{ script_id }}:
+  alias: "{{ alias }}"
+  mode: {{ mode }}
+  sequence:
+{%- if actions %}
+{%- for a in actions %}
+{{ action_block(a) | indent(4, true) }}
+{%- endfor %}
+{%- else %}
+    []
+{%- endif %}
