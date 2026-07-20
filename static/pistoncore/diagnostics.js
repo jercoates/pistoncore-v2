@@ -193,6 +193,44 @@ async function load() {
   if (d.default_band) bandDefault.value = d.default_band;
   checksEl.innerHTML = "";
   d.checks.forEach((c) => checksEl.appendChild(checkRow(c)));
+  // remembered overrides — reviewable, never silent
+  const prefs = (d.band_prefs || []).filter((p) => p.band && p.band !== "auto");
+  const wrap = document.getElementById("band-prefs-wrap");
+  const tbl = document.getElementById("band-prefs");
+  tbl.innerHTML = "";
+  if (prefs.length) {
+    wrap.style.display = "";
+    const head = document.createElement("tr");
+    ["Piston", "Compiles as", "Matched by", ""].forEach((h) => {
+      const th = document.createElement("th"); th.textContent = h; head.appendChild(th);
+    });
+    tbl.appendChild(head);
+    prefs.forEach((p) => {
+      const live = d.pistons.find((x) => x.id === p.id);
+      const tr = document.createElement("tr");
+      const c1 = document.createElement("td");
+      c1.textContent = p.name || p.id;
+      if (!live) c1.textContent += " (no longer present)";
+      const c2 = document.createElement("td");
+      c2.textContent = p.band === "pyscript" ? "Always PyScript" : "HA automation only";
+      const c3 = document.createElement("td");
+      c3.textContent = p.matched || "set here";
+      if (p.adopted_from) c3.textContent += " — carried over from a re-import";
+      const c4 = document.createElement("td");
+      const clr = document.createElement("button");
+      clr.type = "button"; clr.className = "btn"; clr.textContent = "Clear";
+      clr.addEventListener("click", async () => {
+        await fetch("/api/diagnostics/band/" + p.id + "?band=auto", { method: "POST" });
+        load();
+      });
+      c4.appendChild(clr);
+      [c1, c2, c3, c4].forEach((c) => tr.appendChild(c));
+      tbl.appendChild(tr);
+    });
+  } else {
+    wrap.style.display = "none";
+  }
+
   const problems = d.pistons.filter((p) => p.status === "error");
   if (problems.length) {
     const b = document.createElement("div");

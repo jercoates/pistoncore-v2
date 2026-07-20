@@ -32,6 +32,18 @@
     <span id="band-saved" class="field-hint"></span>
   </div>
 
+  <div id="band-prefs-wrap" style="display:none">
+    <h3 class="setup-sub">Remembered overrides</h3>
+    <p class="field-hint">
+      Overrides are remembered by piston <strong>name</strong>, so re-importing
+      a piston keeps its setting even though it gets a new internal id. A
+      structural fingerprint is kept too — if it changed, the row says so, so
+      you can tell a genuine re-import from a different piston that happens to
+      share a name.
+    </p>
+    <table class="help-table" id="band-prefs"></table>
+  </div>
+
   <h2>Pistons</h2>
   <p class="field-hint">
     Every piston's real compile result. Open one to read the exact error, view

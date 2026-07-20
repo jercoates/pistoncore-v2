@@ -316,7 +316,8 @@ async def diagnostics_data():
             "artifacts": _artifact_list(entry["id"]),
         })
     return {"checks": checks, "pistons": pistons,
-            "default_band": storage.load_settings().get("default_band", "auto")}
+            "default_band": storage.load_settings().get("default_band", "auto"),
+            "band_prefs": [dict(v, id=k) for k, v in storage.band_prefs().items()]}
 
 
 def _artifact_list(piston_id: str) -> list:

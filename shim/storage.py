@@ -15,6 +15,7 @@ in Python. encodeEmoji replaces astral-plane characters with ":%XX%XX%XX%XX:" se
 (percent-encoded UTF-8 bytes); decode_emoji reverses that with urllib.parse.unquote.
 """
 
+import hashlib
 import json
 import os
 import re
@@ -489,16 +490,85 @@ def load_settings() -> dict:
         return json.load(f)
 
 
+def piston_fingerprint(piston: dict) -> str:
+    """A short structural fingerprint of a piston: statement types, command
+    names and comparison operators, in order. Deliberately IGNORES device
+    ids, names and values — so an edited piston still fingerprints close to
+    its old self, while a genuinely different piston does not. Used only to
+    SHOW whether a remembered preference matched the same piston or a
+    namesake; never to decide the match on its own."""
+    parts: list[str] = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            if node.get("t"):
+                parts.append(str(node["t"]))
+            if node.get("co"):
+                parts.append(str(node["co"]))
+            for k in node.get("k", []) or []:
+                if k.get("c"):
+                    parts.append(str(k["c"]))
+            for key in ("s", "e", "ei", "c", "cs"):
+                walk(node.get(key))
+        elif isinstance(node, list):
+            for x in node:
+                walk(x)
+
+    walk(piston.get("s", []))
+    return hashlib.md5("|".join(parts).encode("utf-8")).hexdigest()[:12]
+
+
 def compile_band(piston_id: str) -> str:
     """The user's compile-target preference for one piston: "auto" (default),
     "pyscript" (force, for when the YAML translation misbehaves) or "yaml".
     Falls back to the instance-wide default. Stored in PistonCore settings —
-    NEVER in the piston JSON (read-only-compiler rule)."""
+    NEVER in the piston JSON (read-only-compiler rule).
+
+    Preferences SURVIVE re-import (Jeremy, 2026-07-19): a re-imported piston
+    gets a new id but keeps its name, so a miss on id falls back to a
+    name match and the preference is re-keyed to the new id. The remembered
+    list is reviewable on the Diagnostics page — matches are recorded, not
+    silent."""
     s = load_settings()
-    per = (s.get("piston_band") or {}).get(piston_id)
-    if per in ("auto", "yaml", "pyscript"):
-        return per
+    per = s.get("piston_band") or {}
+    rec = per.get(piston_id)
+    if isinstance(rec, str):                       # legacy flat value
+        rec = {"band": rec}
+    if rec and rec.get("band") in ("auto", "yaml", "pyscript"):
+        return rec["band"]
+
+    entry = load_piston(piston_id)
+    if entry:
+        adopted = _adopt_band_by_name(s, per, piston_id, entry)
+        if adopted:
+            return adopted
     return s.get("default_band", "auto")
+
+
+def _adopt_band_by_name(s: dict, per: dict, piston_id: str, entry: dict):
+    """Re-key a remembered preference onto a re-imported piston with the same
+    name. Records how it matched (name, and whether the structure still
+    fingerprints the same) so the Diagnostics list can show it."""
+    name = (entry.get("name") or "").strip().lower()
+    if not name:
+        return None
+    fp = piston_fingerprint(entry.get("piston") or {})
+    for old_id, old in list(per.items()):
+        if old_id == piston_id or not isinstance(old, dict):
+            continue
+        if (old.get("name") or "").strip().lower() != name:
+            continue
+        if load_piston(old_id) is not None:
+            continue          # the original still exists — not a re-import
+        per[piston_id] = {"band": old["band"], "name": entry.get("name"),
+                          "fingerprint": fp,
+                          "adopted_from": old_id,
+                          "matched": "name" + ("" if old.get("fingerprint") == fp
+                                               else " (structure changed)")}
+        per.pop(old_id, None)
+        save_settings(s)
+        return old["band"]
+    return None
 
 
 def set_compile_band(piston_id: str, band: str):
@@ -507,8 +577,20 @@ def set_compile_band(piston_id: str, band: str):
     if band == "auto":
         per.pop(piston_id, None)
     else:
-        per[piston_id] = band
+        entry = load_piston(piston_id) or {}
+        per[piston_id] = {"band": band, "name": entry.get("name"),
+                          "fingerprint": piston_fingerprint(entry.get("piston") or {}),
+                          "matched": "set here"}
     save_settings(s)
+
+
+def band_prefs() -> dict:
+    """The remembered compile-target preferences, for review on Diagnostics."""
+    per = load_settings().get("piston_band") or {}
+    out = {}
+    for pid, rec in per.items():
+        out[pid] = {"band": rec} if isinstance(rec, str) else dict(rec)
+    return out
 
 
 def save_settings(settings: dict):
