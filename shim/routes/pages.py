@@ -303,7 +303,7 @@ async def diagnostics_data():
                              f"templates and routing table under "
                              f"{customize.CUSTOMIZE_DIR} — changes take effect on "
                              f"the next compile, no rebuild.",
-                   "fix": ""})
+                   "fix": "How to (incl. AI instructions): /help/editing-compiler"})
 
     tts = storage.load_settings().get("tts_engine")
     checks.append({"name": "Speech engine", "ok": bool(tts) or None,
@@ -491,7 +491,9 @@ async def diagnostics_repair(piston_id: str):
             parts.append(text if len(text) < 20000 else text[:20000] + "\n…(truncated)")
         except OSError as exc:
             parts.append(f"(could not read: {exc})")
-        parts += ["", "Please reply with the edited section of this file, "
+        parts += ["", "The full editing guide (rules + file shapes) is at "
+                  "/help/editing-compiler on this PistonCore instance.",
+                  "Please reply with the edited section of this file, "
                   "keeping its existing shape and style exactly. Data files are "
                   "plain JSON; template files are Jinja2/Python."]
     else:
@@ -538,6 +540,11 @@ async def help_compiler_debug(request: Request):
 @router.get("/help/best-practices")
 async def help_best_practices(request: Request):
     return templates.TemplateResponse(request, "help_best_practices.html", {})
+
+
+@router.get("/help/editing-compiler")
+async def help_editing_compiler(request: Request):
+    return templates.TemplateResponse(request, "help_editing_compiler.html", {})
 
 
 @router.get("/backup")

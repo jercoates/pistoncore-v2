@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}PistonCore Help — Editing the compiler{% endblock %}
+
+{% block content %}
+<div class="page active help-article">
+  <div class="list-header">
+    <h1>Extending the compiler (with an AI)</h1>
+  </div>
+
+  <p>
+    PistonCore compiles your pistons using <strong>editable data files</strong>,
+    not baked-in code. When a piston fails because the compiler doesn't know a
+    command, a value, or a device attribute yet, you can teach it — usually by
+    adding a few lines to a JSON file — and the fix takes effect on the next
+    compile. No rebuild, no restart, no waiting for a new release. This page is
+    the walkthrough; hand it to any AI along with the repair bundle and it can
+    make the edit for you.
+  </p>
+
+  <h2>The fastest path</h2>
+  <ol>
+    <li>Open <a href="/diagnostics">Diagnostics</a> and find the failing piston.</li>
+    <li>Click <strong>Copy AI repair prompt</strong>. That bundles the exact
+        error, the piston, the code the compiler produced, and the current
+        contents of the file that governs this class of error.</li>
+    <li>Paste it into any AI chat, add a link to this page, and ask it to give
+        you the edited file.</li>
+    <li>Save the AI's version over the file it names (see “Where the files
+        live” below), then re-save the piston. It compiles again.</li>
+  </ol>
+
+  <h2>Where the files live</h2>
+  <p>
+    The editable copies are on PistonCore's data volume, under a
+    <code>customize/</code> folder. Diagnostics shows the exact path for your
+    install (System → “Editable compiler files”). The layout mirrors the
+    project:
+  </p>
+  <table class="help-table">
+    <tr><th>File</th><th>What editing it does</th></tr>
+    <tr><td><code>templates/compiler/yaml/classic/command_maps.json</code></td>
+        <td>Maps a webCoRE command to a Home Assistant service (turn on, set
+            level, play track, lock, arm…). The most common fix.</td></tr>
+    <tr><td><code>templates/compiler/yaml/classic/value_maps.json</code></td>
+        <td>Maps attribute values (motion active → <code>on</code>), alarm
+            commands, thermostat/fan modes, colour names.</td></tr>
+    <tr><td><code>routing_table.json</code></td>
+        <td>The list of features that force a piston onto the PyScript band.
+            Remove a signature here if Home Assistant has since gained native
+            support for it.</td></tr>
+    <tr><td><code>templates/compiler/yaml/classic/*.j2</code></td>
+        <td>The actual shape of the emitted automation / script YAML. Advanced —
+            change how output looks, not just what maps to what.</td></tr>
+    <tr><td><code>templates/compiler/pyscript/2.x/expr_runtime.py.j2</code></td>
+        <td>The webCoRE expression functions, as Python. Add a missing function
+            here (and to <code>_FUNCTIONS</code> in the code) so expressions
+            using it compile.</td></tr>
+    <tr><td><code>picker_capability_map.json</code>, <code>webcore_vocab.json</code></td>
+        <td>How Home Assistant entities become webCoRE-shaped devices and
+            attributes. Edit if a device's attribute isn't recognised.</td></tr>
+  </table>
+  <p class="field-hint">
+    These are seeded from PistonCore's defaults the first time it runs and are
+    never overwritten afterward — your edits always survive an update. Any file
+    you <em>delete</em> falls back to the built-in default, so a bad edit is
+    always one deletion away from being undone.
+  </p>
+
+  <h2>Instructions for the AI making the edit</h2>
+  <p>If you are an AI following this page, these are the rules:</p>
+  <ul>
+    <li><strong>Keep the file valid and in its existing shape.</strong> JSON
+        files stay valid JSON; template files stay valid Jinja2/Python. Match
+        the surrounding style exactly — don't reformat the whole file.</li>
+    <li><strong>Add, don't restructure.</strong> The goal is almost always one
+        new entry (a command mapping, a value, a function, a removed routing
+        signature), not a rewrite. Change the least that fixes the error.</li>
+    <li><strong>command_maps.json values</strong> are either a plain
+        <code>"domain.service"</code> string, or
+        <code>{"service": "domain.service", "data": {…}}</code> where data
+        values may use <code>$1</code>/<code>$2</code> for the task's parameters,
+        optionally with a transform (<code>$1|hex_rgb</code>,
+        <code>$1|pct_float</code>). Look at the existing entries and copy the
+        pattern. Use only real Home Assistant service names.</li>
+    <li><strong>routing_table.json</strong> lists webCoRE-JSON signatures that
+        force PyScript. To let something compile to a native automation instead,
+        remove its entry — but only if Home Assistant genuinely expresses it;
+        if unsure, leave it (PyScript is the safe fallback).</li>
+    <li><strong>expr_runtime.py.j2 functions</strong>: implement
+        <code>def _fn_&lt;name&gt;(...)</code> matching the others, and add the
+        bare name to <code>_FUNCTIONS</code> in
+        <code>shim/compiler/expression.py</code> so the parser accepts it.</li>
+    <li><strong>Reply with the edited file (or the exact edited section)</strong>
+        and say which file it goes in — nothing else is needed.</li>
+    <li>If the fix needs the compiler's Python rather than one of these data
+        files, say so plainly. That's a code change, not a data edit, and
+        should be reported as a bug rather than worked around here.</li>
+  </ul>
+
+  <h2>Checking your edit worked</h2>
+  <ol>
+    <li>Save the edited file to its <code>customize/</code> location.</li>
+    <li>Re-save the piston (open it and save, or Enable it) — that recompiles.</li>
+    <li>On <a href="/diagnostics">Diagnostics</a>, the piston's status should go
+        green; <strong>View generated code</strong> shows exactly what the
+        compiler now produces, so you can confirm the mapping did what you
+        intended.</li>
+    <li>If it's wrong, either fix the file again or delete it to fall back to
+        the default and start over.</li>
+  </ol>
+
+  <h2>When Home Assistant changes under a working piston</h2>
+  <p>
+    If a piston that used to work stops — a service was renamed, a domain
+    changed — the compile error names the Home Assistant domain and service
+    involved. Check Home Assistant's own release notes / breaking-changes for
+    that domain to find what changed, then update the mapping in
+    <code>command_maps.json</code> the same way. PistonCore can't predict future
+    Home Assistant changes, but it always tells you exactly where to look.
+  </p>
+</div>
+{% endblock %}

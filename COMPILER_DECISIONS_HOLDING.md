@@ -510,6 +510,8 @@ a coding session. In v2 the scan naturally happens in the shim's save flow
 the editor as an editable field. It is shown read-only in the Quick Facts panel on the
 status page and as a label in the Test Compile panel header.
 
+**BUILT 2026-07-20:** the spec'd "how to have an AI update the templates" doc (§197) now exists as /help/editing-compiler (templates/help_editing_compiler.html) — generic AI-editing walkthrough, linked from Diagnostics, the AI-repair prompt, and the help index. Below is the original intent.
+
 **The help system (`pyscript.md`)** is the user-facing companion to the routing table.
 When a user sees the PyScript notice on the status page, the `[Learn more →]` link opens
 the help file that explains what PyScript is, why their piston needs it, and how to install
