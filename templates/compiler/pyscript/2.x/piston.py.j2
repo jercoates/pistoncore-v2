@@ -66,7 +66,7 @@ service.call({{ "'" + n.domain + "'" }}, {{ "'" + n.service + "'" }}{% if n.enti
 {%- elif n.kind == 'sleep' -%}
 task.sleep({{ n.seconds }})
 {%- elif n.kind == 'setvar' -%}
-pv[{{ n.name }}] = {{ n.value }}
+_pv_set({{ n.name }}, {{ n.value }})
 {%- elif n.kind == 'setvar_index' -%}
 _pv_setidx({{ n.name }}, {{ n.index }}, {{ n.value }})
 {%- elif n.kind == 'log' -%}
@@ -79,6 +79,24 @@ break
 _guard = 0
 while _truthy({{ n.expr }}) and _guard < 10000:
     _guard += 1
+{%- if n.body %}
+{%- for x in n.body %}
+{{ stmt(x) | indent(4, true) }}
+{%- endfor %}
+{%- else %}
+    pass
+{%- endif %}
+{%- elif n.kind == 'foreach_device' -%}
+for _device in {{ n.get('items') }}:
+{%- if n.body %}
+{%- for x in n.body %}
+{{ stmt(x) | indent(4, true) }}
+{%- endfor %}
+{%- else %}
+    pass
+{%- endif %}
+{%- elif n.kind == 'foreach' -%}
+for _index in {{ n.get('items') }}:
 {%- if n.body %}
 {%- for x in n.body %}
 {{ stmt(x) | indent(4, true) }}
@@ -105,14 +123,26 @@ import random
 
 task.unique("{{ unique_name }}")  # kill in-flight old version on redeploy
 state.persist("pyscript.{{ unique_name }}_state", default_value="idle")
+try:
+    _saved = state.getattr("pyscript.{{ unique_name }}_state") or {}
+    for _k, _v in (_saved.get("vars") or {}).items():
+        pv[_k] = _v
+except Exception as _e:
+    log.warning(f"[{{ piston_id }}] could not restore variables: {_e}")
 
-# piston local variables (from the piston's define section)
+# piston local variables (from the piston's define section). Declared values
+# are the defaults; anything the piston has since set is restored from the
+# persisted state entity so variables survive HA restarts and recompiles —
+# webCoRE keeps piston variables in state, so this matches it.
 pv = {{ variables }}
 {%- if global_values is defined and global_values %}
 # global variable values, snapshotted at compile time (recompile refreshes)
 gv = {{ global_values }}
 {%- endif %}
 _index = 0
+_device = None
+_STATE_ENTITY = "pyscript.{{ unique_name }}_state"
+_ALARM_ENTITY = {{ alarm_entity | tojson }}
 {% include 'expr_runtime.py.j2' %}
 
 
@@ -141,7 +171,7 @@ def _time_between(a, b):
 
 {% for d in decorators -%}
 {%- if d.kind == 'state_trigger' -%}
-@state_trigger({% for e in d.exprs %}"{{ e }}"{{ ", " if not loop.last }}{% endfor %}{% if d.edge %}, state_hold_false=0{% endif %}, kwargs={"stmt_id": {{ d.stmt_id | tojson }}})
+@state_trigger({% for e in d.exprs %}"{{ e }}"{{ ", " if not loop.last }}{% endfor %}{% if d.edge %}, state_hold_false=0{% endif %}{% if d.get('hold') %}, state_hold={{ d.get('hold') }}{% endif %}, kwargs={"stmt_id": {{ d.stmt_id | tojson }}})
 {% elif d.kind == 'time_trigger' -%}
 @time_trigger("{{ d.spec }}", kwargs={"stmt_id": {{ d.stmt_id | tojson }}})
 {% endif -%}

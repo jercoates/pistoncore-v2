@@ -1,32 +1,460 @@
 {
-  "_comment": "webCoRE command -> HA service per target domain. Editable data (template band). A value is either a service string, or {service, data} where data values may use $1/$2 (first/second task param) with optional |transform — transforms live in emit_yaml.py (_PARAM_TRANSFORMS): hex_rgb turns '#rrggbb' into [r, g, b].",
-  "_piston_scope": ["setVariable", "setState", "saveStateLocally", "saveState",
-                    "loadStateLocally", "loadState", "log", "setPistonState",
-                    "setTileColor", "setTileTitle", "setTileText", "setTile",
-                    "clearTile", "exit", "break", "cancelTasks", "cancelPendingTasks",
-                    "executePiston", "pausePiston", "resumePiston", "httpRequest",
-                    "setLocationMode", "sendPushNotification",
-                    "sendSMSNotification", "storeMedia", "wolRequest", "iftttMaker",
-                    "writeToFuelStream", "comment", "waitForTime", "waitForDateTime",
-                    "repeatAction", "followUp", "setHSMStatus"],
-  "on":  {"light": "light.turn_on",  "switch": "switch.turn_on",  "fan": "fan.turn_on"},
-  "off": {"light": "light.turn_off", "switch": "switch.turn_off", "fan": "fan.turn_off"},
-  "toggle": {"light": "light.toggle", "switch": "switch.toggle", "fan": "fan.toggle"},
-  "setLevel": {"light": {"service": "light.turn_on", "data": {"brightness_pct": "$1"}},
-               "fan": {"service": "fan.set_percentage", "data": {"percentage": "$1"}},
-               "media_player": {"service": "media_player.volume_set", "data": {"volume_level": "$1|pct_float"}}},
-  "setColor": {"light": {"service": "light.turn_on", "data": {"rgb_color": "$1|hex_rgb"}}},
-  "setColorTemperature": {"light": {"service": "light.turn_on", "data": {"color_temp_kelvin": "$1"}}},
-  "lock": {"lock": "lock.lock"},
-  "unlock": {"lock": "lock.unlock"},
-  "open": {"cover": "cover.open_cover", "garageDoorControl": "cover.open_cover"},
-  "close": {"cover": "cover.close_cover", "garageDoorControl": "cover.close_cover"},
-  "setVolume": {"media_player": {"service": "media_player.volume_set", "data": {"volume_level": "$1|pct_float"}}},
-  "playTrack": {"media_player": {"service": "media_player.play_media",
-                                 "data": {"media_content_id": "$1", "media_content_type": "music"}}},
-  "stop": {"media_player": "media_player.media_stop"},
-  "pause": {"media_player": "media_player.media_pause"},
-  "play": {"media_player": "media_player.media_play"},
-  "mute": {"media_player": {"service": "media_player.volume_mute", "data": {"is_volume_muted": "true"}}},
-  "unmute": {"media_player": {"service": "media_player.volume_mute", "data": {"is_volume_muted": "false"}}}
+  "_comment": "webCoRE command -> HA service per target domain. Editable data (template band). A value is either a service string, or {service, data} where data values may use $1/$2 (first/second task param) with an optional |transform, or a literal constant. Transforms live in emit_yaml.py (_PARAM_TRANSFORMS): hex_rgb turns '#rrggbb' (or a colour name from value_maps.color_names) into [r,g,b]; pct_float turns 0-100 into 0.0-1.0. All HA service names here were verified against a live HA 2026.7 service list.",
+  "_piston_scope": [
+    "setVariable",
+    "setState",
+    "saveStateLocally",
+    "saveState",
+    "loadStateLocally",
+    "loadState",
+    "log",
+    "setPistonState",
+    "setTileColor",
+    "setTileTitle",
+    "setTileText",
+    "setTile",
+    "clearTile",
+    "exit",
+    "break",
+    "cancelTasks",
+    "cancelPendingTasks",
+    "executePiston",
+    "pausePiston",
+    "resumePiston",
+    "httpRequest",
+    "setLocationMode",
+    "storeMedia",
+    "wolRequest",
+    "iftttMaker",
+    "writeToFuelStream",
+    "comment",
+    "waitForTime",
+    "waitForDateTime",
+    "repeatAction",
+    "followUp",
+    "setHSMStatus"
+  ],
+  "on": {
+    "light": "light.turn_on",
+    "switch": "switch.turn_on",
+    "fan": "fan.turn_on",
+    "media_player": "media_player.turn_on",
+    "climate": "climate.turn_on",
+    "siren": "siren.turn_on",
+    "camera": "camera.turn_on"
+  },
+  "off": {
+    "light": "light.turn_off",
+    "switch": "switch.turn_off",
+    "fan": "fan.turn_off",
+    "media_player": "media_player.turn_off",
+    "climate": "climate.turn_off",
+    "siren": "siren.turn_off",
+    "camera": "camera.turn_off"
+  },
+  "toggle": {
+    "light": "light.toggle",
+    "switch": "switch.toggle",
+    "fan": "fan.toggle",
+    "media_player": "media_player.toggle",
+    "climate": "climate.toggle",
+    "siren": "siren.toggle",
+    "cover": "cover.toggle"
+  },
+  "setLevel": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "brightness_pct": "$1"
+      }
+    },
+    "fan": {
+      "service": "fan.set_percentage",
+      "data": {
+        "percentage": "$1"
+      }
+    },
+    "media_player": {
+      "service": "media_player.volume_set",
+      "data": {
+        "volume_level": "$1|pct_float"
+      }
+    }
+  },
+  "setColor": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "rgb_color": "$1|hex_rgb"
+      }
+    }
+  },
+  "setAdjustedColor": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "rgb_color": "$1|hex_rgb"
+      }
+    }
+  },
+  "setAdjustedHSLColor": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "rgb_color": "$1|hex_rgb"
+      }
+    }
+  },
+  "setColorTemperature": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "color_temp_kelvin": "$1"
+      }
+    }
+  },
+  "setHue": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "hs_color": "$1|hue_hs"
+      }
+    }
+  },
+  "setSaturation": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "hs_color": "$1|sat_hs"
+      }
+    }
+  },
+  "lock": {
+    "lock": "lock.lock"
+  },
+  "unlock": {
+    "lock": "lock.unlock"
+  },
+  "open": {
+    "cover": "cover.open_cover",
+    "garageDoorControl": "cover.open_cover",
+    "lock": "lock.open"
+  },
+  "close": {
+    "cover": "cover.close_cover",
+    "garageDoorControl": "cover.close_cover"
+  },
+  "presetPosition": {
+    "cover": {
+      "service": "cover.set_cover_position",
+      "data": {
+        "position": "$1"
+      }
+    }
+  },
+  "setPosition": {
+    "cover": {
+      "service": "cover.set_cover_position",
+      "data": {
+        "position": "$1"
+      }
+    }
+  },
+  "setVolume": {
+    "media_player": {
+      "service": "media_player.volume_set",
+      "data": {
+        "volume_level": "$1|pct_float"
+      }
+    }
+  },
+  "volumeUp": {
+    "media_player": "media_player.volume_up"
+  },
+  "volumeDown": {
+    "media_player": "media_player.volume_down"
+  },
+  "playTrack": {
+    "media_player": {
+      "service": "media_player.play_media",
+      "data": {
+        "media_content_id": "$1",
+        "media_content_type": "music"
+      }
+    }
+  },
+  "setTrack": {
+    "media_player": {
+      "service": "media_player.play_media",
+      "data": {
+        "media_content_id": "$1",
+        "media_content_type": "music"
+      }
+    }
+  },
+  "playTrackAndResume": {
+    "media_player": {
+      "service": "media_player.play_media",
+      "data": {
+        "media_content_id": "$1",
+        "media_content_type": "music"
+      }
+    }
+  },
+  "playTrackAndRestore": {
+    "media_player": {
+      "service": "media_player.play_media",
+      "data": {
+        "media_content_id": "$1",
+        "media_content_type": "music"
+      }
+    }
+  },
+  "restoreTrack": {
+    "media_player": "media_player.media_play"
+  },
+  "resumeTrack": {
+    "media_player": "media_player.media_play"
+  },
+  "nextTrack": {
+    "media_player": "media_player.media_next_track"
+  },
+  "previousTrack": {
+    "media_player": "media_player.media_previous_track"
+  },
+  "stop": {
+    "media_player": "media_player.media_stop",
+    "cover": "cover.stop_cover",
+    "vacuum": "vacuum.stop"
+  },
+  "pause": {
+    "media_player": "media_player.media_pause",
+    "vacuum": "vacuum.pause"
+  },
+  "play": {
+    "media_player": "media_player.media_play"
+  },
+  "start": {
+    "vacuum": "vacuum.start"
+  },
+  "mute": {
+    "media_player": {
+      "service": "media_player.volume_mute",
+      "data": {
+        "is_volume_muted": "true"
+      }
+    }
+  },
+  "unmute": {
+    "media_player": {
+      "service": "media_player.volume_mute",
+      "data": {
+        "is_volume_muted": "false"
+      }
+    }
+  },
+  "setHeatingSetpoint": {
+    "climate": {
+      "service": "climate.set_temperature",
+      "data": {
+        "temperature": "$1"
+      }
+    }
+  },
+  "setCoolingSetpoint": {
+    "climate": {
+      "service": "climate.set_temperature",
+      "data": {
+        "temperature": "$1"
+      }
+    }
+  },
+  "quickSetHeat": {
+    "climate": {
+      "service": "climate.set_temperature",
+      "data": {
+        "temperature": "$1",
+        "hvac_mode": "heat"
+      }
+    }
+  },
+  "quickSetCool": {
+    "climate": {
+      "service": "climate.set_temperature",
+      "data": {
+        "temperature": "$1",
+        "hvac_mode": "cool"
+      }
+    }
+  },
+  "setThermostatSetpoint": {
+    "climate": {
+      "service": "climate.set_temperature",
+      "data": {
+        "temperature": "$1"
+      }
+    }
+  },
+  "setThermostatMode": {
+    "climate": {
+      "service": "climate.set_hvac_mode",
+      "data": {
+        "hvac_mode": "$1|hvac_mode"
+      }
+    }
+  },
+  "setThermostatFanMode": {
+    "climate": {
+      "service": "climate.set_fan_mode",
+      "data": {
+        "fan_mode": "$1|fan_mode"
+      }
+    }
+  },
+  "heat": {
+    "climate": {
+      "service": "climate.set_hvac_mode",
+      "data": {
+        "hvac_mode": "heat"
+      }
+    }
+  },
+  "cool": {
+    "climate": {
+      "service": "climate.set_hvac_mode",
+      "data": {
+        "hvac_mode": "cool"
+      }
+    }
+  },
+  "auto": {
+    "climate": {
+      "service": "climate.set_hvac_mode",
+      "data": {
+        "hvac_mode": "heat_cool"
+      }
+    }
+  },
+  "emergencyHeat": {
+    "climate": {
+      "service": "climate.set_hvac_mode",
+      "data": {
+        "hvac_mode": "heat"
+      }
+    }
+  },
+  "fanAuto": {
+    "climate": {
+      "service": "climate.set_fan_mode",
+      "data": {
+        "fan_mode": "auto"
+      }
+    }
+  },
+  "fanOn": {
+    "climate": {
+      "service": "climate.set_fan_mode",
+      "data": {
+        "fan_mode": "on"
+      }
+    }
+  },
+  "fanCirculate": {
+    "climate": {
+      "service": "climate.set_fan_mode",
+      "data": {
+        "fan_mode": "diffuse"
+      }
+    }
+  },
+  "setHumidity": {
+    "humidifier": {
+      "service": "humidifier.set_humidity",
+      "data": {
+        "humidity": "$1"
+      }
+    }
+  },
+  "siren": {
+    "siren": {
+      "service": "siren.turn_on",
+      "data": {
+        "tone": "siren"
+      }
+    }
+  },
+  "strobe": {
+    "siren": {
+      "service": "siren.turn_on",
+      "data": {
+        "tone": "strobe"
+      }
+    }
+  },
+  "both": {
+    "siren": "siren.turn_on"
+  },
+  "alert": {
+    "siren": "siren.turn_on"
+  },
+  "beep": {
+    "siren": {
+      "service": "siren.turn_on",
+      "data": {
+        "duration": 1
+      }
+    }
+  },
+  "setDirection": {
+    "fan": {
+      "service": "fan.set_direction",
+      "data": {
+        "direction": "$1"
+      }
+    }
+  },
+  "setSpeed": {
+    "fan": {
+      "service": "fan.set_percentage",
+      "data": {
+        "percentage": "$1|speed_pct"
+      }
+    }
+  },
+  "setFanSpeed": {
+    "vacuum": {
+      "service": "vacuum.set_fan_speed",
+      "data": {
+        "fan_speed": "$1"
+      }
+    }
+  },
+  "take": {
+    "camera": {
+      "service": "camera.snapshot",
+      "data": {
+        "filename": "$1"
+      }
+    }
+  },
+  "push": {
+    "button": "button.press"
+  },
+  "refresh": {
+    "_any": "homeassistant.update_entity"
+  },
+  "poll": {
+    "_any": "homeassistant.update_entity"
+  },
+  "configure": {
+    "_any": "homeassistant.update_entity"
+  },
+  "flash": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "flash": "short"
+      }
+    }
+  }
 }

@@ -441,6 +441,7 @@ def _pv_setidx(name, index, value):
     while len(arr) <= i:
         arr.append(None)
     arr[i] = value
+    _pv_save()
 
 
 def _flatten(args):
@@ -488,3 +489,69 @@ def _fname(entity_id):
         return state.getattr(str(entity_id)).get("friendly_name", str(entity_id))
     except Exception:
         return str(entity_id)
+
+
+def _event_description():
+    """$currentEventDescription — webCoRE's human sentence about the event that
+    woke the piston. Rebuilt from the trigger kwargs available here."""
+    try:
+        name = _fname(var_name) if var_name else "something"
+        return f"{name} is {value}"
+    except Exception:
+        return ""
+
+
+def _sys_alarm():
+    """$alarmSystemStatus as a webCoRE-shaped word."""
+    try:
+        raw = str(state.get(_ALARM_ENTITY)) if _ALARM_ENTITY else None
+    except Exception:
+        raw = None
+    return {"armed_away": "armedAway", "armed_home": "armedHome",
+            "armed_night": "armedNight", "disarmed": "disarmed",
+            "triggered": "alarmActive"}.get(raw, raw or "")
+
+
+def _now_min():
+    n = datetime.datetime.now()
+    return n.hour * 60 + n.minute
+
+
+def _sun_min(event):
+    """Minutes-since-midnight of today's sunrise/sunset, from HA's sun entity."""
+    attr = "next_rising" if str(event).lower().startswith("sunrise") else "next_setting"
+    try:
+        v = state.getattr("sun.sun").get(attr)
+        dt = datetime.datetime.fromisoformat(str(v)).astimezone()
+        return dt.hour * 60 + dt.minute
+    except Exception:
+        return 360 if attr == "next_rising" else 1080
+
+
+def _as_min(v):
+    """Coerce a time-ish value to minutes since midnight (epoch ms, ms since
+    midnight, or an already-minutes number)."""
+    n = _num(v, None)
+    if n is None:
+        return 0
+    if n > 86400000:
+        d = _to_dt(n)
+        return d.hour * 60 + d.minute
+    if n > 1440:
+        return int(n // 60000)
+    return int(n)
+
+
+def _pv_save():
+    """Persist piston-local variables onto the piston's state entity so they
+    survive HA restarts and recompiles (webCoRE parity)."""
+    try:
+        state.setattr(_STATE_ENTITY + ".vars", dict(pv))
+    except Exception as exc:
+        log.warning(f"could not persist variables: {exc}")
+
+
+def _pv_set(name, value):
+    pv[name] = value
+    _pv_save()
+    return value

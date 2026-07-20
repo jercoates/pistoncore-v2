@@ -102,5 +102,41 @@
     "violet": "#EE82EE",
     "white": "#FFFFFF",
     "yellow": "#FFFF00"
+  },
+  "mode_values": {
+    "hvac_mode": {
+      "heat": "heat",
+      "cool": "cool",
+      "auto": "heat_cool",
+      "heat_cool": "heat_cool",
+      "off": "off",
+      "emergency heat": "heat",
+      "emergencyHeat": "heat",
+      "dry": "dry",
+      "fan only": "fan_only",
+      "fanonly": "fan_only"
+    },
+    "fan_mode": {
+      "auto": "auto",
+      "on": "on",
+      "circulate": "diffuse",
+      "fanAuto": "auto",
+      "fanOn": "on",
+      "fanCirculate": "diffuse",
+      "low": "low",
+      "medium": "medium",
+      "high": "high"
+    },
+    "fan_speed": {
+      "low": 33,
+      "medium": 66,
+      "medium-low": 50,
+      "medium-high": 80,
+      "high": 100,
+      "max": 100,
+      "off": 0,
+      "on": 100,
+      "auto": 66
+    }
   }
 }

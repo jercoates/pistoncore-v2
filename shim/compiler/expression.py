@@ -292,6 +292,18 @@ _SYSVARS = {
     "$previouseventvalue": "old_value",
     "$currenteventattribute": "var_name",
     "$index": "_index",
+    "$device": "_device",
+    "$nextsunrise": "_sun_ms('next_rising')",
+    "$nextsunset": "_sun_ms('next_setting')",
+    "$sunrisetime": "_sun_min('sunrise')",
+    "$sunsettime": "_sun_min('sunset')",
+    "$currenteventdescription": "_event_description()",
+    "$currenteventdevicephysical": "var_name",
+    "$currenteventattribute": "var_name",
+    "$previousevent": "old_value",
+    "$alarmsystemalert": "_s('alarm_control_panel_alert')",
+    "$alarmsystemrules": "''",
+    "$alarmsystemstatus": "_sys_alarm()",
     "$random": "_fn_random()", "$randomlevel": "_fn_random(100)",
 }
 

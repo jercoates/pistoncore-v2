@@ -35,12 +35,34 @@ def _hex_rgb(value):
         maps = _json.load(open(_BAND_DIR / "value_maps.json", encoding="utf-8"))
         v = maps.get("color_names", {}).get(v.strip().lower(), v)
     v = v.lstrip("#")
-    return [int(v[0:2], 16), int(v[2:4], 16), int(v[4:6], 16)]
+    try:
+        return [int(v[0:2], 16), int(v[2:4], 16), int(v[4:6], 16)]
+    except ValueError:
+        raise NotYetImplemented(
+            f"colour value {value!r} isn't a hex code or a known colour name — "
+            f"add it to value_maps.json color_names")
+
+
+def _mode_value(kind):
+    """webCoRE mode word -> HA mode word, via value_maps.mode_values."""
+    def xform(v):
+        import json as _json
+        maps = _json.load(open(_BAND_DIR / "value_maps.json", encoding="utf-8"))
+        table = maps.get("mode_values", {}).get(kind, {})
+        key = str(v).strip()
+        return table.get(key, table.get(key.lower(), v))
+    return xform
 
 
 _PARAM_TRANSFORMS = {"hex_rgb": _hex_rgb,
                      # webCoRE volume/level 0-100 -> HA volume_level 0.0-1.0
-                     "pct_float": lambda v: round(float(v) / 100.0, 2)}
+                     "pct_float": lambda v: round(float(v) / 100.0, 2),
+                     # hue/saturation are 0-100 in webCoRE; HA wants [hue0-360, sat0-100]
+                     "hue_hs": lambda v: [round(float(v) * 3.6, 1), 100],
+                     "sat_hs": lambda v: [0, round(float(v), 1)],
+                     "hvac_mode": _mode_value("hvac_mode"),
+                     "fan_mode": _mode_value("fan_mode"),
+                     "speed_pct": _mode_value("fan_speed")}
 
 
 def _delay_hms(params: list) -> str:
@@ -53,6 +75,18 @@ def _delay_hms(params: list) -> str:
 
 def _minutes_hms(minutes: int) -> str:
     return f"{minutes // 60:02d}:{minutes % 60:02d}:00"
+
+
+def _duration_hms(op) -> str | None:
+    """The `to` operand on stays/remains/was comparisons — a hold time.
+    Returns HH:MM:SS or None when it isn't a fixed number."""
+    if not isinstance(op, dict):
+        return None
+    n = op.get("c")
+    if not isinstance(n, (int, float)) or isinstance(n, bool):
+        return None
+    secs = int(n * {"s": 1, "m": 60, "h": 3600, "d": 86400}.get(op.get("vt", "s"), 1))
+    return f"{secs // 3600:02d}:{(secs % 3600) // 60:02d}:{secs % 60:02d}"
 
 
 def _is_number(v) -> bool:
@@ -88,9 +122,35 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
 
 # ── conditions ──────────────────────────────────────────────────────────────
 
+_SUN_EVENTS = {"sunrise": "sunrise", "sunset": "sunset"}
+
+
+def _sun_bound(cond, which):
+    """A time bound that is a sun preset (sunrise/sunset), possibly with the
+    piston's own offset. Returns (event, offset_hms) or None."""
+    preset = cond.get("value_preset") if which == 1 else cond.get("value2_preset")
+    if not preset:
+        expr = cond.get("value_expr") if which == 1 else cond.get("value2_expr")
+        if isinstance(expr, str) and expr.strip().lower().lstrip("$") in ("sunrise", "sunset"):
+            preset = expr.strip().lower().lstrip("$")
+    if not preset:
+        return None
+    key = str(preset).strip().lower()
+    for name, event in _SUN_EVENTS.items():
+        if key.startswith(name):
+            return event
+    return None
+
+
 def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
-    """Condition IR node -> template/time condition dict for the template."""
+    """Condition IR node -> template/time/sun condition dict for the template."""
     co = cond["co"]
+
+    # nested condition group -> HA's and/or condition blocks
+    if co == "_group":
+        kids = [_condition(c, resolver, ctx) for c in cond["children"]]
+        return {"kind": "or" if cond["group_op"] == "or" else "and",
+                "conditions": kids}
 
     if cond.get("lo_type") == "v":
         var = cond.get("lo_var")
@@ -101,6 +161,28 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
             return {"kind": "time",
                     "after": _minutes_hms(int(cond["value"])),
                     "before": _minutes_hms(int(cond["value2"]))}
+        # $time between sunset and X (or any sun preset bound) -> sun condition
+        if var == "time" and co in ("is_between", "is_not_between"):
+            a_sun, b_sun = _sun_bound(cond, 1), _sun_bound(cond, 2)
+            if a_sun or b_sun:
+                node = {"kind": "sun"}
+                if a_sun:
+                    node["after"] = a_sun
+                elif _is_number(cond["value"]):
+                    node["after_time"] = _minutes_hms(int(cond["value"]))
+                if b_sun:
+                    node["before"] = b_sun
+                elif _is_number(cond["value2"]):
+                    node["before_time"] = _minutes_hms(int(cond["value2"]))
+                if node.get("after_time") or node.get("before_time"):
+                    # mixed clock+sun bound: HA can't express it in one node —
+                    # a template using the sun entity's next event does
+                    return _sun_mixed_template(node, cond)
+                return node
+        # $time before/after -> HA time condition (one-sided window)
+        if var == "time" and co in ("is_before", "is_after") and _is_number(cond["value"]):
+            hms = _minutes_hms(int(cond["value"]))
+            return {"kind": "time", "before" if co == "is_before" else "after": hms}
         # entity-backed system variables ($alarmSystemStatus, $mode, ...)
         sysent = resolver.system_entity(var) if var else None
         if sysent and co in _EQUALITY_OPS:
@@ -129,11 +211,71 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         else:
             mapped = resolver.ha_state_value(cond["attr"], value)
             parts = [f"states('{e}') {op} '{mapped}'" for e in entities]
+    elif co in ("is_any_of", "is_not_any_of", "is_any"):
+        vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        neg = "not " if co == "is_not_any_of" else ""
+        parts = [f"{neg}states('{e}') in {mapped!r}" for e in entities]
+    elif co in ("is_even", "is_odd"):
+        want = 0 if co == "is_even" else 1
+        parts = [f"states('{e}') | int(default=-1) % 2 == {want}" for e in entities]
+    elif co == "is_not_between":
+        parts = [f"not ({cond['value']} <= states('{e}') | float(default=1.0e9) "
+                 f"<= {cond['value2']})" for e in entities]
+    elif co in ("is_inside_of_range",):
+        parts = [f"{cond['value']} <= states('{e}') | float(default=1.0e9) "
+                 f"<= {cond['value2']}" for e in entities]
+    elif co in ("is_outside_of_range",):
+        parts = [f"not ({cond['value']} <= states('{e}') | float(default=1.0e9) "
+                 f"<= {cond['value2']})" for e in entities]
+    elif co in ("stays_greater_than", "stays_greater_than_or_equal_to",
+                "stays_less_than", "stays_less_than_or_equal_to",
+                "remains_above", "remains_below"):
+        OPS = {"stays_greater_than": ">", "stays_greater_than_or_equal_to": ">=",
+               "stays_less_than": "<", "stays_less_than_or_equal_to": "<=",
+               "remains_above": ">", "remains_below": "<"}
+        op = OPS[co]
+        hold = _duration_hms(cond.get("duration")) or "00:00:00"
+        h, m, sec = (int(x) for x in hold.split(":"))
+        secs = h * 3600 + m * 60 + sec
+        parts = [f"(states('{e}') | float(default=1.0e9) {op} {cond['value']} and "
+                 f"(as_timestamp(now()) - as_timestamp(states.{e}.last_changed)) >= {secs})"
+                 for e in entities]
+    elif co in ("stays", "stays_equal_to", "stays_any_of", "was", "was_not"):
+        vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        hold = _duration_hms(cond.get("duration")) or "00:00:00"
+        h, m, sec = (int(x) for x in hold.split(":"))
+        secs = h * 3600 + m * 60 + sec
+        neg = "not " if co == "was_not" else ""
+        parts = [f"({neg}states('{e}') in {mapped!r} and "
+                 f"(as_timestamp(now()) - as_timestamp(states.{e}.last_changed)) >= {secs})"
+                 for e in entities]
+    elif co == "is_different_than":
+        mapped = resolver.ha_state_value(cond["attr"], cond["value"])
+        parts = [f"states('{e}') != '{mapped}'" for e in entities]
     else:
         raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
 
     body = parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
     return {"kind": "template", "template": "{{ " + body + " }}"}
+
+
+def _sun_mixed_template(node: dict, cond: dict) -> dict:
+    """One bound is a sun event, the other a clock time — HA's sun condition
+    can't mix them, so compare against the sun entity's timestamp attribute."""
+    parts = []
+    if node.get("after"):
+        parts.append(f"now() >= (state_attr('sun.sun', 'next_{node['after']}') | "
+                     f"as_datetime | as_local)")
+    if node.get("before"):
+        parts.append(f"now() <= (state_attr('sun.sun', 'next_{node['before']}') | "
+                     f"as_datetime | as_local)")
+    if node.get("after_time"):
+        parts.append(f"now().strftime('%H:%M:%S') >= '{node['after_time']}'")
+    if node.get("before_time"):
+        parts.append(f"now().strftime('%H:%M:%S') <= '{node['before_time']}'")
+    return {"kind": "template", "template": "{{ " + " and ".join(parts) + " }}"}
 
 
 # ── triggers ────────────────────────────────────────────────────────────────
@@ -142,6 +284,15 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     co = trig["co"]
     if trig.get("lo_type") == "v":
         var = trig.get("lo_var")
+        # "happens daily at ..." -> HA time trigger, or sun trigger when the
+        # time is a sunrise/sunset preset
+        if var == "time" and trig["co"] in ("happens_daily_at", "happens_at"):
+            sun_ev = _sun_bound(trig, 1)
+            if sun_ev:
+                return {"kind": "sun", "event": sun_ev, "id": trig_id}
+            if _is_number(trig["value"]):
+                return {"kind": "time", "at": _minutes_hms(int(trig["value"])),
+                        "id": trig_id}
         sysent = resolver.system_entity(var) if var else None
         if sysent and co == "changes_to":
             return {"kind": "state", "entities": [sysent],
@@ -151,20 +302,76 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
         raise NotYetImplemented(
             f"trigger on variable '{var}' ({co}) requires PyScript", **ctx)
     entities = resolver.entities_for_attr(trig["devices"], trig["attr"], ctx)
-    if co == "changes_to":
-        to_value = resolver.ha_state_value(trig["attr"], trig["value"])
-        return {"kind": "state", "entities": entities, "to": to_value, "id": trig_id}
+    attr, value = trig["attr"], trig["value"]
+    hold = _duration_hms(trig.get("duration"))
+
+    def mapped(v):
+        return resolver.ha_state_value(attr, v)
+
+    def as_list(v):
+        return [mapped(x) for x in v] if isinstance(v, list) else [mapped(v)]
+
+    # ── state (equality) family ──
+    if co in ("changes_to", "gets", "arrives"):
+        return {"kind": "state", "entities": entities, "to": mapped(value), "id": trig_id}
     if co == "changes":
         return {"kind": "state", "entities": entities, "id": trig_id}
     if co == "changes_away_from":
-        from_value = resolver.ha_state_value(trig["attr"], trig["value"])
-        return {"kind": "state", "entities": entities, "from": from_value, "id": trig_id}
-    if co == "rises_above":
+        return {"kind": "state", "entities": entities, "from": mapped(value), "id": trig_id}
+    if co == "changes_to_any_of":
+        return {"kind": "state", "entities": entities, "to": as_list(value), "id": trig_id}
+    if co == "changes_away_from_any_of":
+        return {"kind": "state", "entities": entities, "from": as_list(value), "id": trig_id}
+    # "stays X for N" -> HA's native `for:` on a state trigger
+    if co in ("stays", "stays_equal_to") and hold:
+        return {"kind": "state", "entities": entities, "to": mapped(value),
+                "for": hold, "id": trig_id}
+    if co == "stays_any_of" and hold:
+        return {"kind": "state", "entities": entities, "to": as_list(value),
+                "for": hold, "id": trig_id}
+    if co in ("stays_away_from", "stays_different_than") and hold:
+        return {"kind": "state", "entities": entities, "from": mapped(value),
+                "for": hold, "id": trig_id}
+    if co == "stays_unchanged" and hold:
+        return {"kind": "state", "entities": entities, "for": hold, "id": trig_id}
+
+    # ── numeric family ──
+    NUM_ABOVE = ("rises_above", "rises", "rises_to_or_above", "becomes_greater_than")
+    NUM_BELOW = ("drops_below", "drops", "drops_to_or_below", "becomes_less_than")
+    if co in NUM_ABOVE:
         return {"kind": "numeric_state", "entities": entities,
-                "above": trig["value"], "id": trig_id}
-    if co == "drops_below":
+                "above": value, "id": trig_id}
+    if co in NUM_BELOW:
         return {"kind": "numeric_state", "entities": entities,
-                "below": trig["value"], "id": trig_id}
+                "below": value, "id": trig_id}
+    if co in ("enters_range", "remains_inside_of_range", "stays_inside_of_range"):
+        node = {"kind": "numeric_state", "entities": entities,
+                "above": value, "below": trig.get("value2"), "id": trig_id}
+        if hold and co != "enters_range":
+            node["for"] = hold
+        return node
+    # "remains above N for T" -> numeric_state with `for:` (HA native)
+    REMAIN_ABOVE = ("remains_above", "remains_above_or_equal_to",
+                    "stays_greater_than", "stays_greater_than_or_equal_to")
+    REMAIN_BELOW = ("remains_below", "remains_below_or_equal_to",
+                    "stays_less_than", "stays_less_than_or_equal_to")
+    if co in REMAIN_ABOVE:
+        node = {"kind": "numeric_state", "entities": entities, "above": value,
+                "id": trig_id}
+        if hold:
+            node["for"] = hold
+        return node
+    if co in REMAIN_BELOW:
+        node = {"kind": "numeric_state", "entities": entities, "below": value,
+                "id": trig_id}
+        if hold:
+            node["for"] = hold
+        return node
+
+    # ── time ──
+    if co == "happens_daily_at" and _is_number(value):
+        return {"kind": "time", "at": _minutes_hms(int(value)), "id": trig_id}
+
     raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
 
 
@@ -212,8 +419,17 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "wait":
                 out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
                 continue
+            if n["command"] in ("cancelTasks", "cancelPendingTasks"):
+                # mode: restart already cancels this automation's pending
+                # delays when it retriggers — same effect webCoRE's
+                # cancel-pending-tasks has. Nothing to emit.
+                continue
             if n["command"] == "sendNotification":
                 out.append(_send_notification(n["params"], ctx))
+                continue
+            if n["command"] in ("sendPushNotification", "sendSMSNotification",
+                                "deviceNotification"):
+                out.append(_push_notification(n, resolver, ctx))
                 continue
             if n["command"] in ("speak", "playText", "playTextAndResume", "playTextAndRestore"):
                 out.append(_speak(n, resolver, ctx))
@@ -239,6 +455,29 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
     return out
+
+
+def _push_notification(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """Push / SMS / device notification -> HA notify. webCoRE's push went to
+    the SmartThings/Hubitat app; HA's equivalent is the notify service (the
+    companion app registers itself there). notify.notify fans out to every
+    configured notifier — the honest general mapping. deviceNotification on a
+    media_player is a spoken message, so that routes to Speak instead."""
+    import json as _json
+    if n["command"] == "deviceNotification" and n["devices"]:
+        try:
+            ents = resolver.entities_for_command(n["devices"], "speak", ctx)
+            if ents and ents[0].startswith("media_player."):
+                return _speak(n, resolver, ctx)
+        except Exception:
+            pass
+    p0 = n["params"][0] if n["params"] else {}
+    text = p0.get("c") if p0.get("t") == "c" else None
+    if not isinstance(text, str) or "{" in text:
+        raise NotYetImplemented(
+            "notification with a computed message requires PyScript", **ctx)
+    return {"kind": "service", "service": "notify.notify", "entities": [],
+            "data": {"message": _json.dumps(text)}}
 
 
 def _speak(n: dict, resolver: Resolver, ctx: dict) -> dict:

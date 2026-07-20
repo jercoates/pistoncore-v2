@@ -15,10 +15,24 @@
 - trigger: state
 {{- entity_ids(t.entities, '  ') }}
 {%- if t.get('to') %}
+{%- if t.get('to') is not sequence or t.get('to') is string %}
   to: "{{ t.get('to') }}"
+{%- else %}
+  to:
+{%- for v in t.get('to') %}
+    - "{{ v }}"
+{%- endfor %}
+{%- endif %}
 {%- endif %}
 {%- if t.get('from') %}
+{%- if t.get('from') is not sequence or t.get('from') is string %}
   from: "{{ t.get('from') }}"
+{%- else %}
+  from:
+{%- for v in t.get('from') %}
+    - "{{ v }}"
+{%- endfor %}
+{%- endif %}
 {%- endif %}
 {%- elif t.kind == 'numeric_state' -%}
 - trigger: numeric_state
@@ -28,6 +42,15 @@
 {%- endif %}
 {%- if t.get('below') is not none %}
   below: {{ t.get('below') }}
+{%- endif %}
+{%- if t.get('for') %}
+  for: "{{ t.get('for') }}"
+{%- endif %}
+{%- elif t.kind == 'sun' -%}
+- trigger: sun
+  event: {{ t.event }}
+{%- if t.get('offset') %}
+  offset: "{{ t.get('offset') }}"
 {%- endif %}
 {%- elif t.kind == 'time' -%}
 - trigger: time
@@ -44,6 +67,9 @@
   seconds: "{{ t.get('seconds') }}"
 {%- endif %}
 {%- endif %}
+{%- if t.kind == 'state' and t.get('for') %}
+  for: "{{ t.get('for') }}"
+{%- endif %}
 {%- if t.get('id') %}
   id: {{ t.get('id') }}
 {%- endif %}
@@ -55,8 +81,26 @@
   value_template: "{{ c.template }}"
 {%- elif c.kind == 'time' -%}
 - condition: time
-  after: "{{ c.after }}"
-  before: "{{ c.before }}"
+{%- if c.get('after') %}
+  after: "{{ c.get('after') }}"
+{%- endif %}
+{%- if c.get('before') %}
+  before: "{{ c.get('before') }}"
+{%- endif %}
+{%- elif c.kind == 'sun' -%}
+- condition: sun
+{%- if c.get('after') %}
+  after: {{ c.get('after') }}
+{%- endif %}
+{%- if c.get('before') %}
+  before: {{ c.get('before') }}
+{%- endif %}
+{%- elif c.kind in ('and', 'or') -%}
+- condition: {{ c.kind }}
+  conditions:
+{%- for k in c.conditions %}
+{{ cond_block(k) | indent(4, true) }}
+{%- endfor %}
 {%- elif c.kind == 'trigger' -%}
 - condition: trigger
   id: {{ c.id }}

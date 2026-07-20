@@ -116,7 +116,9 @@ class Resolver:
         plain service string or {service, data} — data values carry $1/$2
         param tokens the emitter substitutes (see the map's _comment)."""
         domain = entity_id.split(".", 1)[0]
-        spec = (self.command_maps.get(command) or {}).get(domain)
+        per_domain = self.command_maps.get(command) or {}
+        # "_any": commands that work on any entity (refresh/poll -> update_entity)
+        spec = per_domain.get(domain) or per_domain.get("_any")
         if not spec:
             raise UnresolvableDevice(
                 f"no HA service mapping for command '{command}' on domain '{domain}' "

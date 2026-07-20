@@ -39,6 +39,15 @@ def _classify(cond: dict) -> str:
 
 
 def _cond_node(cond: dict, kwargs: dict) -> dict:
+    if cond.get("t") == "group":
+        # nested condition group with its own and/or operator
+        return {"co": "_group", "group_op": cond.get("o", "and"),
+                "children": [_cond_node(c, kwargs) for c in cond.get("c", [])],
+                "ct": "c", "devices": [], "attr": None, "lo_type": "group",
+                "value": None, "value2": None, "duration": {},
+                "aggregation": "any", "lo_var": None,
+                "value_vt": None, "value2_vt": None,
+                "value_preset": None, "value2_preset": None}
     if cond.get("t") != "condition":
         raise NotYetImplemented(
             f"condition node type '{cond.get('t')}' not compiled yet", **kwargs)
@@ -56,6 +65,11 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
         "value_vt": ro.get("vt"),
         "value2": ro2.get("c"),       # second operand (is_between)
         "value2_vt": ro2.get("vt"),
+        "duration": cond.get("to") or {},   # stays/remains/was hold time
+        "value_preset": ro.get("s"),        # preset operand: sunrise/sunset/...
+        "value2_preset": ro2.get("s"),
+        "value_expr": ro.get("x"),          # bare expression operand ($sunrise)
+        "value2_expr": ro2.get("x"),
         "ct": _classify(cond),
     }
 
@@ -70,11 +84,19 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
                 out.append({"kind": "task", "command": task.get("c"),
                             "params": task.get("p", []), "devices": a.get("d", [])})
         elif at == "if":
-            if a.get("o", "and") != "and":
+            conds = [_cond_node(c, kwargs) for c in a.get("c", [])]
+            if a.get("o", "and") == "or" and len(conds) > 1:
+                conds = [{"co": "_group", "group_op": "or", "children": conds,
+                          "ct": "c", "devices": [], "attr": None,
+                          "lo_type": "group", "value": None, "value2": None,
+                          "duration": {}, "aggregation": "any", "lo_var": None,
+                          "value_vt": None, "value2_vt": None,
+                          "value_preset": None, "value2_preset": None,
+                          "value_expr": None, "value2_expr": None}]
+            elif a.get("o", "and") not in ("and", "or"):
                 raise NotYetImplemented(
                     f"condition operator '{a.get('o')}' (nested statement "
                     f"${a.get('$')}) not compiled yet", **kwargs)
-            conds = [_cond_node(c, kwargs) for c in a.get("c", [])]
             for c in conds:
                 if c["ct"] == "t":
                     raise NotYetImplemented(
@@ -107,13 +129,24 @@ def _fold_ei(stmt: dict, where: str, kwargs: dict) -> list:
 
 
 def _if_branch(stmt: dict, sid, kwargs: dict) -> dict:
-    if stmt.get("o", "and") != "and":
+    op = stmt.get("o", "and")
+    if op not in ("and", "or"):
         raise NotYetImplemented(
-            f"condition operator '{stmt.get('o')}' (statement ${sid}) not compiled yet", **kwargs)
+            f"condition operator '{op}' (statement ${sid}) not compiled yet", **kwargs)
     triggers, conditions = [], []
     for cond in stmt.get("c", []):
         node = _cond_node(cond, kwargs)
         (triggers if node["ct"] == "t" else conditions).append(node)
+    # top-level OR over the non-trigger conditions -> HA's `condition: or`
+    # (triggers are already OR'd by HA: any one firing runs the automation)
+    if op == "or" and len(conditions) > 1:
+        conditions = [{"co": "_group", "group_op": "or", "children": conditions,
+                       "ct": "c", "devices": [], "attr": None,
+                       "lo_type": "group", "value": None, "value2": None,
+                       "duration": {}, "aggregation": "any", "lo_var": None,
+                       "value_vt": None, "value2_vt": None,
+                       "value_preset": None, "value2_preset": None,
+                       "value_expr": None, "value2_expr": None}]
     return {
         "stmt_id": sid,
         "kind": "if",

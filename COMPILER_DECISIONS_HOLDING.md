@@ -72,7 +72,33 @@ groovy). Every emitted trigger form VERIFIED against its real parser
 (Jeremy, explicitly out of scope now): if upstream PyScript ever loses
 support, vendor/bake a maintained copy into PistonCore — Apache-2.0 permits
 it and the self-contained custom_components folder makes it feasible.
-**Corpus: 10/14 compile (5 YAML + 5 PyScript). Remaining 4 (all honest):**
+**SESSION-5 (2026-07-19) — REAL-PISTON CORPUS + COMMAND/COMPARISON SWEEP.**
+Discovered test-pistons/ root holds Jeremy's ~84 REAL pistons (devices
+anonymized) — the true acceptance test, previously untested (only the 14
+community bins were). Went 35/98 -> 78/98 compiling (80%), zero crashes.
+Added: 28 device commands verified against a live HA service list (climate,
+media, siren, cover, camera, vacuum, fan, button, `_any` domain fallback);
+mode/colour/percent transforms in value_maps; the stays/remains/rises/drops/
+enters-range/any-of/parity trigger families (HA `for:` and PyScript
+`state_hold` — both native); happens_daily_at incl. $sunrise/$sunset ->
+HA sun triggers; sun-bounded time windows -> `condition: sun` (mixed
+clock+sun bounds -> template on sun.sun); condition GROUPS and statement-level
+`or` -> `condition: or`; each/repeat/while; execute-only pistons (no
+subscriptions is legal — @service is the entry point); $device loop targets;
+push/SMS/deviceNotification -> notify (spoken ones -> tts.speak); more system
+variables; local piston variables now PERSIST across restarts/recompiles
+(attributes on the piston state entity — webCoRE parity, was in-memory only).
+Bugs found by the corpus: Jinja `n.items` resolving to dict.items (generated
+invalid Python), scalar-vs-list `to:` crash, colour-name ValueError crash.
+**OVER-ROUTING FINDING (Jeremy, 2026-07-19):** most PyScript routing is
+unnecessary — HA_YAML_COMPILER_RESEARCH.md §2 documents native YAML for
+computed messages (Jinja + trigger.* vars), setVariable (`variables:`),
+switch (`choose:`), loops (`repeat:`), exit (`stop:`), executePiston
+(`script.X`), and execute-only pistons (emit a SCRIPT, not an automation).
+That doc had never been applied. Scoped in SESSION_BRIEF_YAML_BAND_EXPANSION.md
+— needs a Jinja emitter for the existing expression AST + a script emission
+target. Expect the band split to invert.
+**Community corpus: 10/14 compile (5 YAML + 5 PyScript). Remaining 4:**
 $weather/$twcweather external feeds (3) and httpRequest (1) — the HA-native
 answer is weather/REST sensor entities; needs a mapping decision + help doc,
 not more compiler.

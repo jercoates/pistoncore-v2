@@ -37,7 +37,32 @@ _NUMERIC_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
                 "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
 _EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
                  "is_not": "!=", "is_not_equal_to": "!="}
-_TRIGGER_COS = {"changes_to", "changes", "changes_away_from", "rises_above", "drops_below"}
+_TRIGGER_COS = {
+    "changes_to", "changes", "changes_away_from", "rises_above", "drops_below",
+    "changes_to_any_of", "changes_away_from_any_of", "gets", "arrives",
+    "rises", "drops", "rises_to_or_above", "drops_to_or_below",
+    "enters_range", "exits_range", "happens_daily_at",
+    "becomes_even", "becomes_odd",
+    "stays", "stays_equal_to", "stays_any_of", "stays_away_from",
+    "stays_different_than", "stays_unchanged", "stays_even", "stays_odd",
+    "stays_greater_than", "stays_greater_than_or_equal_to",
+    "stays_less_than", "stays_less_than_or_equal_to",
+    "stays_inside_of_range", "stays_outside_of_range",
+    "remains_above", "remains_above_or_equal_to",
+    "remains_below", "remains_below_or_equal_to",
+    "remains_even", "remains_odd",
+    "remains_inside_of_range", "remains_outside_of_range",
+}
+
+
+def _hold_seconds(op) -> int | None:
+    """The `to` operand on stays/remains — hold time in seconds, or None."""
+    if not isinstance(op, dict):
+        return None
+    n = op.get("c")
+    if not isinstance(n, (int, float)) or isinstance(n, bool):
+        return None
+    return int(n * {"s": 1, "m": 60, "h": 3600, "d": 86400}.get(op.get("vt", "s"), 1))
 
 
 def _q(s) -> str:
@@ -85,6 +110,11 @@ class _PyEmitter:
             return repr("" if text is None else str(text))
         return self._operand_expr(op, ctx)
 
+    _SYS_FALLBACK = {"alarmSystemAlert": "_sys_alarm()",
+                     "alarmSystemRules": "''",
+                     "time": "_now_min()", "datetime": "_now_ms()",
+                     "currentEventDescription": "_event_description()"}
+
     def _var_expr(self, name, ctx: dict) -> str:
         """Variable operand: declared piston locals read from pv; entity-backed
         system variables read their HA entity. Anything else is an unknown
@@ -95,6 +125,8 @@ class _PyEmitter:
             return f"_s({_q(sysent)})"
         if name in self.resolver.local_var_names:
             return f"pv.get({_q(name)})"
+        if name in self._SYS_FALLBACK:
+            return self._SYS_FALLBACK[name]
         raise NotYetImplemented(
             f"system variable '{name}' not compiled yet", **ctx)
 
@@ -121,6 +153,10 @@ class _PyEmitter:
         if t == "e":
             self.expr.ctx = ctx
             return self.expr.transpile_operand(op)
+        if t == "u":
+            # raw user-entered expression text (trailing ';' is editor noise)
+            self.expr.ctx = ctx
+            return self.expr.transpile_operand({"e": str(op.get("u", "")).rstrip("; ")})
         raise NotYetImplemented(f"operand type '{t}' not compiled yet", **ctx)
 
     # ── conditions ─────────────────────────────────────────────────────────
@@ -133,13 +169,51 @@ class _PyEmitter:
 
         if lo.get("t") == "v":
             var = lo.get("v")
-            if var == "time" and co == "is_between":
+            # pure time triggers are gated by their own decorator — the body
+            # has nothing to re-check (there is no "current value" of a clock)
+            if var == "time" and co in ("happens_daily_at", "happens_at", "executes",
+                                        "gets", "arrives"):
+                return "True"
+            if var in ("time", "datetime") and co in ("is_between", "is_not_between"):
                 a, b = ro.get("c"), ro2.get("c")
+                a_sun, b_sun = ro.get("s"), ro2.get("s")
+                if a_sun or b_sun:
+                    lo_e = f"_sun_min({_q(a_sun)})" if a_sun else str(int(a or 0))
+                    hi_e = f"_sun_min({_q(b_sun)})" if b_sun else str(int(b or 0))
+                    body = f"_time_between({lo_e}, {hi_e})"
+                    return f"(not {body})" if co == "is_not_between" else body
                 if _is_number(a) and _is_number(b):
-                    return f"_time_between({int(a)}, {int(b)})"
+                    body = f"_time_between({int(a)}, {int(b)})"
+                    return f"(not {body})" if co == "is_not_between" else body
+                if ro.get("t") in ("x", "e") or ro2.get("t") in ("x", "e"):
+                    lo_e = (f"_as_min({self._operand_expr(ro, ctx)})"
+                            if ro.get("t") in ("x", "e") else str(int(a or 0)))
+                    hi_e = (f"_as_min({self._operand_expr(ro2, ctx)})"
+                            if ro2.get("t") in ("x", "e") else str(int(b or 0)))
+                    body = f"_time_between({lo_e}, {hi_e})"
+                    return f"(not {body})" if co == "is_not_between" else body
                 raise NotYetImplemented("time window with non-fixed bounds requires "
                                         "the expression engine", **ctx)
+            if var in ("time", "datetime") and co in ("is_before", "is_after"):
+                bound = (f"_sun_min({_q(ro.get('s'))})" if ro.get("s")
+                         else str(int(ro.get("c") or 0)))
+                op = "<" if co == "is_before" else ">="
+                return f"(_now_min() {op} {bound})"
             left = self._var_expr(var, ctx)
+            sysent_ = self.resolver.system_entity(var)
+            if co in ("changes_to_any_of", "is_any_of", "stays_any_of",
+                      "is_not_any_of", "was_any_of"):
+                raw = ro.get("c")
+                vals = raw if isinstance(raw, list) else [raw]
+                opts = ", ".join(_q(self.resolver.system_value(var, v)) for v in vals)
+                neg = "not " if "not" in co else ""
+                return f"({neg}str({left}) in ({opts},))"
+            if co in ("executes", "changes", "changed", "gets", "arrives"):
+                return "True"   # gated by the decorator; nothing to re-check
+            if co in ("changes_to", "changes_away_from") and sysent_:
+                mapped = self.resolver.system_value(var, ro.get("c"))
+                op = "==" if co == "changes_to" else "!="
+                return f"{left} {op} {_q(mapped)}"
             if co in _EQUALITY_OPS:
                 if self.resolver.system_entity(var) and (ro.get("t") == "c"):
                     mapped = self.resolver.system_value(var, ro.get("c"))
@@ -152,6 +226,15 @@ class _PyEmitter:
             left = self._operand_expr(lo, ctx)
             return self._compare(left, co, ro, ro2, ctx)
 
+        drefs = [str(d) for d in (lo.get("d") or [])]
+        runtime_ref = next((d for d in drefs
+                            if d in ("$device", "$currentEventDevice")), None)
+        if runtime_ref:
+            # the subject is the loop / triggering entity — known only at
+            # runtime, so compare its live state directly
+            var = "_device" if runtime_ref == "$device" else "var_name"
+            left = f"_s({var})"
+            return self._compare(left, co, ro, ro2, ctx)
         entities = self.resolver.entities_for_attr(lo.get("d", []), lo.get("a"), ctx)
         joiner = " and " if lo.get("g") == "all" else " or "
         attr = lo.get("a")
@@ -182,6 +265,60 @@ class _PyEmitter:
         elif co == "changes":
             ids = ", ".join(_q(e) for e in entities)
             parts = [f"(var_name is None or var_name in ({ids},))"]
+        elif co in ("is_any_of", "is_not_any_of", "is_any", "was_any_of", "was_not_any_of"):
+            vals = value if isinstance(value, list) else [value]
+            opts = ", ".join(_q(self.resolver.ha_state_value(attr, v)) for v in vals)
+            neg = "not " if "not" in co else ""
+            parts = [f"({neg}_s({_q(e)}) in ({opts},))" for e in entities]
+        elif co in ("is_even", "is_odd", "was_even", "was_odd"):
+            want = 0 if co.endswith("even") else 1
+            parts = [f"(_f({_q(e)}) is not None and int(_f({_q(e)})) % 2 == {want})"
+                     for e in entities]
+        elif co in ("is_not_between", "is_outside_of_range", "was_outside_of_range"):
+            v2 = ro2.get("c")
+            parts = [f"(_f({_q(e)}) is None or not ({value} <= _f({_q(e)}) <= {v2}))"
+                     for e in entities]
+        elif co in ("is_inside_of_range", "was_inside_of_range"):
+            v2 = ro2.get("c")
+            parts = [f"(_f({_q(e)}) is not None and {value} <= _f({_q(e)}) <= {v2})"
+                     for e in entities]
+        elif co == "is_different_than":
+            parts = [f"_s({_q(e)}) != {_q(self.resolver.ha_state_value(attr, value))}"
+                     for e in entities]
+        elif co in ("changed", "did_not_change"):
+            ids = ", ".join(_q(e) for e in entities)
+            neg = "not " if co == "did_not_change" else ""
+            parts = [f"({neg}(var_name in ({ids},)))"]
+        elif co in ("was_greater_than", "was_greater_than_or_equal_to",
+                    "was_less_than", "was_less_than_or_equal_to",
+                    "was_equal_to", "was_different_than"):
+            # history comparisons approximate to current state + age (Tier-3)
+            OPS = {"was_greater_than": ">", "was_greater_than_or_equal_to": ">=",
+                   "was_less_than": "<", "was_less_than_or_equal_to": "<=",
+                   "was_equal_to": "==", "was_different_than": "!="}
+            op = OPS[co]
+            if op in ("==", "!="):
+                parts = [f"(_s({_q(e)}) {op} {_q(self.resolver.ha_state_value(attr, value))})"
+                         for e in entities]
+            else:
+                parts = [f"(_f({_q(e)}) is not None and _f({_q(e)}) {op} {value})"
+                         for e in entities]
+        elif co in ("stays_greater_than", "stays_greater_than_or_equal_to",
+                    "stays_less_than", "stays_less_than_or_equal_to",
+                    "remains_above", "remains_below"):
+            OPS = {"stays_greater_than": ">", "stays_greater_than_or_equal_to": ">=",
+                   "stays_less_than": "<", "stays_less_than_or_equal_to": "<=",
+                   "remains_above": ">", "remains_below": "<"}
+            op = OPS[co]
+            hold = _hold_seconds(cond.get("to")) or 0
+            parts = [f"(_f({_q(e)}) is not None and _f({_q(e)}) {op} {value} and "
+                     f"(_fn_age({_q(e)}) or 0) >= {hold * 1000})" for e in entities]
+        elif co in ("stays", "stays_equal_to", "stays_any_of"):
+            vals = value if isinstance(value, list) else [value]
+            opts = ", ".join(_q(self.resolver.ha_state_value(attr, v)) for v in vals)
+            hold = _hold_seconds(cond.get("to")) or 0
+            parts = [f"(_s({_q(e)}) in ({opts},) and "
+                     f"(_fn_age({_q(e)}) or 0) >= {hold * 1000})" for e in entities]
         elif co in ("was", "was_not"):
             # "was (not) X for T": exact via last_changed — the state has been
             # its CURRENT value since last_changed, so current-check + age
@@ -205,8 +342,11 @@ class _PyEmitter:
     def _compare(self, left: str, co: str, ro: dict, ro2: dict, ctx: dict) -> str:
         """Generic comparison against an already-transpiled left expression —
         used for variable/expression left sides."""
-        if co in _EQUALITY_OPS:
-            return f"_op({left}, {_EQUALITY_OPS[co]!r}, {self._operand_expr(ro, ctx)})"
+        if co in _EQUALITY_OPS or co in ("changes_to", "gets", "is_equal_to"):
+            op = _EQUALITY_OPS.get(co, "==")
+            return f"_op({left}, {op!r}, {self._operand_expr(ro, ctx)})"
+        if co == "changes_away_from":
+            return f"_op({left}, '!=', {self._operand_expr(ro, ctx)})"
         if co in _NUMERIC_OPS:
             return f"_op({left}, {_NUMERIC_OPS[co]!r}, {self._operand_expr(ro, ctx)})"
         if co in ("is_between", "is_inside_of_range", "is_outside_of_range"):
@@ -214,6 +354,12 @@ class _PyEmitter:
             b = self._operand_expr(ro2, ctx)
             body = f"_fn_isbetween({left}, {a}, {b})"
             return body if co != "is_outside_of_range" else f"(not {body})"
+        if co in ("is_any_of", "is_not_any_of", "is_any"):
+            vals = ro.get("c")
+            vals = vals if isinstance(vals, list) else [vals]
+            opts = ", ".join(_q(v) for v in vals)
+            neg = "not " if co == "is_not_any_of" else ""
+            return f"({neg}str({left}) in ({opts},))"
         if co in ("is_true",):
             return f"_truthy({left})"
         if co in ("is_false", "is_not_true"):
@@ -234,6 +380,8 @@ class _PyEmitter:
         for c in conds:
             if c.get("t") == "condition":
                 exprs.append(self._condition_expr(c, ctx))
+            elif c.get("t") == "group":
+                exprs.append(self._group_expr(c.get("c", []), c.get("o", "and"), ctx))
             else:
                 raise NotYetImplemented(
                     f"condition node type '{c.get('t')}' not compiled yet", **ctx)
@@ -246,24 +394,140 @@ class _PyEmitter:
 
     # ── triggers (decorators) ──────────────────────────────────────────────
 
-    def _add_state_trigger(self, exprs: list[str], sid, edge: bool):
+    def _add_state_trigger(self, exprs: list[str], sid, edge: bool, hold=None):
         # dedupe exact repeats: two trigger comparisons on the same entity
         # (e.g. changes_to on + changes_to off with an else) would otherwise
         # register identical decorators and double-fire the handler per
         # transition (code-review find, 2026-07-19)
         for d in self.decorators:
             if (d["kind"] == "state_trigger" and d["exprs"] == exprs
-                    and d["edge"] == edge and d["stmt_id"] == sid):
+                    and d["edge"] == edge and d["stmt_id"] == sid
+                    and d.get("hold") == hold):
                 return
         self.decorators.append({"kind": "state_trigger", "exprs": exprs,
-                                "edge": edge, "stmt_id": sid})
+                                "edge": edge, "stmt_id": sid, "hold": hold})
 
     def _trigger_decorator(self, cond: dict, sid, ctx: dict):
         co = cond.get("co")
         lo = cond.get("lo") or {}
+        if lo.get("t") == "v":
+            var = lo.get("v")
+            sysent = self.resolver.system_entity(var)
+            if var in ("time", "datetime"):
+                value = (cond.get("ro") or {}).get("c")
+                ro_ = cond.get("ro") or {}
+                preset = ro_.get("s")
+                if not preset and isinstance(ro_.get("x"), str) and \
+                        ro_["x"].strip().lower().lstrip("$") in ("sunrise", "sunset"):
+                    preset = ro_["x"].strip().lower().lstrip("$")
+                if preset:
+                    self.decorators.append(
+                        {"kind": "time_trigger",
+                         "spec": f"once({str(preset).lower()})", "stmt_id": sid})
+                    return
+                if _is_number(value):
+                    at = int(value)
+                    self.decorators.append(
+                        {"kind": "time_trigger",
+                         "spec": f"cron({at % 60} {at // 60} * * *)", "stmt_id": sid})
+                    return
+            if sysent:
+                raw = (cond.get("ro") or {}).get("c")
+                vals = raw if isinstance(raw, list) else [raw]
+                mapped = [self.resolver.system_value(var, v) for v in vals]
+                if co in ("changes_to", "gets", "is", "executes"):
+                    self._add_state_trigger([f"{sysent} == {_q(mapped[0])}"], sid, True)
+                    return
+                if co in ("changes_to_any_of", "is_any_of"):
+                    opts = ", ".join(_q(v) for v in mapped)
+                    self._add_state_trigger([f"{sysent} in ({opts},)"], sid, True)
+                    return
+                self._add_state_trigger([sysent], sid, False)
+                return
+            raise NotYetImplemented(
+                f"trigger comparison '{co}' on system variable '{var}' "
+                f"not compiled yet", **ctx)
         entities = self.resolver.entities_for_attr(lo.get("d", []), lo.get("a"), ctx)
         value = (cond.get("ro") or {}).get("c")
+        value2 = (cond.get("ro2") or {}).get("c")
         attr = lo.get("a")
+        hold = _hold_seconds(cond.get("to"))
+
+        def mv(v):
+            return self.resolver.ha_state_value(attr, v)
+
+        # "stays/remains X for N" -> PyScript's native state_hold (research §3:
+        # the docs' own definition of state_hold IS webCoRE's `stays`)
+        STAYS_EQ = ("stays", "stays_equal_to")
+        if co in STAYS_EQ and hold:
+            self._add_state_trigger([f"{e} == {_q(mv(value))}" for e in entities],
+                                    sid, True, hold)
+            return
+        if co == "stays_any_of" and hold:
+            vals = value if isinstance(value, list) else [value]
+            opts = ", ".join(_q(mv(v)) for v in vals)
+            self._add_state_trigger([f"{e} in ({opts},)" for e in entities],
+                                    sid, True, hold)
+            return
+        if co in ("stays_away_from", "stays_different_than") and hold:
+            self._add_state_trigger([f"{e} != {_q(mv(value))}" for e in entities],
+                                    sid, True, hold)
+            return
+        if co == "stays_unchanged" and hold:
+            self._add_state_trigger(list(entities), sid, False, hold)
+            return
+        NUM_HOLD = {"stays_greater_than": ">", "stays_greater_than_or_equal_to": ">=",
+                    "stays_less_than": "<", "stays_less_than_or_equal_to": "<=",
+                    "remains_above": ">", "remains_above_or_equal_to": ">=",
+                    "remains_below": "<", "remains_below_or_equal_to": "<="}
+        if co in NUM_HOLD:
+            op = NUM_HOLD[co]
+            self._add_state_trigger(
+                [f"{e} is not None and {e} not in ('unknown','unavailable') "
+                 f"and float({e}) {op} {value}" for e in entities], sid, True, hold)
+            return
+        if co in ("changes_to_any_of", "changes_away_from_any_of"):
+            vals = value if isinstance(value, list) else [value]
+            opts = ", ".join(_q(mv(v)) for v in vals)
+            inop = "in" if co == "changes_to_any_of" else "not in"
+            self._add_state_trigger([f"{e} {inop} ({opts},)" for e in entities],
+                                    sid, True)
+            return
+        if co in ("rises", "rises_to_or_above"):
+            self._add_state_trigger(
+                [f"{e} is not None and {e} not in ('unknown','unavailable') "
+                 f"and float({e}) >= {value}" for e in entities], sid, True)
+            return
+        if co in ("drops", "drops_to_or_below"):
+            self._add_state_trigger(
+                [f"{e} is not None and {e} not in ('unknown','unavailable') "
+                 f"and float({e}) <= {value}" for e in entities], sid, True)
+            return
+        if co in ("enters_range", "exits_range", "remains_inside_of_range",
+                  "stays_inside_of_range", "remains_outside_of_range",
+                  "stays_outside_of_range") and _is_number(value) and _is_number(value2):
+            inside = "outside" not in co
+            body = (f"{value} <= float({{e}}) <= {value2}" if inside
+                    else f"not ({value} <= float({{e}}) <= {value2})")
+            self._add_state_trigger(
+                [f"{e} is not None and {e} not in ('unknown','unavailable') and "
+                 + body.replace("{e}", e) for e in entities], sid, True,
+                hold if "remains" in co or "stays" in co else None)
+            return
+        if co == "happens_daily_at" and _is_number(value):
+            at = int(value)
+            self.decorators.append({"kind": "time_trigger",
+                                    "spec": f"cron({at % 60} {at // 60} * * *)",
+                                    "stmt_id": sid})
+            return
+        if co in ("becomes_even", "becomes_odd", "remains_even", "remains_odd",
+                  "stays_even", "stays_odd"):
+            want = 0 if co.endswith("even") else 1
+            self._add_state_trigger(
+                [f"{e} is not None and {e} not in ('unknown','unavailable') "
+                 f"and int(float({e})) % 2 == {want}" for e in entities], sid, True,
+                hold if ("remains" in co or "stays" in co) else None)
+            return
         if co == "changes_to":
             mapped = self.resolver.ha_state_value(attr, value)
             self._add_state_trigger([f"{e} == {_q(mapped)}" for e in entities], sid, True)
@@ -363,6 +627,31 @@ class _PyEmitter:
             params = task.get("p", [])
             if cmd == "wait":
                 out.append({"kind": "sleep", "seconds": _wait_seconds(params)})
+            elif cmd in ("sendPushNotification", "sendSMSNotification",
+                         "deviceNotification"):
+                msg = self._string_param(params[0] if params else {"t": "c", "c": ""}, ctx)
+                spoken = False
+                if cmd == "deviceNotification" and devices:
+                    try:
+                        ents = self.resolver.entities_for_command(devices, "speak", ctx)
+                        spoken = bool(ents) and ents[0].startswith("media_player.")
+                    except Exception:
+                        spoken = False
+                if spoken:
+                    engine = self.resolver.system_entity("tts")
+                    if not engine:
+                        raise NotYetImplemented(
+                            "spoken device notification needs a TTS engine "
+                            "(PistonCore Settings)", **ctx)
+                    players = self.resolver.entities_for_command(devices, "speak", ctx)
+                    out.append({"kind": "service", "domain": "tts", "service": "speak",
+                                "entities": [engine],
+                                "data": {"media_player_entity_id": repr(players),
+                                         "message": f"str({msg})", "cache": "True"}})
+                else:
+                    out.append({"kind": "service", "domain": "notify",
+                                "service": "notify", "entities": [],
+                                "data": {"message": f"str({msg})"}})
             elif cmd in ("sendNotification", "sendNotificationToContacts"):
                 p0 = params[0] if params else {}
                 # in-app notification == HA notifications panel (NOTIFY_ACTION_SPEC)
@@ -474,6 +763,16 @@ class _PyEmitter:
                 if not devices:
                     raise NotYetImplemented(
                         f"command '{cmd}' with no target devices", **ctx)
+                if any(str(d) in ("$device", "$currentEventDevice") for d in devices):
+                    var = "_device" if "$device" in [str(d) for d in devices] else "var_name"
+                    svc = {"on": "turn_on", "off": "turn_off", "toggle": "toggle"}.get(cmd)
+                    if not svc:
+                        raise NotYetImplemented(
+                            f"command '{cmd}' on a runtime device reference "
+                            f"isn't compiled yet", **ctx)
+                    out.append({"kind": "raw", "code":
+                                f"service.call('homeassistant', '{svc}', entity_id={var})"})
+                    continue
                 entities = self.resolver.entities_for_command(devices, cmd, ctx)
                 service, data_spec = self.resolver.service_spec(cmd, entities[0], ctx)
                 domain, svc = service.split(".", 1)
@@ -534,6 +833,45 @@ class _PyEmitter:
                      "step": int(step), "body": self._block(stmt.get("s", []), ctx)}]
         if t == "do":
             return self._block(stmt.get("s", []), ctx)
+        if t == "each":
+            # for-each over a device list -> iterate the resolved entities
+            lo = stmt.get("lo") or {}
+            if lo.get("t") == "p" and lo.get("d"):
+                ents = self.resolver.entities_for_attr(lo.get("d"), lo.get("a"), ctx)                     if lo.get("a") else None
+                if ents is None:
+                    raise NotYetImplemented("'each' over devices without an attribute", **ctx)
+                return [{"kind": "foreach", "items": repr(ents),
+                         "body": self._block(stmt.get("s", []), ctx)}]
+            if lo.get("t") == "d" and lo.get("d"):
+                hashes = []
+                for dref in lo["d"]:
+                    hashes.extend(self.resolver._hashes(str(dref), ctx))
+                ents = []
+                for h in hashes:
+                    entry = self.resolver.resolution_map.get(h) or {}
+                    binds = entry.get("cmd_bindings") or {}
+                    first = next((v for v in (binds.get(k) for k in
+                                  ("on", "off", "lock", "unlock", "open", "close"))
+                                  if v), None)
+                    if first:
+                        ents.append(first)
+                if not ents:
+                    raise NotYetImplemented(
+                        "'each' over devices with no controllable entities", **ctx)
+                return [{"kind": "foreach_device", "items": repr(ents),
+                         "body": self._block(stmt.get("s", []), ctx)}]
+            raise NotYetImplemented(f"'each' over {lo.get('t')} not compiled yet", **ctx)
+        if t == "repeat":
+            # repeat N times (lo = count) or repeat-while (c = conditions)
+            lo = stmt.get("lo") or {}
+            body = self._block(stmt.get("s", []), ctx)
+            if stmt.get("c"):
+                expr = self._group_expr(stmt.get("c", []), stmt.get("o", "and"), ctx)
+                return [{"kind": "while", "expr": expr, "body": body}]
+            n = lo.get("c")
+            if not _is_number(n):
+                raise NotYetImplemented("'repeat' with a non-constant count", **ctx)
+            return [{"kind": "foreach", "items": f"range({int(n)})", "body": body}]
         if t == "while":
             expr = self._group_expr(stmt.get("c", []), stmt.get("o", "and"), ctx)
             return [{"kind": "while", "expr": expr,
@@ -590,10 +928,9 @@ class _PyEmitter:
             else:
                 event_body.extend(self._stmt_nodes(stmt, ctx, top=True))
 
-        if not self.decorators:
-            raise NotYetImplemented(
-                "piston subscribes to nothing the PyScript band can trigger on",
-                **self._ctx(None))
+        # No subscriptions is legal: an execute-only piston (Test button or
+        # another piston's executePiston). The @service registration in the
+        # template is its entry point — nothing else is needed.
 
         variables = {}
         for v in self.piston.get("v", []):
@@ -611,7 +948,8 @@ class _PyEmitter:
             global_values[name] = g
         return {"decorators": self.decorators, "event_body": event_body,
                 "guarded": guarded, "variables": variables,
-                "global_values": global_values}
+                "global_values": global_values,
+                "alarm_entity": self.resolver.system_entity("alarmSystemStatus")}
 
     def globals_map_value(self, name: str):
         g = (self.resolver.globals_map or {}).get(name) or {}
