@@ -34,6 +34,7 @@ class Resolver:
         self.alarm_commands = maps.get("alarm_commands", {})
         self.command_maps = _load_band_json("command_maps.json")
         self.local_var_names = {v.get("n") for v in piston.get("v", [])}
+        self.unresolved: list[dict] = []   # devices kept but not currently in HA
         sys_ent = resolution_map.get("$system")
         self.system_entities = sys_ent if isinstance(sys_ent, dict) else {}
 
@@ -71,18 +72,58 @@ class Resolver:
         raise UnresolvableDevice(f"device reference '{dref}' is neither a hash, a local "
                                  f"device variable, nor a global", **ctx)
 
+    def remembered_entity(self, h: str, attr_or_cmd: str) -> str | None:
+        """Last entity this device hash resolved to, from PistonCore's own
+        memory. Lets a device that has temporarily left Home Assistant keep
+        its place in the compiled automation (Jeremy's ruling 2026-07-19)."""
+        from .. import storage
+        return storage.remembered_binding(h, attr_or_cmd)
+
+    def _device_label(self, h: str) -> str:
+        """A user-facing name for a device reference. NEVER the raw hash —
+        error messages land on the front-door pill and the piston banner, and
+        the standing rule is that device ids appear nowhere in PistonCore
+        (Jeremy, hard rule). An unknown hash is an imported device this
+        instance has never seen."""
+        entry = self.resolution_map.get(h) or {}
+        if entry.get("name"):
+            return entry["name"]
+        from .. import storage
+        known = storage.remembered_device_name(h)
+        if known:
+            return f"{known} (not in Home Assistant right now)"
+        return "a device from another hub (not in this Home Assistant)"
+
+    def _unresolved(self, h: str, what: str, kind: str, ctx: dict) -> str:
+        """A device that isn't in this Home Assistant right now.
+
+        RULING (Jeremy, 2026-07-19), overriding COMPILER_DECISIONS_DEPLOY §2's
+        skip-and-flag: keep the reference in the emitted automation. Rationale
+        in his words — a device that is just out of service "will just work
+        when they come back up"; dropping it silently shrinks the automation,
+        and failing the piston takes the working devices down too. The dangling
+        entity is visible in HA, the only surface where device ids belong.
+        The compile record carries a warning so the UI can say so in names."""
+        remembered = self.remembered_entity(h, what)
+        self.unresolved.append({"label": self._device_label(h), "for": what,
+                                "kind": kind, "entity": remembered})
+        if remembered:
+            return remembered
+        # never seen here: a stable, obviously-inert placeholder. HA loads the
+        # automation and simply finds nothing to act on until it appears.
+        return f"unknown.pistoncore_unresolved_{h.strip(':')[:8]}"
+
     def entities_for_attr(self, drefs: list[str], attr: str, ctx: dict) -> list[str]:
         out = []
         for dref in drefs:
             for h in self._hashes(dref, ctx):
                 entry = self.resolution_map.get(h)
-                if entry is None:
-                    raise UnresolvableDevice(
-                        f"no resolution-map entry for device {h} (attribute '{attr}')", **ctx)
-                ent = (entry.get("attr_bindings") or {}).get(attr)
-                if not ent:
-                    raise UnresolvableDevice(
-                        f"device {entry.get('name', h)} has no binding for attribute '{attr}'", **ctx)
+                ent = (entry or {}).get("attr_bindings", {}).get(attr) if entry else None
+                if ent:
+                    from .. import storage
+                    storage.remember_binding(h, attr, ent, entry.get("name"))
+                else:
+                    ent = self._unresolved(h, attr, "attribute", ctx)
                 out.append(ent)
         return out
 
@@ -91,13 +132,12 @@ class Resolver:
         for dref in drefs:
             for h in self._hashes(dref, ctx):
                 entry = self.resolution_map.get(h)
-                if entry is None:
-                    raise UnresolvableDevice(
-                        f"no resolution-map entry for device {h} (command '{command}')", **ctx)
-                ent = (entry.get("cmd_bindings") or {}).get(command)
-                if not ent:
-                    raise UnresolvableDevice(
-                        f"device {entry.get('name', h)} has no binding for command '{command}'", **ctx)
+                ent = (entry or {}).get("cmd_bindings", {}).get(command) if entry else None
+                if ent:
+                    from .. import storage
+                    storage.remember_binding(h, command, ent, entry.get("name"))
+                else:
+                    ent = self._unresolved(h, command, "command", ctx)
                 out.append(ent)
         return out
 

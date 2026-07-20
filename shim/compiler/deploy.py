@@ -342,6 +342,16 @@ async def compile_and_deploy(piston_id: str) -> dict:
         return _record(piston_id, status="error", file=filename, auto_ids=auto_ids,
                        artifact=artifact, reload=reload_note, config_check=check_note,
                        message=f"HA rejected the compiled YAML ({note}) — HA's log: {ha_says}")
+    unresolved = result.get("unresolved") or []
+    warn = ""
+    if unresolved:
+        names = sorted({u["label"] for u in unresolved})
+        warn = ("deployed — but " + ", ".join(names[:3]) +
+                (" and others" if len(names) > 3 else "") +
+                " aren't in Home Assistant right now. They're left in the "
+                "automation and will work again when they come back.")
     return _record(piston_id, status="deployed", file=filename, reload=reload_note,
                    auto_ids=auto_ids, enabled=note, artifact=artifact,
-                   config_check=check_note)
+                   config_check=check_note,
+                   unresolved=[u["label"] for u in unresolved],
+                   message=warn or None)

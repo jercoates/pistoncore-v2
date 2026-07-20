@@ -973,4 +973,4 @@ def compile_pyscript(piston: dict, piston_id: str, piston_name: str,
         **built,
     )
     return {"target": "pyscript", "code": code, "yaml": None,
-            "reasons": reasons, "auto_ids": []}
+            "reasons": reasons, "auto_ids": [], "unresolved": resolver.unresolved}

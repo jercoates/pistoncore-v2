@@ -555,6 +555,33 @@ def piston_fingerprint(piston: dict) -> str:
     return hashlib.md5("|".join(parts).encode("utf-8")).hexdigest()[:12]
 
 
+BINDINGS_FILE = DATA_DIR / "device_bindings.json"
+
+
+def remember_binding(device_hash: str, attr_or_cmd: str, entity_id: str, name=None):
+    """Remember what a device hash resolved to. When that device later leaves
+    Home Assistant (integration down, hub offline), the compiler keeps using
+    this so the automation stays intact and simply resumes working when the
+    device returns (Jeremy's ruling 2026-07-19)."""
+    store = read_json_safe(BINDINGS_FILE, dict, "device_bindings.json")
+    rec = store.setdefault(device_hash, {"name": name, "bindings": {}})
+    if name:
+        rec["name"] = name
+    if rec["bindings"].get(attr_or_cmd) != entity_id:
+        rec["bindings"][attr_or_cmd] = entity_id
+        write_json_atomic(BINDINGS_FILE, store)
+
+
+def remembered_binding(device_hash: str, attr_or_cmd: str):
+    store = read_json_safe(BINDINGS_FILE, dict, "device_bindings.json")
+    return (store.get(device_hash) or {}).get("bindings", {}).get(attr_or_cmd)
+
+
+def remembered_device_name(device_hash: str):
+    store = read_json_safe(BINDINGS_FILE, dict, "device_bindings.json")
+    return (store.get(device_hash) or {}).get("name")
+
+
 def compile_band(piston_id: str) -> str:
     """The user's compile-target preference for one piston: "auto" (default),
     "pyscript" (force, for when the YAML translation misbehaves) or "yaml".

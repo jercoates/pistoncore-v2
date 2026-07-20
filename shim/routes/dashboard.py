@@ -225,8 +225,23 @@ async def piston_resume(request: Request):
     return jsonp(request, {"status": "ST_SUCCESS", "active": entry["meta"]["active"], "compile": rec})
 
 
+@router.get("/variable/recompile")
+async def variable_recompile(request: Request):
+    """The 'update them now' half of the device-global prompt: recompile every
+    piston that uses the changed global so HA stops driving the old device
+    list. Declining is equally valid — each piston recompiles on its own next
+    save (Jeremy's ruling 2026-07-19: prompt, auto or manual — never silent)."""
+    ids = [i for i in (request.query_params.get("ids", "").split(",")) if i]
+    done = []
+    for pid in ids:
+        rec = await compiler_deploy.compile_and_deploy(pid)
+        done.append({"id": pid, "status": rec.get("status"),
+                     "message": rec.get("message")})
+    return jsonp(request, {"status": "ST_SUCCESS", "recompiled": done})
+
+
 @router.get("/variable/set")
-def variable_set(request: Request):
+async def variable_set(request: Request):
     name = request.query_params.get("name", "")
     data = request.query_params.get("value", "")
     pid = request.query_params.get("id")
@@ -237,5 +252,25 @@ def variable_set(request: Request):
         # engine exists to give it meaning (SHIM_API_SPEC.md §4.10).
         return jsonp(request, {"status": "ST_SUCCESS", "id": pid, "localVars": {}})
 
+    before = storage.load_globals().get(name) or {}
     updated = storage.set_global_variable(name, value)
-    return jsonp(request, {"status": "ST_SUCCESS", "globalVars": updated})
+
+    # A device global is INLINED into compiled automations at compile time, so
+    # changing its devices leaves every deployed automation driving the OLD
+    # entity list until each piston is re-saved — the UI looks right while HA
+    # does the wrong thing (found by external review, 2026-07-19). Recompile
+    # the pistons that reference it. (HOLDING §H's group.set design would
+    # avoid the recompile entirely; this is the honest interim.)
+    # A device global is inlined into compiled automations, so changing its
+    # devices leaves deployed automations driving the OLD list until each
+    # piston recompiles. RULING (Jeremy, 2026-07-19): do NOT silently
+    # recompile — save the variable, then PROMPT: update those pistons now,
+    # or leave them and update manually. The prompt is driven from the
+    # affected list returned here.
+    affected = []
+    is_device = (before.get("t") == "device") or ((value or {}).get("t") == "device")
+    if is_device and before.get("v") != (value or {}).get("v"):
+        affected = [{"id": u["id"], "name": u.get("name")}
+                    for u in (before.get("used_by") or [])]
+    return jsonp(request, {"status": "ST_SUCCESS", "globalVars": updated,
+                           "affected": affected, "variable": name})

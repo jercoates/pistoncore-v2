@@ -219,6 +219,59 @@
             }, 600);
         });
 
+        // DEVICE-GLOBAL PROMPT: changing a device global's devices leaves the
+        // pistons that use it compiled against the OLD list. The save
+        // response names them; ask whether to update now or leave it for a
+        // manual save (Jeremy 2026-07-19: prompt, auto or manual — never
+        // silent, and never a block on saving the variable itself).
+        (function () {
+            var origOpen = XMLHttpRequest.prototype.open;
+            var origSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function (m, url) {
+                this.__pcUrl = url;
+                return origOpen.apply(this, arguments);
+            };
+            XMLHttpRequest.prototype.send = function () {
+                var xhr = this;
+                var NL = String.fromCharCode(10);
+                if (String(xhr.__pcUrl || "").indexOf("variable/set") !== -1) {
+                    xhr.addEventListener("load", function () {
+                        var m = /callback\((.*)\)/s.exec(xhr.responseText || "");
+                        if (!m) return;
+                        var data;
+                        try { data = JSON.parse(m[1]); } catch (e) { return; }
+                        var list = data && data.affected;
+                        if (!list || !list.length) return;
+                        var names = list.map(function (p) { return p.name || p.id; });
+                        var msg = list.length + " piston" + (list.length > 1 ? "s use " : " uses ") +
+                            (data.variable || "this variable") + ":" + NL + NL +
+                            names.join(NL) + NL + NL +
+                            "Home Assistant is still running them with the previous " +
+                            "devices. Update them now?" + NL + NL +
+                            "OK = update now.  Cancel = leave them (each updates on its next save).";
+                        if (!window.confirm(msg)) return;
+                        var ids = list.map(function (p) { return p.id; }).join(",");
+                        var s = document.createElement("script");
+                        s.src = "/intf/dashboard/variable/recompile?ids=" +
+                                encodeURIComponent(ids) + "&callback=pcRecompiled";
+                        window.pcRecompiled = function (res) {
+                            var bad = (res.recompiled || []).filter(function (r) {
+                                return r.status !== "deployed";
+                            });
+                            window.alert(bad.length
+                                ? "Updated with problems:" + NL + NL + bad.map(function (b) {
+                                      return "- " + (b.message || b.status);
+                                  }).join(NL)
+                                : "Updated " + (res.recompiled || []).length +
+                                  " piston(s) in Home Assistant.");
+                        };
+                        document.body.appendChild(s);
+                    });
+                }
+                return origSend.apply(this, arguments);
+            };
+        })();
+
         // COMPILE BANNER: the piston status screen is announcement surface #2
         // (CLAUDE.md UI split — same screen as Status/Quick Facts, where a
         // webCoRE user expects a piston's problems). Injected as a sibling of

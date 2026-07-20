@@ -69,7 +69,7 @@
       <select id="tts_engine" name="tts_engine">
         <option value="">— pick an engine —</option>
         {% for e in tts_engines %}
-        <option value="{{ e.entity_id }}" {{ 'selected' if e.entity_id == tts_engine }}>{{ e.name }} ({{ e.entity_id }})</option>
+        <option value="{{ e.entity_id }}" {{ 'selected' if e.entity_id == tts_engine }}>{{ e.name }}</option>
         {% endfor %}
       </select>
       <p class="field-hint">
