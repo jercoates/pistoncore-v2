@@ -101,10 +101,7 @@ def load_statuses() -> dict:
     """Per-piston compile/deploy status — its own store, NEVER written into
     the piston entry files (read-only-compiler rule, hard: the compiler and
     its lifecycle machinery do not touch piston JSON or its files at all)."""
-    if not _STATUS_FILE.exists():
-        return {}
-    with open(_STATUS_FILE, encoding="utf-8") as f:
-        return json.load(f)
+    return storage.read_json_safe(_STATUS_FILE, dict, "compile_status.json")
 
 _reg_cache: dict = {"t": 0.0, "map": None}
 
@@ -126,9 +123,7 @@ def _record(piston_id: str, **fields) -> dict:
     statuses = load_statuses()
     rec = {"ts": int(time.time() * 1000), **fields}
     statuses[piston_id] = rec
-    _STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(_STATUS_FILE, "w", encoding="utf-8") as f:
-        json.dump(statuses, f, indent=1)
+    storage.write_json_atomic(_STATUS_FILE, statuses)
     return rec
 
 

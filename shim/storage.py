@@ -18,6 +18,9 @@ in Python. encodeEmoji replaces astral-plane characters with ":%XX%XX%XX%XX:" se
 import hashlib
 import json
 import os
+import tempfile
+import time as _time
+import os
 import re
 import time
 import urllib.parse
@@ -255,8 +258,7 @@ def load_piston(piston_id: str) -> dict | None:
     path = _piston_path(piston_id)
     if not path.exists():
         return None
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    return read_json_safe(path, None, f"piston {piston_id}")
 
 
 def set_piston_active(piston_id: str, active: bool) -> dict | None:
@@ -320,8 +322,9 @@ def list_pistons() -> list[dict]:
     _ensure_dirs()
     result = []
     for path in PISTONS_DIR.glob("*.json"):
-        with open(path, encoding="utf-8") as f:
-            entry = json.load(f)
+        entry = read_json_safe(path, None, f"piston file {path.name}")
+        if not entry or "id" not in entry:
+            continue      # a single damaged file must never hide the rest
         result.append({"id": entry["id"], "name": entry["name"], "meta": meta_for_list(entry)})
     return result
 
@@ -403,8 +406,7 @@ def count_subscriptions(piston: dict) -> int:
 
 def _save_piston_file(entry: dict):
     _ensure_dirs()
-    with open(_piston_path(entry["id"]), "w", encoding="utf-8") as f:
-        json.dump(entry, f, indent=2)
+    write_json_atomic(_piston_path(entry["id"]), entry)
 
 
 # ---------------------------------------------------------------------------
@@ -413,16 +415,11 @@ def _save_piston_file(entry: dict):
 
 def load_globals() -> dict:
     """{"@Name": {"t": ..., "v": ..., "used_by": [{"id":, "name":}, ...]}}"""
-    if not GLOBALS_FILE.exists():
-        return {}
-    with open(GLOBALS_FILE, encoding="utf-8") as f:
-        return json.load(f)
+    return read_json_safe(GLOBALS_FILE, dict, "globals.json")
 
 
 def save_globals(globals_store: dict):
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with open(GLOBALS_FILE, "w", encoding="utf-8") as f:
-        json.dump(globals_store, f, indent=2)
+    write_json_atomic(GLOBALS_FILE, globals_store)
 
 
 def globals_for_wire() -> dict:
@@ -483,11 +480,51 @@ def update_used_by(piston_id: str, piston_name: str, referenced_globals: set[str
 # then this file is hand-edited like data/config.json was before it existed.
 # ---------------------------------------------------------------------------
 
+def write_json_atomic(path, data):
+    """Write JSON so a crash/kill/full disk can never leave a half-written
+    store behind: serialise to a temp file in the same directory, flush to
+    disk, then atomically replace. os.replace is atomic on POSIX and Windows.
+    (Corrupt stores used to brick the whole app — found 2026-07-19.)"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+def read_json_safe(path, default, label=""):
+    """Read a JSON store, tolerating a corrupt/truncated file: the bad file is
+    QUARANTINED (renamed with a timestamp, never deleted — it may be
+    recoverable by hand) and the default is returned, so one damaged store
+    cannot take the whole app down."""
+    if not path.exists():
+        return default() if callable(default) else default
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError) as exc:
+        quarantine = path.with_suffix(path.suffix + f".corrupt-{int(_time.time())}")
+        try:
+            os.replace(path, quarantine)
+        except OSError:
+            quarantine = None
+        print(f"[pistoncore] {label or path.name} is unreadable ({exc}); "
+              f"quarantined as {quarantine.name if quarantine else 'n/a'} "
+              f"and starting from empty")
+        return default() if callable(default) else default
+
+
 def load_settings() -> dict:
-    if not SETTINGS_FILE.exists():
-        return {}
-    with open(SETTINGS_FILE, encoding="utf-8") as f:
-        return json.load(f)
+    return read_json_safe(SETTINGS_FILE, dict, "settings.json")
 
 
 def piston_fingerprint(piston: dict) -> str:
@@ -594,6 +631,4 @@ def band_prefs() -> dict:
 
 
 def save_settings(settings: dict):
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
-        json.dump(settings, f, indent=2)
+    write_json_atomic(SETTINGS_FILE, settings)

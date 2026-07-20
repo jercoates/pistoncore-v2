@@ -25,10 +25,8 @@ class HAClientError(Exception):
 
 
 def _load_config() -> dict:
-    if not CONFIG_FILE.exists():
-        return {}
-    with open(CONFIG_FILE, encoding="utf-8") as f:
-        return json.load(f)
+    from . import storage
+    return storage.read_json_safe(CONFIG_FILE, dict, "config.json")
 
 
 def _load_auth() -> tuple[str, str]:
@@ -89,9 +87,8 @@ def save_config(ha_url: str, ha_token: str | None, **extra) -> None:
             config[key] = extra[key]
     if extra.get("smb_password"):
         config["smb_password"] = extra["smb_password"]
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
+    from . import storage
+    storage.write_json_atomic(CONFIG_FILE, config)
 
 
 async def _ws_call(messages: list[dict]) -> dict[int, dict]:
