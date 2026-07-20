@@ -141,6 +141,33 @@ function pistonRow(p) {
   });
   tools.appendChild(copy);
 
+  // Compile-target override — the escape hatch for when the YAML translation
+  // misbehaves (Jeremy 2026-07-19). Stored in PistonCore settings, never in
+  // the piston JSON; changing it recompiles immediately.
+  const bandWrap = document.createElement("span");
+  bandWrap.className = "diag-band";
+  const bandLabel = document.createElement("label");
+  bandLabel.textContent = "Compile as ";
+  const bandSel = document.createElement("select");
+  [["auto", "Automatic (recommended)"],
+   ["pyscript", "Always PyScript"],
+   ["yaml", "HA automation only"]].forEach(([v, t]) => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = t;
+    if ((p.band_pref || "auto") === v) o.selected = true;
+    bandSel.appendChild(o);
+  });
+  bandSel.addEventListener("change", async () => {
+    bandSel.disabled = true;
+    const r = await fetch("/api/diagnostics/band/" + p.id + "?band=" + bandSel.value,
+                          { method: "POST" });
+    bandSel.disabled = false;
+    if (r.ok) load();
+  });
+  bandLabel.appendChild(bandSel);
+  bandWrap.appendChild(bandLabel);
+  tools.appendChild(bandWrap);
+
   const openBtn = document.createElement("a");
   openBtn.className = "btn";
   openBtn.textContent = "Open piston";
@@ -163,6 +190,7 @@ async function load() {
   pistonsEl.innerHTML = "";
   const r = await fetch("/api/diagnostics");
   const d = await r.json();
+  if (d.default_band) bandDefault.value = d.default_band;
   checksEl.innerHTML = "";
   d.checks.forEach((c) => checksEl.appendChild(checkRow(c)));
   const problems = d.pistons.filter((p) => p.status === "error");
@@ -175,6 +203,19 @@ async function load() {
   }
   d.pistons.forEach((p) => pistonsEl.appendChild(pistonRow(p)));
 }
+
+// instance-wide default compile target (per-piston overrides are on each row)
+const bandDefault = document.getElementById("default_band");
+bandDefault.addEventListener("change", async () => {
+  bandDefault.disabled = true;
+  const r = await fetch("/api/diagnostics/default-band?band=" + bandDefault.value,
+                        { method: "POST" });
+  bandDefault.disabled = false;
+  document.getElementById("band-saved").textContent =
+    r.ok ? "Saved — applies to pistons set to Automatic; re-save a piston to recompile it."
+         : "Could not save.";
+  if (r.ok) load();
+});
 
 document.getElementById("diag-refresh").addEventListener("click", load);
 load();

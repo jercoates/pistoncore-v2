@@ -468,3 +468,5 @@ button {
   white-space: pre; }
 .compile-paused { color: var(--text-muted); }
 .compile-pending { color: var(--text-muted); }
+.diag-band { font-size: 12px; color: var(--text-muted); }
+.diag-band select { margin-left: 6px; font-size: 12px; }

@@ -98,6 +98,20 @@ switch (`choose:`), loops (`repeat:`), exit (`stop:`), executePiston
 That doc had never been applied. Scoped in SESSION_BRIEF_YAML_BAND_EXPANSION.md
 — needs a Jinja emitter for the existing expression AST + a script emission
 target. Expect the band split to invert.
+**COMPILE-TARGET OVERRIDE — DECIDED + BUILT (Jeremy, 2026-07-19):** a
+per-piston and instance-wide band preference ("auto" | "pyscript" | "yaml"),
+implementing COMPILER_SPEC §3.2's optional "prefer PyScript for fidelity"
+user preference. Rationale (Jeremy): PyScript follows webCoRE's execution
+model more closely, so when a piston compiles to YAML but doesn't behave
+right, forcing PyScript is the escape hatch. "auto" = routing table then
+YAML then fall through; "pyscript" = always, even when YAML could express
+it; "yaml" = YAML only, and an unexpressible piston is an honest error
+rather than a silent change of execution model. Stored in PistonCore
+settings (storage.compile_band/set_compile_band) — NEVER in the piston JSON
+(read-only-compiler rule). UI lives on the DIAGNOSTICS page, not Settings
+(Jeremy: "it could live in the compiler debug for edge cases or just won't
+work right") — instance default at the top, per-piston selector on each row,
+changing a piston's setting recompiles it immediately.
 **Community corpus: 10/14 compile (5 YAML + 5 PyScript). Remaining 4:**
 $weather/$twcweather external feeds (3) and httpRequest (1) — the HA-native
 answer is weather/REST sensor entities; needs a mapping decision + help doc,

@@ -286,7 +286,8 @@ async def compile_and_deploy(piston_id: str) -> dict:
     try:
         resolution_map = await _resolution_map()
         result = compile_piston(entry["piston"], piston_id, name, resolution_map,
-                                storage.load_globals())
+                                storage.load_globals(),
+                                band=storage.compile_band(piston_id))
     except CompilerError as exc:
         fields = exc.record()
         fields.pop("piston_id", None)  # already _record()'s key

@@ -14,6 +14,24 @@
     <div class="field-hint">Running checks…</div>
   </div>
 
+  <h2>Compile target</h2>
+  <p class="field-hint">
+    PistonCore normally compiles each piston to a plain Home Assistant
+    automation and only uses PyScript when the piston needs it. PyScript
+    follows webCoRE's execution model more closely — if a piston compiles but
+    behaves differently than it did on Hubitat, forcing it to PyScript is the
+    escape hatch. Set the default here; override any individual piston below.
+  </p>
+  <div class="form-group diag-default-band">
+    <label for="default_band">Default for all pistons</label>
+    <select id="default_band">
+      <option value="auto">Automatic — HA automations where possible (recommended)</option>
+      <option value="pyscript">Always PyScript — closest to webCoRE behaviour</option>
+      <option value="yaml">HA automations only — never use PyScript</option>
+    </select>
+    <span id="band-saved" class="field-hint"></span>
+  </div>
+
   <h2>Pistons</h2>
   <p class="field-hint">
     Every piston's real compile result. Open one to read the exact error, view

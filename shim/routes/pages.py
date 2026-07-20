@@ -115,6 +115,7 @@ async def settings_page(request: Request):
     # TTS engine picker (SPEAK_ACTION_SPEC: engine is a global setting) —
     # best-effort live enumeration; page still renders when HA is down
     config["tts_engine"] = storage.load_settings().get("tts_engine", "")
+    config["default_band"] = storage.load_settings().get("default_band", "auto")
     try:
         regs = await ha_client.fetch_registries()
         from .. import device_pipeline
@@ -311,9 +312,11 @@ async def diagnostics_data():
             "message": rec.get("message", "not compiled yet — save the piston to compile"),
             "file": rec.get("file"), "band": rec.get("band", "yaml" if rec.get("file") else ""),
             "code": rec.get("code"), "stmt_id": rec.get("stmt_id"),
+            "band_pref": storage.compile_band(entry["id"]),
             "artifacts": _artifact_list(entry["id"]),
         })
-    return {"checks": checks, "pistons": pistons}
+    return {"checks": checks, "pistons": pistons,
+            "default_band": storage.load_settings().get("default_band", "auto")}
 
 
 def _artifact_list(piston_id: str) -> list:
@@ -322,6 +325,32 @@ def _artifact_list(piston_id: str) -> list:
     if not d.is_dir():
         return []
     return sorted((f.name for f in d.iterdir() if f.is_file()), reverse=True)[:10]
+
+
+@router.post("/api/diagnostics/default-band")
+async def diagnostics_default_band(band: str = "auto"):
+    """Instance-wide compile-target default. Lives on the compiler page, not
+    in Settings (Jeremy 2026-07-19: this is an edge-case control for when the
+    translation doesn't behave, so it belongs with the compiler tools)."""
+    if band not in ("auto", "yaml", "pyscript"):
+        return JSONResponse({"error": "bad band"}, status_code=400)
+    s = storage.load_settings()
+    s["default_band"] = band
+    storage.save_settings(s)
+    return {"ok": True, "band": band}
+
+
+@router.post("/api/diagnostics/band/{piston_id}")
+async def diagnostics_set_band(piston_id: str, band: str = "auto"):
+    """Per-piston compile-target override (Jeremy 2026-07-19): force PyScript
+    when the YAML translation misbehaves, or pin YAML. Recompiles immediately
+    so the choice takes effect without a separate save."""
+    if band not in ("auto", "yaml", "pyscript"):
+        return JSONResponse({"error": "bad band"}, status_code=400)
+    storage.set_compile_band(piston_id, band)
+    from ..compiler import deploy as compiler_deploy
+    rec = await compiler_deploy.compile_and_deploy(piston_id)
+    return {"ok": True, "band": band, "compile": rec}
 
 
 @router.get("/api/diagnostics/artifact/{piston_id}/{name}")

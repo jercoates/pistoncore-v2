@@ -489,6 +489,28 @@ def load_settings() -> dict:
         return json.load(f)
 
 
+def compile_band(piston_id: str) -> str:
+    """The user's compile-target preference for one piston: "auto" (default),
+    "pyscript" (force, for when the YAML translation misbehaves) or "yaml".
+    Falls back to the instance-wide default. Stored in PistonCore settings —
+    NEVER in the piston JSON (read-only-compiler rule)."""
+    s = load_settings()
+    per = (s.get("piston_band") or {}).get(piston_id)
+    if per in ("auto", "yaml", "pyscript"):
+        return per
+    return s.get("default_band", "auto")
+
+
+def set_compile_band(piston_id: str, band: str):
+    s = load_settings()
+    per = s.setdefault("piston_band", {})
+    if band == "auto":
+        per.pop(piston_id, None)
+    else:
+        per[piston_id] = band
+    save_settings(s)
+
+
 def save_settings(settings: dict):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
