@@ -98,6 +98,26 @@ switch (`choose:`), loops (`repeat:`), exit (`stop:`), executePiston
 That doc had never been applied. Scoped in SESSION_BRIEF_YAML_BAND_EXPANSION.md
 — needs a Jinja emitter for the existing expression AST + a script emission
 target. Expect the band split to invert.
+**REVIEW FINDINGS FIXED (2026-07-20, second external review):**
+- **Fail-open numeric conditions (real, systemic, both bands).** The
+  `float(default=1.0e9)` sentinel only failed CLOSED for `<`/`<=`/inside-range;
+  it failed OPEN for `>`/`>=`/outside-range (a huge default reads as
+  "greater than" / "outside"), so an unavailable sensor spuriously SATISFIED
+  those conditions — the exact silent-misfire class COMPILER_DECISIONS_DEPLOY
+  §2 exists to prevent. YAML band now routes every numeric comparison through
+  `_num_cmp`/`_num_between` (an `is_number` guard → false on
+  unknown/unavailable, fail-closed for ALL operators). PyScript band's one
+  offender (negative-range `_f is None or`) fixed to `is not None and`.
+  Golden fixture updated by hand to the guarded form; new regression test
+  `test_unavailable_sensor_fails_closed` renders every numeric operator's
+  template with the sensor unavailable and asserts False.
+- **Duplicated speaker-detection swallow** (deviceNotification-on-a-media_player
+  is a spoken message) factored from both emitters into
+  `Resolver.speaker_targets`.
+- The review's "no .j2 templates, nothing compiles" alarm was the
+  unpushed-working-tree confusion again (GitHub main lagged local); templates
+  exist and render, the reviewer retracted it on seeing the screenshot.
+
 **PRODUCT INTENT — YAML-FIRST, PYSCRIPT AS THE VALVE (Jeremy, 2026-07-19):**
 "the real goal is to make all of them work correctly in yaml but a way to
 just make it work out in the wild is gold if it ends up with less trouble

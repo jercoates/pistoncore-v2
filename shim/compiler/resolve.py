@@ -147,6 +147,19 @@ class Resolver:
     def opposite_state(self, value: str) -> str | None:
         return self.binary_opposites.get(value)
 
+    def speaker_targets(self, drefs: list[str], ctx: dict) -> list[str] | None:
+        """If these devices are media_players that can speak, return their
+        entities; else None. A webCoRE deviceNotification on a speaker is a
+        spoken message, not a push — both bands need this test, so it lives
+        here rather than copy-pasted (review 2026-07-20 finding C)."""
+        if not drefs:
+            return None
+        try:
+            ents = self.entities_for_command(drefs, "speak", ctx)
+        except Exception:
+            return None
+        return ents if ents and all(e.startswith("media_player.") for e in ents) else None
+
     def service_for(self, command: str, entity_id: str, ctx: dict) -> str:
         service, _ = self.service_spec(command, entity_id, ctx)
         return service

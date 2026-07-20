@@ -209,6 +209,20 @@ def _sun_bound(cond, which):
     return None
 
 
+def _num_cmp(entity: str, op: str, value) -> str:
+    """A numeric comparison that is FALSE when the sensor is unavailable, for
+    ANY operator (fail-closed). states('x') | is_number is false for
+    unknown/unavailable, so the `and` short-circuits."""
+    return (f"states('{entity}') | is_number and "
+            f"states('{entity}') | float(0) {op} {value}")
+
+
+def _num_between(entity: str, lo, hi, negate: bool = False) -> str:
+    inside = f"{lo} <= states('{entity}') | float(0) <= {hi}"
+    body = f"not ({inside})" if negate else f"({inside})"
+    return f"states('{entity}') | is_number and {body}"
+
+
 def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     """Condition IR node -> template/time/sun condition dict for the template."""
     co = cond["co"]
@@ -285,17 +299,14 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
 
     if co in _NUMERIC_OPS:
         op = _NUMERIC_OPS[co]
-        # fail-closed default: unavailable sensor -> condition false (fixture rule)
-        parts = [f"states('{e}') | float(default=1.0e9) {op} {cond['value']}"
-                 for e in entities]
+        parts = [_num_cmp(e, op, cond["value"]) for e in entities]
     elif co == "is_between" and _is_number(cond["value"]) and _is_number(cond["value2"]):
-        parts = [f"{cond['value']} <= states('{e}') | float(default=1.0e9) <= {cond['value2']}"
-                 for e in entities]
+        parts = [_num_between(e, cond["value"], cond["value2"]) for e in entities]
     elif co in _EQUALITY_OPS:
         op = _EQUALITY_OPS[co]
         value = cond["value"]
         if _is_number(value):
-            parts = [f"states('{e}') | float(default=1.0e9) {op} {value}" for e in entities]
+            parts = [_num_cmp(e, op, value) for e in entities]
         else:
             mapped = resolver.ha_state_value(cond["attr"], value)
             parts = [f"states('{e}') {op} '{mapped}'" for e in entities]
@@ -308,14 +319,13 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         want = 0 if co == "is_even" else 1
         parts = [f"states('{e}') | int(default=-1) % 2 == {want}" for e in entities]
     elif co == "is_not_between":
-        parts = [f"not ({cond['value']} <= states('{e}') | float(default=1.0e9) "
-                 f"<= {cond['value2']})" for e in entities]
+        parts = [_num_between(e, cond["value"], cond["value2"], negate=True)
+                 for e in entities]
     elif co in ("is_inside_of_range",):
-        parts = [f"{cond['value']} <= states('{e}') | float(default=1.0e9) "
-                 f"<= {cond['value2']}" for e in entities]
+        parts = [_num_between(e, cond["value"], cond["value2"]) for e in entities]
     elif co in ("is_outside_of_range",):
-        parts = [f"not ({cond['value']} <= states('{e}') | float(default=1.0e9) "
-                 f"<= {cond['value2']})" for e in entities]
+        parts = [_num_between(e, cond["value"], cond["value2"], negate=True)
+                 for e in entities]
     elif co in ("stays_greater_than", "stays_greater_than_or_equal_to",
                 "stays_less_than", "stays_less_than_or_equal_to",
                 "remains_above", "remains_below"):
@@ -326,7 +336,7 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         hold = _duration_hms(cond.get("duration")) or "00:00:00"
         h, m, sec = (int(x) for x in hold.split(":"))
         secs = h * 3600 + m * 60 + sec
-        parts = [f"(states('{e}') | float(default=1.0e9) {op} {cond['value']} and "
+        parts = [f"({_num_cmp(e, op, cond['value'])} and "
                  f"(as_timestamp(now()) - as_timestamp(states.{e}.last_changed)) >= {secs})"
                  for e in entities]
     elif co in ("stays", "stays_equal_to", "stays_any_of", "was", "was_not"):
@@ -355,14 +365,12 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         parts = [f"states('{e}') | float(default=-1.0e9) > {cond['value']}"
                  for e in entities]
     elif co in ("drops_below", "drops", "drops_to_or_below"):
-        parts = [f"states('{e}') | float(default=1.0e9) < {cond['value']}"
-                 for e in entities]
+        parts = [_num_cmp(e, "<", cond["value"]) for e in entities]
     elif co in ("was_greater_than", "was_greater_than_or_equal_to",
                 "was_less_than", "was_less_than_or_equal_to"):
         OPS = {"was_greater_than": ">", "was_greater_than_or_equal_to": ">=",
                "was_less_than": "<", "was_less_than_or_equal_to": "<="}
-        parts = [f"states('{e}') | float(default=1.0e9) {OPS[co]} {cond['value']}"
-                 for e in entities]
+        parts = [_num_cmp(e, OPS[co], cond["value"]) for e in entities]
     elif co in ("was_equal_to", "was_any_of"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
         mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
@@ -705,13 +713,8 @@ def _push_notification(n: dict, resolver: Resolver, ctx: dict) -> dict:
     configured notifier — the honest general mapping. deviceNotification on a
     media_player is a spoken message, so that routes to Speak instead."""
     import json as _json
-    if n["command"] == "deviceNotification" and n["devices"]:
-        try:
-            ents = resolver.entities_for_command(n["devices"], "speak", ctx)
-            if ents and ents[0].startswith("media_player."):
-                return _speak(n, resolver, ctx)
-        except Exception:
-            pass
+    if n["command"] == "deviceNotification" and resolver.speaker_targets(n["devices"], ctx):
+        return _speak(n, resolver, ctx)
     p0 = n["params"][0] if n["params"] else {}
     return {"kind": "service", "service": "notify.notify", "entities": [],
             "data": {"message": _text_param(p0, resolver, ctx, n.get("_piston"))}}

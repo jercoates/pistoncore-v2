@@ -54,9 +54,10 @@
       to: "on"
   conditions:
     # is_less_than_or_equal_to 1000 — template form, fails closed on unavailable
+    # (is_number guard: unknown/unavailable makes the whole condition false)
     - condition: template
       value_template: >-
-        {{ states('sensor.cave_lumen') | float(default=1.0e9) <= 1000 }}
+        {{ states('sensor.cave_lumen') | is_number and states('sensor.cave_lumen') | float(0) <= 1000 }}
   actions:
     - action: light.turn_on
       target:

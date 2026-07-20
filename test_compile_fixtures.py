@@ -114,7 +114,87 @@ def test_else_on_trigger_only_if():
     return 0
 
 
+
+
+def test_unavailable_sensor_fails_closed():
+    """A sensor going unavailable must never SATISFY a condition — for every
+    operator, positive or negative (COMPILER_DECISIONS_DEPLOY §2: silent dead
+    or spuriously-firing automations are the worst failure mode). Regression
+    for the fail-open bug the 2026-07-20 review found: the old
+    float(default=1.0e9) sentinel failed OPEN for > / >= / outside-range.
+    We render each emitted template with the sensor unavailable and assert it
+    evaluates False."""
+    import re
+    from shim.compiler import compile_piston
+    try:
+        from jinja2 import Environment
+    except ImportError:
+        print("SKIP — jinja2 unavailable"); return 0
+
+    reso = {":s:": {"name": "Lux", "attr_bindings": {"illuminance": "sensor.lux"},
+                    "cmd_bindings": {}},
+            ":l:": {"name": "L", "attr_bindings": {},
+                    "cmd_bindings": {"on": "light.l"}}, "$system": {}}
+
+    def cond(co, v, v2=None):
+        c = {"t": "condition", "ct": "c", "co": co,
+             "lo": {"t": "p", "d": [":s:"], "a": "illuminance", "g": "any"},
+             "ro": {"t": "c", "c": v, "vt": "integer"}}
+        if v2 is not None:
+            c["ro2"] = {"t": "c", "c": v2, "vt": "integer"}
+        return c
+
+    # a fake HA template environment: unavailable sensor
+    def is_number(x):
+        try:
+            float(x); return x not in ("unknown", "unavailable", "none")
+        except (TypeError, ValueError):
+            return False
+    env = Environment()
+    env.filters["is_number"] = is_number
+    env.filters["float"] = lambda x, d=0.0: (float(x) if is_number(x) else d)
+
+    def evaluate(tmpl):
+        body = tmpl.strip()[2:-2]
+        return env.from_string("{{ (" + body + ") | string }}").render(
+            states=lambda e: "unavailable")
+
+    failures = []
+    for co, v, v2 in [("is_greater_than", 50, None),
+                      ("is_greater_than_or_equal_to", 50, None),
+                      ("is_less_than", 50, None),
+                      ("is_between", 10, 50),
+                      ("is_not_between", 10, 50),
+                      ("is_inside_of_range", 10, 50),
+                      ("is_outside_of_range", 10, 50)]:
+        piston = {"v": [], "s": [{"$": 1, "t": "if", "tcp": "c", "o": "and",
+            "c": [{"t": "condition", "ct": "t", "co": "changes_to",
+                   "lo": {"t": "p", "d": [":s:"], "a": "illuminance", "g": "any"},
+                   "ro": {"t": "c", "c": 1, "vt": "integer"}},
+                  cond(co, v, v2)],
+            "s": [{"t": "action", "$": 2, "d": [":l:"], "k": [{"c": "on", "p": []}]}],
+            "e": []}]}
+        r = compile_piston(piston, "u", "U", reso, {})
+        if r["target"] != "yaml":
+            continue
+        import yaml as _y
+        auto = _y.safe_load(r["yaml"])[0]
+        tmpls = [c["value_template"] for c in auto.get("conditions", [])
+                 if c.get("condition") == "template"]
+        for t in tmpls:
+            if evaluate(t) != "False":
+                failures.append((co, t, evaluate(t)))
+    if failures:
+        print("FAIL — unavailable sensor satisfied a condition (fail-open):")
+        for co, t, got in failures:
+            print(f"   {co}: {t} -> {got}")
+        return 1
+    print("PASS — every numeric condition fails closed when the sensor is unavailable")
+    return 0
+
+
 if __name__ == "__main__":
     rc = main()
     rc = test_else_on_trigger_only_if() or rc
+    rc = test_unavailable_sensor_fails_closed() or rc
     sys.exit(rc)

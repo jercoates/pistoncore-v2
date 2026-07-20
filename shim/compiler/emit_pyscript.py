@@ -276,7 +276,9 @@ class _PyEmitter:
                      for e in entities]
         elif co in ("is_not_between", "is_outside_of_range", "was_outside_of_range"):
             v2 = ro2.get("c")
-            parts = [f"(_f({_q(e)}) is None or not ({value} <= _f({_q(e)}) <= {v2}))"
+            # fail-closed: an unavailable sensor must NOT satisfy an
+            # outside-range check (was a fail-open `is None or` — review 2026-07-20)
+            parts = [f"(_f({_q(e)}) is not None and not ({value} <= _f({_q(e)}) <= {v2}))"
                      for e in entities]
         elif co in ("is_inside_of_range", "was_inside_of_range"):
             v2 = ro2.get("c")
@@ -630,20 +632,14 @@ class _PyEmitter:
             elif cmd in ("sendPushNotification", "sendSMSNotification",
                          "deviceNotification"):
                 msg = self._string_param(params[0] if params else {"t": "c", "c": ""}, ctx)
-                spoken = False
-                if cmd == "deviceNotification" and devices:
-                    try:
-                        ents = self.resolver.entities_for_command(devices, "speak", ctx)
-                        spoken = bool(ents) and ents[0].startswith("media_player.")
-                    except Exception:
-                        spoken = False
-                if spoken:
+                players = (self.resolver.speaker_targets(devices, ctx)
+                           if cmd == "deviceNotification" else None)
+                if players:
                     engine = self.resolver.system_entity("tts")
                     if not engine:
                         raise NotYetImplemented(
                             "spoken device notification needs a TTS engine "
                             "(PistonCore Settings)", **ctx)
-                    players = self.resolver.entities_for_command(devices, "speak", ctx)
                     out.append({"kind": "service", "domain": "tts", "service": "speak",
                                 "entities": [engine],
                                 "data": {"media_player_entity_id": repr(players),
