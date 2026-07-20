@@ -158,9 +158,17 @@ function pistonRow(p) {
     bandSel.appendChild(o);
   });
   bandSel.addEventListener("change", async () => {
+    let why = "";
+    if (bandSel.value === "pyscript") {
+      // every use of the escape hatch is a YAML-band gap worth recording
+      why = window.prompt(
+        "Optional: what did the HA automation get wrong? " +
+        "The goal is for every piston to run as a native HA automation — a note " +
+        "here travels with the debug bundle and helps get that fixed.", "") || "";
+    }
     bandSel.disabled = true;
-    const r = await fetch("/api/diagnostics/band/" + p.id + "?band=" + bandSel.value,
-                          { method: "POST" });
+    const r = await fetch("/api/diagnostics/band/" + p.id + "?band=" + bandSel.value +
+                          "&why=" + encodeURIComponent(why), { method: "POST" });
     bandSel.disabled = false;
     if (r.ok) load();
   });
@@ -216,6 +224,12 @@ async function load() {
       const c3 = document.createElement("td");
       c3.textContent = p.matched || "set here";
       if (p.adopted_from) c3.textContent += " — carried over from a re-import";
+      if (p.why) {
+        const note = document.createElement("div");
+        note.className = "field-hint";
+        note.textContent = "“" + p.why + "”";
+        c3.appendChild(note);
+      }
       const c4 = document.createElement("td");
       const clr = document.createElement("button");
       clr.type = "button"; clr.className = "btn"; clr.textContent = "Clear";

@@ -342,13 +342,13 @@ async def diagnostics_default_band(band: str = "auto"):
 
 
 @router.post("/api/diagnostics/band/{piston_id}")
-async def diagnostics_set_band(piston_id: str, band: str = "auto"):
+async def diagnostics_set_band(piston_id: str, band: str = "auto", why: str = ""):
     """Per-piston compile-target override (Jeremy 2026-07-19): force PyScript
     when the YAML translation misbehaves, or pin YAML. Recompiles immediately
     so the choice takes effect without a separate save."""
     if band not in ("auto", "yaml", "pyscript"):
         return JSONResponse({"error": "bad band"}, status_code=400)
-    storage.set_compile_band(piston_id, band)
+    storage.set_compile_band(piston_id, band, why=why.strip())
     from ..compiler import deploy as compiler_deploy
     rec = await compiler_deploy.compile_and_deploy(piston_id)
     return {"ok": True, "band": band, "compile": rec}
@@ -379,6 +379,14 @@ async def diagnostics_bundle(piston_id: str):
     parts = [f"PistonCore debug bundle — \"{entry['name']}\" ({piston_id})",
              f"generated {datetime.now().isoformat(timespec='seconds')}",
              "", "== COMPILE STATUS ==", json.dumps(rec, indent=1)]
+    pref = storage.band_prefs().get(piston_id) or {}
+    if pref.get("band") in ("pyscript", "yaml"):
+        parts += ["", "== COMPILE-TARGET OVERRIDE ==",
+                  f"This piston is forced to: {pref['band']}",
+                  f"Reason given: {pref.get('why') or '(none)'}",
+                  "NOTE: the goal is for every piston to work as a native HA "
+                  "automation. A piston needing this override is a gap in the "
+                  "YAML compiler — worth reporting with this bundle."]
     names = _artifact_list(piston_id)
     if names:
         path = compiler_deploy._DEBUG_DIR / piston_id / names[0]

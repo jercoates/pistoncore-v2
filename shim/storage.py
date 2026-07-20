@@ -561,7 +561,7 @@ def _adopt_band_by_name(s: dict, per: dict, piston_id: str, entry: dict):
         if load_piston(old_id) is not None:
             continue          # the original still exists — not a re-import
         per[piston_id] = {"band": old["band"], "name": entry.get("name"),
-                          "fingerprint": fp,
+                          "why": old.get("why", ""), "fingerprint": fp,
                           "adopted_from": old_id,
                           "matched": "name" + ("" if old.get("fingerprint") == fp
                                                else " (structure changed)")}
@@ -571,7 +571,7 @@ def _adopt_band_by_name(s: dict, per: dict, piston_id: str, entry: dict):
     return None
 
 
-def set_compile_band(piston_id: str, band: str):
+def set_compile_band(piston_id: str, band: str, why: str = ""):
     s = load_settings()
     per = s.setdefault("piston_band", {})
     if band == "auto":
@@ -580,7 +580,7 @@ def set_compile_band(piston_id: str, band: str):
         entry = load_piston(piston_id) or {}
         per[piston_id] = {"band": band, "name": entry.get("name"),
                           "fingerprint": piston_fingerprint(entry.get("piston") or {}),
-                          "matched": "set here"}
+                          "matched": "set here", "why": why}
     save_settings(s)
 
 

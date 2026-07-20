@@ -98,6 +98,20 @@ switch (`choose:`), loops (`repeat:`), exit (`stop:`), executePiston
 That doc had never been applied. Scoped in SESSION_BRIEF_YAML_BAND_EXPANSION.md
 — needs a Jinja emitter for the existing expression AST + a script emission
 target. Expect the band split to invert.
+**PRODUCT INTENT — YAML-FIRST, PYSCRIPT AS THE VALVE (Jeremy, 2026-07-19):**
+"the real goal is to make all of them work correctly in yaml but a way to
+just make it work out in the wild is gold if it ends up with less trouble
+tickets." So: native HA automations are the target for EVERY piston (that is
+what SESSION_BRIEF_YAML_BAND_EXPANSION.md exists to advance); the
+compile-target override is a pressure valve, not an answer. Consequence for
+design: every use of the valve is a LABELLED DEFECT in the YAML band, not
+just a user workaround — forcing PyScript optionally captures a reason, the
+reason is stored with the preference, shown in the Diagnostics "Remembered
+overrides" list, and carried in the debug bundle under a COMPILE-TARGET
+OVERRIDE heading that states the goal explicitly. Overrides in the wild are
+therefore the YAML band's prioritised backlog. Do not let the valve become
+the plan.
+
 **COMPILE-TARGET OVERRIDE — DECIDED + BUILT (Jeremy, 2026-07-19):** a
 per-piston and instance-wide band preference ("auto" | "pyscript" | "yaml"),
 implementing COMPILER_SPEC §3.2's optional "prefer PyScript for fidelity"
