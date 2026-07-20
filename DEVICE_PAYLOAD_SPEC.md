@@ -214,6 +214,17 @@ bound to its member; `c`: [] (sensors). Exactly the Hubitat presentation.
 A dimmable light whose registry device has one entity behaves identically to Draft 1's
 entity-as-device — grouping is a no-op for singles.
 
+## 4a. REQUIRED help (Jeremy, 2026-07-20)
+
+The translation files this spec governs — `webcore_vocab.json` (`"ha"` arrays +
+`_ha_translation`) and `picker_capability_map.json` — are user-editable data on
+the /data volume (COMPILER_SPEC §1a). They still lack a user/AI editing
+walkthrough. A future session MUST add a "how to edit the translation layer"
+section to `/help/editing-compiler`: what the `"ha"` read/write rules and the
+picker signal→attribute rules do, their shape, and step-by-step instructions
+(for a human or an AI) to add recognition for a new device or attribute. Goal:
+a user teaches PistonCore a new attribute translation without a code change.
+
 ## 5. Open items
 1. ~~Duplicate-attribute split rule~~ — RESOLVED (Jeremy, 2026-07-09): never split; see
    Stage 3 decision text.

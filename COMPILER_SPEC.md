@@ -65,6 +65,21 @@ loaded through `customize.path`/`search_dirs`. A loader that opens a file via
 into the image and breaks editability. (This exact regression was found and
 fixed 2026-07-20: all loaders had drifted to image-relative paths.)
 
+**REQUIRED, not yet built (Jeremy, 2026-07-20 — "make sure it happens"):** the
+editing help (`/help/editing-compiler`, templates/help_editing_compiler.html)
+MUST gain a full "how to edit the TRANSLATION layer" section, alongside the
+command/value-map guidance it already has. The translation layer is how HA
+entities become webCoRE-shaped devices/attributes and how attribute reads &
+command writes route back to HA — it lives in `webcore_vocab.json` (the
+per-attribute/command `"ha"` arrays + `_ha_translation` block — the structured
+read/write rules, see DEVICE_PAYLOAD_SPEC §2) and `picker_capability_map.json`
+(HA signals → attribute keys). The section must be written for ANYONE (a user
+following it by hand, or an AI handed the file), matching the existing doc's
+"what it does / shape rules / instructions for the AI / verify" structure, so a
+user can teach PistonCore to recognise a new device or attribute without a
+code change. The whole product goal is maximum user-updateability; the
+translation layer is the last editable surface still lacking its how-to.
+
 ## 2. Input contract [pointer section — content lives elsewhere]
 
 - Format: PISTON_JSON_REFERENCE.md (certified against editor source + live captures).

@@ -57,7 +57,11 @@
             using it compile.</td></tr>
     <tr><td><code>picker_capability_map.json</code>, <code>webcore_vocab.json</code></td>
         <td>How Home Assistant entities become webCoRE-shaped devices and
-            attributes. Edit if a device's attribute isn't recognised.</td></tr>
+            attributes, and how attribute reads and command writes route back
+            to HA. Edit if a device or attribute isn't recognised. <em>A full
+            step-by-step for this translation layer is coming; for now, follow
+            the same add-don't-restructure rules below and use
+            <strong>Copy AI repair prompt</strong>, which includes the file.</em></td></tr>
   </table>
   <p class="field-hint">
     These are seeded from PistonCore's defaults the first time it runs and are
