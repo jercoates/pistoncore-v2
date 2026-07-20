@@ -106,9 +106,29 @@ function pistonRow(p) {
     body.appendChild(tools);
   }
 
+  if (p.status === "error") {
+    const repair = document.createElement("button");
+    repair.type = "button";
+    repair.className = "btn btn-primary";
+    repair.textContent = "Copy AI repair prompt";
+    repair.title = "The failure + the compiler's input/output + the mapping file that " +
+                   "governs this error — paste into an AI and it can hand back the edit";
+    repair.addEventListener("click", async () => {
+      const r = await fetch("/api/diagnostics/repair/" + p.id);
+      const d = await r.json();
+      if (!d.text) { repair.textContent = "Failed"; return; }
+      await navigator.clipboard.writeText(d.text);
+      repair.textContent = d.target
+        ? "Copied — includes " + d.target.path.split("/").pop()
+        : "Copied";
+      setTimeout(() => (repair.textContent = "Copy AI repair prompt"), 3500);
+    });
+    tools.appendChild(repair);
+  }
+
   const copy = document.createElement("button");
   copy.type = "button";
-  copy.className = "btn btn-primary";
+  copy.className = "btn";
   copy.textContent = "Copy debug info";
   copy.title = "Status + generated code + piston JSON, ready to paste into a chat or bug report";
   copy.addEventListener("click", async () => {

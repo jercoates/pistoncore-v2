@@ -360,6 +360,106 @@ async def diagnostics_bundle(piston_id: str):
     return {"text": "\n".join(parts)}
 
 
+# Which editable file governs which class of compile error. This is the
+# self-repair surface (memory: user-maintainability goal — extend the compiler
+# by editing DATA, not by a coding session). Order matters: first match wins.
+_REPAIR_MAP = [
+    ("no HA service mapping for command",
+     "templates/compiler/yaml/classic/command_maps.json",
+     "Add the missing webCoRE command -> HA service mapping for that device "
+     "domain. Values are either a plain \"domain.service\" string, or "
+     "{\"service\": \"domain.service\", \"data\": {...}} where data values may "
+     "use $1/$2 for the task's parameters (optionally |hex_rgb or |pct_float)."),
+    ("alarm status",
+     "templates/compiler/yaml/classic/value_maps.json",
+     "Add the webCoRE alarm status -> HA alarm_control_panel service under "
+     "\"alarm_commands\"."),
+    ("expression function",
+     "templates/compiler/pyscript/2.x/expr_runtime.py.j2",
+     "Implement the missing webCoRE function as a def _fn_<name>(...) in this "
+     "runtime file, AND add its bare name to the _FUNCTIONS set at the bottom "
+     "of shim/compiler/expression.py so the compiler knows it exists."),
+    ("has no binding for attribute",
+     "picker_capability_map.json",
+     "This maps HA entity signals (domain, device_class, supported_features) "
+     "to webCoRE attribute names. Add a rule so the entity that carries this "
+     "attribute is recognised; check webcore_vocab.json for the attribute's "
+     "canonical name and type."),
+    ("requires PyScript",
+     "routing_table.json",
+     "This lists the webCoRE JSON signatures that force the PyScript band. "
+     "Usually nothing to change — but if HA has since gained native support "
+     "for the construct, removing its signature here lets it compile to YAML."),
+    ("state value", "templates/compiler/yaml/classic/value_maps.json",
+     "Add the webCoRE attribute value -> HA state value under "
+     "\"attribute_values\"."),
+]
+
+
+def _repair_target(message: str):
+    for needle, path, guidance in _REPAIR_MAP:
+        if needle.lower() in (message or "").lower():
+            return {"path": path, "guidance": guidance}
+    return None
+
+
+@router.get("/api/diagnostics/repair/{piston_id}")
+async def diagnostics_repair(piston_id: str):
+    """A ready-to-paste AI repair prompt: the failure, the compiler's input and
+    output, AND the current contents of the data file that governs this class
+    of error — so the answer can be an edit you apply, not a discussion."""
+    from ..compiler import deploy as compiler_deploy
+    entry = storage.load_piston(piston_id)
+    if entry is None:
+        return JSONResponse({"error": "no such piston"}, status_code=404)
+    rec = compiler_deploy.load_statuses().get(piston_id) or {}
+    message = rec.get("message", "")
+    target = _repair_target(message)
+
+    parts = [
+        "I use PistonCore, which compiles webCoRE piston JSON into Home "
+        "Assistant automations (YAML) or PyScript modules. A piston is failing "
+        "to compile. Please fix it by giving me the exact edit to make.",
+        "", "== THE FAILURE ==",
+        f"Piston: {entry['name']}",
+        f"Status: {rec.get('status', 'unknown')}",
+        f"Message: {message}",
+    ]
+    if rec.get("stmt_id"):
+        parts.append(f"Statement id: ${rec['stmt_id']}")
+
+    if target:
+        path = REPO_ROOT / target["path"]
+        parts += ["", "== THE FILE THAT GOVERNS THIS ==",
+                  f"Path: {target['path']}",
+                  f"What to do: {target['guidance']}", "", "Current contents:"]
+        try:
+            text = path.read_text(encoding="utf-8")
+            parts.append(text if len(text) < 20000 else text[:20000] + "\n…(truncated)")
+        except OSError as exc:
+            parts.append(f"(could not read: {exc})")
+        parts += ["", "Please reply with the edited section of this file, "
+                  "keeping its existing shape and style exactly. Data files are "
+                  "plain JSON; template files are Jinja2/Python."]
+    else:
+        parts += ["", "== NO SINGLE DATA FILE GOVERNS THIS ONE ==",
+                  "This error is not one of the data-file-fixable classes "
+                  "(service mappings, value maps, expression functions, "
+                  "attribute bindings, routing). It likely needs a change in "
+                  "the compiler itself, or the piston uses something with no "
+                  "Home Assistant equivalent. Explain what the piston is trying "
+                  "to do and what the closest HA-native approach would be."]
+
+    names = _artifact_list(piston_id)
+    if names:
+        art = compiler_deploy._DEBUG_DIR / piston_id / names[0]
+        parts += ["", f"== WHAT THE COMPILER PRODUCED ({names[0]}) ==",
+                  art.read_text(encoding="utf-8")]
+    parts += ["", "== THE PISTON (compiler input) ==",
+              json.dumps(entry["piston"], indent=1)]
+    return {"text": "\n".join(parts), "target": target}
+
+
 @router.get("/api/compile-status/{piston_id}")
 async def compile_status(piston_id: str):
     """Latest compile/deploy record for one piston — the piston status

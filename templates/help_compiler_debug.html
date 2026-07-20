@@ -1,174 +1,165 @@
 {% extends "base.html" %}
-{% block title %}PistonCore Help — Debugging a bad compile{% endblock %}
+{% block title %}PistonCore Help — When pistons don't compile{% endblock %}
 
 {% block content %}
 <div class="page active help-article">
   <div class="list-header">
-    <h1>Debugging a bad compile</h1>
+    <h1>When pistons don't compile</h1>
   </div>
 
   <p>
-    Every time you save, pause, or enable a piston, PistonCore compiles it and pushes the
-    result into Home Assistant. When that goes wrong, the problem is announced in exactly
-    two places: the <strong>status pill</strong> on the piston's row on the landing page,
-    and a <strong>banner</strong> on the piston's own status screen. Everything below is
-    about what to do after you've seen one of those.
+    Start at <a href="/diagnostics"><strong>Diagnostics</strong></a> — it runs
+    the checks below for you and shows every piston's real result. This page
+    explains what those results mean and, importantly, <strong>how to extend
+    the compiler yourself</strong> when it hits something it doesn't know yet.
   </p>
+
+  <h2>Situation 1 — nothing works yet (first run)</h2>
+  <p>
+    If <em>every</em> piston is red or stuck on “not compiled”, the problem is
+    almost never the pistons. It's plumbing, and it fails in a fixed order —
+    each step depends on the one above it:
+  </p>
+  <ol>
+    <li><strong>Home Assistant connection.</strong> Without it nothing else can
+        even be checked. Settings → URL + long-lived token.</li>
+    <li><strong>Write access.</strong> PistonCore has to put files inside HA's
+        config folder — a mounted path or HA's Samba share. Settings → write
+        target → <em>Test write target</em> until it passes. Until it does,
+        every compile fails at the last step.</li>
+    <li><strong>configuration.yaml include lines.</strong> HA only loads
+        PistonCore's folders if its config points at them. Settings → Check
+        configuration.yaml (shows the exact lines, backs the file up first),
+        then reload or restart HA.</li>
+    <li><strong>PyScript.</strong> Simple pistons don't need it. Anything with
+        formulas, loops, switches, variables, event blocks or computed text
+        does. Install from HACS (search “pyscript”), then re-save.</li>
+    <li><strong>Globals and devices.</strong> Imported pistons reference global
+        variables <em>by name</em> — the devices live in your instance, not in
+        the piston file. Create them in the editor's Global variables panel
+        using the same names (case-sensitive) and assign devices.</li>
+  </ol>
+  <p>
+    Diagnostics checks 1–4 directly and names the one that's broken, so you
+    don't have to guess which layer failed.
+  </p>
+
+  <h2>Situation 2 — it worked, and now it doesn't</h2>
+  <p>Something changed. Work from what changed:</p>
+  <ul>
+    <li><strong>Compare the generated code.</strong> Diagnostics → the piston →
+        <em>View generated code</em>. The last several compiles are kept in the
+        dropdown; diffing the last good one against the current one usually
+        shows exactly what the compiler started doing differently.</li>
+    <li><strong>“HA rejected the compiled YAML” / “PyScript did not load”</strong>
+        means the compiler produced something Home Assistant refused — a
+        compiler bug, not your piston. HA's own complaint is quoted in the
+        message, and the previously working version was restored
+        automatically, so nothing is down while you sort it out.</li>
+    <li><strong>An entity was renamed or removed in HA.</strong> The piston still
+        points at the old one — re-pick that device in the editor.</li>
+    <li><strong>It compiles but behaves wrong</strong> — see Situation 4.</li>
+  </ul>
+
+  <h2>Situation 3 — the compiler doesn't know something yet</h2>
+  <p>
+    This is the most common real error and the most fixable. Messages like
+    <em>“no HA service mapping for command 'setColorTemperature' on domain
+    'light'”</em> or <em>“expression function 'formatduration()' not compiled
+    yet”</em> mean there's simply no entry for that thing yet.
+  </p>
+  <p>
+    <strong>Most of that knowledge lives in plain editable files, not in
+    code</strong> — deliberately, so it can grow without a development session:
+  </p>
+  <table class="help-table">
+    <tr><th>File</th><th>Holds</th></tr>
+    <tr><td><code>templates/compiler/yaml/classic/command_maps.json</code></td>
+        <td>webCoRE commands → HA services (turn on, set level, set colour,
+            play track, lock…) including the data each call sends.</td></tr>
+    <tr><td><code>templates/compiler/yaml/classic/value_maps.json</code></td>
+        <td>Attribute values (motion active → <code>on</code>), alarm-status
+            commands, colour names, system-variable values.</td></tr>
+    <tr><td><code>templates/compiler/pyscript/2.x/expr_runtime.py.j2</code></td>
+        <td>Every webCoRE expression function (<code>format</code>,
+            <code>indexOf</code>, date maths…) as ordinary Python.</td></tr>
+    <tr><td><code>picker_capability_map.json</code>, <code>webcore_vocab.json</code></td>
+        <td>How HA entities become webCoRE-shaped devices and attributes.</td></tr>
+    <tr><td><code>routing_table.json</code></td>
+        <td>Which webCoRE features force the PyScript band instead of YAML.</td></tr>
+    <tr><td><code>templates/compiler/**/*.j2</code></td>
+        <td>The actual shape of the emitted automation / Python module.</td></tr>
+  </table>
+
+  <h3>Fixing one with an AI — the intended workflow</h3>
+  <ol>
+    <li>Open <a href="/diagnostics">Diagnostics</a>, find the failing piston.</li>
+    <li>Click <strong>Copy AI repair prompt</strong>. That copies the exact
+        error, the piston's JSON (the compiler's input), the code the compiler
+        produced, <em>and the current contents of the file that governs this
+        class of error</em>, with instructions to reply with an edit in that
+        file's existing shape.</li>
+    <li>Paste it into any AI chat. Because the file travels with the question,
+        the answer is a concrete edit rather than advice.</li>
+    <li>Apply the edit to that file, redeploy PistonCore, and re-save the
+        piston. Compile again — the mapping now exists.</li>
+    <li>If the fix needs the compiler's Python rather than a data file, the
+        prompt says so plainly. That one's a code change worth reporting.</li>
+  </ol>
+  <p>
+    This is the maintenance model on purpose: as Home Assistant grows new
+    services and you meet more webCoRE features, the compiler is extended by
+    adding lines to data files — not by waiting for someone to rebuild it.
+  </p>
+
+  <h2>Situation 4 — it compiles, runs, and does the wrong thing</h2>
+  <p>
+    A green pill means HA accepted the automation, not that the logic is right.
+    Two things slip past every check: a template that only fails when it runs,
+    and logic that's valid but wrong.
+  </p>
+  <ul>
+    <li><strong>YAML pistons:</strong> Home Assistant → Settings → Automations →
+        <em>PistonCore: &lt;piston name&gt;</em> → <strong>Traces</strong>.
+        That shows the exact path taken: which trigger fired, what each
+        condition evaluated to, where it stopped.</li>
+    <li><strong>PyScript pistons:</strong> they don't appear in the automations
+        list — their activity goes to HA's log, one line per wake, tagged with
+        the piston id.</li>
+    <li>Compare that against <em>View generated code</em>. If the automation did
+        what the code says but not what the piston means, that's a compiler
+        bug — use <strong>Copy AI repair prompt</strong>, or report it with
+        <strong>Copy debug info</strong>.</li>
+  </ul>
 
   <h2>What each status means</h2>
   <table class="help-table">
-    <tr>
-      <th>Status</th><th>What happened</th><th>Your first move</th>
-    </tr>
-    <tr>
-      <td><span class="compile-pill compile-deployed">deployed</span></td>
-      <td>Compiled, written into HA, HA's config check passed, and the automation was
-          verified present and enabled after the reload. This is the only green.</td>
-      <td>Nothing — but see "when it compiles fine and still misbehaves" below.</td>
-    </tr>
-    <tr>
-      <td><span class="compile-pill compile-error">compile error</span></td>
-      <td>The piston uses something the compiler can't build yet, or a device that no
-          longer resolves. The message names the exact statement and construct.
-          Nothing in HA was touched — the previous working version keeps running.</td>
-      <td>Read the message. "Not compiled yet" means scheduled work, not a broken piston
-          — the piston itself is fine and saved. A device error means re-pick that
-          device in the editor and save.</td>
-    </tr>
-    <tr>
-      <td><span class="compile-pill compile-error">HA rejected</span></td>
-      <td>The compiler produced YAML that Home Assistant refused — this is a
-          <em>compiler or template bug</em>, not a mistake in your piston. HA's own
-          error text is quoted in the message. The previous good version was
-          automatically restored, so nothing broke.</td>
-      <td>Open <a href="/diagnostics">Diagnostics</a>, click <strong>Copy debug
-          info</strong> on that piston, and report it — nothing else to collect.</td>
-    </tr>
-    <tr>
-      <td><span class="compile-pill compile-pyscript">needs PyScript</span></td>
-      <td>The piston is valid but uses features beyond plain HA automations, so it
-          compiles to a PyScript module instead — which needs the PyScript
-          integration installed in HA.</td>
-      <td>Install PyScript from HACS, then re-save the piston. Diagnostics tells
-          you whether it's installed.</td>
-    </tr>
-    <tr>
-      <td><span class="compile-pill compile-paused">paused</span></td>
-      <td>You paused it — its automation is disabled inside HA (or removed, if HA
-          couldn't be reached to disable it; the message says which).</td>
-      <td>Nothing. Enable recompiles fresh and turns it back on.</td>
-    </tr>
+    <tr><th>Status</th><th>Meaning</th></tr>
+    <tr><td><span class="compile-pill compile-deployed">deployed</span></td>
+        <td>Compiled, written, accepted by HA's config check, and verified
+            present after the reload. The only green.</td></tr>
+    <tr><td><span class="compile-pill compile-error">compile error</span></td>
+        <td>Read the message — it names the exact statement. Your piston is
+            safe and the previously deployed version keeps running.</td></tr>
+    <tr><td><span class="compile-pill compile-pyscript">needs PyScript</span></td>
+        <td>Valid piston, but it needs the PyScript integration installed in
+            Home Assistant.</td></tr>
+    <tr><td><span class="compile-pill compile-paused">paused</span></td>
+        <td>You paused it; its automation is disabled in HA.</td></tr>
   </table>
-
-  <h2>Start here: the Diagnostics page</h2>
-  <p>
-    <a href="/diagnostics"><strong>Diagnostics</strong></a> (also linked from
-    Settings) does the digging for you. It checks this instance end to end —
-    Home Assistant connection, write access, PyScript, the
-    <code>configuration.yaml</code> lines — and tells you the fix for anything
-    failing. Below that, every piston is listed with its real compile result;
-    failing ones are already expanded.
-  </p>
-  <p>For any piston you can, without leaving the browser:</p>
-  <ul>
-    <li><strong>Read the exact error</strong> — the same message the banner
-        shows, with the statement number it came from.</li>
-    <li><strong>View the generated code</strong> — the actual YAML or Python
-        PistonCore produced, plus the last several versions it kept, so you can
-        compare a working compile against a broken one.</li>
-    <li><strong>Copy debug info</strong> — one click puts the complete evidence
-        package on your clipboard: the compile status, the generated code, and
-        the piston's own JSON. Paste it into an AI chat or a bug report and
-        nothing else is needed.</li>
-  </ul>
-
-  <h2>Fixing the common errors</h2>
-  <table class="help-table">
-    <tr><th>What the message says</th><th>What to do</th></tr>
-    <tr>
-      <td>“…not compiled yet” / “requires PyScript”</td>
-      <td>The construct is real but this band can't build it. If PyScript isn't
-          installed, install it (HACS → “pyscript”) and re-save — most of these
-          disappear. If it is installed, the message names a construct that
-          genuinely isn't built yet; simplify that statement or wait for it.</td>
-    </tr>
-    <tr>
-      <td>“global device variable '@X' not found” or “has no devices assigned”</td>
-      <td>Open the piston, and in the editor's <em>Global variables</em> panel
-          create/assign that variable's devices. Names are case-sensitive —
-          <code>@Speakers_All</code> and <code>@speakers_all</code> are
-          different variables. The message suggests a near-match when it finds
-          one.</td>
-    </tr>
-    <tr>
-      <td>“device … has no binding for attribute 'X'”</td>
-      <td>The device you picked doesn't expose that attribute in Home
-          Assistant. Open the piston and re-pick the device (or the attribute)
-          from the editor's list — the picker only offers what really
-          exists.</td>
-    </tr>
-    <tr>
-      <td>“HA rejected the compiled YAML” / “PyScript did not load the module”</td>
-      <td>A compiler bug, not your piston — and the previous working version
-          was restored automatically. Home Assistant's own complaint is quoted
-          in the message. Use <strong>Copy debug info</strong> on the
-          Diagnostics page and report it; that bundle contains everything
-          needed to fix it.</td>
-    </tr>
-    <tr>
-      <td>“no HA service mapping for command 'X' on domain 'Y'”</td>
-      <td>That webCoRE command has no Home Assistant equivalent wired yet for
-          that kind of device. The mappings live in editable data files, so
-          this is usually a small addition rather than a code change — worth
-          reporting with the bundle.</td>
-    </tr>
-    <tr>
-      <td>“system variable '$X' has no HA equivalent (external data feed)”</td>
-      <td>The piston reads a SmartThings-era weather/HTTP feed that doesn't
-          exist in HA. Replace it with a Home Assistant sensor (weather
-          integration, REST sensor) and reference that device instead.</td>
-    </tr>
-  </table>
-
-  <h2>When it compiles fine and still misbehaves</h2>
-  <p>
-    A green pill means HA accepted the automation — not that the logic is right. Two
-    kinds of problems slip through every check: a template that only fails when it
-    actually runs, and logic that's valid but wrong. For those, use Home Assistant's
-    own trace view: <strong>Settings → Automations</strong>, find
-    <em>PistonCore: &lt;piston name&gt;</em>, open it, and click <strong>Traces</strong>
-    after it fires (or fails to). The trace shows the exact path taken — which trigger
-    fired, what every condition evaluated to, and where it stopped. It's the closest
-    thing HA has to webCoRE's own trace screen.
-  </p>
-  <p>
-    Then compare what the trace did against the generated code —
-    <a href="/diagnostics">Diagnostics</a> → that piston → <strong>View generated
-    code</strong>. Older versions are kept in the same dropdown, so if it worked
-    last week, comparing the two usually points straight at what changed.
-  </p>
-
-  <h2>Getting help on something specific</h2>
-  <p>
-    Use <strong>Copy debug info</strong> on the
-    <a href="/diagnostics">Diagnostics</a> page, paste the result into a chat
-    or issue, and say what the piston was supposed to do. That bundle already
-    contains the compiler's input (your piston JSON), its output (the generated
-    code), and the verdict (the status record with any Home Assistant
-    complaint) — input, output and error together, which is everything a
-    diagnosis needs.
-  </p>
 
   <h2>Safety facts worth knowing</h2>
   <ul>
-    <li>A failed compile never loses your piston and never touches the working version
-        already running in HA.</li>
-    <li>If a new compile fails HA's config check, the previous good file is restored
-        automatically before HA reloads anything.</li>
-    <li>Pause always works: if HA can't be reached to disable the automation, the file
-        is removed instead. The paused message tells you which happened.</li>
-    <li>The compiler never writes into your piston — the JSON you author is read-only
-        to it, always.</li>
+    <li>A failed compile never loses your piston and never touches the working
+        version already running in HA.</li>
+    <li>If a new compile fails HA's config check, the previous good file is
+        restored automatically before HA reloads anything.</li>
+    <li>Pause always works: if HA can't be reached to disable the automation,
+        the file is removed instead. The message says which happened.</li>
+    <li>The compiler never writes into your piston — the JSON you author is
+        read-only to it, always.</li>
+    <li>Every compile's output is kept (last ten per piston), so the evidence
+        survives several re-saves.</li>
   </ul>
 </div>
 {% endblock %}
