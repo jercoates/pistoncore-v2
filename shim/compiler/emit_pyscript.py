@@ -247,6 +247,14 @@ class _PyEmitter:
     # ── triggers (decorators) ──────────────────────────────────────────────
 
     def _add_state_trigger(self, exprs: list[str], sid, edge: bool):
+        # dedupe exact repeats: two trigger comparisons on the same entity
+        # (e.g. changes_to on + changes_to off with an else) would otherwise
+        # register identical decorators and double-fire the handler per
+        # transition (code-review find, 2026-07-19)
+        for d in self.decorators:
+            if (d["kind"] == "state_trigger" and d["exprs"] == exprs
+                    and d["edge"] == edge and d["stmt_id"] == sid):
+                return
         self.decorators.append({"kind": "state_trigger", "exprs": exprs,
                                 "edge": edge, "stmt_id": sid})
 

@@ -74,5 +74,47 @@ def main() -> int:
     return 1
 
 
+
+
+def test_else_on_trigger_only_if():
+    """Regression (semantic-audit find + code review, 2026-07-19): an
+    'if X changes to Y THEN..ELSE..' must wake on ANY change of the attribute
+    (webCoRE subscribes to the attribute; the opposite transition runs the
+    else) -> routes to PyScript with exactly ONE plain any-change trigger —
+    never an edge-filtered trigger, never duplicate decorators."""
+    import ast
+    from shim.compiler import compile_piston
+    reso = {":sw:": {"name": "Master", "attr_bindings": {"switch": "switch.master"},
+                     "cmd_bindings": {}},
+            ":lt:": {"name": "Mirror", "attr_bindings": {},
+                     "cmd_bindings": {"on": "light.mirror", "off": "light.mirror"}},
+            "$system": {}}
+    cond_on = {"t": "condition", "ct": "t", "co": "changes_to",
+               "lo": {"t": "p", "d": [":sw:"], "a": "switch", "g": "any"},
+               "ro": {"t": "c", "c": "on", "vt": "enum"}}
+    cond_off = {"t": "condition", "ct": "t", "co": "changes_to",
+                "lo": {"t": "p", "d": [":sw:"], "a": "switch", "g": "any"},
+                "ro": {"t": "c", "c": "off", "vt": "enum"}}
+    piston = {"v": [], "s": [{"$": 1, "t": "if", "tcp": "c", "o": "and",
+        "c": [cond_on],
+        "s": [{"t": "action", "$": 2, "d": [":lt:"], "k": [{"c": "on", "p": []}]}],
+        "e": [{"t": "action", "$": 3, "d": [":lt:"], "k": [{"c": "off", "p": []}]}]}]}
+
+    for label, conds in [("one comparison", [cond_on]),
+                         ("two comparisons same entity", [cond_on, cond_off])]:
+        piston["s"][0]["c"] = conds
+        r = compile_piston(piston, "mirror01", "Mirror", reso, {})
+        assert r["target"] == "pyscript", f"{label}: expected pyscript, got {r['target']}"
+        ast.parse(r["code"])
+        trigs = [l.strip() for l in r["code"].splitlines()
+                 if l.strip().startswith("@state_trigger")]
+        assert len(trigs) == 1, f"{label}: {len(trigs)} state triggers, want 1 (dedup)"
+        assert '"switch.master"' in trigs[0] and "==" not in trigs[0],             f"{label}: trigger must be plain any-change: {trigs[0]}"
+    print("PASS — else-on-trigger-only-if: any-change wake, single deduped trigger")
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    rc = main()
+    rc = test_else_on_trigger_only_if() or rc
+    sys.exit(rc)
