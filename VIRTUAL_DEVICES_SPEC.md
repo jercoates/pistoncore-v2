@@ -1,13 +1,14 @@
 # VIRTUAL_DEVICES_SPEC.md — Test devices (behavioral testing)
 
-**Status:** Draft 2 — rewritten 2026-07-20 around Jeremy's actual mechanism
-(the Draft 1 abstraction missed it). Plain-language behavior first (Jeremy
-verifies behaviorally, not by reading code); the under-the-hood realization is
-lower down, tagged for the build session.
+**Status:** Draft 3 — mechanism DECIDED 2026-07-20 (Jeremy): build on a fork of
+the GPL-3.0 `twrecked/hass-virtual` integration. Draft 2's template+helper
+mechanism is REJECTED (it can't group; see §5). Plain-language behavior first
+(Jeremy verifies behaviorally, not by reading code); the under-the-hood
+realization is lower down, tagged for the build session.
 
-**Tagging:** VERIFIED = established HA behavior. ASSUMED = design choice not yet
-proven. **TO-VERIFY** = check against a running HA in the build session.
-DECISION = Jeremy's call.
+**Tagging:** VERIFIED = established HA behavior / read in code. ASSUMED = design
+choice not yet proven. **TO-VERIFY** = check against a running HA in the build
+session. DECISION = Jeremy's call.
 
 ---
 
@@ -34,6 +35,19 @@ these **"test devices"** everywhere in code and UI so the two never collide.
 
 That's it. Grab one of each real type → make a copy you can drive → drive them
 all from PistonCore → watch pistons behave.
+
+## 1.5 The SECOND purpose — the long-term maintenance bench (Jeremy, 2026-07-20)
+
+Test devices are also **Jeremy's way to work on device types he does NOT own.**
+The compiler needs a mapping for every device kind webCoRE can target, but you
+can't write or verify a mapping for a siren / humidifier / vacuum / thermostat
+you don't have on the bench. A test device of that kind — settable, driveable,
+with visible compiled output — lets Jeremy add the missing mapping and *see it
+work* without buying hardware or waiting on help. This is what makes PistonCore
+**self-maintainable long-term.** So the integration must be able to build **every
+device kind the compiler targets, not just the ones in Jeremy's house** (§5.2).
+This is why the "needed devices" list below is the compiler's target set, not an
+inventory of his home.
 
 ## 2. Why COPIES, not your real devices (the reason this feature exists)
 
@@ -62,6 +76,13 @@ have — not a generic list, your actual shapes. ASSUMED: dedupe key = the sorte
 set of attribute keys + commands. **TO-VERIFY:** confirm against Jeremy's real
 payload that this yields a sensible, not-too-long list.
 
+**Plus the bench types you DON'T own (§1.5).** Auto-discovery covers your house,
+but the control panel must ALSO let you spin up a test device of any kind the
+compiler targets even when you own none of it — a "add a test device of kind…"
+picker over the full §5.2 list — so you can build and verify a siren / humidifier
+/ vacuum mapping with nothing of that kind in your home. The owned set is the
+default rows; the full target set is what's *available* to add.
+
 ## 4. The control panel (PistonCore owns it) — REQUIRED per device
 
 A page at `/test-devices` (replaces today's stub), showing each test device as
@@ -71,10 +92,10 @@ have (Jeremy, 2026-07-20):**
 1. **A test/virtual TAG** clearly marking it a test device, not a real one —
    visible on the row, and in its HA name (`Test — …`), so it's never mistaken
    for real hardware anywhere.
-2. **An add/remove-from-HA toggle.** Flip ON = PistonCore creates the test
-   device in Home Assistant (so it exists to author against and drive); flip
-   OFF = PistonCore removes it from HA cleanly (both the copy and its backing
-   parts — no orphans, §8.6). So a test device can sit defined-but-not-present
+2. **An add/remove-from-HA toggle.** Flip ON = PistonCore has the integration
+   create the test device in Home Assistant (so it exists to author against and
+   drive); flip OFF = PistonCore has it removed cleanly (device and all its
+   entities — no orphans, §8.6). So a test device can sit defined-but-not-present
    until you want it, and be pulled out when you're done.
 3. **One control per capability, showing its CURRENT state.** Each capability
    the device has gets its own control that both SETS and DISPLAYS the value:
@@ -85,56 +106,136 @@ have (Jeremy, 2026-07-20):**
    The current state is always visible, so you can see what the test device is
    reporting right now, and change it in place.
 
-Flipping a capability control sets that test device's state immediately, so you
-can set up a scenario (motion active AND it's dark AND alarm armed) and watch
-the piston go. DECISION-CANDIDATE (Jeremy): a "fire now / reset all" affordance
-too.
+Flipping a capability control sets that test device's state immediately (via the
+integration's set-state service, §5), so you can set up a scenario (motion active
+AND it's dark AND alarm armed) and watch the piston go. DECISION-CANDIDATE
+(Jeremy): a "fire now / reset all" affordance too.
 
-## 5. How it's built under the hood (for the build session)
+## 5. How it's built under the hood — DECIDED: build on `hass-virtual`
 
-Plain summary: a test device is a **real HA entity of the right kind that
-PistonCore can set**, made from parts PistonCore already knows how to create.
+### 5.1 The mechanism, and why the two simpler ones were rejected
 
-- **Settable copies via HA helpers + template entities.** PistonCore creates an
-  input helper it's allowed to set (`input_boolean` for on/off,
-  `input_number` for values, `input_select` for choices — same helper-create it
-  already uses for Location Mode, VERIFIED `ha_client.create_input_select`), and
-  a `template` entity of the REAL domain + device_class that mirrors it
-  (template `binary_sensor` device_class motion, template `sensor` with a unit,
-  template `light`/`switch`/`lock`/`alarm_control_panel`/`climate`/`media_player`).
-  The piston sees the template entity (correct kind → correct compiled trigger);
-  the PistonCore control panel sets the backing helper; the template mirrors it.
-- **Why the template layer is needed:** the copy must be the same DOMAIN the
-  compiler emits against. A piston on a motion sensor compiles to
-  `trigger: state, entity_id: binary_sensor.x, to: "on"` — so the test copy has
-  to be a `binary_sensor`, not a bare `input_boolean`, or the trigger wouldn't
-  match. VERIFIED (device_pipeline groups on domain + device_class).
-- **Created through the write path already built** — the template entities go in
-  a `pistoncore/test_devices/` package via `shim/config_yaml.py` + the write
-  transport, same show-changes-consent-backup flow as automations. Helpers via
-  the websocket helper-CRUD.
-- **The picker needs zero changes** — test devices are real HA entities, so they
-  flow through the existing device pipeline and appear in the editor grouped
-  like any device, named e.g. "Test — Motion". VERIFIED.
-- **TO-VERIFY (build session):** exact current template YAML shape for the
-  less-mature domains — `alarm_control_panel`, `media_player`, `climate`; and
-  helper-CRUD coverage for `input_boolean`/`input_number` (mode used
-  `input_select`).
-- **ALTERNATIVE to evaluate at build (may be simpler, and is the most
-  "PistonCore controls it directly" option):** a single PyScript module that
-  PistonCore deploys, which creates every test entity and exposes ONE service
-  to set any of them — PistonCore's control panel just calls that service. No
-  template YAML, no separate helpers. Uses the pyscript deploy path already
-  built. **TO-VERIFY:** whether a PyScript `state.set` entity lands in HA's
-  entity REGISTRY so the device pipeline/picker sees it (state-only entities
-  sometimes don't). If it does, this is likely the cleaner mechanism; if not,
-  fall back to the template+helper path above.
+A faithful test device must be **one real HA device that owns several entities
+(one per capability), grouped under a single device-registry entry**, or the
+editor's picker shows it as several unrelated one-trick devices instead of one
+multi-capability copy. VERIFIED — the grouping code is explicit: an entity with
+no registry `device_id` "becomes a singleton group of one"
+(`device_pipeline.py:156-169`); your real multi-sensors carry 34–40 entities
+under one device, and that shape is what must be matched.
+
+Two mechanisms were evaluated and **REJECTED** for this reason — do not
+resurrect either:
+
+- **REJECTED — PyScript `state.set`.** A PyScript-invented entity is
+  *state-only*: it appears in the live state machine but never lands in HA's
+  **entity registry**, which is what the device pipeline enumerates
+  (`ha_client.fetch_registries` → `config/entity_registry/list`, consumed at
+  `device_pipeline.py:148`). So it would be invisible in the picker. Dead end.
+- **REJECTED — Template helpers + input helpers.** The Template helper builds
+  **one entity at a time** and can only attach it to a device that *already
+  exists*; it has no way to *create* a device to bundle several readings under.
+  So it can't produce a grouped multi-capability copy. VERIFIED against Jeremy's
+  live HA (2026-07-20): zero template helpers present, and the helper flow
+  offers no create-a-device step.
+
+The only kind of thing HA lets create a device and hang all its entities off it
+is a **custom integration**. So:
+
+### 5.2 DECISION (Jeremy, 2026-07-20): fork and extend `twrecked/hass-virtual`
+
+Rather than a clean-room integration, **build on
+[`hass-virtual`](https://github.com/twrecked/hass-virtual)**. It is
+**GPL-3.0** (matches this repo — fork-clean, and shippable in/with a GPL
+project), it is in the **default HACS store** (community-trusted), and it
+already delivers most of what we need, VERIFIED from its docs (2026-07-20):
+
+- **Grouped multi-capability devices** — its own example is a motion device
+  carrying both a motion binary_sensor and a battery sensor under one device.
+- **Live set-state from outside**, the seam PistonCore drives:
+  `virtual.turn_on` / `virtual.turn_off` / `virtual.toggle` (on/off),
+  `virtual.set` (values), `virtual.move` (device_tracker),
+  `virtual.set_availability`.
+- **Nine platforms already done and battle-tested:** binary_sensor, sensor,
+  light, switch, lock, fan, cover, valve, device_tracker.
+
+**What we ADD on the fork** (the gap between it and webCoRE fidelity):
+
+1. **The device kinds the compiler targets that `hass-virtual` does NOT cover.**
+   The authoritative "needed devices" list is the set of HA domains the compiler
+   actually emits services against — extracted 2026-07-20 from
+   `templates/compiler/yaml/classic/command_maps.json`:
+   `button, camera, climate, cover, fan, humidifier, light, lock, media_player,
+   siren, switch, vacuum` (`homeassistant` = the generic cross-domain
+   turn_on/off, not a device kind), plus `alarm_control_panel` (HSM/arm state,
+   handled via value_maps, heavily used). `hass-virtual` already provides
+   light, switch, lock, fan, cover (+ binary_sensor, sensor, valve,
+   device_tracker for the read side). So the platforms **we must add to the
+   fork** are:
+   - `alarm_control_panel` — arm/disarm state (webCoRE HSM; heavily used)
+   - `climate` — thermostat: settable target temp, mode, current temp
+   - `media_player` — speaker: settable state / volume
+   - `siren` — on/off + tone (a likely hard-fail source Jeremy doesn't own)
+   - `humidifier` — on/off + target humidity/mode
+   - `vacuum` — start/stop/dock state
+   - `button` — press (stateless; a test press that records it fired)
+   - `camera` — edge kind (commands like snapshot); include only if a corpus
+     piston needs it, else defer. **TO-VERIFY** which hard-fails actually need it.
+
+   Each new platform is a settable platform in the same style as the existing
+   nine, with a set-state path reachable from PistonCore. **This list is what
+   makes the bench complete (§1.5)** — with all of these, Jeremy can author and
+   verify a mapping for any device kind the compiler targets, owned or not.
+2. **Live create/remove an outside app can trigger.** `hass-virtual` configures
+   devices via YAML (plus a newer config-flow GUI); neither existing project
+   solves *both* live-add AND external set-state (the newer `hassio-virtual-
+   devices` does live-add but has no external set-state, so it was not viable).
+   So PistonCore must be able to add/remove a test device **without the user
+   hand-editing YAML**. **TO-VERIFY (build session):** the cleanest of —
+   (a) PistonCore writes the integration's YAML + calls its reload service;
+   (b) we add a `create`/`remove` service to the fork; (c) config-flow entries
+   created programmatically over the websocket. Goal: the §4 add/remove toggle
+   just works.
+
+### 5.3 How PistonCore uses it
+
+- **Discovery** — PistonCore buckets the grouped device payload by capability
+  signature (§3) and picks one representative per type.
+- **Create** — for each chosen type, PistonCore tells the integration to create
+  a matching virtual device with the same domain + device_class entities,
+  grouped (name `Test — …`). The picker then surfaces it exactly like any real
+  device — **no picker/pipeline change needed**, because it's a real grouped HA
+  device. VERIFIED (pipeline groups any device with a registry `device_id`).
+- **Drive** — each §4 capability control calls the matching `virtual.*` service
+  (or the new alarm/climate/media set-state) and reads current state back from
+  HA to display it.
+- **Output side** — virtual `light`/`switch`/`lock` the piston acts on; the
+  integration records the command, PistonCore/logbook shows it. Nothing real
+  moves (§2).
+
+### 5.4 Install & lifecycle (the honest friction)
+
+It's a custom integration, so its files live in HA's `custom_components/` and HA
+needs **one restart** to first load it; after that, devices add/remove live
+(the §5.2 item 2 goal). DECISION-CANDIDATE: PistonCore *offers to install* the
+integration files for the user (via the write path it already has) so they don't
+do it by hand. **TO-VERIFY:** whether PistonCore's HA access can write to
+`custom_components/` and trigger the restart. If not, the user does a one-time
+manual/HACS install; everything after is smooth.
+
+### 5.5 Where the fork lives (NEW COMPONENT — needs Jeremy's location call)
+
+The fork is a **separate deliverable** from the shim and the sealed dashboard —
+a standalone HA custom_component that also ships to the community. It is NOT part
+of `dashboard/` and NOT inside `shim/`. **Open (Jeremy to decide at build):**
+its own sibling repo (cleanest for HACS/community) vs. a top-level folder in this
+repo. Either way it keeps its own GPL-3.0 headers and upstream attribution to
+`twrecked/hass-virtual`.
 
 ## 6. Two places to run it
 
 1. **On your real HA, as clearly-labeled test devices (default).** The copies
-   live on your live instance named `Test — …`. Works with the write path today.
-   Safe as long as both ends are test copies (§2).
+   live on your live instance named `Test — …`. Safe as long as both ends are
+   test copies (§2).
 2. **On a throwaway test HA (isolated).** Nothing real to touch; the honest
    choice if you never want side effects, and the home for an automated
    behavioral gate later. Its own session; this spec just reserves the seam.
@@ -151,15 +252,33 @@ Test devices DRIVE a piston; trace SHOWS what it did.
 - **Forced-PyScript + test + trace** is the full fidelity loop the compile-band
   override was built for.
 
-## 8. Open items / TO-VERIFY before building
+## 8. Open items / TO-VERIFY before/at building
 
 1. Dedupe key for "one of each type" yields a sane list on Jeremy's real payload (§3).
-2. Template YAML shape for alarm_control_panel / media_player / climate (§5).
-3. Helper-CRUD coverage for every input type (§5).
+2. The three added platforms — alarm_control_panel / climate / media_player —
+   built in `hass-virtual`'s style, each with a set-state path (§5.2).
+3. Live create/remove mechanism an outside app can trigger — pick a/b/c (§5.2).
 4. Output side: confirm both ends must be test copies, and how a piston authored
    on real devices gets swapped to test twins for a run (or authored on test
    devices directly) — Jeremy to confirm the workflow.
-5. Package/include path + config.yaml lines for `pistoncore/test_devices/`
-   (mirror the automations/scripts include, COMPILER_DECISIONS_DEPLOY §3).
-6. Teardown: deleting a test device removes BOTH the template entity and its
-   backing helper and cleans the package file — no orphans.
+5. Can PistonCore install the integration files + trigger the one-time restart,
+   or is first install manual/HACS (§5.4)?
+6. Teardown: removing a test device removes the device AND all its entities and
+   cleans config — no orphans (§4.2).
+7. Fork location: sibling repo vs. in-repo folder (§5.5) — Jeremy's call.
+
+## 9. Build order (proposed)
+
+1. **Fork `hass-virtual`**, get it installed and running on the dev HA unchanged
+   — prove the baseline (create a grouped virtual motion+battery device via its
+   YAML, set it with `virtual.set`, confirm it appears grouped in PistonCore's
+   picker). Establishes the whole approach before we add anything.
+2. **Add the live create/remove seam** (§5.2 item 2) — so a device can be added
+   and removed without hand-YAML. This is the load-bearing new capability.
+3. **Add the missing platforms (§5.2 full list)** — alarm_control_panel,
+   climate, media_player, siren, humidifier, vacuum, button (camera only if a
+   corpus piston needs it). This is what makes the bench complete (§1.5).
+4. **PistonCore side:** type-discovery (§3) + the `/test-devices` control panel
+   (§4) driving it all; then teardown (§8.6).
+5. **Install helper + docs** — offer-to-install (§5.4) and a short standalone
+   README so the community can use the fork on its own.

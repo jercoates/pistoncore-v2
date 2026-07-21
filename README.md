@@ -18,9 +18,21 @@ PistonCore tomorrow and every simple piston keeps running natively; complex pist
 running as long as PyScript remains installed. No lock-in, no cloud, no account, nothing
 phoning home.
 
-> **Status: early development — not ready for users.** The editor works against live HA
-> devices and pistons save, but the compiler does not exist yet. Nothing here runs your
-> automations today. Watch/star if you're interested; don't install expecting a product.
+> **Status: early alpha — looking for testers (Docker only).**  
+> For people who know webCoRE and Docker. The editor, save path, and dual-band compiler
+> (YAML-first + PyScript fallback) are built, and the compiler produces native HA files
+> for real pistons — but **very little of that output has been verified running on live
+> HA yet. Compiling is not the same as tested: treat everything the compiler emits as
+> unverified until you've watched it run.** First-run wizard and Samba write path work.
+> Test devices (for behavioral testing) and the trace/activity console are in development —
+> spec'd, not built yet. There is no HA add-on — Docker only. **Port from webCoRE:** bin
+> codes work *into* PistonCore; export out is plain piston JSON (not bins). JSON paste also
+> works both ways. Bring real pistons and real devices — report where compile or behavior
+> is wrong, **and** where the editor is missing capabilities or devices don't show up right
+> (research-backed mapping, not every device type has been live-checked). **Don't put the
+> house on it — assume a piston is broken until you've verified it yourself.** Expect rough
+> edges. This is under active development; watch the repo and check back for updates. Alpha
+> feedback is the fastest way to widen compiler and editor coverage.
 
 ## How it works
 
@@ -30,24 +42,52 @@ phoning home.
   webCoRE-shaped data from Home Assistant: your HA devices appear in the editor grouped
   the way physical devices are (one picker item per device, like Hubitat), with their
   attributes, commands, and live values.
-- Saved pistons are **byte-standard webCoRE piston JSON** — the format is documented in
-  [PISTON_JSON_REFERENCE.md](PISTON_JSON_REFERENCE.md), which also serves as the target
-  format for AI-generated and shared pistons (import/export is plain copy/paste JSON; no
-  cloud, no accounts).
-- The **compiler** (in progress) translates piston JSON into native HA automations where
-  possible and PyScript where webCoRE semantics demand it. Simple pistons — the large
-  majority — become a standard YAML automation/script pair with zero external
-  dependencies. Complex pistons (loop-breaking, in-flight task cancellation, and similar
-  webCoRE semantics HA YAML can't express) become a PyScript file. The compiler detects
-  which target each piston needs automatically; you never choose. Compiler behavior is
-  driven by editable Jinja2 templates and data files, not hardcoded Python.
+- Saved pistons are **byte-standard webCoRE piston JSON** — the same internal format the
+  real engine stores. **Import from webCoRE:** bin codes work *in*; you can also paste
+  piston JSON. **Export from PistonCore:** plain JSON copy/paste only (no bin codes out,
+  no accounts, no cloud). That JSON is what the compiler treats as law — and what you
+  share without a sensitive full backup. Details:
+  [PISTON_JSON_REFERENCE.md](PISTON_JSON_REFERENCE.md). Also the target for AI-authored
+  pistons.
+- The **compiler** translates piston JSON into native HA automations where possible and
+  PyScript where webCoRE semantics demand it. YAML is the default path; PyScript is the
+  routed exception (`routing_table.json`). Simple pistons become a standard YAML
+  automation/script pair with zero external dependencies. Complex features HA YAML can't
+  express fall through to PyScript. Compile runs automatically on save. Compiler behavior
+  is driven by editable Jinja2 templates and JSON maps on the `/data` volume, not
+  hardcoded Python. (Producing that output is well exercised against a real-piston corpus;
+  verifying it *runs correctly* on live HA is the part that's still thin — see status.)
 
-## Planned install paths
+## Install (early alpha — Docker only)
 
-An **HA add-on** (HAOS/Supervised — sidebar entry, automatic supervisor auth) and a
-**plain Docker container** (Unraid, NAS, any Docker host, and Docker-based HA installs —
-long-lived token auth). Same image, same features, same piston format on both. Neither is
-published yet — see the status note above.
+Assumes you already know how to build and run a Docker container and how to give it a
+persistent volume. There is no published image or HA add-on yet; you build from source.
+
+```bash
+git clone https://github.com/jercoates/pistoncore-v2.git
+cd pistoncore-v2
+docker build -t pistoncore-v2 .
+docker run -d --name pistoncore-v2 \
+  -p 7777:7777 \
+  -v /path/to/pistoncore-data:/data \
+  --restart unless-stopped \
+  pistoncore-v2
+```
+
+Open `http://<host>:7777`. The **first-run wizard** walks you through:
+
+1. **HA connection** — URL + long-lived access token
+2. **Write target** — how compiled automations reach HA's `/config`:
+   - **Local path** — bind-mount HA's config into the container (or a host mount of a
+     Samba share), set `ha_config_path`
+   - **In-app SMB** — PistonCore connects to HA's Samba share add-on directly (host,
+     share, credentials). Tested and working.
+
+Use the wizard's "Test write target" before finishing. After that you're on the front
+door; create or import a piston and it compiles on save.
+
+An HA add-on path is planned later (same image, supervisor auth). For now this is
+Docker-only on purpose — alpha testers are expected to be comfortable there.
 
 ## Project documents
 
@@ -56,8 +96,11 @@ published yet — see the status note above.
 | [SHIM_API_SPEC.md](SHIM_API_SPEC.md) | The webCoRE SmartApp API contract the shim implements |
 | [DEVICE_PAYLOAD_SPEC.md](DEVICE_PAYLOAD_SPEC.md) | How HA entities become webCoRE devices (grouping, capabilities, resolution) |
 | [PISTON_JSON_REFERENCE.md](PISTON_JSON_REFERENCE.md) | The webCoRE piston JSON format — compiler input, import format, AI-authoring target |
-| [TRACE_ACTIVITY_CONTRACT.md](TRACE_ACTIVITY_CONTRACT.md) | The trace/console data contract (future instrumentation) |
-| [COMPILER_DECISIONS_HOLDING.md](COMPILER_DECISIONS_HOLDING.md) | Compiler decisions held until the compiler spec exists |
+| [COMPILER_SPEC.md](COMPILER_SPEC.md) | Compiler pipeline, routing, emission rules, and non-negotiable policy |
+| [COMPILER_DECISIONS_DEPLOY.md](COMPILER_DECISIONS_DEPLOY.md) | Deploy layout, write transport, pause/resume, check_config, recompile-all |
+| [RECONCILIATION.md](RECONCILIATION.md) | Load-bearing decisions checked against current code |
+| [TRACE_ACTIVITY_CONTRACT.md](TRACE_ACTIVITY_CONTRACT.md) | The trace/console data contract (in development) |
+| [VIRTUAL_DEVICES_SPEC.md](VIRTUAL_DEVICES_SPEC.md) | Test devices for behavioral testing (spec'd — in development) |
 | [CLAUDE.md](CLAUDE.md) | Working rules for AI-assisted development sessions |
 
 ## Relationship to webCoRE
