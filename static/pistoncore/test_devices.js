@@ -20,6 +20,44 @@ async function api(path, body) {
   return r.json().catch(() => ({}));
 }
 
+// Offer to install the integration into HA — GATED behind a warning the user
+// must acknowledge (the Install button stays disabled until the box is ticked,
+// and the backend also requires the acknowledgment, so it can't be skipped).
+function showInstall() {
+  statusEl.innerHTML =
+    "<div class='banner banner-warning'>" +
+    "<strong>Install the test-device integration onto Home Assistant?</strong>" +
+    "<div class='field-hint' style='margin-top:6px'>PistonCore will <strong>write files into your " +
+    "Home Assistant</strong> (<code>custom_components/virtual/</code>) and then <strong>restart Home " +
+    "Assistant</strong> — it will be offline for roughly 30–60 seconds. Your existing automations, " +
+    "scripts, and settings are not touched. (Prefer HACS? You can install it that way instead and " +
+    "skip this.)</div>" +
+    "<label class='td-switch' style='margin-top:10px'><input type='checkbox' id='td-inst-ack'> " +
+    "I understand PistonCore will write into my Home Assistant and restart it.</label>" +
+    "<div style='margin-top:10px'><button class='btn btn-primary' id='td-install' disabled>" +
+    "Install onto Home Assistant</button></div></div>";
+  const ack = document.getElementById("td-inst-ack");
+  const btn = document.getElementById("td-install");
+  ack.onchange = () => { btn.disabled = !ack.checked; };
+  btn.onclick = async () => {
+    btn.disabled = true; btn.textContent = "Writing files…";
+    const res = await api("/api/test-devices/install", { acknowledged: true });
+    if (res.error) { banner("error", res.error); return; }
+    statusEl.innerHTML =
+      "<div class='banner banner-info'>Files written — Home Assistant is restarting to load the " +
+      "integration (about 30–60 seconds). When it's back, click below.<div style='margin-top:10px'>" +
+      "<button class='btn btn-primary' id='td-after'>Continue setup</button></div></div>";
+    document.getElementById("td-after").onclick = async () => {
+      const b = document.getElementById("td-after");
+      b.disabled = true; b.textContent = "Setting up…";
+      const r = await api("/api/test-devices/setup", {});
+      if (r.error) {
+        banner("warning", r.error + " (Home Assistant may still be restarting — wait a moment and click Set up again.)");
+      } else { load(); }
+    };
+  };
+}
+
 async function load() {
   const data = await api("/api/test-devices/list");
   if (typeSel && !typeSel.dataset.filled && data.types) {
@@ -40,7 +78,8 @@ async function load() {
       const b = document.getElementById("td-setup");
       b.disabled = true; b.textContent = "Setting up…";
       const res = await api("/api/test-devices/setup", {});
-      if (res.error) { banner("warning", res.error); }
+      if (res.error && /isn.t installed|not installed/i.test(res.error)) { showInstall(); }
+      else if (res.error) { banner("warning", res.error); b.disabled = false; b.textContent = "Set up test devices"; }
       else { load(); }
     };
     addEl.style.display = "none"; listEl.innerHTML = ""; return;

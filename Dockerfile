@@ -17,6 +17,9 @@ COPY static/ static/
 COPY webcore_vocab.json .
 COPY picker_capability_map.json .
 COPY routing_table.json .
+# The test-devices integration, so PistonCore can install it into HA on request
+# (VIRTUAL_DEVICES_SPEC.md Stage 5 — the /api/test-devices/install helper).
+COPY test-devices-integration/ test-devices-integration/
 
 ENV PISTONCORE_DATA_DIR=/data
 VOLUME ["/data"]

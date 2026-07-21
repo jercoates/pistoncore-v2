@@ -15,7 +15,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from .. import ha_client, storage
+from .. import deploy_writer, ha_client, storage
 
 router = APIRouter()
 
@@ -311,6 +311,48 @@ async def api_test_devices_list():
     devices = await _list_test_devices() if present else []
     return {"configured": True, "present": present, "devices": devices,
             "types": list(TEST_DEVICE_TEMPLATES)}
+
+
+_INTEGRATION_SRC = REPO_ROOT / "test-devices-integration" / "custom_components" / "virtual"
+
+
+def _integration_files() -> list:
+    if not _INTEGRATION_SRC.exists():
+        return []
+    return [p for p in _INTEGRATION_SRC.rglob("*")
+            if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"]
+
+
+@router.post("/api/test-devices/install")
+async def api_test_devices_install(request: Request):
+    """Write the test-device integration into HA's custom_components and restart
+    HA to load it. GATED: the caller MUST acknowledge that this writes into Home
+    Assistant — enforced here server-side, so the warning can't be skipped by
+    hitting the endpoint directly (Jeremy 2026-07-21)."""
+    body = await request.json()
+    if not body.get("acknowledged"):
+        return JSONResponse(
+            {"error": "This writes files into your Home Assistant and restarts it — "
+                      "acknowledge the warning to proceed."}, status_code=400)
+    files = _integration_files()
+    if not files:
+        return JSONResponse(
+            {"error": "The integration files aren't bundled in this build."}, status_code=500)
+    try:
+        writer = deploy_writer.get_writer()
+        for p in files:
+            rel = p.relative_to(_INTEGRATION_SRC).as_posix()
+            content = p.read_text(encoding="utf-8")
+            await asyncio.to_thread(writer.write, f"custom_components/virtual/{rel}", content)
+    except deploy_writer.WriteTargetError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    # Restart HA to load the new integration. HA drops the connection as it goes
+    # down, so a failed call here just means the restart is under way.
+    try:
+        await ha_client.call_service("homeassistant", "restart", {})
+    except Exception:
+        pass
+    return {"ok": True, "files": len(files), "restarting": True}
 
 
 @router.post("/api/test-devices/setup")
