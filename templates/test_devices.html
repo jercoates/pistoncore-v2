@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}PistonCore — Test Devices{% endblock %}
+
+{% block content %}
+<style>
+  .td-intro { color: var(--text-secondary); max-width: 640px; margin-bottom: var(--space-4); }
+  .td-add {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 12px; margin-bottom: var(--space-4);
+    background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px;
+  }
+  .td-add select, .td-add input {
+    padding: 7px 9px; background: var(--bg-base); color: var(--text-primary);
+    border: 1px solid var(--border-subtle); border-radius: 6px; font: inherit;
+  }
+  .td-add input { min-width: 180px; }
+  .td-row {
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: 8px; margin-bottom: 10px; overflow: hidden;
+  }
+  .td-row-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-bottom: 1px solid var(--border-subtle);
+  }
+  .td-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    color: var(--yellow); border: 1px solid var(--yellow); border-radius: 4px;
+    padding: 2px 6px; text-transform: uppercase;
+  }
+  .td-name { font-weight: 600; color: var(--text-primary); flex: 1; }
+  .td-caps { display: flex; flex-direction: column; }
+  .td-cap {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px; border-top: 1px solid var(--border-subtle);
+  }
+  .td-caps .td-cap:first-child { border-top: none; }
+  .td-cap-label { color: var(--text-secondary); font-size: 13px; min-width: 150px; }
+  .td-cap-control { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .td-cap select, .td-cap input {
+    padding: 5px 8px; background: var(--bg-base); color: var(--text-primary);
+    border: 1px solid var(--border-subtle); border-radius: 6px; font: inherit;
+  }
+  .td-cap input[type=number] { width: 90px; }
+  .td-cap input[type=range] { width: 140px; }
+  .td-state { color: var(--text-muted); font-size: 12px; font-family: var(--font-code); }
+  .td-remove { color: var(--red); border-color: var(--border-subtle); }
+  .td-switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  .td-empty { color: var(--text-muted); padding: 16px 4px; }
+</style>
+
+<div class="page active">
+  <div class="list-header"><h1>Test Devices</h1></div>
+  <p class="td-intro">
+    Controllable stand-in devices on your Home Assistant — flip a test motion sensor
+    active, drag a test lux to 500, arm a test alarm — so you can watch a compiled
+    piston fire without touching real hardware. Grouped just like real devices; clearly
+    tagged <strong>TEST</strong> so they're never mistaken for the real thing.
+  </p>
+
+  <div id="td-status"></div>
+
+  <div class="td-add" id="td-add" style="display:none">
+    <label for="td-type" class="td-cap-label" style="min-width:auto">Add a</label>
+    <select id="td-type"></select>
+    <input id="td-name" type="text" placeholder="Name (e.g. Cave Motion)">
+    <button class="btn btn-primary" id="td-create">Add test device</button>
+  </div>
+
+  <div id="td-list"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/pistoncore/test_devices.js"></script>
+{% endblock %}

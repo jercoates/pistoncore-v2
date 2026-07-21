@@ -4,6 +4,7 @@ which answers the vendored webCoRE dashboard's own intf/dashboard/* API calls.
 Vanilla HTML/CSS/JS + Jinja2, no frontend framework, no build step (CLAUDE.md).
 """
 
+import asyncio
 import json
 import os
 import uuid
@@ -99,14 +100,273 @@ def _stub(request: Request, title: str, message: str):
 
 
 @router.get("/test-devices")
-async def test_devices_stub(request: Request):
-    return _stub(request, "Test Devices", (
-        "Test devices — controllable dummy Home Assistant entities (motion, "
-        "light, alarm, smoke, water, etc.) for exercising a COMPILED piston "
-        "without real hardware, so you can see it fire and check it behaves. "
-        "Not built yet; designed in VIRTUAL_DEVICES_SPEC.md (faithful twins: "
-        "template entities of the real domain, driven by input helpers)."
-    ))
+async def test_devices_page(request: Request):
+    # Data loads client-side from /api/test-devices/* (test_devices.js); this
+    # just serves the shell so the panel reflects HA's live truth on every action.
+    return templates.TemplateResponse(request, "test_devices.html", {})
+
+
+# ---------------------------------------------------------------------------
+# Test devices panel (VIRTUAL_DEVICES_SPEC.md Stage 4). PistonCore ties into the
+# forked `virtual` integration (test-devices-integration/): it CREATES and
+# CONTROLS devices via that integration's HA services and reads current state
+# from HA's API to display (Jeremy 2026-07-21). PistonCore keeps no device state
+# of its own. The integration must be installed on the connected HA; if it isn't,
+# the panel says so and points at the install help.
+# ---------------------------------------------------------------------------
+
+TEST_DEVICES_GROUP = "PistonCore Test Devices"
+
+# The catalog of addable test-device TYPES = the device kinds the compiler targets
+# (VIRTUAL_DEVICES_SPEC §1.5/§5.2), not just what Jeremy owns — this is the
+# maintenance bench. Each value is the entity list for `virtual.create_device`.
+# (Candidate to become editable data later, like the compiler maps.)
+TEST_DEVICE_TEMPLATES: dict[str, list[dict]] = {
+    "Motion sensor": [{"platform": "binary_sensor", "class": "motion"}],
+    "Contact sensor": [{"platform": "binary_sensor", "class": "door"}],
+    "Smoke detector": [{"platform": "binary_sensor", "class": "smoke"}],
+    "Water/leak sensor": [{"platform": "binary_sensor", "class": "moisture"}],
+    "Switch": [{"platform": "switch"}],
+    "Light / dimmer": [{"platform": "light"}],
+    "Lock": [{"platform": "lock"}],
+    "Cover / shade": [{"platform": "cover", "class": "shade"}],
+    "Fan": [{"platform": "fan"}],
+    "Temperature sensor": [{"platform": "sensor", "class": "temperature", "unit_of_measurement": "°C"}],
+    "Illuminance sensor": [{"platform": "sensor", "class": "illuminance", "unit_of_measurement": "lx"}],
+    "Humidity sensor": [{"platform": "sensor", "class": "humidity", "unit_of_measurement": "%"}],
+    "Alarm panel (HSM)": [{"platform": "alarm_control_panel"}],
+    "Thermostat": [{"platform": "climate"}],
+    "Speaker": [{"platform": "media_player"}],
+    "Siren": [{"platform": "siren"}],
+    "Humidifier": [{"platform": "humidifier"}],
+    "Vacuum": [{"platform": "vacuum"}],
+    "Button": [{"platform": "button"}],
+    "Multi-sensor (motion + lux + temp)": [
+        {"platform": "binary_sensor", "class": "motion"},
+        {"platform": "sensor", "class": "illuminance", "unit_of_measurement": "lx"},
+        {"platform": "sensor", "class": "temperature", "unit_of_measurement": "°C"},
+    ],
+}
+
+
+async def _integration_present() -> bool:
+    """Is the forked `virtual` test-device integration installed on the HA we're
+    connected to? Detected by its create_device service being registered."""
+    try:
+        services = await ha_client.get_services()
+    except Exception:
+        return False
+    return "create_device" in (services.get("virtual") or {})
+
+
+async def _list_test_devices() -> list[dict]:
+    """Every device the `virtual` integration owns on the connected HA, grouped,
+    with each entity's live state read straight from HA."""
+    regs = await ha_client.fetch_registries()
+    states = {s["entity_id"]: s for s in regs.get("states", [])}
+    devmap = {d["id"]: d for d in regs.get("devices", [])}
+    groups: dict[str, dict] = {}
+    for e in regs.get("entities", []):
+        if e.get("platform") != "virtual":
+            continue
+        did = e.get("device_id")
+        dev = devmap.get(did, {})
+        g = groups.setdefault(did or e["entity_id"], {
+            "device_name": dev.get("name_by_user") or dev.get("name") or "Test device",
+            "entities": [],
+        })
+        st = states.get(e["entity_id"], {})
+        g["entities"].append({
+            "entity_id": e["entity_id"],
+            "domain": e["entity_id"].split(".")[0],
+            "name": e.get("name") or e.get("original_name") or e["entity_id"],
+            "state": st.get("state"),
+            "attributes": st.get("attributes", {}) or {},
+        })
+    return sorted(groups.values(), key=lambda g: g["device_name"].lower())
+
+
+def _truthy(value) -> bool:
+    return str(value).strip().lower() in ("on", "true", "1", "yes", "open", "unlocked", "active")
+
+
+async def _set_capability(entity_id: str, value, sub: str | None = None) -> None:
+    """Drive one test-device capability through the right NATIVE HA service
+    (same services a standalone HA user would use). `sub` names which facet of a
+    multi-facet device (climate: current_temperature|temperature|mode;
+    media_player: volume|state; humidifier: humidity|onoff)."""
+    domain = entity_id.split(".", 1)[0]
+    ent = {"entity_id": entity_id}
+    if domain == "binary_sensor":
+        await ha_client.call_service("virtual", "turn_on" if _truthy(value) else "turn_off", ent)
+    elif domain in ("switch", "light", "fan", "siren"):
+        await ha_client.call_service(domain, "turn_on" if _truthy(value) else "turn_off", ent)
+    elif domain == "lock":
+        await ha_client.call_service("lock", "unlock" if _truthy(value) else "lock", ent)
+    elif domain == "cover":
+        await ha_client.call_service("cover", "open_cover" if _truthy(value) else "close_cover", ent)
+    elif domain == "number":
+        await ha_client.call_service("number", "set_value", {**ent, "value": value})
+    elif domain == "sensor":
+        await ha_client.call_service("virtual", "set", {**ent, "value": str(value)})
+    elif domain == "alarm_control_panel":
+        svc = {"disarmed": "alarm_disarm", "armed_away": "alarm_arm_away",
+               "armed_home": "alarm_arm_home", "armed_night": "alarm_arm_night",
+               "armed_vacation": "alarm_arm_vacation", "triggered": "alarm_trigger"}.get(str(value))
+        if svc:
+            await ha_client.call_service("alarm_control_panel", svc, ent)
+    elif domain == "climate":
+        if sub == "current_temperature":
+            await ha_client.call_service("virtual", "set_current_temperature", {**ent, "value": value})
+        elif sub == "temperature":
+            await ha_client.call_service("climate", "set_temperature", {**ent, "temperature": value})
+        else:
+            await ha_client.call_service("climate", "set_hvac_mode", {**ent, "hvac_mode": str(value)})
+    elif domain == "media_player":
+        if sub == "volume":
+            await ha_client.call_service("media_player", "volume_set", {**ent, "volume_level": value})
+        else:
+            svc = {"playing": "media_play", "paused": "media_pause", "idle": "media_stop",
+                   "on": "turn_on", "off": "turn_off"}.get(str(value))
+            if svc:
+                await ha_client.call_service("media_player", svc, ent)
+    elif domain == "humidifier":
+        if sub == "humidity":
+            await ha_client.call_service("humidifier", "set_humidity", {**ent, "humidity": value})
+        else:
+            await ha_client.call_service("humidifier", "turn_on" if _truthy(value) else "turn_off", ent)
+    elif domain == "vacuum":
+        svc = {"cleaning": "start", "idle": "stop", "paused": "pause",
+               "returning": "return_to_base", "docked": "return_to_base"}.get(str(value))
+        if svc:
+            await ha_client.call_service("vacuum", svc, ent)
+    elif domain == "button":
+        await ha_client.call_service("button", "press", ent)
+
+
+async def _ensure_group() -> None:
+    """Make sure the PistonCore test-devices group (a `virtual` config entry)
+    exists, so devices can be added. Because HA only loads a config-flow
+    integration once it has an entry, this doubles as the install check: if the
+    integration isn't installed, HA's flow-init reports an invalid handler and we
+    say so plainly. Uses HA's REST config-flow (the call the wizard makes),
+    echoing HA's own default file path so we never guess HA's config dir."""
+    import urllib.error
+    import urllib.request
+
+    # Already set up (its services are registered)? Nothing to do.
+    if await _integration_present():
+        return
+
+    ha_url, token = ha_client._load_auth()
+    if not (ha_url and token):
+        raise ha_client.HAClientError("No HA credentials configured.")
+    base = ha_url.rstrip("/")
+
+    def _post(path: str, body: dict):
+        req = urllib.request.Request(
+            base + path, method="POST", data=json.dumps(body).encode(),
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError:
+            return None
+
+    def _work() -> bool:
+        started = _post("/api/config/config_entries/flow", {"handler": "virtual"})
+        if not started or not started.get("flow_id"):
+            return False  # integration not installed / no config flow available
+        default_file = None
+        for field in started.get("data_schema", []):
+            if field.get("name") == "file_name":
+                default_file = field.get("default")
+        _post(f"/api/config/config_entries/flow/{started['flow_id']}", {
+            "group_name": TEST_DEVICES_GROUP,
+            "file_name": default_file or "virtual.yaml",
+        })
+        return True
+
+    if not await asyncio.to_thread(_work):
+        raise ha_client.HAClientError(
+            "The PistonCore Test Devices integration isn't installed on Home "
+            "Assistant yet. Install it (the test-devices-integration folder) and "
+            "restart Home Assistant, then try again.")
+
+    # The entry sets up asynchronously; wait for its services to register.
+    for _ in range(20):
+        if await _integration_present():
+            return
+        await asyncio.sleep(0.5)
+    raise ha_client.HAClientError(
+        "Created the group, but Home Assistant hasn't finished loading it — "
+        "reload this page in a moment.")
+
+
+@router.get("/api/test-devices/list")
+async def api_test_devices_list():
+    if not ha_client.is_configured():
+        return {"configured": False, "present": False, "devices": [], "types": list(TEST_DEVICE_TEMPLATES)}
+    present = await _integration_present()
+    devices = await _list_test_devices() if present else []
+    return {"configured": True, "present": present, "devices": devices,
+            "types": list(TEST_DEVICE_TEMPLATES)}
+
+
+@router.post("/api/test-devices/setup")
+async def api_test_devices_setup():
+    """One-time: create the PistonCore test-devices group so devices can be added.
+    Reports plainly if the integration isn't installed (see _ensure_group)."""
+    try:
+        await _ensure_group()
+    except ha_client.HAClientError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return {"ok": True}
+
+
+@router.post("/api/test-devices/create")
+async def api_test_devices_create(request: Request):
+    body = await request.json()
+    type_name = body.get("type")
+    device_name = (body.get("name") or "").strip()
+    entities = TEST_DEVICE_TEMPLATES.get(type_name)
+    if not entities or not device_name:
+        return JSONResponse({"error": "Pick a type and a name."}, status_code=400)
+    try:
+        await _ensure_group()
+    except ha_client.HAClientError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    # give each entity a friendly name derived from the device name
+    ents = []
+    for i, e in enumerate(entities):
+        ent = dict(e)
+        cls = ent.get("class", ent["platform"].replace("_", " "))
+        ent["name"] = device_name if len(entities) == 1 else f"{device_name} {cls}"
+        ents.append(ent)
+    await ha_client.call_service("virtual", "create_device", {
+        "group_name": TEST_DEVICES_GROUP, "device_name": device_name, "entities": ents})
+    return {"ok": True}
+
+
+@router.post("/api/test-devices/remove")
+async def api_test_devices_remove(request: Request):
+    body = await request.json()
+    device_name = (body.get("name") or "").strip()
+    if not device_name:
+        return JSONResponse({"error": "No device named."}, status_code=400)
+    await ha_client.call_service("virtual", "remove_device", {
+        "group_name": TEST_DEVICES_GROUP, "device_name": device_name})
+    return {"ok": True}
+
+
+@router.post("/api/test-devices/set")
+async def api_test_devices_set(request: Request):
+    body = await request.json()
+    entity_id = body.get("entity_id")
+    if not entity_id:
+        return JSONResponse({"error": "No entity."}, status_code=400)
+    await _set_capability(entity_id, body.get("value"), body.get("sub"))
+    return {"ok": True}
 
 
 @router.get("/settings")
