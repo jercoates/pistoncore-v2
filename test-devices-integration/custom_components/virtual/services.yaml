@@ -82,3 +82,58 @@ move:
           min: 0
           mode: box
           unit_of_measurement: "m"
+
+# --- PistonCore additions (FORK_NOTES.md): live create/remove of a test device ---
+create_device:
+  name: Create device (PistonCore)
+  description: >-
+    Create a virtual (test) device live and group its entities under one device,
+    without editing the group's yaml by hand. PistonCore calls this; usable
+    standalone too.
+  fields:
+    group_name:
+      name: Group
+      description: Which virtual group's file to write to. Omit if you only have one.
+      required: false
+      example: 'Test Devices'
+      selector:
+        text:
+    device_name:
+      name: Device name
+      description: The device to create; its entities are grouped under it.
+      required: true
+      example: 'Test Multi Sensor'
+      selector:
+        text:
+    entities:
+      name: Entities
+      description: >-
+        List of entity definitions, each with a 'platform' plus that platform's
+        normal virtual options (name, class, initial_value, unit_of_measurement).
+      required: true
+      example: >-
+        [{"platform": "binary_sensor", "name": "Test Motion", "class": "motion",
+        "initial_value": "off"}, {"platform": "sensor", "name": "Test Lux",
+        "class": "illuminance", "initial_value": "100"}]
+      selector:
+        object:
+
+remove_device:
+  name: Remove device (PistonCore)
+  description: >-
+    Remove a virtual (test) device and all its entities live, with no orphans.
+  fields:
+    group_name:
+      name: Group
+      description: Which virtual group. Omit if you only have one.
+      required: false
+      example: 'Test Devices'
+      selector:
+        text:
+    device_name:
+      name: Device name
+      description: The device to remove.
+      required: true
+      example: 'Test Multi Sensor'
+      selector:
+        text:

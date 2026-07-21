@@ -48,15 +48,22 @@ SERVICE_SCHEMA = vol.Schema({
 })
 
 VIRTUAL_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,  # PistonCore addition (FORK_NOTES.md)
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,               # PistonCore addition
+    Platform.CLIMATE,              # PistonCore addition
     Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.FAN,
+    Platform.HUMIDIFIER,           # PistonCore addition
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,         # PistonCore addition
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SIREN,                # PistonCore addition
     Platform.SWITCH,
+    Platform.VACUUM,               # PistonCore addition
     Platform.VALVE
 ]
 
@@ -196,6 +203,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[COMPONENT_SERVICES][COMPONENT_DOMAIN] = 'installed'
         hass.services.async_register(COMPONENT_DOMAIN, SERVICE_AVAILABILE,
                                      async_virtual_service_set_available, schema=SERVICE_SCHEMA)
+
+    # --- PistonCore: live create/remove-device services (additive; FORK_NOTES.md) ---
+    from .pistoncore_manage import async_register_manage_services
+    async_register_manage_services(hass)
 
     return True
 
