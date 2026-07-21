@@ -60,8 +60,8 @@ phoning home.
 
 ## Install (early alpha — Docker only)
 
-Assumes you already know how to build and run a Docker container and how to give it a
-persistent volume. There is no published image or HA add-on yet; you build from source.
+For people comfortable building and running a Docker container with a persistent volume.
+There's no published image or HA add-on yet — you build from source.
 
 ```bash
 git clone https://github.com/jercoates/pistoncore-v2.git
@@ -74,20 +74,56 @@ docker run -d --name pistoncore-v2 \
   pistoncore-v2
 ```
 
-Open `http://<host>:7777`. The **first-run wizard** walks you through:
+Open `http://<host>:7777` and the **first-run wizard** walks you through three things:
 
-1. **HA connection** — URL + long-lived access token
-2. **Write target** — how compiled automations reach HA's `/config`:
-   - **Local path** — bind-mount HA's config into the container (or a host mount of a
-     Samba share), set `ha_config_path`
-   - **In-app SMB** — PistonCore connects to HA's Samba share add-on directly (host,
-     share, credentials). Tested and working.
+1. **Connect to Home Assistant** — your HA URL and a **long-lived access token**. Get the
+   token in HA: your profile → **Security** → **Long-Lived Access Tokens** → **Create
+   Token**.
+2. **Choose where PistonCore writes** — how compiled automations reach HA's config folder.
+   Pick the one that matches how you run Home Assistant:
+   - **HA in Docker → bind-mount (local path).** A Docker HA has no add-ons, so there's no
+     Samba share to use. Instead, mount HA's config folder into the PistonCore container
+     and point the wizard at it: add a second volume to the `docker run` above, e.g.
+     `-v /path/to/homeassistant/config:/ha-config`, and set the config path to
+     `/ha-config`. *(Verified against a fresh Docker HA: PistonCore writes in this way,
+     backs up `configuration.yaml` first, and HA still reports its config valid.)*
+   - **HA OS / Supervised → in-app SMB.** If you run Home Assistant OS or Supervised,
+     install the **Samba share** add-on and give PistonCore its host / share / credentials
+     in the wizard — no bind-mount needed. *(This is the path developed and tested on the
+     author's own setup.)*
+3. **Let HA load the files** — the wizard shows the **exact `configuration.yaml` lines** it
+   will add (after taking a timestamped backup), then applies them and reloads HA.
 
-Use the wizard's "Test write target" before finishing. After that you're on the front
-door; create or import a piston and it compiles on save.
+Use the wizard's **Test write access** before finishing. After that you're on the front
+door — create or import a piston and it compiles on save.
 
-An HA add-on path is planned later (same image, supervisor auth). For now this is
+**PyScript is optional.** Simple pistons run as plain HA automations with nothing extra.
+Pistons that use formulas, loops, variables, event blocks, or computed messages need
+PyScript — install it any time from HACS (search "pyscript"); nothing breaks without it.
+
+An HA add-on path (sidebar entry, automatic auth) is planned later. For now it's
 Docker-only on purpose — alpha testers are expected to be comfortable there.
+
+## Will this break my Home Assistant?
+
+It's built hard not to, and the one risky step is gated behind your explicit approval.
+
+- **It only *adds* its own files.** Compiled pistons go into PistonCore's own folders
+  (`pistoncore/automations/`, `pistoncore/scripts/`). Your existing automations, scripts,
+  and entities are left alone.
+- **It never edits `configuration.yaml` without showing you first.** The one file it has
+  to change gets a **timestamped backup written first**, and the wizard shows you the
+  **exact lines** it will add *before* it writes anything — you approve, then it applies.
+- **It checks the result.** Before a deploy goes live, PistonCore runs Home Assistant's
+  own configuration check; a failed check **stops the deploy** instead of shipping a broken
+  file. *(Verified: after PistonCore's edits, a fresh Docker HA reported its config valid.)*
+- **No lock-in.** Compiled pistons are ordinary HA files. Remove PistonCore and your simple
+  automations keep running natively; complex ones keep running as long as PyScript is
+  installed.
+
+Still — this is alpha (see the status note up top), so keep your own backups as you would
+for any change. PistonCore is designed to add-and-back-up, not overwrite, but don't skip
+your own safety net yet.
 
 ## Project documents
 

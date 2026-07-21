@@ -226,6 +226,30 @@ function summarize() {
     : "Everything's connected. Import or write a piston and it will compile straight into Home Assistant.";
 }
 
+// ── ALPHA-ACK ▶ temporary early-alpha acknowledgment gate ───────────────────
+// Remove this block AND the matching "ALPHA-ACK" block in templates/setup.html
+// when PistonCore leaves alpha. Client-side only, by design: even a tester who
+// routes around it by typing "/" has been shown the warning explicitly, so no
+// one can claim they weren't told. Remembers the acknowledgment so returning
+// testers aren't re-nagged.
+(function () {
+  const ack = el("alpha-ack-check");
+  const start = el("start-btn");
+  if (!ack || !start) return;
+  const KEY = "pc_alpha_ack";
+  function sync() {
+    const ok = ack.checked;
+    start.setAttribute("aria-disabled", ok ? "false" : "true");
+    start.style.opacity = ok ? "" : ".5";
+    start.style.pointerEvents = ok ? "" : "none";
+    try { localStorage.setItem(KEY, ok ? "1" : ""); } catch (e) { /* private mode */ }
+  }
+  try { if (localStorage.getItem(KEY) === "1") ack.checked = true; } catch (e) { /* private mode */ }
+  ack.addEventListener("change", sync);
+  sync();
+})();
+// ◀ ALPHA-ACK
+
 // boot
 detect();
 open(1);

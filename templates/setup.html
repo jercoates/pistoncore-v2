@@ -126,7 +126,23 @@
       </div>
       <div class="setup-body">
         <p class="field-hint" id="finish-summary">Finish the steps above, or jump in now.</p>
-        <a class="btn btn-primary" href="/">Start using PistonCore →</a>
+
+        <!-- ALPHA-ACK ▶ temporary early-alpha acknowledgment gate. Remove this whole
+             block AND the matching "ALPHA-ACK" block in static/pistoncore/setup.js
+             when PistonCore leaves alpha. -->
+        <label class="banner alpha-ack" id="alpha-ack"
+               style="display:flex; gap:.6rem; align-items:flex-start; cursor:pointer;
+                      background:var(--amber-bg, rgba(255,193,7,.10));
+                      border:1px solid var(--amber, rgba(255,193,7,.55));">
+          <input type="checkbox" id="alpha-ack-check" style="margin-top:.25rem;">
+          <span>I understand PistonCore is an <strong>early alpha</strong>. The automations
+          it generates are largely <strong>unverified</strong> and may not run correctly —
+          I will not rely on them, I've read the status above, and I'm testing at my own
+          risk.</span>
+        </label>
+        <!-- ◀ ALPHA-ACK -->
+
+        <a class="btn btn-primary" href="/" id="start-btn" aria-disabled="true">Start using PistonCore →</a>
         <a class="btn" href="/help/best-practices">Read the getting-started guide</a>
       </div>
     </li>
