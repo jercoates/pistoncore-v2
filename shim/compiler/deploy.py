@@ -245,6 +245,30 @@ async def _reload_ha(script: bool = False) -> str:
             return f"reload FAILED: {exc}"
 
 
+async def undeploy(piston_id: str) -> None:
+    """Run when a piston is DELETED: remove its compiled artifact from HA (so it
+    stops running) and forget its status record. Best-effort and NEVER raises —
+    deleting the stored piston must succeed even if the write target / HA is
+    unreachable (a stray file then clears on the next reload / recompile-all)."""
+    statuses = load_statuses()
+    prev = statuses.get(piston_id, {})
+    files = {f for f in (prev.get("file"),) if f}
+    if files:
+        try:
+            writer = deploy_writer.get_writer()
+            for f in files:
+                try:
+                    writer.delete(f)
+                except Exception:
+                    pass
+            await _reload_ha(script=prev.get("kind") == "script")
+        except Exception:
+            pass
+    if piston_id in statuses:
+        statuses.pop(piston_id)
+        storage.write_json_atomic(_STATUS_FILE, statuses)
+
+
 async def compile_and_deploy(piston_id: str) -> dict:
     """Runs after every successful save / pause / resume / import. Never
     raises — every outcome lands in meta.compile for the UI surfaces."""

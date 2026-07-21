@@ -261,6 +261,27 @@ def load_piston(piston_id: str) -> dict | None:
     return read_json_safe(path, None, f"piston {piston_id}")
 
 
+def delete_piston(piston_id: str) -> bool:
+    """Remove a stored piston and clear its per-piston side records. Returns
+    whether it existed. Does NOT touch HA — the caller undeploys the compiled
+    artifact separately (read-only-compiler separation, deploy.undeploy)."""
+    path = _piston_path(piston_id)
+    entry = load_piston(piston_id)
+    existed = path.exists()
+    if existed:
+        try:
+            path.unlink()
+        except OSError:
+            pass
+    # Drop this piston's global-variable "used by" references so a deleted
+    # piston stops showing as a consumer on the globals editor.
+    try:
+        update_used_by(piston_id, entry["name"] if entry else "", set())
+    except Exception:
+        pass
+    return existed
+
+
 def set_piston_active(piston_id: str, active: bool) -> dict | None:
     """piston/pause and piston/resume (SHIM_API_SPEC.md §4.6) -- only the
     active flag changes, no other meta bookkeeping (unlike save_piston,

@@ -63,15 +63,34 @@ phoning home.
 For people comfortable building and running a Docker container with a persistent volume.
 There's no published image or HA add-on yet — you build from source.
 
+**Pick a deliberate, persistent location first** — don't run this from `/`, your home root,
+or a temp dir, or the source ends up somewhere you didn't mean (on **Unraid** especially,
+never clone to the array root — use `appdata`). Keep the **source** and PistonCore's
+**data** in two separate folders.
+
 ```bash
-git clone https://github.com/jercoates/pistoncore-v2.git
-cd pistoncore-v2
+# generic example — substitute your own persistent paths
+SRC=/opt/pistoncore-v2-src           # Unraid: /mnt/user/appdata/pistoncore-v2-src
+DATA=/opt/pistoncore-v2-data         # Unraid: /mnt/user/appdata/pistoncore-v2-data
+mkdir -p "$SRC" "$DATA"
+
+git clone https://github.com/jercoates/pistoncore-v2.git "$SRC"
+cd "$SRC"
 docker build -t pistoncore-v2 .
 docker run -d --name pistoncore-v2 \
   -p 7777:7777 \
-  -v /path/to/pistoncore-data:/data \
+  -v "$DATA":/data \
   --restart unless-stopped \
   pistoncore-v2
+```
+
+**Updating later** (this is where people trip up): the container keeps running old code
+until you rebuild *and* recreate it — a `docker restart` does nothing.
+```bash
+cd "$SRC" && git pull          # must say "Fast-forward"; check: git log --oneline -1
+docker build -t pistoncore-v2 .
+docker rm -f pistoncore-v2     # remove the old container...
+docker run -d ...              # ...then re-run with the same flags as above
 ```
 
 Open `http://<host>:7777` and the **first-run wizard** walks you through three things:

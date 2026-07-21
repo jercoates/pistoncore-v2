@@ -185,6 +185,20 @@ def piston_get(request: Request):
     return jsonp(request, response)
 
 
+@router.get("/piston/delete")
+async def piston_delete(request: Request):
+    """webCoRE's delete button (piston.module.js:653 $scope.del ->
+    dataService.deletePiston, app.js:1445). This route was missing entirely, so
+    every delete 404'd and nothing was removed. Undeploy the compiled automation
+    from HA first (so it stops running), then delete the stored piston. The
+    caller only needs the request to succeed, then it navigates home."""
+    piston_id = request.query_params.get("id", "")
+    if piston_id:
+        await compiler_deploy.undeploy(piston_id)
+        storage.delete_piston(piston_id)
+    return jsonp(request, {"status": "ST_SUCCESS"})
+
+
 def _save_response(entry: dict) -> dict:
     # piston.module.js:599-606 — only treats a save as successful if
     # response.data.build is truthy, then applies these three fields

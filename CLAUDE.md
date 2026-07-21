@@ -105,14 +105,21 @@ never treat it as gospel.
   real one (happened once, 2026-07-12 — looked like "deleted everything," wasn't, just
   mounted wrong). Recreate the container, never `docker restart` — a rebuilt image has no
   effect on an already-running container until it's recreated.
+  Source and data both live under `appdata`, never at the Unraid root (Jeremy,
+  2026-07-21 — a bare `git clone` dumping files at `/` bit both him and a tester):
+  source in `pistoncore-v2-src`, the persistent `/data` volume in
+  `pistoncore-v2-data`.
   ```bash
-  cd /mnt/user/appdata/pistoncore-v2   # wherever the repo is actually cloned
+  # first time only:
+  #   mkdir -p /mnt/user/appdata/pistoncore-v2-src /mnt/user/appdata/pistoncore-v2-data
+  #   git clone https://github.com/jercoates/pistoncore-v2.git /mnt/user/appdata/pistoncore-v2-src
+  cd /mnt/user/appdata/pistoncore-v2-src
   git pull
   docker build -t pistoncore-v2 .
   docker rm -f pistoncore-v2
   docker run -d --name pistoncore-v2 \
     -p 7778:7777 \
-    -v /mnt/user/appdata/pistoncore-data:/data \
+    -v /mnt/user/appdata/pistoncore-v2-data:/data \
     --restart unless-stopped \
     pistoncore-v2
   ```
