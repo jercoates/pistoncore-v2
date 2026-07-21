@@ -113,7 +113,11 @@ async def _ws_call(messages: list[dict]) -> dict[int, dict]:
     results: dict[int, dict] = {}
 
     try:
-        async with websockets.connect(ws_url, open_timeout=10) as ws:
+        # max_size=None: HA's batched registry snapshot on a large install (many
+        # devices/entities) exceeds the websockets default 1 MiB frame cap and
+        # fails with 1009 "message too big". This is a trusted local connection
+        # to the user's own HA, so remove the cap rather than guess a ceiling.
+        async with websockets.connect(ws_url, open_timeout=10, max_size=None) as ws:
             auth_req = json.loads(await ws.recv())
             if auth_req.get("type") != "auth_required":
                 raise HAClientError(f"Unexpected HA handshake: {auth_req}")
