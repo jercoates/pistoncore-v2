@@ -60,6 +60,8 @@
                   data-active="{{ '1' if tile.active else '0' }}">
             {{ 'Pause' if tile.active else 'Enable' }}
           </button>
+          <button class="btn btn-sm btn-ghost piston-delete" style="color:var(--red)"
+                  title="Delete this piston">Delete</button>
         </div>
         {% endfor %}
       </div>

@@ -64,6 +64,25 @@ document.querySelectorAll(".piston-toggle").forEach((btn) => {
   });
 });
 
+// ── Per-row Delete (same shim endpoint the editor's delete uses) ────────────
+document.querySelectorAll(".piston-delete").forEach((btn) => {
+  btn.addEventListener("click", async (e) => {
+    e.stopPropagation();  // don't open the piston
+    const row = btn.closest(".piston-row");
+    const name = row.querySelector(".piston-name").textContent;
+    if (!confirm(`Delete "${name}"?\n\nThis removes the piston and its compiled automation from Home Assistant.`)) return;
+    btn.disabled = true;
+    const resp = await fetch(`/intf/dashboard/piston/delete?id=${row.dataset.pistonId}`);
+    if (!resp.ok) { btn.disabled = false; alert("Delete failed — try again."); return; }
+    row.remove();
+    const banner = document.getElementById("fd-banner");
+    if (banner) {
+      banner.innerHTML = '<div class="banner banner-info"></div>';
+      banner.firstChild.textContent = `Deleted "${name}".`;
+    }
+  });
+});
+
 // ── Folder filter + search (client-side, search scoped to current folder) ──
 const rows = Array.from(document.querySelectorAll(".piston-row"));
 const search = document.getElementById("fd-search");
