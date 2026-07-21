@@ -222,14 +222,31 @@ do it by hand. **TO-VERIFY:** whether PistonCore's HA access can write to
 `custom_components/` and trigger the restart. If not, the user does a one-time
 manual/HACS install; everything after is smooth.
 
-### 5.5 Where the fork lives (NEW COMPONENT — needs Jeremy's location call)
+### 5.5 Where the fork lives — DECIDED (Jeremy, 2026-07-21): in-repo folder for now
 
-The fork is a **separate deliverable** from the shim and the sealed dashboard —
-a standalone HA custom_component that also ships to the community. It is NOT part
-of `dashboard/` and NOT inside `shim/`. **Open (Jeremy to decide at build):**
-its own sibling repo (cleanest for HACS/community) vs. a top-level folder in this
-repo. Either way it keeps its own GPL-3.0 headers and upstream attribution to
+Develop it **in-repo** as a top-level folder `test-devices-integration/` while it's
+young (fast to iterate alongside the shim), and **split it out to its own repo at
+release** when it's HACS-ready (a clean one-time move). It is NOT part of `dashboard/`
+and NOT inside `shim/`. It keeps its own GPL-3.0 headers and upstream attribution to
 `twrecked/hass-virtual`.
+
+### 5.6 STANDALONE SELF-SUFFICIENCY — REQUIRED (Jeremy, 2026-07-21)
+
+The integration must be **fully usable on its own, through Home Assistant's native
+UI and services**, with **no PistonCore required**. It is a community deliverable in
+its own right; PistonCore's `/test-devices` panel is an **optional nicer front-end**,
+never the only control surface. Concretely:
+
+- **Create/remove** works through the integration's HA **config flow** (Settings →
+  Devices & Services — the way any HA user adds/removes an integration) — the same
+  path PistonCore drives programmatically over the websocket. Never a PistonCore-only
+  API.
+- **Set state** works through HA **services** (usable from Developer Tools → Actions)
+  and through native controls in a Lovelace dashboard where the entity type supports
+  it. PistonCore's panel calls those same services.
+- So a standalone user gets the full feature set from HA alone; PistonCore adds
+  convenience (auto-discovery of "one of each type," the grouped control panel), not
+  capability. Do not build any core capability that only PistonCore can reach.
 
 ## 6. Two places to run it
 
