@@ -62,17 +62,33 @@ have — not a generic list, your actual shapes. ASSUMED: dedupe key = the sorte
 set of attribute keys + commands. **TO-VERIFY:** confirm against Jeremy's real
 payload that this yields a sensible, not-too-long list.
 
-## 4. The control panel (PistonCore owns it)
+## 4. The control panel (PistonCore owns it) — REQUIRED per device
 
 A page at `/test-devices` (replaces today's stub), showing each test device as
-a row (never tiles — memory: never-tile-layouts), each with a control per
-capability:
-- on/off things (motion, contact, switch, smoke, water) → a toggle
-- numbers (lux, temperature, humidity, level) → a slider/number box
-- choices (alarm arm state, thermostat mode, media state) → a dropdown
-Flipping a control sets that test device's state immediately, so you can set up
-a scenario (motion active AND it's dark AND alarm armed) and see the piston go.
-DECISION-CANDIDATE (Jeremy): a "fire now / reset all" affordance too.
+a ROW (never tiles — memory: never-tile-layouts). **Every test-device row MUST
+have (Jeremy, 2026-07-20):**
+
+1. **A test/virtual TAG** clearly marking it a test device, not a real one —
+   visible on the row, and in its HA name (`Test — …`), so it's never mistaken
+   for real hardware anywhere.
+2. **An add/remove-from-HA toggle.** Flip ON = PistonCore creates the test
+   device in Home Assistant (so it exists to author against and drive); flip
+   OFF = PistonCore removes it from HA cleanly (both the copy and its backing
+   parts — no orphans, §8.6). So a test device can sit defined-but-not-present
+   until you want it, and be pulled out when you're done.
+3. **One control per capability, showing its CURRENT state.** Each capability
+   the device has gets its own control that both SETS and DISPLAYS the value:
+   - on/off (motion, contact, switch, smoke, water) → a toggle showing on/off
+   - numbers (lux, temperature, humidity, level) → a slider/box showing the value
+   - choices (alarm arm state, thermostat mode, media state) → a dropdown showing
+     the current choice
+   The current state is always visible, so you can see what the test device is
+   reporting right now, and change it in place.
+
+Flipping a capability control sets that test device's state immediately, so you
+can set up a scenario (motion active AND it's dark AND alarm armed) and watch
+the piston go. DECISION-CANDIDATE (Jeremy): a "fire now / reset all" affordance
+too.
 
 ## 5. How it's built under the hood (for the build session)
 
