@@ -1,156 +1,149 @@
-# VIRTUAL_DEVICES_SPEC.md — Virtual test devices (behavioral testing)
+# VIRTUAL_DEVICES_SPEC.md — Test devices (behavioral testing)
 
-**Status:** Draft 1 — spec'd from Jeremy's roadmap ("after compiler → virtual
-devices for testing → trace", 2026-07-20) and the reconciliation finding that
-behavioral testing against faithful twins is what surfaces spec-drift.
-Research-backed; every HA-mechanism claim tagged VERIFIED (HA knowledge, ≤2026)
-/ ASSUMED / **TO-VERIFY** (needs a live-HA check before building).
+**Status:** Draft 2 — rewritten 2026-07-20 around Jeremy's actual mechanism
+(the Draft 1 abstraction missed it). Plain-language behavior first (Jeremy
+verifies behaviorally, not by reading code); the under-the-hood realization is
+lower down, tagged for the build session.
 
-**Tagging:** VERIFIED = established HA behavior. ASSUMED = design choice not
-yet proven. TO-VERIFY = must be checked against a running HA in the build
-session. DECISION = Jeremy's call.
+**Tagging:** VERIFIED = established HA behavior. ASSUMED = design choice not yet
+proven. **TO-VERIFY** = check against a running HA in the build session.
+DECISION = Jeremy's call.
 
 ---
 
-## 0. Do not confuse with webCoRE `virtualDevices`
+## 0. Don't confuse the name
 
-webCoRE already has a thing called `virtualDevices` — `fixtures.build_virtual_devices`
-serves `webcore_vocab.json`'s `virtualDevices` (Location Mode, HSM, etc.) to the
-EDITOR as pickable system devices (VERIFIED-HE-GROOVY webcore.groovy:6032). **That
-is NOT this.** This spec is about **PistonCore TEST DEVICES**: controllable dummy
-HA entities that let you exercise a *compiled* piston without real hardware. Different
-purpose, different mechanism, different UI (`/test-devices`, currently a stub in
-`shim/routes/pages.py`). Keep the words straight in code and UI — call these "test
-devices," never "virtual devices," to avoid the collision.
+webCoRE already has "virtualDevices" (Location Mode / HSM, served to the
+editor — `fixtures.build_virtual_devices`). This feature is different. Call
+these **"test devices"** everywhere in code and UI so the two never collide.
 
-## 1. Why this exists
+## 1. What you'll be able to do (the whole point, in behavior)
 
-- **Surface spec-drift behaviorally.** A piston that should fire but doesn't, or
-  fires wrong, is drift made visible (RECONCILIATION.md). Reading code catches
-  a lot; running the real compiled output against faithful twins catches the rest.
-- **Author-and-check without hardware.** The stub's own promise:
-  "quickly exercising compiler output without real hardware."
-- **No HA dry-run exists.** VERIFIED (HA_LIMITATIONS.md:439): "Test button always
-  executes real actions. No dry-run mode." So testing = real entities really
-  firing. That forces two rules: outputs must also be dummy (§4), and there must
-  be an isolated-instance option (§6) for anyone who won't tolerate real side
-  effects.
+1. PistonCore looks at all your real devices — the ones coming in from Hubitat
+   through Home Assistant — and grabs **one of each TYPE** (one motion sensor,
+   one contact, one dimmer, one thermostat, one alarm panel, one speaker…).
+2. For each, it makes a **controllable copy** — a test device that is the same
+   KIND of device but that PistonCore can set the state of.
+3. You get a **control panel inside PistonCore** where you flip every
+   capability of every test device: turn the test motion active/inactive, drag
+   the test lux to 500, arm the test alarm, set the test thermostat to 72.
+4. You write (or point) a piston at those test devices, and when you flip a
+   control, the piston fires **exactly as it would for the real device** — and
+   you watch what it does. A piston that should fire but doesn't, or does the
+   wrong thing, is a bug made visible without touching real hardware.
 
-## 2. The faithfulness principle (LOAD-BEARING)
+That's it. Grab one of each real type → make a copy you can drive → drive them
+all from PistonCore → watch pistons behave.
 
-A test MUST exercise the **actual compiled automation as it would run in
-production** — otherwise it tests a different thing and proves nothing about
-drift. Consequences:
+## 2. Why COPIES, not your real devices (the reason this feature exists)
 
-- A test motion sensor must be a real `binary_sensor` with `device_class: motion`,
-  because that is what the compiler binds and emits
-  `trigger: state, entity_id: binary_sensor.x, to: "on"` against. An
-  `input_boolean` is the WRONG domain — the picker would group it differently and
-  the compiled trigger wouldn't match. VERIFIED (device_pipeline grouping keys on
-  domain + device_class).
-- So a test device is not one entity but a **controllable twin**: a real-domain
-  entity the piston sees, plus a way to drive its state.
+Two hard reasons, both plain:
 
-## 3. What a test device IS, per domain (the research)
+- **Home Assistant won't let PistonCore set a real device's state.** Your
+  Hubitat devices are owned by the Hubitat integration — PistonCore can read
+  them but can't make `binary_sensor.cave_motion` say "active" on command; HA
+  ignores or overwrites that. VERIFIED (HA state-machine ownership). So to
+  *drive* a device for a test, PistonCore must own a copy it's allowed to set.
+- **Testing fires for real.** VERIFIED (HA_LIMITATIONS.md:439 — "Test button
+  always executes real actions. No dry-run mode."). If a test piston turned on
+  your real cave light every time you tested, that's unusable. So the OUTPUT
+  side must be test copies too — drive test inputs, watch test outputs, touch
+  nothing real.
 
-The chosen mechanism: **template entities backed by input helpers.** You flip an
-`input_*` helper on the test page; a `template` entity of the correct domain +
-device_class mirrors it; the piston references the template entity. Faithful
-(real domain the compiler emits against) and controllable (you own the input).
+## 3. "One of each type" — what a TYPE is
 
-| webCoRE device | Test twin (real domain the piston sees) | Driven by |
-|---|---|---|
-| Motion / contact / presence / smoke / water | `template` **binary_sensor** with the matching `device_class` | `input_boolean` |
-| Illuminance / temperature / humidity / power / battery | `template` **sensor** with `device_class` + `unit_of_measurement` | `input_number` |
-| Switch | `template` **switch** | `input_boolean` (and the switch's own on/off) |
-| Light (on/off + level + color) | `template` **light** | `input_boolean` + `input_number` (brightness) |
-| Lock | `template` **lock** | `input_boolean` |
-| Alarm panel | `template` **alarm_control_panel** | `input_select` (arm states) |
-| Media player / speaker | `template` **media_player** (state + volume) | `input_select` + `input_number` |
-| Thermostat | `template` **climate** | `input_number` (setpoints) + `input_select` (mode) |
+Your device payload already groups devices by capability (DEVICE_PAYLOAD_SPEC).
+Two devices are the SAME type when they expose the same capabilities/attributes
+— all your motion sensors are one type; a motion+lux camera sensor is a
+different type; the thermostat is its own type. PistonCore walks the grouped
+payload, buckets by capability signature, and takes ONE representative per
+bucket. Result: a test-device set that mirrors exactly the kinds of devices YOU
+have — not a generic list, your actual shapes. ASSUMED: dedupe key = the sorted
+set of attribute keys + commands. **TO-VERIFY:** confirm against Jeremy's real
+payload that this yields a sensible, not-too-long list.
 
-- Template entities support `device_class`, `unit_of_measurement`, and — for
-  actuators (light/switch/lock/climate/media_player) — command handlers that write
-  back to the backing input, so a piston that TURNS ON a test light visibly flips
-  the input. VERIFIED (HA template integration, ≤2026). **TO-VERIFY:** the exact
-  current YAML shape for template `alarm_control_panel`, `media_player`, and
-  `climate` (these are the least-mature template domains) on the target HA version.
-- **ASSUMED:** one PistonCore-managed template package file per test device (or one
-  combined file) is cleaner than scattering helpers. Decide at build time.
+## 4. The control panel (PistonCore owns it)
 
-**Alternative considered — MQTT entities.** Faithful domain + fully scriptable
-state, but needs an MQTT broker and is heavier to set up. ASSUMED reject for the
-default path; keep as a power-user option. **Alternative — the `demo`
-integration:** provides one entity per domain but not targeted/controllable —
-reject.
+A page at `/test-devices` (replaces today's stub), showing each test device as
+a row (never tiles — memory: never-tile-layouts), each with a control per
+capability:
+- on/off things (motion, contact, switch, smoke, water) → a toggle
+- numbers (lux, temperature, humidity, level) → a slider/number box
+- choices (alarm arm state, thermostat mode, media state) → a dropdown
+Flipping a control sets that test device's state immediately, so you can set up
+a scenario (motion active AND it's dark AND alarm armed) and see the piston go.
+DECISION-CANDIDATE (Jeremy): a "fire now / reset all" affordance too.
 
-## 4. Outputs must be dummy too
+## 5. How it's built under the hood (for the build session)
 
-Because Test executes real actions (§1), a test piston's TARGET devices must also
-be test devices, or Test would actuate real hardware. DECISION-CANDIDATE (Jeremy
-to confirm): the test flow warns if a piston under test targets a NON-test
-(real) device, and offers to swap the target to a test twin for the run. This is
-the "faithful twin on both ends" rule — drive test inputs, observe test outputs,
-touch nothing real.
+Plain summary: a test device is a **real HA entity of the right kind that
+PistonCore can set**, made from parts PistonCore already knows how to create.
 
-## 5. Creation, picker, and the test UI
+- **Settable copies via HA helpers + template entities.** PistonCore creates an
+  input helper it's allowed to set (`input_boolean` for on/off,
+  `input_number` for values, `input_select` for choices — same helper-create it
+  already uses for Location Mode, VERIFIED `ha_client.create_input_select`), and
+  a `template` entity of the REAL domain + device_class that mirrors it
+  (template `binary_sensor` device_class motion, template `sensor` with a unit,
+  template `light`/`switch`/`lock`/`alarm_control_panel`/`climate`/`media_player`).
+  The piston sees the template entity (correct kind → correct compiled trigger);
+  the PistonCore control panel sets the backing helper; the template mirrors it.
+- **Why the template layer is needed:** the copy must be the same DOMAIN the
+  compiler emits against. A piston on a motion sensor compiles to
+  `trigger: state, entity_id: binary_sensor.x, to: "on"` — so the test copy has
+  to be a `binary_sensor`, not a bare `input_boolean`, or the trigger wouldn't
+  match. VERIFIED (device_pipeline groups on domain + device_class).
+- **Created through the write path already built** — the template entities go in
+  a `pistoncore/test_devices/` package via `shim/config_yaml.py` + the write
+  transport, same show-changes-consent-backup flow as automations. Helpers via
+  the websocket helper-CRUD.
+- **The picker needs zero changes** — test devices are real HA entities, so they
+  flow through the existing device pipeline and appear in the editor grouped
+  like any device, named e.g. "Test — Motion". VERIFIED.
+- **TO-VERIFY (build session):** exact current template YAML shape for the
+  less-mature domains — `alarm_control_panel`, `media_player`, `climate`; and
+  helper-CRUD coverage for `input_boolean`/`input_number` (mode used
+  `input_select`).
+- **ALTERNATIVE to evaluate at build (may be simpler, and is the most
+  "PistonCore controls it directly" option):** a single PyScript module that
+  PistonCore deploys, which creates every test entity and exposes ONE service
+  to set any of them — PistonCore's control panel just calls that service. No
+  template YAML, no separate helpers. Uses the pyscript deploy path already
+  built. **TO-VERIFY:** whether a PyScript `state.set` entity lands in HA's
+  entity REGISTRY so the device pipeline/picker sees it (state-only entities
+  sometimes don't). If it does, this is likely the cleaner mechanism; if not,
+  fall back to the template+helper path above.
 
-- **Creation.** Two HA-native paths, reusing what PistonCore already has:
-  - Input helpers via the websocket helper-CRUD PistonCore already uses for
-    Location Mode (VERIFIED: `ha_client.create_input_select`; the same namespace
-    covers `input_boolean/create`, `input_number/create`). **TO-VERIFY:** helper
-    CRUD covers every input type needed.
-  - Template entities via the **configuration.yaml write capability already built**
-    (`shim/config_yaml.py` + the write transport) — PistonCore writes a
-    `pistoncore/test_devices/` template package, same include mechanism as
-    automations, with the same show-changes-then-consent + backup flow.
-- **Picker integration is FREE.** Test devices are real HA entities, so they flow
-  through the existing device pipeline (DEVICE_PAYLOAD_SPEC) and appear in the
-  editor grouped like any device — named e.g. "Test — Motion 1". No compiler or
-  picker change. VERIFIED (they're real entities).
-- **The `/test-devices` page** (replaces the stub): create/list/delete test
-  devices; a control panel to SET each input (toggle the motion, dial the lux);
-  a **Fire** affordance and a live view of what the compiled piston did — which
-  automation triggered, which services it called, the resulting test-output
-  states. Vanilla JS/Jinja per CLAUDE.md, row lists not tiles (memory:
-  never-tile-layouts).
+## 6. Two places to run it
 
-## 6. Two environments
-
-1. **Live instance, labeled test devices (default).** Create `Test — …` entities
-   on the user's real HA. Cheapest; works today with the existing write path.
-   Safe as long as §4 holds (outputs are test twins). This matches the stub.
-2. **Dedicated test HA instance (isolated).** The dev-HA bed idea — a throwaway HA
-   with PyScript + seeded test devices, nothing real to actuate. Heavier setup;
-   the honest choice for anyone who won't risk real side effects, and the natural
-   home for an automated corpus behavioral-gate later. Its own session (there's a
-   dev-HA-bed brief already noted); this spec just reserves the seam.
+1. **On your real HA, as clearly-labeled test devices (default).** The copies
+   live on your live instance named `Test — …`. Works with the write path today.
+   Safe as long as both ends are test copies (§2).
+2. **On a throwaway test HA (isolated).** Nothing real to touch; the honest
+   choice if you never want side effects, and the home for an automated
+   behavioral gate later. Its own session; this spec just reserves the seam.
 
 ## 7. Relationship to trace (the next milestone)
 
-Test devices DRIVE a piston; trace OBSERVES what it did. Complementary, not
-sequential-dependent:
-- **Before trace exists**, the test page observes via what it can already see:
-  the test-output entities' resulting states, and HA's logbook/`get_states`.
-- **With trace** (`TRACE_ACTIVITY_CONTRACT.md`, Draft 2, spec-ready), the test
-  page shows the per-statement path — which trigger fired, each condition's
-  value — turning "it didn't fire" into "it evaluated condition $4 false." That is
-  the richest form of drift-surfacing. Build test devices first (they need no
-  trace); wire trace into the test view when trace lands.
-- **Forced-PyScript + test** is the strongest combo for the toggle Jeremy added:
-  a piston forced to PyScript for fidelity, driven by test devices, observed via
-  trace, is the full behavioral-fidelity loop. RECONCILIATION.md confirms the
-  PyScript path is over-built enough to deliver this.
+Test devices DRIVE a piston; trace SHOWS what it did.
+- **Before trace:** the control panel shows what it can already see — the test
+  OUTPUT devices changing, plus HA's logbook.
+- **With trace** (TRACE_ACTIVITY_CONTRACT.md, Draft 2, spec-ready): the panel
+  shows the per-statement path — which trigger fired, each condition's value —
+  so "it didn't fire" becomes "condition $4 was false." Build test devices first
+  (they need no trace); wire trace into the panel when trace lands.
+- **Forced-PyScript + test + trace** is the full fidelity loop the compile-band
+  override was built for.
 
 ## 8. Open items / TO-VERIFY before building
 
-1. Template YAML shape for `alarm_control_panel`, `media_player`, `climate` on the
-   target HA version (§3) — least-mature template domains.
-2. Helper-CRUD coverage for every input type (§5).
-3. The output-swap rule (§4) — Jeremy to confirm the warn-and-offer-swap flow.
-4. Whether one combined template package or per-device files is cleaner (§3).
-5. Package/include path + config.yaml lines for `pistoncore/test_devices/` — mirror
-   the automations/scripts include design (COMPILER_DECISIONS_DEPLOY §3).
-6. Reset/teardown: deleting a test device must remove BOTH the template entity and
-   its backing helper, and clean the package file (no orphans — same discipline as
-   the deploy rename cleanup).
+1. Dedupe key for "one of each type" yields a sane list on Jeremy's real payload (§3).
+2. Template YAML shape for alarm_control_panel / media_player / climate (§5).
+3. Helper-CRUD coverage for every input type (§5).
+4. Output side: confirm both ends must be test copies, and how a piston authored
+   on real devices gets swapped to test twins for a run (or authored on test
+   devices directly) — Jeremy to confirm the workflow.
+5. Package/include path + config.yaml lines for `pistoncore/test_devices/`
+   (mirror the automations/scripts include, COMPILER_DECISIONS_DEPLOY §3).
+6. Teardown: deleting a test device removes BOTH the template entity and its
+   backing helper and cleans the package file — no orphans.
