@@ -87,6 +87,38 @@ async function load() {
   statusEl.innerHTML = "";
   addEl.style.display = "";
   renderDevices(data.devices || []);
+  loadClones();
+}
+
+// Clone panel (user-facing): faithful copies of the user's REAL devices.
+async function loadClones() {
+  const wrap = document.getElementById("td-clone-wrap");
+  const list = document.getElementById("td-clone-list");
+  const data = await api("/api/test-devices/discover");
+  const types = data.types || [];
+  if (!types.length) { wrap.style.display = "none"; return; }
+  wrap.style.display = "";
+  list.innerHTML = "";
+  types.forEach((t) => {
+    const row = el("div", "td-clone-row");
+    const info = el("div", "td-clone-info");
+    const name = el("span", "td-clone-name");
+    name.textContent = t.label + (t.count > 1 ? `  (×${t.count})` : "");
+    const caps = el("span", "td-clone-caps");
+    caps.textContent = t.caps.join(" · ");
+    caps.title = t.caps.join(", ");
+    info.append(name, caps);
+    const btn = el("button", "btn");
+    btn.textContent = "Clone";
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = "Cloning…";
+      const res = await api("/api/test-devices/create-twin", { label: t.label, entities: t.entities });
+      if (res.error) { banner("error", res.error); btn.disabled = false; btn.textContent = "Clone"; return; }
+      load();
+    };
+    row.append(info, btn);
+    list.appendChild(row);
+  });
 }
 
 function renderDevices(devices) {
@@ -152,6 +184,12 @@ function numberBox(e, current, sub, step) {
   n.onchange = () => set(e.entity_id, n.value, sub);
   return n;
 }
+function textBox(e, current, sub) {
+  const n = el("input"); n.type = "text"; n.placeholder = "type a value…";
+  if (current !== undefined && current !== null) n.value = current;
+  n.onchange = () => set(e.entity_id, n.value, sub);
+  return n;
+}
 
 // Build the control(s) for one entity, keyed by its HA domain.
 function controlsFor(e) {
@@ -166,8 +204,12 @@ function controlsFor(e) {
       return [capRow(e.name, [toggle(e, "unlocked", "locked", st === "unlocked")], st)];
     case "cover":
       return [capRow(e.name, [toggle(e, "open", "closed", st === "open")], st)];
-    case "sensor": case "number":
-      return [capRow(e.name, [numberBox(e, st, null, "any")], st + (a.unit_of_measurement ? " " + a.unit_of_measurement : ""))];
+    case "sensor":
+      // sensors can hold strings (a camera's smartDetectType = "person") or
+      // numbers (lux = 500) — free text handles both; you type the value.
+      return [capRow(e.name, [textBox(e, st)], st + (a.unit_of_measurement ? " " + a.unit_of_measurement : ""))];
+    case "number":
+      return [capRow(e.name, [numberBox(e, st, null, "any")], st)];
     case "alarm_control_panel":
       return [capRow(e.name, [selectOf(e, ["disarmed", "armed_home", "armed_away", "armed_night", "armed_vacation", "triggered"], st)], st)];
     case "vacuum":

@@ -8,6 +8,8 @@ still fixture data — no HA location/mode/HSM pipeline built yet.
 
 import hashlib
 import json
+import logging
+import traceback
 
 from fastapi import APIRouter, Request
 
@@ -15,7 +17,16 @@ from .. import device_pipeline, fixtures, ha_client, storage
 from ..compiler import deploy as compiler_deploy
 from ..jsonp import jsonp
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/intf/dashboard")
+
+# Captured so a remote / first-run user's dashboard-load failure is diagnosable
+# WITHOUT their server logs: open /whats-wrong in the browser to read it. Set on
+# every /load (SHIM_API_SPEC.md §4) — see the load handler.
+LAST_LOAD_DIAG: dict = {
+    "ok": True, "stage": None, "error": None, "traceback": None, "skipped": [],
+}
 
 # In-memory cache — HA registry fetch is a WebSocket round trip; no point
 # repeating it on every /load + /devices pair. Cleared only by server
@@ -63,24 +74,45 @@ def _device_version(devices: dict) -> str:
 @router.get("/load")
 async def load(request: Request):
     global _registries_cache
-    payload = await _get_device_payload()
-    registries = await _get_registries()
-    location, helper_created = await fixtures.build_location(registries)
-    if helper_created:
-        # Next fetch picks up the newly-created helper for free; this
-        # response is already correct without waiting (built from the
-        # create call's own result) — see fixtures.build_location.
-        _registries_cache = None
+    LAST_LOAD_DIAG.update({"ok": True, "stage": None, "error": None, "traceback": None, "skipped": []})
+    try:
+        LAST_LOAD_DIAG["stage"] = "reading your Home Assistant devices"
+        payload = await _get_device_payload()
+        LAST_LOAD_DIAG["skipped"] = payload.get("skipped", [])
 
-    virtual_devices = fixtures.build_virtual_devices([m["name"] for m in location["modes"]])
-    instance = fixtures.fake_instance(str(request.base_url), virtual_devices)
-    instance["deviceVersion"] = _device_version(payload["devices"])
-    instance["pistons"] = storage.list_pistons()
-    instance["globalVars"] = storage.globals_for_wire()
-    return jsonp(request, {
-        "location": location,
-        "instance": instance,
-    })
+        LAST_LOAD_DIAG["stage"] = "reading Home Assistant location / mode"
+        registries = await _get_registries()
+        location, helper_created = await fixtures.build_location(registries)
+        if helper_created:
+            # Next fetch picks up the newly-created helper for free; this
+            # response is already correct without waiting (built from the
+            # create call's own result) — see fixtures.build_location.
+            _registries_cache = None
+
+        LAST_LOAD_DIAG["stage"] = "assembling the dashboard"
+        virtual_devices = fixtures.build_virtual_devices([m["name"] for m in location["modes"]])
+        instance = fixtures.fake_instance(str(request.base_url), virtual_devices)
+        instance["deviceVersion"] = _device_version(payload["devices"])
+        instance["pistons"] = storage.list_pistons()
+        instance["globalVars"] = storage.globals_for_wire()
+        LAST_LOAD_DIAG["stage"] = None
+        return jsonp(request, {
+            "location": location,
+            "instance": instance,
+        })
+    except Exception as exc:
+        # A first-run user must never be left on an eternal "loading…" with a
+        # blank 500 and no clue why. We can't reach their server logs, so capture
+        # exactly what broke (which stage, the error, the traceback) — readable
+        # at /whats-wrong in their browser — and log it. Re-raise so the
+        # dashboard's own retry still applies; the diagnosis is now retrievable.
+        LAST_LOAD_DIAG.update({
+            "ok": False,
+            "error": f"{type(exc).__name__}: {exc}",
+            "traceback": traceback.format_exc(),
+        })
+        logger.exception("dashboard /load failed at stage: %s", LAST_LOAD_DIAG["stage"])
+        raise
 
 
 @router.get("/devices")

@@ -11,8 +11,10 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+from html import escape
+
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from .. import deploy_writer, ha_client, storage
@@ -147,6 +149,87 @@ TEST_DEVICE_TEMPLATES: dict[str, list[dict]] = {
         {"platform": "sensor", "class": "temperature", "unit_of_measurement": "°C"},
     ],
 }
+
+
+# Domains the virtual integration can reproduce as a settable test entity.
+_VIRTUAL_PLATFORM_DOMAINS = {
+    "alarm_control_panel", "binary_sensor", "button", "climate", "cover",
+    "device_tracker", "fan", "humidifier", "light", "lock", "media_player",
+    "number", "sensor", "siren", "switch", "vacuum", "valve",
+}
+
+
+async def _discover_twin_types() -> list[dict]:
+    """Read the user's REAL devices (device_pipeline grouping) and build a
+    faithful test-twin spec for each distinct device TYPE: a grouped virtual
+    device reproducing the same HA entities (domain + device_class + unit), so a
+    piston can be tested against a twin of the ACTUAL gear — a UniFi camera's
+    motion + smartDetectType, an ecobee, an alarm keypad, whatever the user has.
+    This is the 'one of each of YOUR devices' the bench is for (VIRTUAL_DEVICES_
+    SPEC §3), not a generic catalog."""
+    from .. import device_pipeline
+
+    import re
+
+    regs = await ha_client.fetch_registries()
+    states = {s["entity_id"]: s.get("attributes", {}) for s in regs.get("states", [])}
+    ent_reg = {e["entity_id"]: e for e in regs.get("entities", [])}
+    groups = device_pipeline.group_entities(regs)
+
+    def _cap_name(eid: str, attrs: dict, device_label: str) -> str:
+        # Prefer the entity's own capability name; strip the device label so a
+        # camera's "Driveway Motion Smart Detect Type" reads as "Smart Detect Type".
+        name = (ent_reg.get(eid, {}).get("original_name")
+                or attrs.get("friendly_name") or eid.split(".", 1)[1])
+        dl = device_label.strip().lower()
+        if name.lower().startswith(dl):
+            name = name[len(dl):].strip(" -—:")
+        return name or eid.split(".", 1)[1]
+
+    # Infrastructure, not test devices (Jeremy 2026-07-21): the Hubitat hub / HSM
+    # (HSM is handled as the alarm binding), and PistonCore's own internals.
+    _SKIP_LABEL = ("hubitat", "hsm", "pistoncore")
+
+    types: dict = {}
+    for g in groups:
+        label = g["display_name"]
+        if any(s in label.lower() for s in _SKIP_LABEL):
+            continue
+        ents = []
+        for eid in g["member_entity_ids"]:
+            dom = eid.split(".", 1)[0]
+            if dom not in _VIRTUAL_PLATFORM_DOMAINS:
+                continue  # image/select/event/update not reproducible YET (see spec §5.7)
+            # Reproduce EVERYTHING in a reproducible domain — no trimming. A full
+            # debug suite is large ON PURPOSE (Jeremy 2026-07-21): the "extra"
+            # capabilities (YoLink alarm thresholds, Inovelli/Zooz double-tap,
+            # held/pushed, mmWave, ...) are exactly what a piston might use, so a
+            # faithful twin must carry them, not a tidied-down subset.
+            reg = ent_reg.get(eid, {})
+            attrs = states.get(eid, {})
+            spec = {"platform": dom, "name": _cap_name(eid, attrs, label)}
+            dc = attrs.get("device_class") or reg.get("device_class")
+            if dc:
+                spec["class"] = dc
+            unit = attrs.get("unit_of_measurement")
+            if unit and dom in ("sensor", "number"):
+                spec["unit_of_measurement"] = unit
+            ents.append(spec)
+        if not ents:
+            continue
+        # Type signature keys on the SHAPE (platform+class+capname), so a
+        # smartDetect camera is a distinct type from a plain motion sensor.
+        sig = tuple(sorted(
+            (e["platform"], e.get("class", ""), e["name"].lower()) for e in ents))
+        rec = types.setdefault(sig, {"label": label, "entities": ents, "count": 0})
+        rec["count"] += 1
+
+    out = []
+    for rec in sorted(types.values(), key=lambda r: -r["count"]):
+        caps = [e.get("class") or e["name"] for e in rec["entities"]]
+        out.append({"label": rec["label"], "count": rec["count"],
+                    "caps": caps, "entities": rec["entities"]})
+    return out
 
 
 async def _integration_present() -> bool:
@@ -378,15 +461,62 @@ async def api_test_devices_create(request: Request):
         await _ensure_group()
     except ha_client.HAClientError as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
-    # give each entity a friendly name derived from the device name
+    # ALWAYS tag the HA name with "Test —" (VIRTUAL_DEVICES_SPEC §4.1): the device
+    # and its entities must read as test gear inside Home Assistant itself
+    # (dashboards, logbook, entity_ids), not only on this panel. Don't double-tag
+    # if the user already typed "Test".
+    tagged = device_name if device_name.lower().startswith("test") else f"Test — {device_name}"
     ents = []
-    for i, e in enumerate(entities):
+    for e in entities:
         ent = dict(e)
         cls = ent.get("class", ent["platform"].replace("_", " "))
-        ent["name"] = device_name if len(entities) == 1 else f"{device_name} {cls}"
+        ent["name"] = tagged if len(entities) == 1 else f"{tagged} {cls}"
         ents.append(ent)
     await ha_client.call_service("virtual", "create_device", {
-        "group_name": TEST_DEVICES_GROUP, "device_name": device_name, "entities": ents})
+        "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": ents})
+    return {"ok": True}
+
+
+@router.get("/api/test-devices/discover")
+async def api_test_devices_discover():
+    """The user's real device TYPES, each as a cloneable twin spec (clone panel)."""
+    if not ha_client.is_configured():
+        return {"types": []}
+    return {"types": await _discover_twin_types()}
+
+
+@router.post("/api/test-devices/create-twin")
+async def api_test_devices_create_twin(request: Request):
+    """Clone one discovered device type into a grouped test device."""
+    body = await request.json()
+    label = (body.get("label") or "").strip()
+    entities = body.get("entities") or []
+    if not label or not entities:
+        return JSONResponse({"error": "Nothing to clone."}, status_code=400)
+    try:
+        await _ensure_group()
+    except ha_client.HAClientError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    tagged = label if label.lower().startswith("test") else f"Test — {label}"
+    seen: dict = {}
+    ents = []
+    for e in entities:
+        plat = e.get("platform")
+        if plat not in _VIRTUAL_PLATFORM_DOMAINS:
+            continue
+        base = (e.get("name") or plat).strip()
+        seen[base] = seen.get(base, 0) + 1
+        uniq = base if seen[base] == 1 else f"{base} {seen[base]}"  # de-dup within device
+        ent = {"platform": plat, "name": f"Test — {uniq}"}
+        if e.get("class"):
+            ent["class"] = e["class"]
+        if e.get("unit_of_measurement") and plat in ("sensor", "number"):
+            ent["unit_of_measurement"] = e["unit_of_measurement"]
+        ents.append(ent)
+    if not ents:
+        return JSONResponse({"error": "No reproducible capabilities on this device."}, status_code=400)
+    await ha_client.call_service("virtual", "create_device", {
+        "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": ents})
     return {"ok": True}
 
 
@@ -409,6 +539,44 @@ async def api_test_devices_set(request: Request):
         return JSONResponse({"error": "No entity."}, status_code=400)
     await _set_capability(entity_id, body.get("value"), body.get("sub"))
     return {"ok": True}
+
+
+@router.get("/whats-wrong")
+async def whats_wrong(request: Request):
+    """Plain diagnostic page a stuck user (or a remote friend) opens in the
+    browser and screenshots — no server logs needed. Shows HA connectivity plus
+    the last dashboard-load failure captured in shim/routes/dashboard.py."""
+    from .dashboard import LAST_LOAD_DIAG as d
+
+    if ha_client.is_configured():
+        ha_ok, ha_msg = await ha_client.check_connection()
+    else:
+        ha_ok, ha_msg = False, "No Home Assistant URL/token set — finish the first-run wizard / Settings."
+
+    parts = ["<h1>PistonCore — what's wrong</h1>",
+             f"<p><b>Home Assistant:</b> {'✅ ' if ha_ok else '❌ '}{escape(str(ha_msg))}</p>"]
+    if not d.get("ok"):
+        parts.append(f"<h2>❌ The dashboard failed to load</h2>"
+                     f"<p>It broke while <b>{escape(str(d.get('stage')))}</b>.</p>"
+                     f"<pre>{escape(str(d.get('error')))}</pre>"
+                     f"<details><summary>Full details (copy this to Jeremy)</summary>"
+                     f"<pre>{escape(str(d.get('traceback')))}</pre></details>")
+    elif not d.get("skipped"):
+        parts.append("<p>✅ Last dashboard load was clean — no errors captured. "
+                     "If it's still stuck, reload the dashboard once so this page can catch the error.</p>")
+    if d.get("skipped"):
+        parts.append(f"<h2>⚠️ {len(d['skipped'])} device(s) skipped</h2>"
+                     "<p>The dashboard still loads without them — but these devices tripped the shim:</p><ul>")
+        for s in d["skipped"]:
+            parts.append(f"<li><b>{escape(str(s.get('device')))}</b> — {escape(str(s.get('error')))}"
+                         f"<br><small>{escape(str(s.get('entities')))}</small></li>")
+        parts.append("</ul>")
+    style = ("<meta name=viewport content='width=device-width,initial-scale=1'>"
+             "<style>body{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;"
+             "padding:0 1rem;color:#e8e8f0;background:#1a1a2e}pre{white-space:pre-wrap;"
+             "background:#16213e;padding:1rem;border-radius:8px;overflow:auto}"
+             "a{color:#4a9eff}li{margin:.5rem 0}</style>")
+    return HTMLResponse(style + "\n".join(parts) + "<p><a href='/'>← back to PistonCore</a></p>")
 
 
 @router.get("/settings")

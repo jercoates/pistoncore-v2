@@ -555,16 +555,35 @@ def build_device_payload(registries: dict) -> dict:
 
     devices: dict[str, dict] = {}
     resolution_map: dict[str, dict] = {}
+    skipped: list[dict] = []
 
     for group in groups:
-        hashed_id, device_obj, resolution_entry = _process_group(
-            group, state_map, entity_map, picker_map, vocab, attr_to_caps
-        )
+        # One malformed device must NOT take down the whole dashboard (a fresh
+        # user's varied HA is exactly where an unhandled shape shows up). Skip it,
+        # record why, and keep every other device working.
+        try:
+            hashed_id, device_obj, resolution_entry = _process_group(
+                group, state_map, entity_map, picker_map, vocab, attr_to_caps
+            )
+        except Exception as exc:
+            logger.exception("device pipeline skipped group %s", group.get("display_name"))
+            skipped.append({
+                "device": group.get("display_name"),
+                "group_key": group.get("group_key"),
+                "entities": group.get("member_entity_ids"),
+                "error": f"{type(exc).__name__}: {exc}",
+            })
+            continue
         devices[hashed_id] = device_obj
         resolution_map[hashed_id] = resolution_entry
 
     for service_key in extract_notify_target_services(registries):
-        hashed_id, device_obj, resolution_entry = _build_notify_device(service_key, vocab)
+        try:
+            hashed_id, device_obj, resolution_entry = _build_notify_device(service_key, vocab)
+        except Exception as exc:
+            logger.exception("device pipeline skipped notify %s", service_key)
+            skipped.append({"device": f"notify:{service_key}", "error": f"{type(exc).__name__}: {exc}"})
+            continue
         devices[hashed_id] = device_obj
         resolution_map[hashed_id] = resolution_entry
 
@@ -590,8 +609,13 @@ def build_device_payload(registries: dict) -> dict:
         system_entities["tts"] = engines[0]["entity_id"]
     resolution_map["$system"] = system_entities
 
+    if skipped:
+        logger.warning("device pipeline skipped %d device(s): %s",
+                       len(skipped), [s["device"] for s in skipped])
+
     return {
         "devices": devices,
         "resolution_map": resolution_map,
         "tts_engines": extract_tts_engines(registries),
+        "skipped": skipped,
     }

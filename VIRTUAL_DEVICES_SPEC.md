@@ -248,6 +248,75 @@ never the only control surface. Concretely:
   convenience (auto-discovery of "one of each type," the grouped control panel), not
   capability. Do not build any core capability that only PistonCore can reach.
 
+## 5.7 Discovery-driven twins + FULL reproduction (Jeremy, 2026-07-21)
+
+The bench is **discovery-driven**, not a generic catalog: PistonCore reads the
+user's REAL devices (`device_pipeline.group_entities`), buckets them by capability
+signature, and offers a faithful **twin** of each type — reproducing the same HA
+entities (domain + device_class + name). `_discover_twin_types()` in
+`shim/routes/pages.py` does this. The generic edge-case catalog
+(`TEST_DEVICE_TEMPLATES`) stays too, for kinds the user does NOT own.
+
+**Reproduce EVERYTHING — no trimming (firm).** A full debug suite is large ON
+PURPOSE. The "extra" capabilities are the whole point: YoLink alarm thresholds,
+Inovelli/Zooz **double-tap / held / pushed / released**, a camera's
+**smartDetectType**, mmWave presence, IR — a piston (especially someone else's)
+may trigger on any of them, so a twin must carry all of them, not a tidied
+subset. An early build trimmed diagnostics/config/noise; that was WRONG and was
+removed. Only skip: entities in domains not yet reproducible (below). Simple
+devices come out simple, complex devices come out full — that falls out of
+reproducing everything, so don't second-guess the size.
+
+**Camera smartDetect:** reproduced as a plain string `sensor` (values like
+`person`, `vehicle`, `waiting`). VERIFIED it accepts the state; the panel sets a
+`sensor` via a free-text box (typing isn't ideal UX — a dropdown of known values
+is a future nicety, but settability is what matters).
+
+**Known gaps — capability kinds that still need work (TO-BUILD):**
+1. **Multi-tap / scene button events** (Inovelli, Zooz — double-tap is used
+   heavily). These are momentary EVENTS (single/double/held/released/pushed),
+   not states, and often arrive as HA `event` entities — a domain the fork
+   doesn't reproduce yet. Needs an `event`-style test platform that can FIRE a
+   chosen sub-event (like `button.press` but with a value). **Without this the
+   twin can't test a double-tap piston.**
+2. **`select` domain** capabilities (modes, presets) — skipped today; needs a
+   settable select platform for full fidelity.
+3. **New device types the user is adding:** a LinkLink/Broadlink **eMotion Ultra**
+   with **IR** (command device) and **mmWave presence** (an occupancy/presence
+   binary_sensor — reproducible now; IR-blast commands are the harder part).
+
+These are real, named build items — not to be quietly dropped again.
+
+## 5.8 TWO surfaces, two audiences (Jeremy, 2026-07-21 — supersedes single-panel)
+
+The bench serves two different people, so it has two surfaces sharing one engine
+(the integration's create/set/remove):
+
+1. **Clone panel — `/test-devices` (USER-facing).** Discovers the user's REAL
+   devices (`_discover_twin_types`) and offers a faithful **clone** of each, full
+   reproduction (§5.7). This is for a normal user testing THEIR automations
+   against copies of THEIR gear — "going to be a hit with users." The commonest
+   want, and the friendly default surface.
+2. **Debug library panel — DEVELOPER-facing, separate.** The full **72-capability
+   library** from `webcore_vocab.json` (`capabilities`), one single instance of
+   every capability/edge-case type — the overwhelming majority of which the user
+   does NOT own. This is the actual "full debug suite": for debugging pistons and
+   building compiler coverage against devices you don't have (yours, a friend's,
+   community pistons). Reached from **Diagnostics** AND a **"Developer" link at the
+   bottom of the screen** so it's findable. Generated from the vocab's own
+   `_ha_translation` attribute/command rules (motionSensor→binary_sensor/motion,
+   thermostat→climate, alarm→siren, valve→valve, button/holdableButton→multi-tap,
+   …), NOT guessed. Includes a "spin up the whole suite" action.
+
+Why both: cloning gives a user what they HAVE; the library gives a developer what
+they DON'T. Neither alone is the bench. The earlier generic 20-item catalog and
+the "twin-only" idea are both retired by this split.
+
+**Build state (2026-07-21):** clone discovery engine built + proven against real
+devices; still needs create-twin endpoint + the "Your devices" UI + entity-name
+de-dup + end-to-end test. Debug library: not built — vocab-driven generator +
+its own panel + the Diagnostics/Developer links.
+
 ## 6. Two places to run it
 
 1. **On your real HA, as clearly-labeled test devices (default).** The copies
