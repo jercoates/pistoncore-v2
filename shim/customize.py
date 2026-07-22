@@ -17,9 +17,12 @@ loaded from there, with a per-file fallback to the bundled copy in the image.
   back to bundled automatically until re-seeded.
 """
 
+import logging
 import os
 import shutil
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # repo root inside the image (contains templates/ and the root JSON maps)
 _BUNDLED = Path(__file__).resolve().parent.parent
@@ -52,11 +55,21 @@ def ensure_seeded() -> None:
         dst = CUSTOMIZE_DIR / rel
         if dst.exists() or not src.exists():
             continue
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        if src.is_dir():
-            shutil.copytree(src, dst)
-        else:
-            shutil.copy2(src, dst)
+        # A failed seed must NEVER crash startup: if /data is read-only, has a
+        # container-vs-host UID mismatch, or is full, copying throws — and a hard
+        # exception here (called at import time) takes the whole app down. It's
+        # also non-fatal by design: customize.path() falls back to the bundled
+        # copy when the /data copy is absent, so an unseeded file still WORKS,
+        # it just isn't user-editable. So log and continue, per file.
+        try:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if src.is_dir():
+                shutil.copytree(src, dst)
+            else:
+                shutil.copy2(src, dst)
+        except Exception:
+            logger.warning("Could not seed editable copy of %s (using bundled "
+                           "default; not user-editable this run).", rel, exc_info=True)
     _seeded = True
 
 

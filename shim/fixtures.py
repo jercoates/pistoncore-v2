@@ -78,7 +78,22 @@ async def _resolve_mode_entity(registries: dict) -> tuple[dict, bool]:
         storage.save_settings(settings)
         return default_state, False
 
-    created = await ha_client.create_input_select(DEFAULT_MODE_NAME, DEFAULT_MODE_OPTIONS)
+    try:
+        created = await ha_client.create_input_select(DEFAULT_MODE_NAME, DEFAULT_MODE_OPTIONS)
+    except ha_client.HAClientError as exc:
+        # A brand-new user's FIRST /load lands here (the helper doesn't exist
+        # yet). It must not become an eternal "loading…" just because we couldn't
+        # create the helper — a read-only-ish token, input_select unavailable, or
+        # an HA hiccup. Serve default modes so the dashboard loads; do NOT save to
+        # settings, so the next load retries the create when HA is happy again.
+        logger.warning("Could not auto-create Location Mode helper (%s); serving "
+                       "default modes without a live helper this load.", exc)
+        return {
+            "entity_id": DEFAULT_MODE_ENTITY,
+            "state": DEFAULT_MODE_OPTIONS[0],
+            "attributes": {"options": list(DEFAULT_MODE_OPTIONS),
+                           "friendly_name": DEFAULT_MODE_NAME},
+        }, False
     created_entity_id = f"input_select.{created['id']}"
     settings["location_mode_entity"] = created_entity_id
     storage.save_settings(settings)
@@ -120,7 +135,10 @@ async def build_location(registries: dict) -> tuple[dict, bool]:
     current = mode_state["state"]
 
     config = registries["config"]
-    temp_scale = config["unit_system"]["temperature"].replace("°", "")
+    # Don't hard-index HA's config shape — an unusual/partial get_config (missing
+    # unit_system) would KeyError and kill the whole load. Default to °C.
+    unit_system = config.get("unit_system") or {}
+    temp_scale = (unit_system.get("temperature") or "°C").replace("°", "")
 
     location = {
         "id": "pistoncore-location",
