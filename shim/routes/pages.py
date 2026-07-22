@@ -108,6 +108,14 @@ async def test_devices_page(request: Request):
     return templates.TemplateResponse(request, "test_devices.html", {})
 
 
+@router.get("/test-devices/debug")
+async def debug_devices_page(request: Request):
+    """Developer debug library (VIRTUAL_DEVICES_SPEC §5.8) — every capability as a
+    single test type, for troubleshooting other people's pistons. Separate from
+    the user clone panel; reached from Diagnostics and a Developer link."""
+    return templates.TemplateResponse(request, "debug_devices.html", {})
+
+
 # ---------------------------------------------------------------------------
 # Test devices panel (VIRTUAL_DEVICES_SPEC.md Stage 4). PistonCore ties into the
 # forked `virtual` integration (test-devices-integration/): it CREATES and
@@ -154,8 +162,8 @@ TEST_DEVICE_TEMPLATES: dict[str, list[dict]] = {
 # Domains the virtual integration can reproduce as a settable test entity.
 _VIRTUAL_PLATFORM_DOMAINS = {
     "alarm_control_panel", "binary_sensor", "button", "climate", "cover",
-    "device_tracker", "fan", "humidifier", "light", "lock", "media_player",
-    "number", "sensor", "siren", "switch", "vacuum", "valve",
+    "device_tracker", "event", "fan", "humidifier", "light", "lock",
+    "media_player", "number", "sensor", "siren", "switch", "vacuum", "valve",
 }
 
 
@@ -230,6 +238,94 @@ async def _discover_twin_types() -> list[dict]:
         out.append({"label": rec["label"], "count": rec["count"],
                     "caps": caps, "entities": rec["entities"]})
     return out
+
+
+# Creation-only mappings for capabilities the vocab's MATCHING rules can't map
+# (their attribute has no distinguishing HA device_class, so a forward rule would
+# over-match every plain sensor/binary_sensor). These DO have a settable HA
+# representation for a TEST device. (platform, device_class|None). This never
+# touches the device pipeline — it's only used to CREATE debug devices.
+_DEBUG_EXTRA: dict[str, tuple[str, str | None]] = {
+    "consumable": ("sensor", None),
+    "estimatedTimeOfArrival": ("sensor", "timestamp"),
+    "indicator": ("sensor", None),
+    "infraredLevel": ("number", None),
+    "powerSource": ("sensor", None),
+    "sensor": ("sensor", None),
+    "sleepSensor": ("binary_sensor", None),
+    "speechRecognition": ("sensor", None),
+    "stepSensor": ("sensor", None),
+    "threeAxis": ("sensor", None),
+    "touchSensor": ("binary_sensor", None),
+    "timedSession": ("sensor", None),          # HA `timer` proper; sensor stopgap
+    "mediaController": ("media_player", None),  # HA `remote` proper; media_player is a real fallback
+    # command-only speaker/action capabilities (no state attribute) — a device of
+    # this kind IS a media_player / button / siren:
+    "audioNotification": ("media_player", None),
+    "speechSynthesis": ("media_player", None),
+    "momentary": ("button", None),
+    "tone": ("siren", None),
+    "notification": ("sensor", None),          # last-message text as a sensor
+}
+
+# Genuinely not reproducible as a settable test device (honest, with the reason).
+# (button/holdableButton now reproduce via the event platform — see event.py.)
+_DEBUG_NEEDS_PLATFORM = {
+    "imageCapture": "a camera snapshot — not settable as a test entity",
+}
+_DEBUG_MARKERS = {  # webCoRE capability markers, not device types
+    "actuator", "configuration", "polling", "refresh",
+}
+
+
+def _debug_library() -> dict:
+    """The DEVELOPER debug suite (VIRTUAL_DEVICES_SPEC §5.8): every webCoRE
+    capability the vocab defines, as ONE single settable test type — so a piston
+    someone sends you can be troubleshot against the exact device KIND it uses,
+    even one you don't own. Grounded in the vocab's own capability + attribute
+    rules, with a creation-only supplement (_DEBUG_EXTRA) for kinds whose HA rule
+    is match-only. Returns {types: [...], unmappable: [{label, why}]}."""
+    from .. import device_pipeline
+
+    vocab = device_pipeline._load_json("webcore_vocab.json")
+    caps = vocab.get("capabilities", {})
+    attrs = vocab.get("attributes", {})
+
+    def _first_supported_rule(attr_key):
+        rules = (attrs.get(attr_key) or {}).get("ha")
+        if not rules or rules == "n/a":
+            return None
+        rules = rules if isinstance(rules, list) else [rules]
+        for r in rules:  # scan ALL rules, not just the first — a later one may be reproducible
+            if isinstance(r, dict) and r.get("domain") in _VIRTUAL_PLATFORM_DOMAINS:
+                return r
+        return None
+
+    types, unmappable = [], []
+    for cap_key, cap in sorted(caps.items()):
+        label = cap.get("n") or cap_key
+        domain = dc = None
+        rule = _first_supported_rule(cap.get("a")) if cap.get("a") else None
+        if rule:
+            domain = rule["domain"]
+            rdc = rule.get("device_class")
+            dc = rdc[0] if isinstance(rdc, list) and rdc else (rdc if isinstance(rdc, str) else None)
+        elif cap_key in _DEBUG_EXTRA:
+            domain, dc = _DEBUG_EXTRA[cap_key]
+
+        if not domain:
+            why = (_DEBUG_NEEDS_PLATFORM.get(cap_key)
+                   or ("a webCoRE capability marker, not a device" if cap_key in _DEBUG_MARKERS
+                       else "no HA equivalent"))
+            unmappable.append({"label": label, "why": why})
+            continue
+
+        ent = {"platform": domain, "name": label}
+        if dc:
+            ent["class"] = dc
+        types.append({"label": label, "key": cap_key, "domain": domain,
+                      "device_class": dc, "entities": [ent]})
+    return {"types": types, "unmappable": unmappable}
 
 
 async def _integration_present() -> bool:
@@ -325,6 +421,8 @@ async def _set_capability(entity_id: str, value, sub: str | None = None) -> None
             await ha_client.call_service("vacuum", svc, ent)
     elif domain == "button":
         await ha_client.call_service("button", "press", ent)
+    elif domain == "event":
+        await ha_client.call_service("virtual", "fire_event", {**ent, "event_type": str(value)})
 
 
 async def _ensure_group() -> None:
@@ -475,6 +573,51 @@ async def api_test_devices_create(request: Request):
     await ha_client.call_service("virtual", "create_device", {
         "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": ents})
     return {"ok": True}
+
+
+@router.get("/api/test-devices/debug-library")
+async def api_debug_library():
+    """The developer debug suite catalog: every capability as a single test type."""
+    return _debug_library()
+
+
+async def _create_single(label: str, entity: dict) -> None:
+    tagged = label if label.lower().startswith("test") else f"Test — {label}"
+    ent = {"platform": entity["platform"], "name": tagged}
+    if entity.get("class"):
+        ent["class"] = entity["class"]
+    await ha_client.call_service("virtual", "create_device", {
+        "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": [ent]})
+
+
+@router.post("/api/test-devices/debug-add")
+async def api_debug_add(request: Request):
+    """Add ONE debug-suite type (the common path: a piston needs a garage door
+    you don't own — add just that)."""
+    body = await request.json()
+    label, entities = body.get("label"), body.get("entities") or []
+    if not label or not entities:
+        return JSONResponse({"error": "Nothing to add."}, status_code=400)
+    try:
+        await _ensure_group()
+    except ha_client.HAClientError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    await _create_single(label, entities[0])
+    return {"ok": True}
+
+
+@router.post("/api/test-devices/debug-suite")
+async def api_debug_suite():
+    """Spin up the WHOLE suite — one device per mappable capability. Slower (a
+    reload per device); the per-type add above is the everyday path."""
+    try:
+        await _ensure_group()
+    except ha_client.HAClientError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    lib = _debug_library()
+    for t in lib["types"]:
+        await _create_single(t["label"], t["entities"][0])
+    return {"ok": True, "created": len(lib["types"])}
 
 
 @router.get("/api/test-devices/discover")

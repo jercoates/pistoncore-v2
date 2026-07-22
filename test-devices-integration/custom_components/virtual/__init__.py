@@ -54,6 +54,7 @@ VIRTUAL_PLATFORMS = [
     Platform.CLIMATE,              # PistonCore addition
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,                # PistonCore addition (button / scene / multi-tap)
     Platform.FAN,
     Platform.HUMIDIFIER,           # PistonCore addition
     Platform.LIGHT,

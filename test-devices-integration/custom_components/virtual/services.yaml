@@ -118,6 +118,24 @@ create_device:
       selector:
         object:
 
+fire_event:
+  name: Fire event (PistonCore)
+  description: >-
+    Fire a chosen event type on a virtual event entity — for testing button /
+    scene / multi-tap pistons (press, hold, double_press, …).
+  target:
+    entity:
+      integration: virtual
+      domain: event
+  fields:
+    event_type:
+      name: Event type
+      description: The event type to fire (e.g. press, hold, double_press).
+      required: true
+      example: "double_press"
+      selector:
+        text:
+
 remove_device:
   name: Remove device (PistonCore)
   description: >-

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}PistonCore — Debug Library{% endblock %}
+
+{% block content %}
+<style>
+  .dbg-intro { color: var(--text-secondary); max-width: 680px; margin-bottom: var(--space-4); }
+  .dbg-actions { display:flex; gap:8px; align-items:center; margin-bottom: var(--space-4); flex-wrap:wrap; }
+  .dbg-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:8px; }
+  .dbg-card {
+    display:flex; align-items:center; gap:10px; padding:8px 10px;
+    background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:8px;
+  }
+  .dbg-card-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .dbg-name { color:var(--text-primary); font-weight:500; font-size:14px; }
+  .dbg-map { color:var(--text-muted); font-size:11px; font-family:var(--font-code); }
+  .dbg-unmap { color:var(--text-muted); font-size:12px; margin-top:6px; line-height:1.7; }
+  .dbg-unmap code { color:var(--yellow); }
+</style>
+
+<div class="page active">
+  <div class="list-header"><h1>Debug Library <span style="color:var(--text-muted);font-size:14px;font-weight:400">— developer</span></h1></div>
+  <p class="dbg-intro">
+    One test device for <strong>every device kind webCoRE can target</strong> — so a piston
+    someone sends you can be exercised against the exact capability it uses, even one you
+    don't own. Add the kinds a piston needs, then drive them on the
+    <a href="/test-devices">Test Devices</a> panel. (For copies of <em>your own</em> gear,
+    use the clone list there instead.)
+  </p>
+
+  <div id="dbg-status"></div>
+
+  <div class="dbg-actions" id="dbg-actions" style="display:none">
+    <button class="btn btn-primary" id="dbg-suite">Spin up the whole suite</button>
+    <span class="field-hint" id="dbg-count"></span>
+  </div>
+
+  <div class="dbg-grid" id="dbg-grid"></div>
+
+  <div id="dbg-unmappable"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/pistoncore/debug_devices.js"></script>
+{% endblock %}

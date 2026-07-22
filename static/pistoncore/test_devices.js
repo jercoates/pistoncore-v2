@@ -235,6 +235,16 @@ function controlsFor(e) {
       b.onclick = () => set(e.entity_id, "press");
       return [capRow(e.name, [b], st)];
     }
+    case "event": {
+      // button / scene / multi-tap: pick an event type and fire it
+      const types = (a.event_types && a.event_types.length)
+        ? a.event_types : ["press", "double_press", "hold", "release"];
+      const sel = el("select");
+      sel.innerHTML = types.map((t) => `<option>${t}</option>`).join("");
+      const b = el("button", "btn"); b.textContent = "Fire";
+      b.onclick = () => set(e.entity_id, sel.value);
+      return [capRow(e.name, [sel, b], a.event_type || "—")];
+    }
     default:
       return [capRow(e.name, [], st)];
   }
