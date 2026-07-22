@@ -203,6 +203,11 @@ async def _discover_twin_types() -> list[dict]:
         label = g["display_name"]
         if any(s in label.lower() for s in _SKIP_LABEL):
             continue
+        # Don't offer to clone our OWN test devices (platform 'virtual') — the
+        # clone list is for real gear you own, not copies you already made.
+        if g["member_entity_ids"] and all(
+                ent_reg.get(eid, {}).get("platform") == "virtual" for eid in g["member_entity_ids"]):
+            continue
         ents = []
         for eid in g["member_entity_ids"]:
             dom = eid.split(".", 1)[0]

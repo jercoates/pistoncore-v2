@@ -46,6 +46,7 @@
   .td-remove { color: var(--red); border-color: var(--border-subtle); }
   .td-switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
   .td-empty { color: var(--text-muted); padding: 16px 4px; }
+  #td-clone-select { flex: 1; min-width: 320px; max-width: 680px; }
   .td-clone-row {
     display: flex; align-items: center; gap: 12px;
     padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 8px;
@@ -63,6 +64,12 @@
     active, drag a test lux to 500, arm a test alarm — so you can watch a compiled
     piston fire without touching real hardware. Grouped just like real devices; clearly
     tagged <strong>TEST</strong> so they're never mistaken for the real thing.
+  </p>
+
+  <p class="field-hint" style="margin: -6px 0 var(--space-4)">
+    A device kind not working (like a newly-added <strong>Button</strong>)? Your Home Assistant
+    may have an older copy of the integration —
+    <a href="#" id="td-update-integration">update it on Home Assistant</a>.
   </p>
 
   <div id="td-status"></div>
@@ -84,8 +91,13 @@
     <p class="field-hint" style="max-width:640px;margin-bottom:10px">
       Faithful copies of your <em>real</em> devices — same capabilities — so you can test your
       automations against a stand-in instead of the real thing. (Need a device you <em>don't</em>
-      own? That's the full <a href="/diagnostics">developer library</a>.)
+      own? That's the <a href="/test-devices/debug">developer library</a>.)
     </p>
+    <div class="td-add" id="td-clone-form" style="display:none">
+      <label class="td-cap-label" style="min-width:auto">Clone</label>
+      <select id="td-clone-select"></select>
+      <button class="btn btn-primary" id="td-clone-btn">Clone this device</button>
+    </div>
     <div id="td-clone-list"></div>
   </div>
 

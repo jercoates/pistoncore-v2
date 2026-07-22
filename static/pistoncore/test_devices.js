@@ -23,19 +23,22 @@ async function api(path, body) {
 // Offer to install the integration into HA — GATED behind a warning the user
 // must acknowledge (the Install button stays disabled until the box is ticked,
 // and the backend also requires the acknowledgment, so it can't be skipped).
-function showInstall() {
+function showInstall(isUpdate) {
+  const verb = isUpdate ? "Update" : "Install";
   statusEl.innerHTML =
     "<div class='banner banner-warning'>" +
-    "<strong>Install the test-device integration onto Home Assistant?</strong>" +
-    "<div class='field-hint' style='margin-top:6px'>PistonCore will <strong>write files into your " +
-    "Home Assistant</strong> (<code>custom_components/virtual/</code>) and then <strong>restart Home " +
-    "Assistant</strong> — it will be offline for roughly 30–60 seconds. Your existing automations, " +
-    "scripts, and settings are not touched. (Prefer HACS? You can install it that way instead and " +
-    "skip this.)</div>" +
+    `<strong>${verb} the test-device integration on Home Assistant?</strong>` +
+    "<div class='field-hint' style='margin-top:6px'>PistonCore will <strong>write the current integration " +
+    "files into your Home Assistant</strong> (<code>custom_components/virtual/</code>" +
+    (isUpdate ? ", overwriting the installed copy" : "") + ") and then <strong>restart Home " +
+    "Assistant</strong> — offline for roughly 30–60 seconds. Your existing automations, scripts, and " +
+    "settings are not touched." + (isUpdate
+      ? " Use this after a PistonCore update adds new device kinds (e.g. Button) that your installed copy doesn't have yet."
+      : " (Prefer HACS? You can install it that way instead and skip this.)") + "</div>" +
     "<label class='td-switch' style='margin-top:10px'><input type='checkbox' id='td-inst-ack'> " +
     "I understand PistonCore will write into my Home Assistant and restart it.</label>" +
-    "<div style='margin-top:10px'><button class='btn btn-primary' id='td-install' disabled>" +
-    "Install onto Home Assistant</button></div></div>";
+    `<div style='margin-top:10px'><button class='btn btn-primary' id='td-install' disabled>` +
+    `${verb} on Home Assistant</button></div></div>`;
   const ack = document.getElementById("td-inst-ack");
   const btn = document.getElementById("td-install");
   ack.onchange = () => { btn.disabled = !ack.checked; };
@@ -90,37 +93,53 @@ async function load() {
   loadClones();
 }
 
-// Clone panel (user-facing): faithful copies of the user's REAL devices.
+// Clone panel (user-facing): faithful copies of the user's REAL devices, offered
+// as a searchable dropdown (there can be dozens — a long row list is unusable).
+let cloneTypes = [];
 async function loadClones() {
   const wrap = document.getElementById("td-clone-wrap");
+  const form = document.getElementById("td-clone-form");
+  const sel = document.getElementById("td-clone-select");
   const list = document.getElementById("td-clone-list");
-  wrap.style.display = "";  // always visible so it never silently vanishes
+  wrap.style.display = "";
+  form.style.display = "none";
+  list.innerHTML = "";
   const data = await api("/api/test-devices/discover");
   const types = data.types || [];
   if (data.error) { list.innerHTML = `<div class="banner banner-warning">${data.error}</div>`; return; }
-  if (!types.length) { list.innerHTML = `<p class="td-empty">No devices found to clone.</p>`; return; }
-  list.innerHTML = "";
-  types.forEach((t) => {
-    const row = el("div", "td-clone-row");
-    const info = el("div", "td-clone-info");
-    const name = el("span", "td-clone-name");
-    name.textContent = t.label + (t.count > 1 ? `  (×${t.count})` : "");
-    const caps = el("span", "td-clone-caps");
-    caps.textContent = t.caps.join(" · ");
-    caps.title = t.caps.join(", ");
-    info.append(name, caps);
-    const btn = el("button", "btn");
-    btn.textContent = "Clone";
-    btn.onclick = async () => {
-      btn.disabled = true; btn.textContent = "Cloning…";
-      const res = await api("/api/test-devices/create-twin", { label: t.label, entities: t.entities });
-      if (res.error) { banner("error", res.error); btn.disabled = false; btn.textContent = "Clone"; return; }
-      load();
-    };
-    row.append(info, btn);
-    list.appendChild(row);
-  });
+  if (!types.length) { list.innerHTML = `<p class="td-empty">No real devices found to clone.</p>`; return; }
+  cloneTypes = types;
+  sel.innerHTML = types.map((t, i) =>
+    `<option value="${i}">${t.label}${t.count > 1 ? `  (×${t.count})` : ""}`
+    + `${t.caps.length ? "  —  " + t.caps.join(", ") : ""}</option>`).join("");
+  form.style.display = "";
+  // full capability readout for whatever's selected (you liked seeing the attrs)
+  const showSel = () => {
+    const t = cloneTypes[sel.value];
+    list.innerHTML = t
+      ? `<p class="field-hint" style="max-width:680px"><strong>${t.label}</strong>`
+        + `${t.count > 1 ? `  (×${t.count})` : ""} — reproduces: ${t.caps.join(" · ")}</p>`
+      : "";
+  };
+  sel.onchange = showSel;
+  showSel();
 }
+
+const cloneBtn = document.getElementById("td-clone-btn");
+if (cloneBtn) cloneBtn.onclick = async () => {
+  const t = cloneTypes[document.getElementById("td-clone-select").value];
+  if (!t) return;
+  cloneBtn.disabled = true; cloneBtn.textContent = "Cloning…";
+  const res = await api("/api/test-devices/create-twin", { label: t.label, entities: t.entities });
+  cloneBtn.disabled = false; cloneBtn.textContent = "Clone this device";
+  if (res.error) { banner("error", res.error); return; }
+  load();
+};
+
+// Update the installed integration (overwrite files + restart HA) — for when a
+// PistonCore update adds a device kind (like Button) the installed copy lacks.
+const updateLink = document.getElementById("td-update-integration");
+if (updateLink) updateLink.onclick = (e) => { e.preventDefault(); showInstall(true); };
 
 function renderDevices(devices) {
   listEl.innerHTML = "";
