@@ -328,6 +328,13 @@ def _debug_library() -> dict:
     return {"types": types, "unmappable": unmappable}
 
 
+def _bust_device_cache() -> None:
+    """Drop the dashboard's cached device snapshot so a just-added/removed test
+    device shows up in the editor's picker immediately (no restart/reload)."""
+    from .dashboard import reset_device_cache
+    reset_device_cache()
+
+
 async def _integration_present() -> bool:
     """Is the forked `virtual` test-device integration installed on the HA we're
     connected to? Detected by its create_device service being registered."""
@@ -572,6 +579,7 @@ async def api_test_devices_create(request: Request):
         ents.append(ent)
     await ha_client.call_service("virtual", "create_device", {
         "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": ents})
+    _bust_device_cache()
     return {"ok": True}
 
 
@@ -588,6 +596,7 @@ async def _create_single(label: str, entity: dict) -> None:
         ent["class"] = entity["class"]
     await ha_client.call_service("virtual", "create_device", {
         "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": [ent]})
+    _bust_device_cache()
 
 
 @router.post("/api/test-devices/debug-add")
@@ -625,7 +634,11 @@ async def api_test_devices_discover():
     """The user's real device TYPES, each as a cloneable twin spec (clone panel)."""
     if not ha_client.is_configured():
         return {"types": []}
-    return {"types": await _discover_twin_types()}
+    try:
+        return {"types": await _discover_twin_types()}
+    except Exception as exc:
+        # Never let a discovery failure silently hide the clone section — say why.
+        return {"types": [], "error": f"Couldn't read your devices: {exc}"}
 
 
 @router.post("/api/test-devices/create-twin")
@@ -660,6 +673,7 @@ async def api_test_devices_create_twin(request: Request):
         return JSONResponse({"error": "No reproducible capabilities on this device."}, status_code=400)
     await ha_client.call_service("virtual", "create_device", {
         "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": ents})
+    _bust_device_cache()
     return {"ok": True}
 
 
@@ -671,6 +685,7 @@ async def api_test_devices_remove(request: Request):
         return JSONResponse({"error": "No device named."}, status_code=400)
     await ha_client.call_service("virtual", "remove_device", {
         "group_name": TEST_DEVICES_GROUP, "device_name": device_name})
+    _bust_device_cache()
     return {"ok": True}
 
 

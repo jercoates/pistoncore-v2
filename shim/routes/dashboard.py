@@ -46,6 +46,16 @@ async def _get_registries() -> dict:
         _registries_cache = await ha_client.fetch_registries()
     return _registries_cache
 
+
+def reset_device_cache() -> None:
+    """Drop the cached HA device snapshot so the NEXT /load|/devices re-fetches.
+    Call after anything that changes HA's devices behind the shim (e.g. creating
+    or removing a test device) — otherwise the editor's device picker stays stale
+    and a new test device isn't usable until a restart."""
+    global _registries_cache, _device_payload_cache
+    _registries_cache = None
+    _device_payload_cache = None
+
 # Chunked piston save, in progress (SHIM_API_SPEC.md §4.7). set.chunk/set.end
 # carry no piston id or session id at all (VERIFIED app.js:1278-1292) — the
 # dashboard sends set.start -> n x set.chunk -> set.end strictly sequentially

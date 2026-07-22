@@ -94,10 +94,11 @@ async function load() {
 async function loadClones() {
   const wrap = document.getElementById("td-clone-wrap");
   const list = document.getElementById("td-clone-list");
+  wrap.style.display = "";  // always visible so it never silently vanishes
   const data = await api("/api/test-devices/discover");
   const types = data.types || [];
-  if (!types.length) { wrap.style.display = "none"; return; }
-  wrap.style.display = "";
+  if (data.error) { list.innerHTML = `<div class="banner banner-warning">${data.error}</div>`; return; }
+  if (!types.length) { list.innerHTML = `<p class="td-empty">No devices found to clone.</p>`; return; }
   list.innerHTML = "";
   types.forEach((t) => {
     const row = el("div", "td-clone-row");

@@ -3,7 +3,9 @@
 
 {% block content %}
 <style>
-  .dbg-intro { color: var(--text-secondary); max-width: 680px; margin-bottom: var(--space-4); }
+  .dbg-intro { color: var(--text-secondary); max-width: 680px; margin-bottom: var(--space-3); }
+  .dbg-how { max-width: 680px; color: var(--text-secondary); line-height: 1.7; margin: 0 0 var(--space-4); padding-left: 20px; }
+  .dbg-how li { margin: 4px 0; }
   .dbg-actions { display:flex; gap:8px; align-items:center; margin-bottom: var(--space-4); flex-wrap:wrap; }
   .dbg-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:8px; }
   .dbg-card {
@@ -20,11 +22,23 @@
 <div class="page active">
   <div class="list-header"><h1>Debug Library <span style="color:var(--text-muted);font-size:14px;font-weight:400">— developer</span></h1></div>
   <p class="dbg-intro">
-    One test device for <strong>every device kind webCoRE can target</strong> — so a piston
-    someone sends you can be exercised against the exact capability it uses, even one you
-    don't own. Add the kinds a piston needs, then drive them on the
-    <a href="/test-devices">Test Devices</a> panel. (For copies of <em>your own</em> gear,
-    use the clone list there instead.)
+    Fake devices of <strong>every kind webCoRE can target</strong> — so a piston someone
+    sends you can be tested even when it uses a device you don't own.
+  </p>
+  <ol class="dbg-how">
+    <li><strong>Import the broken piston</strong> (front door → Import).</li>
+    <li><strong>Add the device kinds it uses</strong> — click <em>Add</em> below on each one
+        (or <em>Spin up the whole suite</em> for all of them). Each Add creates a real fake
+        device in Home Assistant.</li>
+    <li><strong>Open the piston</strong> in the editor and <strong>point its devices at your
+        new test devices</strong> (pick them from the device list, like any device).</li>
+    <li><strong>Drive them on <a href="/test-devices">Test Devices</a></strong> — flip the
+        motion on, fire the double-tap, open the garage — and watch the piston react. That's
+        where you see what's broken.</li>
+  </ol>
+  <p class="dbg-intro" style="margin-top:10px">
+    For copies of <em>your own</em> gear (to test your own automations), use the clone list
+    on <a href="/test-devices">Test Devices</a> instead.
   </p>
 
   <div id="dbg-status"></div>
