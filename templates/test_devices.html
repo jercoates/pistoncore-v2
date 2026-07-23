@@ -46,7 +46,13 @@
   .td-remove { color: var(--red); border-color: var(--border-subtle); }
   .td-switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
   .td-empty { color: var(--text-muted); padding: 16px 4px; }
-  #td-clone-select { flex: 1; min-width: 320px; max-width: 680px; }
+  #td-clone-search {
+    width: 100%; max-width: 680px; padding: 8px 10px; margin-bottom: 8px;
+    background: var(--bg-base); color: var(--text-primary);
+    border: 1px solid var(--border-subtle); border-radius: 6px; font: inherit;
+  }
+  #td-clone-search:focus { outline: none; border-color: var(--teal-dim); }
+  .td-clone-scroll { max-height: 360px; overflow-y: auto; padding-right: 4px; }
   .td-clone-row {
     display: flex; align-items: center; gap: 12px;
     padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 8px;
@@ -93,12 +99,9 @@
       automations against a stand-in instead of the real thing. (Need a device you <em>don't</em>
       own? That's the <a href="/test-devices/debug">developer library</a>.)
     </p>
-    <div class="td-add" id="td-clone-form" style="display:none">
-      <label class="td-cap-label" style="min-width:auto">Clone</label>
-      <select id="td-clone-select"></select>
-      <button class="btn btn-primary" id="td-clone-btn">Clone this device</button>
-    </div>
-    <div id="td-clone-list"></div>
+    <input type="search" id="td-clone-search" placeholder="Search your devices…"
+           autocomplete="off" spellcheck="false" style="display:none">
+    <div id="td-clone-list" class="td-clone-scroll"></div>
   </div>
 
   <p class="field-hint" style="margin-top:var(--space-5); border-top:1px solid var(--border-subtle); padding-top:12px">

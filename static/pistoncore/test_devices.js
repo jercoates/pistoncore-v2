@@ -93,48 +93,55 @@ async function load() {
   loadClones();
 }
 
-// Clone panel (user-facing): faithful copies of the user's REAL devices, offered
-// as a searchable dropdown (there can be dozens — a long row list is unusable).
+// Clone panel (user-facing): faithful copies of the user's REAL devices, as a
+// SEARCHABLE, scrollable list — each row shows the device's capabilities and its
+// own Clone button; the search box filters by name or capability.
 let cloneTypes = [];
 async function loadClones() {
   const wrap = document.getElementById("td-clone-wrap");
-  const form = document.getElementById("td-clone-form");
-  const sel = document.getElementById("td-clone-select");
+  const search = document.getElementById("td-clone-search");
   const list = document.getElementById("td-clone-list");
   wrap.style.display = "";
-  form.style.display = "none";
+  search.style.display = "none";
   list.innerHTML = "";
   const data = await api("/api/test-devices/discover");
   const types = data.types || [];
   if (data.error) { list.innerHTML = `<div class="banner banner-warning">${data.error}</div>`; return; }
   if (!types.length) { list.innerHTML = `<p class="td-empty">No real devices found to clone.</p>`; return; }
   cloneTypes = types;
-  sel.innerHTML = types.map((t, i) =>
-    `<option value="${i}">${t.label}${t.count > 1 ? `  (×${t.count})` : ""}`
-    + `${t.caps.length ? "  —  " + t.caps.join(", ") : ""}</option>`).join("");
-  form.style.display = "";
-  // full capability readout for whatever's selected (you liked seeing the attrs)
-  const showSel = () => {
-    const t = cloneTypes[sel.value];
-    list.innerHTML = t
-      ? `<p class="field-hint" style="max-width:680px"><strong>${t.label}</strong>`
-        + `${t.count > 1 ? `  (×${t.count})` : ""} — reproduces: ${t.caps.join(" · ")}</p>`
-      : "";
-  };
-  sel.onchange = showSel;
-  showSel();
+  search.style.display = "";
+  renderCloneList("");
+  search.oninput = () => renderCloneList(search.value);
 }
 
-const cloneBtn = document.getElementById("td-clone-btn");
-if (cloneBtn) cloneBtn.onclick = async () => {
-  const t = cloneTypes[document.getElementById("td-clone-select").value];
-  if (!t) return;
-  cloneBtn.disabled = true; cloneBtn.textContent = "Cloning…";
-  const res = await api("/api/test-devices/create-twin", { label: t.label, entities: t.entities });
-  cloneBtn.disabled = false; cloneBtn.textContent = "Clone this device";
-  if (res.error) { banner("error", res.error); return; }
-  load();
-};
+function renderCloneList(q) {
+  const list = document.getElementById("td-clone-list");
+  q = (q || "").trim().toLowerCase();
+  const matches = cloneTypes.filter((t) =>
+    !q || (t.label + " " + t.caps.join(" ")).toLowerCase().includes(q));
+  list.innerHTML = "";
+  if (!matches.length) { list.innerHTML = `<p class="td-empty">No devices match.</p>`; return; }
+  matches.forEach((t) => {
+    const row = el("div", "td-clone-row");
+    const info = el("div", "td-clone-info");
+    const name = el("span", "td-clone-name");
+    name.textContent = t.label + (t.count > 1 ? `  (×${t.count})` : "");
+    const caps = el("span", "td-clone-caps");
+    caps.textContent = t.caps.join(" · ");   // the attribute readout you liked
+    caps.title = t.caps.join(", ");
+    info.append(name, caps);
+    const btn = el("button", "btn");
+    btn.textContent = "Clone";
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = "Cloning…";
+      const res = await api("/api/test-devices/create-twin", { label: t.label, entities: t.entities });
+      if (res.error) { banner("error", res.error); btn.disabled = false; btn.textContent = "Clone"; return; }
+      load();
+    };
+    row.append(info, btn);
+    list.appendChild(row);
+  });
+}
 
 // Update the installed integration (overwrite files + restart HA) — for when a
 // PistonCore update adds a device kind (like Button) the installed copy lacks.
