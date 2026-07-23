@@ -1,6 +1,12 @@
 const form = document.getElementById("settings-form");
 
 function settingsParams() {
+  // media config is a JSON blob the backend MERGES, so send only what's set —
+  // an empty server_base would otherwise blank the auto-detected address.
+  const media = {};
+  if (form.media_server_base && form.media_server_base.value.trim()) {
+    media.server_base = form.media_server_base.value.trim();
+  }
   return new URLSearchParams({
     ha_url: form.ha_url.value,
     ha_token: form.ha_token.value,
@@ -11,6 +17,7 @@ function settingsParams() {
     smb_username: form.smb_username.value,
     smb_password: form.smb_password.value,
     tts_engine: form.tts_engine ? form.tts_engine.value : "",
+    media: JSON.stringify(media),
   });
 }
 
