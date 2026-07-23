@@ -456,5 +456,13 @@
         "flash": "short"
       }
     }
+  },
+  "adjustLevel": {
+    "light": {
+      "service": "light.turn_on",
+      "data": {
+        "brightness_step_pct": "$1"
+      }
+    }
   }
 }

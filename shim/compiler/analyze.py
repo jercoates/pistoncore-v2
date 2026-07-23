@@ -311,6 +311,23 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
             branches.append(_if_branch(stmt, sid, kwargs))
         elif t == "every":
             branches.append(_every_branch(stmt, sid, kwargs))
+        elif t == "on":
+            # on-events-do (PISTON_JSON_REFERENCE §2.2): an explicit event block.
+            # Its `c` entries are the events to subscribe to — webCoRE forces
+            # o="or" and n=false — and `s` is the body. Every entry is a TRIGGER,
+            # never a checked condition: the block exists precisely to say "when
+            # any of these happen, do this".
+            on_triggers = []
+            for c in stmt.get("c", []):
+                node = _cond_node(c, kwargs)
+                node["ct"] = "t"
+                on_triggers.append(node)
+            branches.append({
+                "stmt_id": sid, "kind": "if", "tcp": stmt.get("tcp", "c") or "c",
+                "triggers": on_triggers, "conditions": [],
+                "then": _action_tree(stmt.get("s", []), f"on ${sid}", kwargs),
+                "else": [],
+            })
         elif t == "action":
             # a bare top-level action: no subscription, just steps to run
             branches.append({

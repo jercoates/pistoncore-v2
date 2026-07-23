@@ -751,7 +751,7 @@ statement table in PISTON_JSON_REFERENCE.md §2.2:
 | Expression functions | **93 / 109** (was 51 — 42 added this pass) | 6 group-H + 10 ambiguous-semantics |
 | Comparisons | 76 / 79 | `does_not_drop`, `does_not_rise`, `stays_away_from_any_of` |
 | Commands + virtualCommands | 80 / 135 | **55 unmapped** |
-| Statement types | 9 / 12 | **`on`** (on-events-do), **`each`** (for-each device), **`break`** |
+| Statement types | **12 / 12 work** | `on`, `each`, `break` were YAML-band-only gaps — see correction below |
 
 **RULING (Jeremy 2026-07-23): implement all of it EXCEPT the two sets below.** Under the
 governing rule above, none of these are cuts — they are unbuilt work with a named owner.
@@ -777,10 +777,27 @@ fade/adjust/flash command family (dimmer ramps are everyday piston material; HA'
 `transition:` covers them). `pausePiston`/`resumePiston` are the cheapest wins — native
 pause already exists and only needs wiring.
 
+**CORRECTION (same day) — statement types were a FALSE POSITIVE.** The first pass grepped
+`analyze.py` and reported `on`/`each`/`break` as missing. `analyze.py` is only the **YAML
+band's** front end: a statement it doesn't know raises `NotYetImplemented`, which routes the
+piston to PyScript — and `emit_pyscript` already implements all three (`each` :865 with both
+device-list variants, `break` :910, `on` :943). So **no piston was ever broken by these**;
+the gap was YAML-band nativeness, not capability. `on` has since been added to `analyze.py`
+so on-event blocks compile to a native automation instead of routing (verified: triggers +
+actions, 84/84 corpus clean); `each` and `break` deliberately still route — HA's
+`repeat/for_each` cannot bind webCoRE's loop VARIABLE as a device reference, and HA's `stop`
+ends the whole sequence rather than just the enclosing loop, so PyScript is the correct
+target for both rather than a worse YAML approximation.
+
+**Method lesson worth keeping:** coverage must be measured **per band and then combined**.
+Grepping one band's front end over-reports gaps, exactly as it did here.
+
 ⚠️ **These are PRESENCE checks, not correctness checks.** The `else` bug was a correctness
-bug no presence check could catch. A correctness pass over condition/trigger emission is
-still outstanding — starting with the known `≤`/`≥` boundary miss, where a value landing
-exactly on N wakes neither direction (HA's `above`/`below` are strict).
+bug no presence check could catch — and **restrictions** (see §5.1) proved the point again:
+they were present in neither band and failed SILENTLY. A correctness pass over
+condition/trigger emission is still outstanding — starting with the known `≤`/`≥` boundary
+miss, where a value landing exactly on N wakes neither direction (HA's `above`/`below` are
+strict).
 
 - Omitted-from-db features never reach pistons (reproduce-cleanly test; `ha:"n/a"` markers
   drive Stage-3/getDb filtering) — this is picker-side scope, decided separately.

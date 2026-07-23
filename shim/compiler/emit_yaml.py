@@ -645,6 +645,10 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "setVariable":
                 out.append(_set_variable(n, resolver, ctx))
                 continue
+            if n["command"] == "noop":
+                # "No operation" (vocab: no parameters). Emitting nothing is the
+                # whole behaviour — webCoRE uses it as a deliberate placeholder.
+                continue
             if n["command"] in ("cancelTasks", "cancelPendingTasks"):
                 # mode: restart already cancels this automation's pending
                 # delays when it retriggers — same effect webCoRE's
@@ -704,6 +708,17 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             out.append(node)
         elif n["kind"] == "stop":
             out.append({"kind": "stop"})
+        elif n["kind"] == "foreach":
+            # HA's repeat/for_each can iterate a list, but the loop VARIABLE here
+            # is used as a device reference inside the body, which YAML can't
+            # bind the way webCoRE does. PyScript does it naturally — route.
+            raise NotYetImplemented(
+                "for-each over a device list requires PyScript", **ctx)
+        elif n["kind"] == "break":
+            # HA's `stop` ends the whole sequence, not just the enclosing loop —
+            # not the same thing. PyScript has a real `break`.
+            raise NotYetImplemented(
+                "break out of a loop requires PyScript", **ctx)
         elif n["kind"] == "if":
             out.append({"kind": "if",
                         "conditions": [_condition(c, resolver, ctx) for c in n["conditions"]],

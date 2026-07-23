@@ -55,7 +55,7 @@ The `else` bug prompted a full coverage audit. Presence-checked against `webcore
 | Functions | 93/109 | 6 group-H (ruled OUT: need history HA doesn't keep; workarounds die with PistonCore) + 10 ambiguous semantics (need real webCoRE source) |
 | Comparisons | 76/79 | `does_not_drop`, `does_not_rise`, `stays_away_from_any_of` |
 | Commands | 80/135 | **55 unmapped** — implement all except the SmartThings/platform group (`indicator*`, `lifx*`, `writeToFuelStream`, `storeMedia`, `setTileFooter`, `executeRoutine`, `iftttMaker`, `saveState*`/`loadState*`), which is documented as "does not work" |
-| Statement types | 9/12 | **`on`** (on-events-do block), **`each`** (for-each device), **`break`** |
+| Statement types | **12/12 work** | FALSE POSITIVE in the first pass — `analyze.py` is the YAML band's front end only; `emit_pyscript` already implemented `each`/`break`/`on`, so unhandled-there simply routed to PyScript. `on` since made native in YAML; `each`/`break` correctly stay PyScript-routed. **Lesson: measure coverage per band, then combine.** |
 
 ⚠️ **All four axes are PRESENCE checks, not correctness checks.** The `else` bug was a correctness bug that presence-checking cannot catch — a correctness spot-check of condition/trigger emission is still outstanding (starting with the known `≤`/`≥` boundary miss, where a value landing exactly on N wakes nothing).
 
