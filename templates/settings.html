@@ -80,6 +80,31 @@
         {% endif %}
       </p>
     </div>
+    <h2>Playing media files</h2>
+    <p class="field-hint">
+      When a piston's <strong>Play track</strong> uses an old-school
+      <code>x-file-cifs://…</code> network-share URL, PistonCore streams the file
+      to your speakers itself — the share is read straight from the URL, nothing
+      to set up here. Files kept in Home Assistant that use <code>/local/…</code>
+      play through HA directly and don't need this at all.
+      <a href="/help/media-files">How this works →</a>
+    </p>
+    <div class="form-group">
+      <label for="media_server_base">PistonCore address your speakers reach</label>
+      <input type="text" id="media_server_base" name="media_server_base"
+             value="{{ media.server_base or '' }}"
+             placeholder="http://192.168.1.50:7778 — detected automatically">
+      <p class="field-hint">
+        Detected from how you open PistonCore; only change it if your speakers
+        can't reach that address. <strong>Note:</strong> share files play only
+        while PistonCore is running — remove it and they stop until you move the
+        files into Home Assistant and switch those URLs to <code>/local/…</code>.
+      </p>
+    </div>
+    {% if media.server_base %}
+    <p class="field-hint">Media server is on (address above). Old-school share URLs will stream through PistonCore.</p>
+    {% endif %}
+
     <div id="write-test-banner"></div>
     <button type="submit" class="btn btn-primary">Save</button>
     <button type="button" class="btn" id="test-write">Test write target</button>
