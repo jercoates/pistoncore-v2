@@ -384,10 +384,16 @@ class _PyEmitter:
     def _group_expr(self, conds: list, operator: str, ctx: dict) -> str:
         exprs = []
         for c in conds:
-            if c.get("t") == "condition":
+            # "restriction" nodes share the condition anatomy (PISTON_JSON_REFERENCE
+            # §7); a restriction GROUP carries children in `r`/`rop` where a
+            # condition group uses `c`/`o`.
+            if c.get("t") in ("condition", "restriction"):
                 exprs.append(self._condition_expr(c, ctx))
             elif c.get("t") == "group":
-                exprs.append(self._group_expr(c.get("c", []), c.get("o", "and"), ctx))
+                kids, op = c.get("c"), c.get("o", "and")
+                if not kids and c.get("r"):
+                    kids, op = c.get("r"), c.get("rop", "and")
+                exprs.append(self._group_expr(kids or [], op, ctx))
             else:
                 raise NotYetImplemented(
                     f"condition node type '{c.get('t')}' not compiled yet", **ctx)
@@ -787,6 +793,29 @@ class _PyEmitter:
     # ── statements ─────────────────────────────────────────────────────────
 
     def _stmt_nodes(self, stmt: dict, ctx: dict, top: bool = False) -> list:
+        """Emit a statement, GATED BY ITS RESTRICTIONS if it has any.
+
+        A restriction ("only when ...") gates the WHOLE statement, its else
+        included — see analyze._restriction_nodes for the full reasoning. So the
+        statement's nodes are wrapped in a single `if <restrictions>:` with NO
+        else: when a restriction fails, nothing runs — not the then, not the
+        else. Restrictions never subscribe; this is a gate checked when
+        something else wakes the piston.
+        """
+        nodes = self._stmt_nodes_unrestricted(stmt, ctx, top)
+        raw = stmt.get("r") or []
+        if not raw:
+            return nodes
+        if stmt.get("rn"):
+            # "except when ..." — silently dropping a restriction is exactly the
+            # bug this guards against, so fail loudly instead.
+            raise NotYetImplemented(
+                "negated restriction set ('rn') not compiled yet", **ctx)
+        return [{"kind": "if",
+                 "expr": self._group_expr(raw, stmt.get("rop", "and"), ctx),
+                 "then": nodes, "else": []}]
+
+    def _stmt_nodes_unrestricted(self, stmt: dict, ctx: dict, top: bool = False) -> list:
         t = stmt.get("t")
         sid = stmt.get("$")
         if t == "action":
@@ -893,6 +922,15 @@ class _PyEmitter:
     def build(self) -> dict:
         event_body = []      # runs on device/service wakes (whole-piston walk)
         guarded = []         # every/on bodies: fast-forward to firing stmt only
+
+        # Piston-level restrictions ("only execute if ...") gate EVERY statement.
+        # Statement-level ones are handled in _stmt_nodes; this band does not yet
+        # wrap the whole piston body, and silently ignoring a gate is the exact
+        # bug this feature exists to prevent — so fail loudly until implemented.
+        if self.piston.get("r"):
+            raise NotYetImplemented(
+                "piston-level restrictions are not compiled in the PyScript band yet",
+                piston_id=self.piston_id, piston_name=self.piston_name, stmt_id=None)
 
         for stmt in self.piston.get("s", []):
             sid = stmt.get("$")

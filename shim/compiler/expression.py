@@ -545,6 +545,19 @@ _FUNCTIONS = {
     "time", "date", "datetime", "addseconds", "addminutes", "addhours",
     "adddays", "formatdatetime", "formatduration",
     "age",
+    # coverage-audit additions 2026-07-23 — these previously compiled in
+    # NEITHER band (hard fail). Group H (previousvalue/previousage/newer/
+    # older/ispistonpaused/setvariable) stays OUT on purpose: needs history
+    # HA doesn't keep, and workarounds die with PistonCore (Jeremy).
+    "ceiling", "pow", "sqr", "strlen", "size", "text", "title", "lastindexof",
+    "ltrim", "rtrim", "trimleft", "trimright",
+    "if", "not", "eq", "gt", "ge", "lt", "le",
+    "sin", "cos", "tan", "asin", "atan2", "log", "todegrees", "toradians",
+    "variance", "stdev", "sort",
+    "addweeks", "dateadd", "monthname", "weekdayname", "parsedatetime",
+    "roundtimetominutes", "settzid",
+    "urlencode", "encodeuricomponent", "matches",
+    "fahrenheit", "celsius",
 }
 
 

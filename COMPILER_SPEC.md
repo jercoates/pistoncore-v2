@@ -504,6 +504,37 @@ before assuming the pattern needs compiler support at v1.
   `choose` block does natively. **XOR groups have no native HA equivalent** (behavior map
   §3) — must route to a template condition (`{{ (cond1|int) + (cond2|int) == 1 }}`) or
   force PyScript.
+- **An `else` on a PROMOTED condition needs the OPPOSITE-direction wake (BUG FIXED
+  2026-07-23, `emit_yaml.py` `_emit_branch`).** When a statement has no explicit trigger,
+  its conditions are promoted to subscriptions (§2.5 item 2). That promotion produces a
+  *one-directional* HA trigger — `numeric_state: below N`, or `state: to X` — which wakes
+  the automation on ONE transition only. With an `else` branch that is silently wrong: the
+  reverse transition never wakes the automation, so the else can never run. Observed: a
+  piston turned a light ON when illuminance dropped under 200 but NEVER off when it rose
+  back over.
+  **Rule: whenever a branch has an `else` and its wake came from a promoted condition, the
+  compiler ALSO emits the mirrored trigger** — numeric `below:N` → companion `above:N` (and
+  vice versa); state `to:X` → companion `from:X`. Both transitions then wake the automation
+  and the inner `if`/`else` re-decides on each. Keyed off the COMPARISON, not the device, so
+  it covers every sensor attribute and every equality condition (door/presence/lock/mode).
+  **The fix belongs in the compiler, never in the piston** (DECISION, Jeremy 2026-07-23):
+  telling a user to add a second `if` for the reverse direction "is just making it work, not
+  fixing it — the else is there so you don't have to write a whole new if block."
+  Still routed to PyScript (correctly): an `else` on a pure CHANGE-trigger with no
+  re-checkable condition, where there is nothing for an inner `if` to evaluate.
+- **Play track / media URLs are routed BY FORMAT, per URL (BUILT 2026-07-23,
+  `emit_yaml.py` `_rewrite_media_url`).** A `media_player.play_media` call's
+  `media_content_id` is rewritten at compile time according to the URL's own shape:
+  `/local/…`, `http(s)://` and `media-source://` pass through untouched (Home Assistant
+  plays them natively, and nothing depends on PistonCore); `x-file-cifs://` / `smb://` —
+  the Hubitat spelling — is rewritten to PistonCore's signed media-proxy URL, which streams
+  the file off the share (SHIM_API_SPEC §11.3). Host, share and path are taken **from the
+  URL itself**; no share is ever pre-configured.
+  **DECISION (Jeremy 2026-07-23, firm): never a mode toggle** — "a fucking toggle would piss
+  me off, all or none is not a good choice." The two paths coexist; a single piston may play
+  one sound from HA's own media folder and another off a share, and the author chooses per
+  file simply by how the URL is written. The `x-file-cifs://` prefix is the signal that says
+  "this is old-school, make it work."
 - **Comparison table — VERIFIED coverage checked against the REAL corpus's operator set,
   not just transcribed.** The corpus uses exactly 22 distinct `co` (comparison operator)
   values (confirmed by direct extraction from all 84 files, matching PISTON_JSON_REFERENCE
@@ -707,6 +738,49 @@ PyScript cannot do it. Corpus absence is NEVER a reason to defer or cut: the 84-
 corpus is Jeremy's test/debug set and the regression priority order, NOT the feature
 ceiling ("I'm only testing and debugging my pistons through the compiler — I am not
 purposely leaving shit out").
+
+### 5.0 COVERAGE AUDIT 2026-07-23 — the honest gap list
+
+Prompted by the `else` bug (a promoted condition woke on only ONE transition, so the else
+could never run — see §3.3). If one correctness bug hid that long, coverage needed measuring
+rather than assuming. Presence-checked against `webcore_vocab.json` and the verified
+statement table in PISTON_JSON_REFERENCE.md §2.2:
+
+| Axis | Covered | Gap |
+|---|---|---|
+| Expression functions | **93 / 109** (was 51 — 42 added this pass) | 6 group-H + 10 ambiguous-semantics |
+| Comparisons | 76 / 79 | `does_not_drop`, `does_not_rise`, `stays_away_from_any_of` |
+| Commands + virtualCommands | 80 / 135 | **55 unmapped** |
+| Statement types | 9 / 12 | **`on`** (on-events-do), **`each`** (for-each device), **`break`** |
+
+**RULING (Jeremy 2026-07-23): implement all of it EXCEPT the two sets below.** Under the
+governing rule above, none of these are cuts — they are unbuilt work with a named owner.
+
+**(a) Group H — device history / piston state. LEFT OUT, flagged for later research.**
+`previousValue`, `previousAge`, `newer`, `older`, `isPistonPaused`, `setVariable`. These
+need per-attribute history or engine state Home Assistant does not keep. Jeremy's verified
+reason for not forcing it: the workarounds he can think of "would not survive PistonCore
+deletion" — i.e. they'd make compiled automations depend on PistonCore still being
+installed, violating the standing rule that PistonCore compiles and then gets out of the way.
+That is the same line that killed the media-proxy-for-everything idea.
+
+**(b) SmartThings / webCoRE-platform features — DOCUMENTED AS "does not work"** (Jeremy
+2026-07-23: "the smart things can land there as dont work"): `indicatorNever`/`WhenOn`/
+`WhenOff` (ST hub LED), `lifxBreathe`/`Pulse`/`Scene`/`State`/`Toggle`, `writeToFuelStream`,
+`storeMedia`, `setTileFooter`, `executeRoutine`, `iftttMaker`, `saveStateGlobally`/`Locally`,
+`loadStateGlobally`/`Locally`. Platform features with no HA counterpart; these belong in the
+help file's unsupported list, not in the compiler.
+
+**Everything else on the list is queued to implement**, most valuably: the three statement
+types (`on` especially — a core construct that fails outright today), and the
+fade/adjust/flash command family (dimmer ramps are everyday piston material; HA's
+`transition:` covers them). `pausePiston`/`resumePiston` are the cheapest wins — native
+pause already exists and only needs wiring.
+
+⚠️ **These are PRESENCE checks, not correctness checks.** The `else` bug was a correctness
+bug no presence check could catch. A correctness pass over condition/trigger emission is
+still outstanding — starting with the known `≤`/`≥` boundary miss, where a value landing
+exactly on N wakes neither direction (HA's `above`/`below` are strict).
 
 - Omitted-from-db features never reach pistons (reproduce-cleanly test; `ha:"n/a"` markers
   drive Stage-3/getDb filtering) — this is picker-side scope, decided separately.

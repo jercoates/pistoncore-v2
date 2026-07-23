@@ -41,15 +41,23 @@ def _classify(cond: dict) -> str:
 
 def _cond_node(cond: dict, kwargs: dict) -> dict:
     if cond.get("t") == "group":
-        # nested condition group with its own and/or operator
-        return {"co": "_group", "group_op": cond.get("o", "and"),
-                "children": [_cond_node(c, kwargs) for c in cond.get("c", [])],
+        # nested group with its own and/or operator. A CONDITION group carries
+        # its children in `c` with operator `o`; a RESTRICTION group carries
+        # them in `r` with operator `rop` (PISTON_JSON_REFERENCE §7) — same
+        # anatomy, different key names.
+        kids, op = cond.get("c"), cond.get("o", "and")
+        if not kids and cond.get("r"):
+            kids, op = cond.get("r"), cond.get("rop", "and")
+        return {"co": "_group", "group_op": op,
+                "children": [_cond_node(c, kwargs) for c in kids or []],
                 "ct": "c", "devices": [], "attr": None, "lo_type": "group",
                 "value": None, "value2": None, "duration": {},
                 "aggregation": "any", "lo_var": None,
                 "value_vt": None, "value2_vt": None,
                 "value_preset": None, "value2_preset": None}
-    if cond.get("t") != "condition":
+    # "restriction" nodes have the SAME comparison anatomy as "condition"
+    # (PISTON_JSON_REFERENCE §7) and so reuse this parser verbatim.
+    if cond.get("t") not in ("condition", "restriction"):
         raise NotYetImplemented(
             f"condition node type '{cond.get('t')}' not compiled yet", **kwargs)
     lo = cond.get("lo") or {}
@@ -73,6 +81,47 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
         "value2_expr": ro2.get("x"),
         "ct": _classify(cond),
     }
+
+
+def _restriction_nodes(owner: dict, kwargs: dict) -> list:
+    """webCoRE restrictions ("only when ...") — piston root `r` or statement `r`
+    (PISTON_JSON_REFERENCE §7). Same comparison anatomy as conditions, so they
+    reuse `_cond_node`, but their INTENT is different in two load-bearing ways:
+
+    1. A restriction GATES THE WHOLE STATEMENT, else included. "Only when mode is
+       Home: if dark, light on, else light off" must do NOTHING when the mode is
+       not Home — it must NOT run the else. So restrictions are kept in their own
+       list and emitted at AUTOMATION-condition level, OUTSIDE the if/else action.
+       Folding them in with the branch's own conditions would put them inside the
+       if (see emit_yaml `_emit_branch`), and a failed restriction would then fire
+       the else — precisely backwards.
+    2. A restriction NEVER SUBSCRIBES. A piston does not wake because a
+       restriction changed; it is a gate checked when something else wakes it.
+       Keeping them out of `conditions` also keeps them out of promotion.
+    """
+    raw = owner.get("r") or []
+    if not raw:
+        return []
+    if owner.get("rn"):
+        # "except when ..." — needs a NOT the condition IR has no node for.
+        # Fail loudly: silently dropping a restriction is the bug this whole
+        # feature exists to prevent.
+        raise NotYetImplemented(
+            "negated restriction set ('rn') not compiled yet", **kwargs)
+    nodes = []
+    for node in raw:
+        n = _cond_node(node, kwargs)
+        n["ct"] = "c"          # a gate, never a subscription
+        nodes.append(n)
+    if owner.get("rop", "and") == "or" and len(nodes) > 1:
+        return [{"co": "_group", "group_op": "or", "children": nodes,
+                 "ct": "c", "devices": [], "attr": None, "lo_type": "group",
+                 "value": None, "value2": None, "duration": {},
+                 "aggregation": "any", "lo_var": None,
+                 "value_vt": None, "value2_vt": None,
+                 "value_preset": None, "value2_preset": None,
+                 "value_expr": None, "value2_expr": None}]
+    return nodes
 
 
 def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
@@ -139,6 +188,17 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
             out.append({"kind": "loop", "conditions": [], "body": body if False else
                         _action_tree(a.get("s", []), where, kwargs),
                         "count": span, "until": False})
+        elif at == "each":
+            # for-each over a device list (PISTON_JSON_REFERENCE §2.2):
+            # x = loop variable name, lo = device-list operand, s = body.
+            lo = a.get("lo") or {}
+            out.append({"kind": "foreach",
+                        "var": a.get("x"),
+                        "devices": lo.get("d", []),
+                        "lo_type": lo.get("t"),
+                        "body": _action_tree(a.get("s", []), where, kwargs)})
+        elif at == "break":
+            out.append({"kind": "break"})
         elif at == "do":
             out.extend(_action_tree(a.get("s", []), where, kwargs))
         elif at == "exit":
@@ -240,6 +300,9 @@ def _every_branch(stmt: dict, sid, kwargs: dict) -> dict:
 def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
     """Returns a list of branch IRs, one per top-level statement."""
     branches = []
+    # piston-level restrictions ("only execute if ...") gate EVERY statement.
+    piston_kwargs = {"piston_id": piston_id, "piston_name": piston_name, "stmt_id": None}
+    piston_restrictions = _restriction_nodes(piston, piston_kwargs)
     for stmt in piston.get("s", []):
         sid = stmt.get("$")
         kwargs = {"piston_id": piston_id, "piston_name": piston_name, "stmt_id": sid}
@@ -259,4 +322,9 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
         else:
             raise NotYetImplemented(
                 f"top-level statement type '{t}' (statement ${sid}) not compiled yet", **kwargs)
+        # Kept OUT of "conditions" on purpose — see _restriction_nodes: these
+        # gate the whole statement (else included) and must be emitted above the
+        # if/else action, and they must never be promoted to a subscription.
+        branches[-1]["restrictions"] = (_restriction_nodes(stmt, kwargs)
+                                        + list(piston_restrictions))
     return branches

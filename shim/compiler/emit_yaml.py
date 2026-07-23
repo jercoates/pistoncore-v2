@@ -915,6 +915,14 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     if cancel_triggers:
         conditions.append({"kind": "trigger", "id": "fire"})
 
+    # RESTRICTIONS ("only when ...") gate the whole statement, ELSE INCLUDED, so
+    # they belong at AUTOMATION-condition level — never folded in with the
+    # branch's own conditions, which move inside the if/else action below. If a
+    # restriction fails the automation simply does not run: no then, no else.
+    # (analyze._restriction_nodes carries the full reasoning.)
+    for r in br.get("restrictions") or []:
+        conditions.append(_condition(r, resolver, ctx))
+
     cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]]
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)

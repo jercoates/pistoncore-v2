@@ -153,6 +153,13 @@ Params: `settings` (URL-encoded JSON). Instance-level dashboard settings; store 
 ### 4.12 `intf/dashboard/piston/evaluate` (VERIFIED)
 Params: `id`, `expression`, `dataType`, `v`. The dashboard asks the **backend** to evaluate an expression (expression preview in the editor). Real implementation requires the expression engine — out of scope pre-compiler. v1: return `{ "value": "" }` or an "evaluation unavailable" error and confirm the editor degrades gracefully. **TO VERIFY** response shape + graceful-degradation behavior.
 
+### 4.13 `intf/dashboard/variable/recompile` (PistonCore addition, BUILT 2026-07-19)
+Params: `ids` (comma-separated piston ids), `callback`. Returns `{status, recompiled:[{id,status,message}]}`.
+
+**Not a webCoRE endpoint** — the second half of the device-global change flow. A device global is INLINED into compiled automations, so changing its member devices leaves deployed automations driving the OLD list. §4.10 `variable/set` therefore returns an extra `affected` array (the global's `used_by` pistons) whenever a **device**-type global's value changed; unsealed `pistoncore-nav.js` prompts, and an OK calls this endpoint to recompile+redeploy those pistons.
+
+**RULING (Jeremy 2026-07-19): prompt, auto or manual — NEVER silent, and never a block on saving the variable itself.** Declining is equally valid; each piston recompiles on its own next save. (The prompt is a confidence check Jeremy may remove after testing; the recompile behavior stays.)
+
 ---
 
 ## 5. Data shapes
@@ -357,3 +364,59 @@ app.js, dashboard.module.js, or piston.module.js.
 4. DEVICE_PAYLOAD_SPEC.md — entity_id → device object pipeline using picker_capability_map + vocab + attribute translation. **Status:** built (milestone 2), Stage 3.1/3.2/3.3 added since.
 5. Spike milestone: static serving + `/connect` + hardcoded `load`/`devices`/`getDb` with 3 fake devices → dashboard renders piston list and device picker. **Status: DONE (milestone 1).**
 6. TRACE_ACTIVITY_CONTRACT.md (new, 2026-07-10) — `piston/activity` response shape and log-entry shape resolved; the `state`/`trace` blobs' write sites (not just where they're read/served from) still need a dedicated trace before the compiler can commit to a trace strategy.
+
+---
+
+## 11. PistonCore's own endpoints (NOT part of the webCoRE contract)
+
+Everything above impersonates webCoRE. These are PistonCore's own surface — its pages
+and services. They are documented here so the two never get confused; the sealed
+dashboard never calls them (the sole exception is `variable/recompile`, §4.13, which the
+unsealed `pistoncore-nav.js` calls).
+
+### 10.1 Pages
+| Route | Purpose |
+|---|---|
+| `/` | **Front door** — the piston list (grouped rows, never tiles) with compile + deploy + HA-health status. Also auto-captures PistonCore's own LAN address for the media server (§10.3). |
+| `/settings`, `/setup` | Settings + first-run. **HARD RULE (Jeremy 2026-07-23): every setting in first-run MUST also be editable in Settings**, same store — sole exception is the HA-config *write permission*, a one-time consent action rather than a stored value. |
+| `/diagnostics`, `/whats-wrong` | Health + the plain-language "what's wrong" page. |
+| `/backup` | Import / export (paste-JSON in, pretty-print + copy out). Also the AI-authoring door. |
+| `/test-devices`, `/debug-devices` | Virtual test devices — clone real devices, or create types the user does not own. See `VIRTUAL_DEVICES_SPEC.md`. |
+| `/help`, `/help/<article>` | Help index (**searchable** — filters title/summary/`data-keywords`) + articles: `best-practices`, `editing-compiler`, `compiler-debug`, `media-files`. Drill-in only — help is never an error-announcement surface. |
+
+### 10.2 Services
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/support-report` | One plain-text bundle a stuck user sends to Jeremy or pastes to an AI: HA status, last load failure + traceback, skipped devices, every piston's compile status. Surfaced with Copy/Download on `/whats-wrong`. |
+| `POST /api/settings` | Saves settings. `media` is a JSON blob that is **merged**, not replaced (a partial save must not blank the auto-detected media address); a signing secret is minted the first time a media-server address is set. |
+| `/api/test-devices/*` | list, setup, install, create, remove, set, discover, create-twin, debug-library, debug-add, debug-suite. |
+| `/api/config-yaml`, `/api/config-yaml/apply` | The configuration.yaml consent flow — shows exact changes, timestamped backup, nothing touched without a click. |
+
+### 10.3 `GET|HEAD /media/proxy` (BUILT 2026-07-23 — SMB read untested vs a live share)
+Params: `src` (the original share URL), `sig` (HMAC). Streams a sound file off a network
+share to a speaker — the role the Hubitat hub used to play.
+
+- **Routing is per URL, by FORMAT — never a mode toggle** (Jeremy, firm: "all or none is
+  not a good choice"). `/local/…`, `http(s)://` and `media-source://` pass straight through
+  to HA and never reach this endpoint; `x-file-cifs://` / `smb://` flags an old-school
+  Hubitat path and routes here. Both coexist in the same piston.
+- **Nothing is configured by hand.** The URL *is* the map: `x-file-cifs://HOST/SHARE/PATH`
+  yields host, share and path directly. Credentials are consulted only if a share refuses
+  guest access. PistonCore's own address is auto-captured from the browser `Host` header.
+- **Signed, not an open relay.** Only URLs the compiler signed (HMAC over `src`, secret in
+  settings) are served; speakers cannot authenticate, so the signature is the gate.
+- Supports `Range` (Sonos needs it) and `HEAD`; content type from the file extension.
+- **Trade-off, stated in the help article:** share files play only while PistonCore runs.
+  Files under `/local/…` never depend on PistonCore. Echo/Alexa cannot play arbitrary
+  sound files at all — an Amazon restriction that applied to Hubitat too.
+
+> ⚠️ **SANCTIONED EXCEPTION — do NOT "fix" this by removing it.** This endpoint knowingly
+> bends the standing rule that PistonCore compiles and then gets out of the way: a piston
+> playing an `x-file-cifs://` file depends on PistonCore still running. Jeremy raised that
+> objection himself ("making pistoncore do that breaks the no pistoncore needed") and then
+> **chose to keep it as an opt-in with the consequence stated up front** (2026-07-23) —
+> because the alternative was telling every Hubitat migrant to move or re-address their
+> files, which Hubitat never made them do. The rule still governs the DEFAULT: `/local/…`
+> and `http(s)://` URLs are native and PistonCore-free, and that is what the help article
+> recommends first. A future reconciliation pass must treat this as a deliberate, approved
+> deviation and leave it alone. Deviations of this kind get documented here, never removed.

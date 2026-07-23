@@ -120,6 +120,8 @@ for _index in {{ n.get('items') }}:
 import datetime
 import math
 import random
+import re
+import urllib.parse
 
 task.unique("{{ unique_name }}")  # kill in-flight old version on redeploy
 state.persist("pyscript.{{ unique_name }}_state", default_value="idle")

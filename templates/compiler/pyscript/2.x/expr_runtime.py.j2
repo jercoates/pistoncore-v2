@@ -430,6 +430,231 @@ def _fn_age(entity_id):
         return None
 
 
+# ── coverage-audit additions (2026-07-23) ──────────────────────────────────
+# webCoRE functions that previously compiled in NEITHER band, i.e. any piston
+# using one hard-failed. Group H of the audit (previousValue, previousAge,
+# newer, older, isPistonPaused, setVariable) is deliberately NOT here: it needs
+# attribute history / piston state Home Assistant doesn't keep, and every
+# workaround would stop working the moment PistonCore is removed
+# (Jeremy 2026-07-23) — left for later research.
+
+# -- spellings/aliases of functions already above --
+def _fn_ceiling(x):
+    return _fn_ceil(x)
+
+
+def _fn_pow(x, p):
+    return _fn_power(x, p)
+
+
+def _fn_sqr(x):
+    n = _num(x)
+    return n * n
+
+
+def _fn_strlen(s):
+    return _fn_length(s)
+
+
+def _fn_size(x):
+    return _fn_count(x)
+
+
+def _fn_text(x):
+    return _fn_string(x)
+
+
+def _fn_title(s):
+    return str(s or "").title()
+
+
+def _fn_lastindexof(haystack, needle):
+    if isinstance(haystack, (list, tuple)):
+        found = -1
+        for i, x in enumerate(haystack):
+            if str(x) == str(needle):
+                found = i
+        return found
+    return str(haystack or "").rfind(str(needle))
+
+
+def _fn_ltrim(s):
+    return str(s or "").lstrip()
+
+
+def _fn_rtrim(s):
+    return str(s or "").rstrip()
+
+
+def _fn_trimleft(s):
+    return _fn_ltrim(s)
+
+
+def _fn_trimright(s):
+    return _fn_rtrim(s)
+
+
+# -- function spellings of operators (a > b already compiles natively) --
+def _fn_if(cond, a, b=""):
+    return a if _truthy(cond) else b
+
+
+def _fn_not(x):
+    return not _truthy(x)
+
+
+def _fn_eq(a, b):
+    if _both_numeric(a, b):
+        return _num(a) == _num(b)
+    return str(a).strip().lower() == str(b).strip().lower()
+
+
+def _fn_gt(a, b):
+    return _num(a) > _num(b) if _both_numeric(a, b) else str(a) > str(b)
+
+
+def _fn_ge(a, b):
+    return _num(a) >= _num(b) if _both_numeric(a, b) else str(a) >= str(b)
+
+
+def _fn_lt(a, b):
+    return _num(a) < _num(b) if _both_numeric(a, b) else str(a) < str(b)
+
+
+def _fn_le(a, b):
+    return _num(a) <= _num(b) if _both_numeric(a, b) else str(a) <= str(b)
+
+
+# -- math --
+def _fn_sin(x):
+    return math.sin(_num(x))
+
+
+def _fn_cos(x):
+    return math.cos(_num(x))
+
+
+def _fn_tan(x):
+    return math.tan(_num(x))
+
+
+def _fn_asin(x):
+    try:
+        return math.asin(_num(x))
+    except ValueError:
+        return None
+
+
+def _fn_atan2(y, x):
+    return math.atan2(_num(y), _num(x))
+
+
+def _fn_log(x, base=None):
+    n = _num(x)
+    if n <= 0:
+        return None
+    return math.log(n) if base is None else math.log(n, _num(base))
+
+
+def _fn_todegrees(x):
+    return math.degrees(_num(x))
+
+
+def _fn_toradians(x):
+    return math.radians(_num(x))
+
+
+# -- statistics --
+def _fn_variance(*args):
+    vals = [_num(a) for a in _flatten(args)]
+    if len(vals) < 2:
+        return 0
+    mean = sum(vals) / len(vals)
+    return sum((v - mean) ** 2 for v in vals) / len(vals)
+
+
+def _fn_stdev(*args):
+    return math.sqrt(_fn_variance(*args))
+
+
+def _fn_sort(*args):
+    vals = _flatten(args)
+    if vals and all(_both_numeric(v, 0) for v in vals):
+        return sorted(vals, key=_num)
+    return sorted((str(v) for v in vals))
+
+
+# -- date & time --
+def _fn_addweeks(v, w):
+    return _fn_datetime(v) + _int(w) * 604800000
+
+
+def _fn_dateadd(v, amount, unit="d"):
+    """dateAdd(date, amount, unit) - unit s/m/h/d/w, days by default."""
+    u = str(unit or "d").strip().lower()[:1]
+    mult = {"s": 1000, "m": 60000, "h": 3600000, "d": 86400000, "w": 604800000}
+    return _fn_datetime(v) + _int(amount) * mult.get(u, 86400000)
+
+
+def _fn_monthname(v=None):
+    return _to_dt(_now_ms() if v is None else v).strftime("%B")
+
+
+def _fn_weekdayname(v=None):
+    return _to_dt(_now_ms() if v is None else v).strftime("%A")
+
+
+def _fn_parsedatetime(s, fmt=None):
+    """Date/time string -> epoch ms. ISO by default, or a Java pattern."""
+    try:
+        if fmt:
+            pat = str(fmt)
+            for j, p in _JAVA_FMT:
+                pat = pat.replace(j, p)
+            return int(datetime.datetime.strptime(str(s), pat).timestamp() * 1000)
+        return int(datetime.datetime.fromisoformat(str(s)).timestamp() * 1000)
+    except Exception:
+        return None
+
+
+def _fn_roundtimetominutes(v, minutes=1):
+    """Round an epoch-ms time to the nearest N minutes."""
+    step = max(1, _int(minutes)) * 60000
+    return int(round(_fn_datetime(v) / step) * step)
+
+
+def _fn_settzid(tzid):
+    """webCoRE pins the piston's timezone; HA already runs in the configured
+    local timezone, so this is accepted and otherwise inert."""
+    return str(tzid or "")
+
+
+# -- string / encoding --
+def _fn_urlencode(s):
+    return urllib.parse.quote(str("" if s is None else s), safe="")
+
+
+def _fn_encodeuricomponent(s):
+    return _fn_urlencode(s)
+
+
+def _fn_matches(s, pattern):
+    """Regex test (webCoRE matches -> boolean)."""
+    try:
+        return re.search(str(pattern), str("" if s is None else s)) is not None
+    except re.error:
+        return False
+
+
+# -- temperature --
+def _fn_fahrenheit(c):
+    return _num(c) * 9.0 / 5.0 + 32
+
+
+def _fn_celsius(f):
+    return (_num(f) - 32) * 5.0 / 9.0
+
+
 def _pv_setidx(name, index, value):
     """setVariable into an array element (webCoRE type[] variables) —
     auto-grows the list like the engine's sparse arrays."""
