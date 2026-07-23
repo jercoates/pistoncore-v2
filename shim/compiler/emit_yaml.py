@@ -827,6 +827,7 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     triggers = []
     cancel_triggers = []
     conditions = []
+    promoted = False
 
     if br["kind"] == "timer":
         t = dict(br["timer"])
@@ -851,6 +852,7 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                 # nothing here can wake the piston: it is a runnable sequence,
                 # not an automation. Signal the script path.
                 raise _NoSubscriptions()
+            promoted = True
 
     if cancel_triggers:
         conditions.append({"kind": "trigger", "id": "fire"})
@@ -863,6 +865,24 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         # else must NOT run on a cancel-trigger pass, so the template
         # conditions move inside an if-action; only the trigger gate stays
         # at automation level.
+        #
+        # A condition promoted to a directional numeric trigger (below:N / above:N)
+        # only wakes on ONE crossing, so the else could never run — webCoRE instead
+        # subscribes to the ATTRIBUTE and re-decides on ANY change, both directions.
+        # The compiler honors the else by emitting the OPPOSITE-direction trigger
+        # itself (Jeremy 2026-07-22: the user writes one if/else; the compiler keeps
+        # the promise — never a hand-written second if). The inner if/else below then
+        # re-evaluates on each wake and routes then vs else correctly.
+        if promoted:
+            for node in list(triggers):
+                if node.get("kind") != "numeric_state":
+                    continue
+                if "below" in node and "above" not in node:
+                    triggers.append({"kind": "numeric_state", "entities": node["entities"],
+                                     "above": node["below"], "id": node.get("id")})
+                elif "above" in node and "below" not in node:
+                    triggers.append({"kind": "numeric_state", "entities": node["entities"],
+                                     "below": node["above"], "id": node.get("id")})
         actions = [{"kind": "if", "conditions": cond_nodes,
                     "then": then_actions, "else": else_actions}]
     elif else_actions:
