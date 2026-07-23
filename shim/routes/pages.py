@@ -14,7 +14,7 @@ from pathlib import Path
 from html import escape
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from .. import deploy_writer, ha_client, storage
@@ -704,6 +704,63 @@ async def api_test_devices_set(request: Request):
     return {"ok": True}
 
 
+async def _build_support_report() -> str:
+    """One copyable text bundle a stuck user sends to Jeremy (or pastes to an AI)
+    to get a problem fixed — HA connectivity, the last dashboard-load failure,
+    skipped devices, and every piston's compile status, all in one place."""
+    from .dashboard import LAST_LOAD_DIAG
+    from ..compiler import deploy as _deploy
+
+    out = [f"PistonCore Support Report — {datetime.utcnow().isoformat(timespec='seconds')}Z",
+           "=" * 60]
+
+    out.append("\n## Home Assistant")
+    if ha_client.is_configured():
+        ok, msg = await ha_client.check_connection()
+        out.append(f"Configured: yes\nReachable: {'yes' if ok else 'NO'} — {msg}")
+        cfg = ha_client.get_config_for_display()
+        out.append(f"Write mode: {cfg.get('write_mode', '?')}")
+    else:
+        out.append("Configured: NO — first-run wizard not completed.")
+
+    d = LAST_LOAD_DIAG
+    out.append("\n## Last dashboard load")
+    if not d.get("ok"):
+        out.append(f"FAILED while: {d.get('stage')}")
+        out.append(f"Error: {d.get('error')}")
+        if d.get("traceback"):
+            out.append("Traceback:\n" + str(d.get("traceback")).rstrip())
+    else:
+        out.append("OK (no load error captured this run).")
+    if d.get("skipped"):
+        out.append(f"Skipped devices ({len(d['skipped'])} — dashboard loads without them):")
+        for s in d["skipped"]:
+            out.append(f"  - {s.get('device')}: {s.get('error')}")
+
+    out.append("\n## Pistons (compile status)")
+    statuses = _deploy.load_statuses()
+    pistons = storage.list_pistons()
+    if not pistons:
+        out.append("  (none)")
+    for p in pistons:
+        s = statuses.get(p["id"], {})
+        line = f"  - {p['name']}: {s.get('status', 'not compiled')}"
+        if s.get("message"):
+            line += f" — {s['message']}"
+        if s.get("band"):
+            line += f" [band={s['band']}]"
+        out.append(line)
+
+    out.append("\n----\nSend this whole report to Jeremy, or paste it to an AI and ask it "
+               "to help fix the problem.")
+    return "\n".join(out)
+
+
+@router.get("/api/support-report", response_class=PlainTextResponse)
+async def api_support_report():
+    return await _build_support_report()
+
+
 @router.get("/whats-wrong")
 async def whats_wrong(request: Request):
     """Plain diagnostic page a stuck user (or a remote friend) opens in the
@@ -716,8 +773,18 @@ async def whats_wrong(request: Request):
     else:
         ha_ok, ha_msg = False, "No Home Assistant URL/token set — finish the first-run wizard / Settings."
 
+    _btn = ("padding:8px 14px;border-radius:6px;border:1px solid #3a3a5c;background:#2f7bd9;"
+            "color:#fff;font:inherit;cursor:pointer;text-decoration:none;display:inline-block")
     parts = ["<h1>PistonCore — what's wrong</h1>",
-             f"<p><b>Home Assistant:</b> {'✅ ' if ha_ok else '❌ '}{escape(str(ha_msg))}</p>"]
+             f"<p><b>Home Assistant:</b> {'✅ ' if ha_ok else '❌ '}{escape(str(ha_msg))}</p>",
+             "<div style='background:#16213e;padding:1rem;border-radius:8px;margin:1rem 0'>"
+             "<b>Stuck? Send this to Jeremy.</b>"
+             "<p style='margin:.4rem 0;color:#9999bb'>Copy the full report and send it to Jeremy, "
+             "or paste it to an AI and ask it to fix the problem — it has everything needed to "
+             "diagnose (Home Assistant status, the load error, and every piston's compile status).</p>"
+             f"<button id='cp' style='{_btn}'>Copy support report</button> "
+             f"<a href='/api/support-report' download='pistoncore-report.txt' style='{_btn}'>Download</a>"
+             "<span id='cpok' style='margin-left:.6rem;color:#4caf50'></span></div>"]
     if not d.get("ok"):
         parts.append(f"<h2>❌ The dashboard failed to load</h2>"
                      f"<p>It broke while <b>{escape(str(d.get('stage')))}</b>.</p>"
@@ -739,7 +806,14 @@ async def whats_wrong(request: Request):
              "padding:0 1rem;color:#e8e8f0;background:#1a1a2e}pre{white-space:pre-wrap;"
              "background:#16213e;padding:1rem;border-radius:8px;overflow:auto}"
              "a{color:#4a9eff}li{margin:.5rem 0}</style>")
-    return HTMLResponse(style + "\n".join(parts) + "<p><a href='/'>← back to PistonCore</a></p>")
+    script = ("<script>document.getElementById('cp').onclick=async()=>{"
+              "const t=await (await fetch('/api/support-report')).text();"
+              "try{await navigator.clipboard.writeText(t);"
+              "document.getElementById('cpok').textContent='copied ✓';}"
+              "catch(e){document.getElementById('cpok').textContent='select the Download file instead';}"
+              "};</script>")
+    return HTMLResponse(style + "\n".join(parts)
+                        + "<p><a href='/'>← back to PistonCore</a></p>" + script)
 
 
 @router.get("/settings")

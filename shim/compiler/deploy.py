@@ -39,7 +39,9 @@ _SCRIPTS_DIR = "pistoncore/scripts"
 _PYSCRIPT_DIR = "pyscript/scripts/pistoncore"  # research §2: only sanctioned autoload subdir
 _STATUS_FILE = storage.DATA_DIR / "compile_status.json"
 _DEBUG_DIR = storage.DATA_DIR / "compile_debug"
-_DEBUG_KEEP = 25  # newest artifacts kept per piston
+_DEBUG_KEEP = 200  # newest artifacts kept PER PISTON (small text files; deep
+# history so the last GOOD compile can't get evicted by a run of bad ones — that
+# would cost the "put back on errors" rollback its restore target)
 
 
 def _keep_artifact(piston_id: str, text: str, suffix: str) -> str:

@@ -10,6 +10,7 @@ import hashlib
 import json
 import logging
 import traceback
+from datetime import datetime
 
 from fastapi import APIRouter, Request
 
@@ -207,6 +208,65 @@ async def piston_delete(request: Request):
         await compiler_deploy.undeploy(piston_id)
         storage.delete_piston(piston_id)
     return jsonp(request, {"status": "ST_SUCCESS"})
+
+
+def _iso_ms(iso) -> int:
+    """HA ISO timestamp -> epoch ms (webCoRE's lastExecuted/nextSchedule unit)."""
+    if not iso:
+        return 0
+    try:
+        return int(datetime.fromisoformat(str(iso).replace("Z", "+00:00")).timestamp() * 1000)
+    except Exception:
+        return 0
+
+
+@router.get("/piston/activity")
+async def piston_activity(request: Request):
+    """The piston status/trace screen polls this every 3s (app.js:1151). Minimum
+    viable today (TRACE_ACTIVITY_CONTRACT.md): live `state` + `lastExecuted` from
+    real HA — logs and the per-statement trace overlay layer on next. Response is
+    wrapped under "activity" (piston.module.js:164 reads response.activity.*)."""
+    piston_id = request.query_params.get("id", "")
+    entry = storage.load_piston(piston_id)
+    name = entry["name"] if entry else ""
+    status = compiler_deploy.load_statuses().get(piston_id, {})
+    try:
+        states = {s["entity_id"]: s for s in await ha_client.get_states()}
+    except Exception:
+        states = {}
+
+    last_executed = 0
+    state_blob: dict = {}
+    local_vars: dict = {}
+
+    # PyScript band: the persisted state entity holds state + local vars; its last
+    # update is ~when the piston last ran.
+    st = states.get(f"pyscript.pistoncore_{piston_id}_state")
+    if st:
+        last_executed = _iso_ms(st.get("last_updated") or st.get("last_changed"))
+        attrs = st.get("attributes", {}) or {}
+        local_vars = attrs.get("vars", {}) or {}
+        state_blob = {k: v for k, v in attrs.items() if k != "friendly_name"}
+
+    # YAML/script band: last_triggered across our emitted automations.
+    auto_ids = set(status.get("auto_ids") or [])
+    if auto_ids:
+        for eid, s in states.items():
+            if eid.startswith("automation.") and s.get("attributes", {}).get("id") in auto_ids:
+                last_executed = max(last_executed, _iso_ms(s.get("attributes", {}).get("last_triggered")))
+
+    return jsonp(request, {"activity": {
+        "name": name,
+        "state": state_blob,
+        "logs": [],          # step 4
+        "trace": {},         # step 5
+        "localVars": local_vars,
+        "memory": "unknown",
+        "lastExecuted": last_executed,
+        "nextSchedule": 0,
+        "schedules": [],
+        "systemVars": {},
+    }})
 
 
 def _save_response(entry: dict) -> dict:
