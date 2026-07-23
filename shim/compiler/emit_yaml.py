@@ -875,14 +875,23 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         # re-evaluates on each wake and routes then vs else correctly.
         if promoted:
             for node in list(triggers):
-                if node.get("kind") != "numeric_state":
-                    continue
-                if "below" in node and "above" not in node:
-                    triggers.append({"kind": "numeric_state", "entities": node["entities"],
-                                     "above": node["below"], "id": node.get("id")})
-                elif "above" in node and "below" not in node:
-                    triggers.append({"kind": "numeric_state", "entities": node["entities"],
-                                     "below": node["above"], "id": node.get("id")})
+                kind = node.get("kind")
+                if kind == "numeric_state":
+                    # level comparison (temp/humidity/battery/lux/... any sensor):
+                    # below:N wakes on the down-crossing, add above:N for the up.
+                    if "below" in node and "above" not in node:
+                        triggers.append({"kind": "numeric_state", "entities": node["entities"],
+                                         "above": node["below"], "id": node.get("id")})
+                    elif "above" in node and "below" not in node:
+                        triggers.append({"kind": "numeric_state", "entities": node["entities"],
+                                         "below": node["above"], "id": node.get("id")})
+                elif kind == "state" and node.get("to") is not None and node.get("from") is None:
+                    # equality condition (door open/closed, presence, lock, mode,
+                    # a switch used as a condition): to:X wakes on ENTERING X, add
+                    # from:X so LEAVING X wakes the else too. Works for binary and
+                    # multi-state values alike — the inner if re-decides on each.
+                    triggers.append({"kind": "state", "entities": node["entities"],
+                                     "from": node["to"], "id": node.get("id")})
         actions = [{"kind": "if", "conditions": cond_nodes,
                     "then": then_actions, "else": else_actions}]
     elif else_actions:
