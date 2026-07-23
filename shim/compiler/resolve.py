@@ -37,6 +37,7 @@ class Resolver:
         self.command_maps = _load_band_json("command_maps.json")
         self.local_var_names = {v.get("n") for v in piston.get("v", [])}
         self.unresolved: list[dict] = []   # devices kept but not currently in HA
+        self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
         sys_ent = resolution_map.get("$system")
         self.system_entities = sys_ent if isinstance(sys_ent, dict) else {}
 

@@ -60,6 +60,8 @@ async def front_door(request: Request):
     if not ha_client.is_configured():
         return RedirectResponse(url="/setup")
 
+    _capture_media_base(request)   # learn our own address for the media proxy
+
     from ..compiler import deploy as compiler_deploy
     statuses = compiler_deploy.load_statuses()
     tiles = sorted((_tile_view(entry) for entry in storage.list_pistons()),
@@ -818,6 +820,7 @@ async def whats_wrong(request: Request):
 
 @router.get("/settings")
 async def settings_page(request: Request):
+    _capture_media_base(request)
     config = ha_client.get_config_for_display()
     config["first_run"] = request.query_params.get("first_run") == "1"
     config["saved"] = request.query_params.get("saved") == "1"
@@ -825,6 +828,7 @@ async def settings_page(request: Request):
     # best-effort live enumeration; page still renders when HA is down
     config["tts_engine"] = storage.load_settings().get("tts_engine", "")
     config["default_band"] = storage.load_settings().get("default_band", "auto")
+    config["media"] = storage.load_settings().get("media", {}) or {}
     try:
         regs = await ha_client.fetch_registries()
         from .. import device_pipeline
@@ -837,9 +841,28 @@ async def settings_page(request: Request):
 @router.post("/api/settings")
 async def save_settings(ha_url: str = "", ha_token: str = "", write_mode: str = "local",
                         ha_config_path: str = "", smb_host: str = "", smb_share: str = "config",
-                        smb_username: str = "", smb_password: str = "", tts_engine: str = ""):
+                        smb_username: str = "", smb_password: str = "", tts_engine: str = "",
+                        media: str = ""):
     settings = storage.load_settings()
     settings["tts_engine"] = tts_engine.strip()
+    # Media playback config (mode/map/server) — posted as a JSON blob by the
+    # settings + first-run media panels. Merged, not clobbered, so a partial
+    # save (e.g. first-run just flips the mode) keeps the rest.
+    if media:
+        import json
+        try:
+            incoming = json.loads(media)
+            if isinstance(incoming, dict):
+                cur = settings.get("media", {}) or {}
+                cur.update(incoming)
+                # the media server needs a signing secret so its proxy isn't an
+                # open relay; mint one the first time a server address is set.
+                if cur.get("server_base") and not cur.get("server_secret"):
+                    import secrets
+                    cur["server_secret"] = secrets.token_hex(16)
+                settings["media"] = cur
+        except (ValueError, TypeError):
+            pass
     storage.save_settings(settings)
     ha_client.save_config(
         ha_url.strip(), ha_token.strip() or None,
@@ -1254,6 +1277,125 @@ async def help_best_practices(request: Request):
 @router.get("/help/editing-compiler")
 async def help_editing_compiler(request: Request):
     return templates.TemplateResponse(request, "help_editing_compiler.html", {})
+
+
+@router.get("/help/media-files")
+async def help_media_files(request: Request):
+    return templates.TemplateResponse(request, "help_media_files.html", {})
+
+
+def _capture_media_base(request: Request):
+    """Learn PistonCore's own LAN address from how the user reaches it. The
+    speaker fetches proxied share files from here, and the browser's Host header
+    is by definition an address that works on this network — so we never ask for
+    it. Stored once as a default (editable in Settings). The x-file-cifs:// URL
+    maps the file; this maps PistonCore. (Jeremy 2026-07-23: no setup.)"""
+    try:
+        settings = storage.load_settings()
+        media = settings.get("media", {}) or {}
+        if media.get("server_base"):
+            return
+        host = request.headers.get("host", "")
+        if not host or host.split(":")[0] in ("localhost", "127.0.0.1", "::1"):
+            return  # a speaker can't fetch from PistonCore via loopback
+        scheme = request.headers.get("x-forwarded-proto") or request.url.scheme or "http"
+        media["server_base"] = f"{scheme}://{host}"
+        if not media.get("server_secret"):
+            import secrets
+            media["server_secret"] = secrets.token_hex(16)
+        settings["media"] = media
+        storage.save_settings(settings)
+    except Exception:
+        pass  # never break a page load over address capture
+
+
+def _parse_share_url(url: str):
+    """x-file-cifs://HOST/SHARE/Music/Siren.mp3 -> (HOST, SHARE, 'Music/Siren.mp3').
+    The URL literally maps where the file is — nothing is pre-configured."""
+    for scheme in ("x-file-cifs://", "smb://", "cifs://"):
+        if url.startswith(scheme):
+            parts = url[len(scheme):].split("/", 2)
+            if len(parts) == 3 and parts[0] and parts[1] and parts[2]:
+                return parts[0], parts[1], parts[2]
+            return None, None, None
+    return None, None, None
+
+
+@router.get("/media/proxy")
+@router.head("/media/proxy")
+async def media_proxy(request: Request):
+    """The PistonCore media server (Hubitat-hub role): stream a sound file off a
+    network share straight to a speaker. The share is read from the x-file-cifs://
+    URL itself as pistons run — no share is ever set up by hand. Only URLs the
+    compiler SIGNED are served, so this is not an open relay. Speakers can't
+    authenticate, so the signature in the query is the gate.
+
+    NOTE: the SMB read path needs verifying against a real share on the test
+    server — guest vs. credentialed access can't be exercised from dev."""
+    import hmac, hashlib, mimetypes
+    from fastapi.responses import StreamingResponse, Response
+
+    src = request.query_params.get("src", "")
+    sig = request.query_params.get("sig", "")
+    media = storage.load_settings().get("media", {}) or {}
+    secret = media.get("server_secret") or ""
+    expect = (hmac.new(secret.encode(), src.encode(), hashlib.sha256).hexdigest()[:32]
+              if secret else "")
+    if not secret or not hmac.compare_digest(sig, expect):
+        return JSONResponse({"error": "bad or missing signature"}, status_code=403)
+
+    host, share, path = _parse_share_url(src)
+    if not host:
+        return JSONResponse({"error": "not a share URL"}, status_code=400)
+    try:
+        import smbclient
+    except ImportError:
+        return JSONResponse({"error": "SMB support not installed (rebuild image)"},
+                            status_code=500)
+    # Credentials only if this host actually needs them (lazy — most shares that
+    # worked on Hubitat are guest-readable); host->{username,password} in settings.
+    creds = (media.get("share_creds") or {}).get(host) or {}
+    if creds.get("username"):
+        smbclient.ClientConfig(username=creds["username"], password=creds.get("password") or "")
+    unc = "\\\\" + host + "\\" + share + "\\" + path.replace("/", "\\")
+    ctype = mimetypes.guess_type(path)[0] or "application/octet-stream"
+
+    try:
+        size = smbclient.stat(unc).st_size
+    except Exception as exc:
+        return JSONResponse({"error": f"cannot open {share}/{path}: {exc}"}, status_code=404)
+
+    start, end, status = 0, size - 1, 200
+    headers = {"Accept-Ranges": "bytes", "Content-Type": ctype}
+    rng = request.headers.get("range", "")
+    if rng.startswith("bytes="):
+        try:
+            lo, _, hi = rng.split("=", 1)[1].partition("-")
+            start = int(lo) if lo else 0
+            end = int(hi) if hi else size - 1
+            end = min(end, size - 1)
+            status = 206
+            headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+        except ValueError:
+            start, end, status = 0, size - 1, 200
+    length = max(0, end - start + 1)
+    headers["Content-Length"] = str(length)
+
+    if request.method == "HEAD":
+        return Response(status_code=status, headers=headers)
+
+    def stream():
+        with smbclient.open_file(unc, mode="rb") as f:
+            f.seek(start)
+            remaining = length
+            while remaining > 0:
+                data = f.read(min(65536, remaining))
+                if not data:
+                    break
+                remaining -= len(data)
+                yield data
+
+    return StreamingResponse(stream(), status_code=status, headers=headers, media_type=ctype)
 
 
 @router.get("/backup")

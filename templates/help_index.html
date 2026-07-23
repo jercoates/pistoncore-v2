@@ -7,19 +7,57 @@
     <h1>Help</h1>
   </div>
 
-  <div class="help-list">
-    <a class="piston-row help-row" href="/help/best-practices">
+  <style>
+    .help-search { width: 100%; box-sizing: border-box; margin: 0 0 16px;
+      padding: 10px 12px; font-size: 15px; border: 1px solid var(--border, #ccc);
+      border-radius: 6px; background: var(--input-bg, #fff); color: inherit; }
+  </style>
+  <input type="search" id="help-search" class="help-search"
+         placeholder="Search help…" autocomplete="off"
+         aria-label="Search help articles">
+
+  <div class="help-list" id="help-list">
+    <a class="piston-row help-row" href="/help/best-practices"
+       data-keywords="start getting started import global variables pills pyscript pause rename traces token connect front door">
       <span class="piston-name">Getting started with PistonCore</span>
       <span class="field-hint">How pistons reach Home Assistant, importing habits, what the status pills mean, and why PyScript is worth installing.</span>
     </a>
-    <a class="piston-row help-row" href="/help/editing-compiler">
+    <a class="piston-row help-row" href="/help/media-files"
+       data-keywords="play track media file sound audio mp3 music sonos echo alexa chime siren doorbell cifs smb share network folder local media-source url playtrack speaker">
+      <span class="piston-name">Playing media files (Play track)</span>
+      <span class="field-hint">How to point Play track at a sound file — from HA's own media folder, or old-school from a network share — and why Echo can't play files.</span>
+    </a>
+    <a class="piston-row help-row" href="/help/editing-compiler"
+       data-keywords="extend compiler command value attribute data file translation vocab ai edit mapping">
       <span class="piston-name">Extending the compiler (with an AI)</span>
       <span class="field-hint">Teach the compiler a new command, value, or device attribute by editing a data file — the fix takes effect on the next compile, no rebuild. Hand it to an AI to do for you.</span>
     </a>
-    <a class="piston-row help-row" href="/help/compiler-debug">
+    <a class="piston-row help-row" href="/help/compiler-debug"
+       data-keywords="compile error debug fails plumbing first run update band pyscript missing device global banner">
       <span class="piston-name">When pistons don't compile</span>
       <span class="field-hint">First-run plumbing, what changed after an update, and how to extend the compiler yourself with an AI when it meets something new.</span>
     </a>
   </div>
+  <p id="help-noresults" class="field-hint" style="display:none">No help articles match that.</p>
 </div>
+
+<script>
+  (function () {
+    var box = document.getElementById('help-search');
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#help-list .help-row'));
+    var none = document.getElementById('help-noresults');
+    if (!box) return;
+    box.addEventListener('input', function () {
+      var q = box.value.trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var hay = (row.textContent + ' ' + (row.getAttribute('data-keywords') || '')).toLowerCase();
+        var match = !q || hay.indexOf(q) !== -1;
+        row.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      none.style.display = shown ? 'none' : '';
+    });
+  })();
+</script>
 {% endblock %}

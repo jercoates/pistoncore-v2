@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}PistonCore Help — Playing media files{% endblock %}
+
+{% block content %}
+<div class="page active help-article">
+  <div class="list-header">
+    <h1>Playing media files (Play track)</h1>
+  </div>
+
+  <p>
+    A piston's <strong>Play track</strong> action tells a speaker to play a sound
+    file. Home Assistant plays audio files all day — chimes, sirens, alerts — so
+    this always works; the only thing that ever needs setting up is telling HA
+    <em>where the file is</em>. You do that just by how you write the URL.
+    There is <strong>no mode to flip</strong> — each Play track URL is handled on
+    its own, and you can mix them freely in the same piston.
+  </p>
+
+  <h2>Why this needs any setup at all</h2>
+  <p>
+    On Hubitat, <code>x-file-cifs://…</code> "just worked" because the hub itself
+    read the file off your share and fed it to the speaker — the hub was the
+    middleman, always on. Networked speakers (Sonos, Chromecast) never read a
+    file share directly; they fetch a URL. Home Assistant does the exact same
+    middleman job — it just needs to know where the file lives. That's the whole
+    gap, and PistonCore closes it two ways.
+  </p>
+
+  <h2>Two ways to point at a file — pick per URL</h2>
+  <table class="help-table">
+    <tr><th>Write the URL as…</th><th>What happens</th></tr>
+    <tr>
+      <td><code>/local/Music/Siren.mp3</code></td>
+      <td><strong>The file lives in Home Assistant.</strong> Drop it into HA's
+          <code>config/www/</code> folder (here, <code>config/www/Music/</code>)
+          and reference it with <code>/local/…</code>. HA serves it. Nothing else
+          to set up — this works on every HA install.</td>
+    </tr>
+    <tr>
+      <td><code>x-file-cifs://192.168.1.208/PiShare/Music/Siren.mp3</code></td>
+      <td><strong>Old-school — the file stays on your network share.</strong> The
+          <code>x-file-cifs://</code> form tells PistonCore this is a Hubitat-style
+          path and to make it work: it streams the file straight off the share
+          through the <strong>PistonCore media server</strong> (set that up once,
+          below). Your existing Hubitat pistons keep their URLs unchanged.</td>
+    </tr>
+  </table>
+  <p>
+    A full <code>http://…</code> URL and HA's <code>media-source://…</code> paths
+    also pass straight through. Because it's decided per URL, one piston can play
+    a doorbell chime from HA's folder and a siren from a share at the same time.
+  </p>
+
+  <h2>Setting up the HA folder way</h2>
+  <ol>
+    <li>Put your sound files in Home Assistant's <code>config/www/</code> folder.
+        Keep them organized in subfolders if you like — a good habit is a
+        <code>config/www/pistoncore/</code> folder just for automation sounds.</li>
+    <li>In Play track, reference the file as <code>/local/…</code> — for
+        <code>config/www/pistoncore/siren.mp3</code> that's
+        <code>/local/pistoncore/siren.mp3</code>.</li>
+    <li>Save the piston. That's it — HA plays it.</li>
+  </ol>
+  <p class="field-hint">
+    Home Assistant has no small file-size limit the way Hubitat did, so you can
+    keep everything in one HA folder if you want — you no longer have to scatter
+    large files across shares.
+  </p>
+
+  <h2>Setting up the old-school share way (PistonCore media server)</h2>
+  <p>
+    This lets your existing <code>x-file-cifs://</code> pistons play without
+    moving a single file. In <a href="/settings">Settings → Playing media
+    files</a>, turn on the media server: give it the address other devices reach
+    PistonCore at (so speakers can fetch from it), and a login for each share it
+    should read. PistonCore then serves those files to your speakers exactly like
+    the Hubitat hub did.
+  </p>
+  <p>
+    <strong>One trade-off, stated plainly:</strong> with the media server, a
+    share file only plays while <strong>PistonCore is running</strong> — it's the
+    middleman. If you ever remove PistonCore, those files stop playing until you
+    move them into Home Assistant and switch those URLs to <code>/local/…</code>.
+    Files that already use <code>/local/…</code> never depend on PistonCore.
+  </p>
+
+  <h2>A note on Amazon Echo / Alexa</h2>
+  <p>
+    Echo/Alexa speakers <strong>cannot</strong> play an arbitrary sound file —
+    Amazon blocks it, and it blocked Hubitat too. This isn't something HA or
+    PistonCore can change. <strong>Sonos, Chromecast, VLC and most media players
+    play files fine.</strong> If a Play track aimed at a mixed group seems to do
+    nothing, check whether the target is an Echo.
+  </p>
+
+  <h2>If a Play track URL is flagged</h2>
+  <p>
+    If a piston uses an <code>x-file-cifs://</code> URL and the media server isn't
+    set up yet, the front-door status and the piston's own screen say so. Fix it
+    by either turning on the media server, or moving the file into HA and using a
+    <code>/local/…</code> URL. Everything else about the piston still deploys.
+  </p>
+</div>
+{% endblock %}

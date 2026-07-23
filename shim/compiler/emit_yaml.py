@@ -44,6 +44,58 @@ def _band_json(name):
 # a dozen signatures for one read-only lookup.
 _PISTON: dict = {"cur": None}
 
+# Media-file playback config (from settings.json "media"), loaded per compile.
+# Lets a piston's old Hubitat "Play track" URL (x-file-cifs://...) reach HA:
+# rewritten to where HA itself can read it (native mode), or routed through the
+# PistonCore media server when the user opted in (server mode). See the
+# "Playing media files" help article.
+_MEDIA_CFG: dict = {}
+_MEDIA_OLD_SCHEMES = ("x-file-cifs://", "smb://", "cifs://")
+
+
+def _rewrite_media_url(url, resolver, ctx):
+    """Route a media_content_id by its FORMAT — no mode toggle, both coexist:
+      - a local / HA URL (/local/..., /media/..., http(s)://, media-source://)
+        passes straight through; HA plays it. The /local/Music/x.mp3 form is how
+        the user says "this file lives in HA's own media folder."
+      - a Hubitat share URL (x-file-cifs://, smb://, cifs://) is streamed through
+        the PistonCore media server IF the user set it up (Settings); if not, a
+        warning — either move the file into HA and use a /local/ URL, or turn the
+        media server on.
+    The user picks per file just by how the URL is written — "change the URL,
+    change the path." (Jeremy 2026-07-23: never a toggle.)"""
+    if not isinstance(url, str) or not url:
+        return url
+    for rw in _MEDIA_CFG.get("rewrites", []):        # explicit override, rare
+        frm = rw.get("from") or ""
+        if frm and url.startswith(frm):
+            return (rw.get("to") or "") + url[len(frm):]
+    if not url.startswith(_MEDIA_OLD_SCHEMES):        # local/HA URL -> HA plays it
+        return url
+    server_base = _MEDIA_CFG.get("server_base")       # share URL -> PistonCore proxy
+    if server_base:
+        from urllib.parse import quote
+        base = server_base.rstrip("/")
+        return f"{base}/media/proxy?src={quote(url, safe='')}&sig={_media_sig(url)}"
+    resolver.media_warnings.append({
+        "url": url,
+        "message": ("This Play track points at a network share. Either put the file "
+                    "in HA's media folder and use a /local/ URL, or turn on the "
+                    "PistonCore media server in Settings."),
+    })
+    return url
+
+
+def _media_sig(url: str) -> str:
+    """HMAC so the media-server proxy only serves URLs the compiler signed —
+    not an open relay. Secret lives in settings; absent -> '' (unsigned)."""
+    secret = _MEDIA_CFG.get("server_secret") or ""
+    if not secret:
+        return ""
+    import hmac, hashlib
+    return hmac.new(secret.encode(), url.encode(), hashlib.sha256).hexdigest()[:32]
+
+
 _NUMERIC_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
                 "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
 _EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
@@ -121,6 +173,9 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
     Routing lives in the package dispatcher (__init__.compile_piston) — a
     NotYetImplemented raised here falls through to the PyScript band there."""
     _PISTON["cur"] = piston
+    global _MEDIA_CFG
+    from .. import storage
+    _MEDIA_CFG = storage.load_settings().get("media", {}) or {}
     branches = analyze(piston, piston_id, piston_name)
     resolver = Resolver(piston, resolution_map, globals_map)
     blocks = []
@@ -151,7 +206,7 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
         raise
 
     return {"target": "yaml", "yaml": header + "\n".join(blocks) + "\n", "reasons": [],
-            "auto_ids": auto_ids}
+            "auto_ids": auto_ids, "media_warnings": resolver.media_warnings}
 
 
 class _NoSubscriptions(Exception):
@@ -194,7 +249,7 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
     )
     return {"target": "yaml", "kind": "script", "yaml": header + block,
             "reasons": [], "auto_ids": [], "script_ids": [script_id],
-            "unresolved": resolver.unresolved}
+            "unresolved": resolver.unresolved, "media_warnings": resolver.media_warnings}
 
 
 # ── conditions ──────────────────────────────────────────────────────────────
@@ -616,6 +671,9 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             data = None
             if data_spec:
                 data = {k: _param_value(v, n["params"], ctx) for k, v in data_spec.items()}
+                if service == "media_player.play_media" and data.get("media_content_id"):
+                    data["media_content_id"] = _rewrite_media_url(
+                        data["media_content_id"], resolver, ctx)
             out.append({"kind": "service", "service": service,
                         "entities": entities, "data": data})
         elif n["kind"] == "switch":
