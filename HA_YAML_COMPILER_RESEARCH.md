@@ -31,6 +31,18 @@ purpose-specific triggers decision.**
    promise: "Existing automations keep working. Generic triggers, conditions, templates,
    and YAML all keep working" [Verified — rel 2026.7].
 
+   **Authoritative 2026.x rename list** (Jeremy 2026-07-22, from the HA release notes —
+   deprecation-scanner seed; PistonCore emits NONE of these, verified by grep, so it's the
+   proof the classic-primitives decision holds). Triggers: `battery.low`→`battery.became_low`,
+   `battery.not_low`→`battery.no_longer_low`, `lawn_mower.docked`→`lawn_mower.returned_to_dock`,
+   `schedule.turned_off`→`schedule.block_ended`, `schedule.turned_on`→`schedule.block_started`,
+   `timer.time_remaining`→`timer.remaining_time_reached`,
+   `update.update_became_available`→`update.became_available`,
+   `vacuum.docked`→`vacuum.returned_to_dock`. Conditions:
+   `climate.target_humidity`→`climate.is_target_humidity`,
+   `climate.target_temperature`→`climate.is_target_temperature`. "The old keys no longer
+   work." A scanner match on OUR output = a compiler bug (we should never produce these).
+
 2. **Classic primitives are the verbatim match to the piston JSON model anyway** —
    webCoRE conditions are entity + comparison + value, which is exactly the shape of
    `state` / `numeric_state` triggers and conditions. Purpose-specific blocks are
