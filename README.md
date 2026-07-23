@@ -18,14 +18,20 @@ PistonCore tomorrow and every simple piston keeps running natively; complex pist
 running as long as PyScript remains installed. No lock-in, no cloud, no account, nothing
 phoning home.
 
+**Test an automation without touching the house.** PistonCore can add virtual **test
+devices** to Home Assistant — a stand-in copy of something you already own, or a device type
+you don't have at all. Point a piston at one, change it by hand, and watch what the
+automation actually does, with nothing real switching on and off. Optional, and it comes
+back out cleanly. [Details below](#test-devices).
+
 > **Status: early alpha — looking for testers (Docker only).**  
 > For people who know webCoRE and Docker. The editor, save path, and dual-band compiler
 > (YAML-first + PyScript fallback) are built, and the compiler produces native HA files
 > for real pistons — but **very little of that output has been verified running on live
 > HA yet. Compiling is not the same as tested: treat everything the compiler emits as
 > unverified until you've watched it run.** First-run wizard and Samba write path work.
-> Test devices (for behavioral testing) and the trace/activity console are in development —
-> spec'd, not built yet. There is no HA add-on — Docker only. **Port from webCoRE:** bin
+> Test devices are built (lightly tested); the trace/activity console is partly built.
+> There is no HA add-on — Docker only. **Port from webCoRE:** bin
 > codes work *into* PistonCore; export out is plain piston JSON (not bins). JSON paste also
 > works both ways. Bring real pistons and real devices — report where compile or behavior
 > is wrong, **and** where the editor is missing capabilities or devices don't show up right
@@ -155,8 +161,39 @@ your own safety net yet.
 | [COMPILER_DECISIONS_DEPLOY.md](COMPILER_DECISIONS_DEPLOY.md) | Deploy layout, write transport, pause/resume, check_config, recompile-all |
 | [RECONCILIATION.md](RECONCILIATION.md) | Load-bearing decisions checked against current code |
 | [TRACE_ACTIVITY_CONTRACT.md](TRACE_ACTIVITY_CONTRACT.md) | The trace/console data contract (in development) |
-| [VIRTUAL_DEVICES_SPEC.md](VIRTUAL_DEVICES_SPEC.md) | Test devices for behavioral testing (spec'd — in development) |
+| [VIRTUAL_DEVICES_SPEC.md](VIRTUAL_DEVICES_SPEC.md) | Test devices for behavioral testing — clone a real device, or create one you don't own |
 | [CLAUDE.md](CLAUDE.md) | Working rules for AI-assisted development sessions |
+
+## Test devices
+
+Two ways they get used:
+
+- **Clone a device you already own.** A stand-in copy with the same capabilities. Point a
+  piston at it, change it by hand, and see what the automation does — nothing real moves.
+- **Create a device you don't own.** A searchable library of device types, so you can build
+  and test a piston for hardware you don't have. This is also how support for an unfamiliar
+  device type gets worked out in the first place.
+
+**Installing them is a separate, explicit step.** PistonCore shows you what it will copy
+into your Home Assistant config and asks first — it never adds anything to HA on its own.
+Home Assistant needs a restart to pick them up. Removing them removes the virtual devices
+and nothing else.
+
+**Status: built, but only lightly tested** — alpha, like everything else here.
+
+<details>
+<summary>Technical detail</summary>
+
+The test devices are a separate Home Assistant integration, not part of the shim. It is a
+fork of [`twrecked/hass-virtual`](https://github.com/twrecked/hass-virtual) (GPL-3, © twrecked),
+vendored under `test-devices-integration/` with additional platforms and a management
+service added. Provenance and the list of changes are recorded in that folder's
+`FORK_NOTES.md`; the design is [VIRTUAL_DEVICES_SPEC.md](VIRTUAL_DEVICES_SPEC.md).
+
+Because it is an ordinary custom integration, it also runs standalone — installed by hand
+into `custom_components/`, with no PistonCore involved.
+
+</details>
 
 ## Relationship to webCoRE
 
