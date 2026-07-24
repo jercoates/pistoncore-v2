@@ -812,7 +812,7 @@ def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | 
 
 def _has_wait(nodes: list) -> bool:
     for n in nodes:
-        if n["kind"] == "task" and n["command"] == "wait":
+        if n["kind"] == "task" and n["command"] in ("wait", "waitForTime"):
             return True
         if n["kind"] == "if" and (_has_wait(n["then"]) or _has_wait(n["else"])):
             return True
@@ -905,6 +905,24 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 continue
             if n["command"] == "setHSLColor":
                 out.append(_set_hsl(n, resolver, ctx))
+                continue
+            if n["command"] == "waitForTime":
+                # "Wait until <time-of-day>" -> HA wait_for_trigger on a time
+                # trigger, which resolves at the NEXT occurrence of that time
+                # (within 24h) — exactly webCoRE's "wait until 11pm" semantics
+                # (it waits for the next 11pm). A safety timeout is still emitted
+                # per the standing hard rule (every wait carries timeout +
+                # continue_on_timeout, HA_LIMITATIONS §9), sized past a full day
+                # so the trigger always wins in practice, never truncating the
+                # wait. A non-constant time (sunrise/variable/expression) routes
+                # to PyScript rather than guessing.
+                p0 = n["params"][0] if n["params"] else {}
+                val = p0.get("c")
+                if not isinstance(val, (int, float)) or isinstance(val, bool):
+                    raise NotYetImplemented(
+                        "waitForTime with a non-constant time (sunrise/variable) "
+                        "requires PyScript", **ctx)
+                out.append({"kind": "wait_for_time", "at": _minutes_hms(int(val))})
                 continue
             if n["command"] == "wolRequest":
                 # no device target — a pure data call to wake_on_lan.send_magic_packet

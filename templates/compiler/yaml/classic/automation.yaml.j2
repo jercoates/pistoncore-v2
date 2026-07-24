@@ -188,6 +188,13 @@
 {%- else %}
       []
 {%- endif %}
+{%- elif a.kind == 'wait_for_time' -%}
+- wait_for_trigger:
+    - trigger: time
+      at: "{{ a.at }}"
+  timeout:
+    hours: 25
+  continue_on_timeout: true
 {%- elif a.kind == 'stop' -%}
 - stop: "piston exited"
 {%- elif a.kind == 'if' -%}
