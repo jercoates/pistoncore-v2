@@ -906,6 +906,9 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "setHSLColor":
                 out.append(_set_hsl(n, resolver, ctx))
                 continue
+            if n["command"] == "sendEmail":
+                out.append(_send_email(n, resolver, ctx))
+                continue
             if n["command"] == "toggleLevel":
                 out.append(_toggle_level(n, resolver, ctx))
                 continue
@@ -1285,6 +1288,46 @@ def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
             f"persists between runs under PyScript", **ctx)
     return {"kind": "variables",
             "vars": {str(name): _text_param(value_op, resolver, ctx)}}
+
+
+def _send_email(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """sendEmail -> HA notify.send_message against the configured email notifier.
+
+    The Hubitat model (Jeremy 2026-07-24): the EMAIL INTEGRATION is set up in HA
+    (the 2026.7+ SMTP config-flow integration creates a notify.<name> entity),
+    not in PistonCore — sendEmail just routes through it, exactly as it "shows
+    up" in webCoRE once the email app exists. VERIFIED (HA SMTP docs, 2026.7.3):
+    notify.send_message with target.entity_id = the notifier entity, data
+    {title, message}, and a per-call data.target overriding the recipient — the
+    same stable-target-reference shape (C1/C2) as the push/SMS notify work.
+
+    The notifier entity is resolved from $system['email'], which the shim binds
+    to the user's email notifier. Unset -> a clear, actionable error (never a
+    guess about WHICH notify entity is email — HA can't distinguish an SMTP
+    notifier from a Telegram/Slack one at the entity level, so that binding is
+    a deliberate selection, not an auto-guess).
+
+    Params (vocab): [0] recipient, [1] subject, [2] message body."""
+    entity = resolver.system_entity("email")
+    if not entity:
+        raise NotYetImplemented(
+            "Send email needs an email notifier — set up an email integration in "
+            "HA (e.g. the SMTP integration, which creates a notify entity) and "
+            "select it as PistonCore's email notifier", **ctx)
+    params = n["params"]
+    piston = n.get("_piston")
+    body = params[2] if len(params) > 2 else {}
+    data = {"message": _text_param(body or {}, resolver, ctx, piston)}
+    subject = params[1] if len(params) > 1 else None
+    if subject and (subject or {}).get("c") not in (None, ""):
+        data["title"] = _text_param(subject, resolver, ctx, piston)
+    recipient = params[0] if len(params) > 0 else None
+    if recipient and (recipient or {}).get("c") not in (None, ""):
+        # per-call recipient override (notify.send_message data.target); a single
+        # address as a scalar is valid, HA also accepts a list.
+        data["target"] = _text_param(recipient, resolver, ctx, piston)
+    return {"kind": "service", "service": "notify.send_message",
+            "entities": [entity], "data": data}
 
 
 def _text_param(op: dict, resolver: Resolver, ctx: dict, piston: dict | None = None) -> str:

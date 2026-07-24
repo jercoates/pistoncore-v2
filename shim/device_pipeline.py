@@ -485,6 +485,26 @@ def extract_tts_engines(registries: dict) -> list[dict]:
     ]
 
 
+def extract_notify_entities(registries: dict) -> list[dict]:
+    """notify.* entities that are candidate email/message notifiers for the
+    sendEmail 'email notifier' setting. Excludes persistent_notification (HA's
+    own dashboard toast, not a real destination) and mobile_app_* (those are
+    push targets already surfaced as picker devices). HA can't flag WHICH of
+    the rest is email, so the user picks — this only supplies the candidate
+    list for that selection."""
+    out = []
+    for s in registries["states"]:
+        eid = s["entity_id"]
+        if not eid.startswith("notify."):
+            continue
+        tail = eid.split(".", 1)[1]
+        if tail == "persistent_notification" or tail.startswith("mobile_app_"):
+            continue
+        out.append({"entity_id": eid,
+                    "name": s["attributes"].get("friendly_name", eid)})
+    return out
+
+
 def extract_notify_target_services(registries: dict) -> list[str]:
     """
     notify.mobile_app_* service keys (VERIFIED live get_services, HA 2026.7.2)
@@ -607,6 +627,16 @@ def build_device_payload(registries: dict) -> dict:
         system_entities["tts"] = configured
     elif len(engines) == 1:
         system_entities["tts"] = engines[0]["entity_id"]
+    # Email notifier for sendEmail (Jeremy 2026-07-24, Hubitat model: the email
+    # INTEGRATION is set up in HA — 2026.7+ SMTP creates a notify entity — and
+    # sendEmail routes through it). Bound by EXPLICIT selection, never an
+    # auto-guess: HA cannot tell an SMTP notifier from a Telegram/Slack one at
+    # the entity level, so picking "the email one" is a deliberate setting, the
+    # same override shape as tts above. Unset -> sendEmail raises a clear,
+    # actionable compile error (emit_yaml._send_email) rather than mis-routing.
+    email_notifier = _storage.load_settings().get("email_notify_entity")
+    if email_notifier:
+        system_entities["email"] = email_notifier
     resolution_map["$system"] = system_entities
 
     if skipped:

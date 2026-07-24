@@ -80,6 +80,23 @@
         {% endif %}
       </p>
     </div>
+    <h2>Email</h2>
+    <div class="form-group">
+      <label for="email_notify_entity">Email notifier (used by Send email)</label>
+      <select id="email_notify_entity" name="email_notify_entity">
+        <option value="">— none —</option>
+        {% for e in notify_entities %}
+        <option value="{{ e.entity_id }}" {{ 'selected' if e.entity_id == email_notify_entity }}>{{ e.name }}</option>
+        {% endfor %}
+      </select>
+      <p class="field-hint">
+        Set up an email integration in Home Assistant first (e.g. the
+        <strong>SMTP</strong> integration, which creates a notify entity), then pick
+        it here. Pistons that Send email route through it; the recipient comes from
+        the piston. Home Assistant can't tell an email notifier from a Telegram or
+        Slack one, so you choose which is email.
+      </p>
+    </div>
     <h2>Playing media files</h2>
     <p class="field-hint">
       When a piston's <strong>Play track</strong> uses an old-school

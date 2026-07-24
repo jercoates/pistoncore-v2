@@ -827,14 +827,17 @@ async def settings_page(request: Request):
     # TTS engine picker (SPEAK_ACTION_SPEC: engine is a global setting) —
     # best-effort live enumeration; page still renders when HA is down
     config["tts_engine"] = storage.load_settings().get("tts_engine", "")
+    config["email_notify_entity"] = storage.load_settings().get("email_notify_entity", "")
     config["default_band"] = storage.load_settings().get("default_band", "auto")
     config["media"] = storage.load_settings().get("media", {}) or {}
     try:
         regs = await ha_client.fetch_registries()
         from .. import device_pipeline
         config["tts_engines"] = device_pipeline.extract_tts_engines(regs)
+        config["notify_entities"] = device_pipeline.extract_notify_entities(regs)
     except Exception:
         config["tts_engines"] = []
+        config["notify_entities"] = []
     return templates.TemplateResponse(request, "settings.html", config)
 
 
@@ -842,9 +845,10 @@ async def settings_page(request: Request):
 async def save_settings(ha_url: str = "", ha_token: str = "", write_mode: str = "local",
                         ha_config_path: str = "", smb_host: str = "", smb_share: str = "config",
                         smb_username: str = "", smb_password: str = "", tts_engine: str = "",
-                        media: str = ""):
+                        email_notify_entity: str = "", media: str = ""):
     settings = storage.load_settings()
     settings["tts_engine"] = tts_engine.strip()
+    settings["email_notify_entity"] = email_notify_entity.strip()
     # Media playback config (mode/map/server) — posted as a JSON blob by the
     # settings + first-run media panels. Merged, not clobbered, so a partial
     # save (e.g. first-run just flips the mode) keeps the rest.
