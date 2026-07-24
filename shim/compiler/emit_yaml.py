@@ -501,6 +501,30 @@ def _sun_mixed_template(node: dict, cond: dict) -> dict:
 
 # ── triggers ────────────────────────────────────────────────────────────────
 
+_BARE_DIRECTION_OPS = {"rises": ">", "drops": "<",
+                       "does_not_rise": "<=", "does_not_drop": ">="}
+
+
+def _direction_condition(trig: dict, ctx: dict) -> dict | None:
+    """Companion condition for the bare direction ops (see _BARE_DIRECTION_OPS
+    and _trigger's "bare direction" branch). The trigger wakes on ANY change
+    to the entity; this evaluates the actual direction using trigger.to_state/
+    from_state, which HA exposes to automation-level conditions (not to a
+    template TRIGGER's own value_template — there's no "previous value" inside
+    that). Intent replicated: "did the reading move up/down from what it just
+    was," same idiom already used for $currentEventValue/$previousEventValue
+    (expression.py:578-579). Fail-closed: a non-numeric or missing from/to
+    state (piston just started, entity unavailable) reads as false, never a
+    stray match."""
+    op = _BARE_DIRECTION_OPS.get(trig.get("co"))
+    if op is None or trig.get("lo_type") == "v":
+        return None
+    body = ("trigger.from_state is not none and trigger.to_state is not none and "
+            "trigger.from_state.state | is_number and trigger.to_state.state | is_number and "
+            f"trigger.to_state.state | float(0) {op} trigger.from_state.state | float(0)")
+    return {"kind": "template", "template": "{{ " + body + " }}"}
+
+
 def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     co = trig["co"]
     if trig.get("lo_type") == "v":
@@ -559,12 +583,26 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     if co in ("stays_away_from", "stays_different_than") and hold:
         return {"kind": "state", "entities": entities, "from": mapped(value),
                 "for": hold, "id": trig_id}
+    if co == "stays_away_from_any_of" and hold:
+        return {"kind": "state", "entities": entities, "from": as_list(value),
+                "for": hold, "id": trig_id}
     if co == "stays_unchanged" and hold:
         return {"kind": "state", "entities": entities, "for": hold, "id": trig_id}
 
+    # ── bare direction (no threshold) ── rises/drops = "the reading moved up/
+    # down from whatever it just was", not a bound to cross, so unlike
+    # rises_above/drops_below this can't be a numeric_state trigger — there is
+    # nothing to compare a single current value against. Wakes on ANY change;
+    # the companion condition _direction_condition (wired in _emit_branch)
+    # gates on the actual direction via trigger.to_state/from_state, the same
+    # idiom already used for $currentEventValue/$previousEventValue
+    # (expression.py:578-579).
+    if co in _BARE_DIRECTION_OPS:
+        return {"kind": "state", "entities": entities, "id": trig_id}
+
     # ── numeric family ──
-    NUM_ABOVE = ("rises_above", "rises", "rises_to_or_above", "becomes_greater_than")
-    NUM_BELOW = ("drops_below", "drops", "drops_to_or_below", "becomes_less_than")
+    NUM_ABOVE = ("rises_above", "rises_to_or_above", "becomes_greater_than")
+    NUM_BELOW = ("drops_below", "drops_to_or_below", "becomes_less_than")
     if co in NUM_ABOVE:
         return {"kind": "numeric_state", "entities": entities,
                 "above": value, "id": trig_id}
@@ -992,6 +1030,7 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     triggers = []
     cancel_triggers = []
     conditions = []
+    direction_conds = []
     promoted = False
 
     if br["kind"] == "timer":
@@ -1005,6 +1044,13 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
             edge = _boundary_trigger(trig, resolver, ctx, trig_id)
             if edge:
                 triggers.append(edge)   # the "or equal to" edge; see _boundary_trigger
+            dc = _direction_condition(trig, ctx)
+            if dc:
+                # the bare-direction trigger above wakes on ANY change; this
+                # gates on the actual direction, same as every other
+                # trigger-classified node's filter (to:/above:/below:) does
+                # inherently — rises/drops just has no filter to encode it in.
+                direction_conds.append(dc)
             if has_wait and br["tcp"] == "c" and node["kind"] == "state" and node.get("to"):
                 opposite = resolver.opposite_state(node["to"])
                 if opposite is not None:
@@ -1036,7 +1082,7 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     for r in br.get("restrictions") or []:
         conditions.append(_condition(r, resolver, ctx))
 
-    cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]]
+    cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]] + direction_conds
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)
 
