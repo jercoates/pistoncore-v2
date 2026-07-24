@@ -127,6 +127,9 @@
 {%- if a.entities %}
   target:
 {{- entity_ids(a.entities, '    ') }}
+{%- elif a.get('target_template') %}
+  target:
+    entity_id: "{{ a.target_template }}"
 {%- endif %}
 {%- elif a.kind == 'variables' -%}
 - variables:

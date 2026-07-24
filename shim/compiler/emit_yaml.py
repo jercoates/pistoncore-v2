@@ -876,6 +876,9 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] in ("speak", "playText", "playTextAndResume", "playTextAndRestore"):
                 out.append(_speak(n, resolver, ctx))
                 continue
+            if n["command"] in ("pausePiston", "resumePiston"):
+                out.append(_piston_pause_resume(n, ctx))
+                continue
             if not n["devices"] or n["command"] in resolver.command_maps.get("_piston_scope", []):
                 # piston-scope command (setVariable, log, setState, tiles, ...)
                 # — piston state has no YAML equivalent, whatever devices the
@@ -939,6 +942,50 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
     return out
+
+
+def _piston_pause_resume(n: dict, ctx: dict) -> dict:
+    """pausePiston/resumePiston target ANOTHER piston by reference (webCoRE's
+    "piston" param type — same colon-wrapped id convention the PyScript band's
+    executePiston already assumes, emit_pyscript.py "target.strip(':')").
+    Native pause/resume IS automation.turn_off/turn_on (the native-pause
+    decision — file stays, only the automation's enabled state changes).
+
+    The wrinkle this needs to solve: one piston can compile to SEVERAL
+    automations (one per top-level if — TCP scoping, COMPILER_SPEC §2.5 point
+    4), so "pause piston X" isn't a single entity_id. The target list is read
+    from piston X's own last recorded auto_ids (deploy.py's compile-status
+    store — a legitimate compile-time lookup, same class as the device
+    resolution map) and matched at HA's OWN runtime by the STABLE `id:`
+    attribute every compiled automation carries — never by entity_id, which
+    isn't deterministic from the id alone (HA derives it from the alias,
+    de-duplicated on collision; that's why deploy.py's own _automation_entities
+    matches the same way instead of guessing the slug)."""
+    params = n["params"]
+    target = (params[0] or {}).get("c") if params else None
+    if not isinstance(target, str) or not target.strip(":"):
+        raise NotYetImplemented(f"{n['command']} without a piston target", **ctx)
+    target_id = target.strip(":")
+    from .deploy import load_statuses
+    rec = load_statuses().get(target_id)
+    if not rec:
+        raise NotYetImplemented(
+            f"{n['command']} targets a piston (id {target_id}) that hasn't been "
+            f"compiled/deployed yet — deploy it first, then this piston", **ctx)
+    auto_ids = rec.get("auto_ids") or []
+    if not auto_ids:
+        raise NotYetImplemented(
+            f"{n['command']} targets a piston (id {target_id}) that compiled to "
+            f"a script, not an automation — scripts have no enabled/disabled "
+            f"state to pause", **ctx)
+    service = "automation.turn_off" if n["command"] == "pausePiston" else "automation.turn_on"
+    # single-quoted Python/Jinja list literal, not _json_dumps — the whole
+    # expression gets wrapped in DOUBLE quotes by the template (matching every
+    # other value_template in this codebase), so nothing inside may use them.
+    id_list = "[" + ", ".join(repr(str(i)) for i in auto_ids) + "]"
+    template = ("{{ states.automation | selectattr('attributes.id', 'in', "
+                + id_list + ") | map(attribute='entity_id') | list }}")
+    return {"kind": "service", "service": service, "target_template": template, "data": None}
 
 
 def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
