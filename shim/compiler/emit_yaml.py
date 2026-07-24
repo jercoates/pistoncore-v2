@@ -570,6 +570,50 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
 
 
+_INCLUSIVE_BOUNDARY_OPS = {
+    # conditions that get promoted to a wake
+    "is_less_than_or_equal_to", "is_greater_than_or_equal_to",
+    # explicit trigger comparisons with the same "or equal to" edge
+    "drops_to_or_below", "rises_to_or_above",
+}
+
+
+def _boundary_trigger(node: dict, resolver: Resolver, ctx: dict, trig_id=None):
+    """The "or equal to" edge of an inclusive numeric comparison.
+
+    HA's `numeric_state` `above:`/`below:` are STRICT, so a webCoRE `<= N` / `>= N`
+    loses its equal case: a value landing EXACTLY on N crosses neither bound and
+    wakes nothing. That failure is SILENT — the automation simply never runs and
+    nothing reports it, the same shape as the else bug. Emit a companion template
+    trigger that fires the moment the value becomes N, so the equal edge has its
+    own wake (Jeremy 2026-07-22: "the = could be a separate line as well").
+
+    A `state` trigger on the literal value would be fragile — "200" vs "200.0" —
+    so this compares numerically, and is fail-closed on unavailable sensors."""
+    if node.get("co") not in _INCLUSIVE_BOUNDARY_OPS:
+        return None
+    value = node.get("value")
+    # webCoRE stores comparison values as STRINGS ("200"), so _is_number (which
+    # requires a real int/float, and is relied on elsewhere to mean exactly that)
+    # would reject every genuine case. Accept anything numerically parseable.
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        float(value)
+    except (TypeError, ValueError):
+        return None
+    if not node.get("devices") or not node.get("attr"):
+        return None
+    entities = resolver.entities_for_attr(node["devices"], node["attr"], ctx)
+    if not entities:
+        return None
+    joiner = " and " if node.get("aggregation") == "all" else " or "
+    parts = [f"states('{e}') | is_number and states('{e}') | float(0) == {value}"
+             for e in entities]
+    body = parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
+    return {"kind": "template", "template": "{{ " + body + " }}", "id": trig_id}
+
+
 def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | None:
     """Condition-only piston: webCoRE subscribes to its conditions (promotion,
     webcore-piston.groovy :9242) — the HA equivalent is a trigger built from
@@ -910,6 +954,9 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         for trig in br["triggers"]:
             node = _trigger(trig, resolver, ctx, trig_id)
             triggers.append(node)
+            edge = _boundary_trigger(trig, resolver, ctx, trig_id)
+            if edge:
+                triggers.append(edge)   # the "or equal to" edge; see _boundary_trigger
             if has_wait and br["tcp"] == "c" and node["kind"] == "state" and node.get("to"):
                 opposite = resolver.opposite_state(node["to"])
                 if opposite is not None:
@@ -921,6 +968,9 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                 node = _promote(cond, resolver, ctx, trig_id)
                 if node:
                     triggers.append(node)
+                    edge = _boundary_trigger(cond, resolver, ctx, trig_id)
+                    if edge:
+                        triggers.append(edge)   # the "or equal to" edge
             if not triggers:
                 # nothing here can wake the piston: it is a runnable sequence,
                 # not an automation. Signal the script path.
