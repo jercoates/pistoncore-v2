@@ -812,7 +812,7 @@ def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | 
 
 def _has_wait(nodes: list) -> bool:
     for n in nodes:
-        if n["kind"] == "task" and n["command"] in ("wait", "waitForTime"):
+        if n["kind"] == "task" and n["command"] in ("wait", "waitForTime", "waitRandom"):
             return True
         if n["kind"] == "if" and (_has_wait(n["then"]) or _has_wait(n["else"])):
             return True
@@ -905,6 +905,15 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 continue
             if n["command"] == "setHSLColor":
                 out.append(_set_hsl(n, resolver, ctx))
+                continue
+            if n["command"] == "toggleLevel":
+                out.append(_toggle_level(n, resolver, ctx))
+                continue
+            if n["command"] == "toggleRandom":
+                out.append(_toggle_random(n, resolver, ctx))
+                continue
+            if n["command"] == "waitRandom":
+                out.append(_wait_random(n, ctx))
                 continue
             if n["command"] == "waitForTime":
                 # "Wait until <time-of-day>" -> HA wait_for_trigger on a time
@@ -1087,6 +1096,62 @@ def _set_hsl(n: dict, resolver: Resolver, ctx: dict) -> dict:
     data = {"hs_color": _json_dumps([round(float(hue) * 3.6, 1), round(float(sat), 1)]),
             "brightness_pct": level}
     return {"kind": "service", "service": service, "entities": entities, "data": data}
+
+
+def _toggle_level(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """toggleLevel -> "toggle between 0% and N%": if the light is currently on,
+    turn it off; else set it to N%. A STATEFUL toggle, so it reads the light's
+    own current on/off state in an inline template condition — self-contained
+    (survives PistonCore removal, reads only HA's own state)."""
+    params = n["params"]
+    level = (params[0] or {}).get("c") if params else None
+    if not isinstance(level, (int, float)) or isinstance(level, bool):
+        raise NotYetImplemented("toggleLevel with a non-constant level", **ctx)
+    ents = resolver.entities_for_command(n["devices"], "setLevel", ctx)
+    off_service, _ = resolver.service_spec("off", ents[0], ctx)
+    on_service, data_spec = resolver.service_spec("setLevel", ents[0], ctx)
+    on_data = {k: _param_value(v, [params[0]], ctx) for k, v in (data_spec or {}).items()}
+    cond = {"kind": "template", "template": "{{ is_state('" + ents[0] + "', 'on') }}"}
+    return {"kind": "if", "conditions": [cond],
+            "then": [{"kind": "service", "service": off_service, "entities": ents, "data": None}],
+            "else": [{"kind": "service", "service": on_service, "entities": ents, "data": on_data}]}
+
+
+def _toggle_random(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """toggleRandom -> "random toggle with P% probability for on": pick on with
+    probability P, off otherwise. HA has no random-set service, so a template
+    condition rolls the die (range(1,101)|random <= P) at RUN time — computed
+    per fire, not fixed at compile, which is the point of a random toggle."""
+    params = n["params"]
+    prob = (params[0] or {}).get("c") if params else None
+    if not isinstance(prob, (int, float)) or isinstance(prob, bool):
+        raise NotYetImplemented("toggleRandom with a non-constant probability", **ctx)
+    on_ents = resolver.entities_for_command(n["devices"], "on", ctx)
+    off_ents = resolver.entities_for_command(n["devices"], "off", ctx)
+    on_service, _ = resolver.service_spec("on", on_ents[0], ctx)
+    off_service, _ = resolver.service_spec("off", off_ents[0], ctx)
+    cond = {"kind": "template",
+            "template": "{{ range(1, 101) | random <= " + str(int(prob)) + " }}"}
+    return {"kind": "if", "conditions": [cond],
+            "then": [{"kind": "service", "service": on_service, "entities": on_ents, "data": None}],
+            "else": [{"kind": "service", "service": off_service, "entities": off_ents, "data": None}]}
+
+
+def _wait_random(n: dict, ctx: dict) -> dict:
+    """waitRandom -> "wait randomly between A and B": a delay whose seconds are
+    rolled at RUN time (range(min, max+1)|random), which is what a random wait
+    means — a fixed compile-time pick would defeat it. HA `delay:` renders its
+    seconds from a template."""
+    params = n["params"]
+    if len(params) < 2:
+        raise NotYetImplemented("waitRandom needs a minimum and a maximum duration", **ctx)
+    lo = _duration_seconds(params[0], ctx, "minimum wait")
+    hi = _duration_seconds(params[1], ctx, "maximum wait")
+    lo_i, hi_i = int(lo), int(hi)
+    if hi_i < lo_i:
+        lo_i, hi_i = hi_i, lo_i
+    expr = "{{ range(" + str(lo_i) + ", " + str(hi_i + 1) + ") | random }}"
+    return {"kind": "delay", "delay_seconds": expr}
 
 
 def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
