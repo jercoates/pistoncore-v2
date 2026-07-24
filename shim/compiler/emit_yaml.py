@@ -327,6 +327,9 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
 
     if cond.get("lo_type") == "v":
         var = cond.get("lo_var")
+        # $time is_any -> no operand, always true (webCoRE's own "matches any time")
+        if var == "time" and co == "is_any":
+            return {"kind": "template", "template": "{{ true }}"}
         # $time between-window -> HA's native time condition
         if (var == "time" and co == "is_between"
                 and cond.get("value_vt") == "time" and cond.get("value2_vt") == "time"
@@ -525,6 +528,72 @@ def _direction_condition(trig: dict, ctx: dict) -> dict | None:
     return {"kind": "template", "template": "{{ " + body + " }}"}
 
 
+# Every trigger-classified node's own HA filter (to:/above:/below:) already
+# proves its truth just by firing — that's why _condition() is never called on
+# them normally. It stops being true the moment there's an ELSE: webCoRE
+# subscribes to the whole ATTRIBUTE and re-decides the SAME comparison on
+# every change, both directions, so an else needs the compiler to replicate
+# both halves of that: a condition that re-checks the comparison right now
+# (routes then vs else), and a mirrored wake for the direction the primary
+# trigger's filter can't see (so else is ever actually reached, not just
+# skipped until some unrelated event). _TRIGGER_RECHECK_OP reuses
+# _condition()'s existing dispatch instead of duplicating boolean logic per
+# operator — the trigger op and its "is the comparison true right now"
+# sibling differ only in name, not in what they test.
+_TRIGGER_RECHECK_OP = {
+    "changes_to": "is",
+    "changes_away_from": "is_different_than",
+    "changes_to_any_of": "is_any_of",
+    "changes_away_from_any_of": "is_not_any_of",
+    "stays": "is", "stays_equal_to": "is_equal_to",
+    "stays_any_of": "is_any_of",
+    "stays_away_from": "is_different_than",
+    "stays_away_from_any_of": "is_not_any_of",
+    "stays_different_than": "is_different_than",
+    "rises_above": "is_greater_than", "rises_to_or_above": "is_greater_than_or_equal_to",
+    "drops_below": "is_less_than", "drops_to_or_below": "is_less_than_or_equal_to",
+    "remains_above": "is_greater_than", "remains_above_or_equal_to": "is_greater_than_or_equal_to",
+    "remains_below": "is_less_than", "remains_below_or_equal_to": "is_less_than_or_equal_to",
+    "stays_greater_than": "is_greater_than", "stays_greater_than_or_equal_to": "is_greater_than_or_equal_to",
+    "stays_less_than": "is_less_than", "stays_less_than_or_equal_to": "is_less_than_or_equal_to",
+    "enters_range": "is_inside_of_range", "remains_inside_of_range": "is_inside_of_range",
+    "stays_inside_of_range": "is_inside_of_range",
+    "exits_range": "is_outside_of_range", "remains_outside_of_range": "is_outside_of_range",
+    "stays_outside_of_range": "is_outside_of_range",
+    "becomes_even": "is_even", "remains_even": "is_even", "stays_even": "is_even",
+    "becomes_odd": "is_odd", "remains_odd": "is_odd", "stays_odd": "is_odd",
+}
+
+# The mirrored wake for ops whose HA shape can't be flipped by swapping a
+# built node's to:/from:/above:/below: (that generic swap, in _emit_branch,
+# covers the equality/numeric-bound families) — these need the SIBLING op
+# recompiled through _trigger() itself, since the opposite direction is a
+# differently-shaped construct (template vs numeric_state) or a different
+# named comparison, not just a flipped field.
+_OPPOSITE_TRIGGER_OP = {
+    "becomes_even": "becomes_odd", "becomes_odd": "becomes_even",
+    "remains_even": "remains_odd", "remains_odd": "remains_even",
+    "stays_even": "stays_odd", "stays_odd": "stays_even",
+    "enters_range": "exits_range", "exits_range": "enters_range",
+    "remains_inside_of_range": "remains_outside_of_range",
+    "remains_outside_of_range": "remains_inside_of_range",
+    "stays_inside_of_range": "stays_outside_of_range",
+    "stays_outside_of_range": "stays_inside_of_range",
+}
+
+
+def _recheck_condition(trig: dict, resolver: Resolver, ctx: dict) -> dict | None:
+    """See _TRIGGER_RECHECK_OP. Builds a synthetic condition node from the
+    trigger's own IR (same shape _cond_node already produces, co swapped to
+    its instantaneous-check sibling) and runs it through the real _condition()
+    dispatch — zero new boolean logic, just borrowing what's already there."""
+    mapped = _TRIGGER_RECHECK_OP.get(trig.get("co"))
+    if mapped is None or trig.get("lo_type") == "v":
+        return None
+    synthetic = dict(trig, co=mapped)
+    return _condition(synthetic, resolver, ctx)
+
+
 def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     co = trig["co"]
     if trig.get("lo_type") == "v":
@@ -613,6 +682,19 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
         node = {"kind": "numeric_state", "entities": entities,
                 "above": value, "below": trig.get("value2"), "id": trig_id}
         if hold and co != "enters_range":
+            node["for"] = hold
+        return node
+    if co in ("exits_range", "remains_outside_of_range", "stays_outside_of_range"):
+        # the negation of enters_range: HA's numeric_state with above+below
+        # only fires on ENTERING the window (both bounds newly satisfied at
+        # once) — there's no native trigger for "value LEFT the range," so
+        # this needs a template that's true exactly when the value sits
+        # outside [value, value2], firing on the false->true transition.
+        joiner = " and " if trig.get("aggregation") == "all" else " or "
+        parts = [_num_between(e, value, trig.get("value2"), negate=True) for e in entities]
+        body = parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
+        node = {"kind": "template", "template": "{{ " + body + " }}", "id": trig_id}
+        if hold and co != "exits_range":
             node["for"] = hold
         return node
     # "remains above N for T" -> numeric_state with `for:` (HA native)
@@ -1031,7 +1113,6 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     cancel_triggers = []
     conditions = []
     direction_conds = []
-    promoted = False
 
     if br["kind"] == "timer":
         t = dict(br["timer"])
@@ -1069,7 +1150,6 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                 # nothing here can wake the piston: it is a runnable sequence,
                 # not an automation. Signal the script path.
                 raise _NoSubscriptions()
-            promoted = True
 
     if cancel_triggers:
         conditions.append({"kind": "trigger", "id": "fire"})
@@ -1086,37 +1166,58 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)
 
+    if else_actions:
+        # EXPLICIT trigger-classified nodes (ct:"t" straight from the JSON —
+        # the shim stamps this on almost every real save, so this is the
+        # COMMON case, unlike the promoted-only fix below which only covers
+        # triggerless pistons). br["triggers"] here is still the raw IR
+        # (_cond_node shape), never the built HA node — that's exactly what
+        # _recheck_condition/_OPPOSITE_TRIGGER_OP need. See their docstrings
+        # for why both a re-check and a mirrored wake are required.
+        for trig in br["triggers"]:
+            rc = _recheck_condition(trig, resolver, ctx)
+            if rc:
+                cond_nodes.append(rc)
+            opp_co = _OPPOSITE_TRIGGER_OP.get(trig.get("co"))
+            if opp_co:
+                triggers.append(_trigger(dict(trig, co=opp_co), resolver, ctx, trig_id))
+
     if else_actions and cond_nodes:
         # else must NOT run on a cancel-trigger pass, so the template
         # conditions move inside an if-action; only the trigger gate stays
         # at automation level.
         #
-        # A condition promoted to a directional numeric trigger (below:N / above:N)
-        # only wakes on ONE crossing, so the else could never run — webCoRE instead
-        # subscribes to the ATTRIBUTE and re-decides on ANY change, both directions.
-        # The compiler honors the else by emitting the OPPOSITE-direction trigger
-        # itself (Jeremy 2026-07-22: the user writes one if/else; the compiler keeps
-        # the promise — never a hand-written second if). The inner if/else below then
-        # re-evaluates on each wake and routes then vs else correctly.
-        if promoted:
-            for node in list(triggers):
-                kind = node.get("kind")
-                if kind == "numeric_state":
-                    # level comparison (temp/humidity/battery/lux/... any sensor):
-                    # below:N wakes on the down-crossing, add above:N for the up.
-                    if "below" in node and "above" not in node:
-                        triggers.append({"kind": "numeric_state", "entities": node["entities"],
-                                         "above": node["below"], "id": node.get("id")})
-                    elif "above" in node and "below" not in node:
-                        triggers.append({"kind": "numeric_state", "entities": node["entities"],
-                                         "below": node["above"], "id": node.get("id")})
-                elif kind == "state" and node.get("to") is not None and node.get("from") is None:
-                    # equality condition (door open/closed, presence, lock, mode,
-                    # a switch used as a condition): to:X wakes on ENTERING X, add
-                    # from:X so LEAVING X wakes the else too. Works for binary and
-                    # multi-state values alike — the inner if re-decides on each.
-                    triggers.append({"kind": "state", "entities": node["entities"],
-                                     "from": node["to"], "id": node.get("id")})
+        # A directional numeric/state trigger (below:N / above:N, to:X / from:X —
+        # promoted OR explicit, same shape either way) only wakes on ONE crossing,
+        # so the else could never run — webCoRE instead subscribes to the ATTRIBUTE
+        # and re-decides on ANY change, both directions. The compiler honors the
+        # else by emitting the OPPOSITE-direction trigger itself (Jeremy 2026-07-22:
+        # the user writes one if/else; the compiler keeps the promise — never a
+        # hand-written second if). The inner if/else below then re-evaluates on
+        # each wake and routes then vs else correctly.
+        for node in list(triggers):
+            kind = node.get("kind")
+            if kind == "numeric_state":
+                # level comparison (temp/humidity/battery/lux/... any sensor):
+                # below:N wakes on the down-crossing, add above:N for the up.
+                if "below" in node and "above" not in node:
+                    triggers.append({"kind": "numeric_state", "entities": node["entities"],
+                                     "above": node["below"], "id": node.get("id")})
+                elif "above" in node and "below" not in node:
+                    triggers.append({"kind": "numeric_state", "entities": node["entities"],
+                                     "below": node["above"], "id": node.get("id")})
+            elif kind == "state" and node.get("to") is not None and node.get("from") is None:
+                # equality condition (door open/closed, presence, lock, mode,
+                # a switch used as a condition): to:X wakes on ENTERING X, add
+                # from:X so LEAVING X wakes the else too. Works for binary and
+                # multi-state values alike — the inner if re-decides on each.
+                triggers.append({"kind": "state", "entities": node["entities"],
+                                 "from": node["to"], "id": node.get("id")})
+            elif kind == "state" and node.get("from") is not None and node.get("to") is None:
+                # the mirror image: stays_away_from/changes_away_from wake on
+                # LEAVING X (from:X) — add to:X so ENTERING X wakes the else too.
+                triggers.append({"kind": "state", "entities": node["entities"],
+                                 "to": node["from"], "id": node.get("id")})
         actions = [{"kind": "if", "conditions": cond_nodes,
                     "then": then_actions, "else": else_actions}]
     elif else_actions:
