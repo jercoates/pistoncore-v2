@@ -74,6 +74,23 @@ def _synthetic_maps(piston):
     names = {str(v.get("n")) for v in (piston.get("v") or [])}
     real = sorted(h for h in hashes if h not in names)
 
+    # Virtual commands (flashLevel, fadeLevel, setHSLColor, adjustLevel, …) don't
+    # resolve on their OWN name — they delegate to the base capability they
+    # "require" (vocab `r`, e.g. fadeLevel -> setLevel). A real device that
+    # supports the virtual command always has the base command bound, so the
+    # synthetic map must too, or these pistons error on a missing base binding
+    # that wouldn't be missing in production. Fold each seen command's `r`
+    # requirements into the binding set.
+    try:
+        _vocab = json.load(open(os.path.join(os.path.dirname(SNAPSHOT),
+                                             "webcore_vocab.json"), encoding="utf-8"))
+        _vc = {**_vocab.get("commands", {}), **_vocab.get("virtualCommands", {})}
+        for c in list(cmds):
+            for base in (_vc.get(c, {}) or {}).get("r", []) or []:
+                cmds.add(str(base))
+    except (OSError, ValueError):
+        pass
+
     attrs = sorted(attrs) or ["switch"]
     cmds = sorted(cmds) or ["on"]
     reso = {}

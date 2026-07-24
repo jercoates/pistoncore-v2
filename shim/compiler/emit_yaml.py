@@ -900,6 +900,12 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] in ("flashLevel", "flashColor"):
                 out.append(_flash(n, resolver, ctx))
                 continue
+            if n["command"] == "fadeLevel":
+                out.extend(_fade(n, resolver, ctx))
+                continue
+            if n["command"] == "setHSLColor":
+                out.append(_set_hsl(n, resolver, ctx))
+                continue
             if n["command"] == "wolRequest":
                 # no device target — a pure data call to wake_on_lan.send_magic_packet
                 # (VERIFIED: home-assistant.io/actions/wake_on_lan.send_magic_packet/,
@@ -991,6 +997,78 @@ def _flash_delay_ms(op: dict, ctx: dict) -> int:
     unit = op.get("vt", "s")
     ms = {"ms": n, "s": n * 1000, "m": n * 60000, "h": n * 3600000}.get(unit, n * 1000)
     return int(ms)
+
+
+def _duration_seconds(op: dict, ctx: dict, what: str = "duration"):
+    """A duration operand -> seconds, for HA's `transition:` (fade time).
+    transition takes a number of seconds and tolerates fractions."""
+    op = op or {}
+    n = op.get("c")
+    if not isinstance(n, (int, float)) or isinstance(n, bool):
+        raise NotYetImplemented(f"{what} must be a fixed number", **ctx)
+    unit = op.get("vt", "s")
+    secs = {"ms": n / 1000, "s": n, "m": n * 60, "h": n * 3600}.get(unit, n)
+    return int(secs) if float(secs).is_integer() else round(secs, 3)
+
+
+def _fade(n: dict, resolver: Resolver, ctx: dict) -> list:
+    """fadeLevel -> HA's native brightness transition. HA `light.turn_on`
+    carries a `transition:` (seconds) that ramps brightness smoothly, which is
+    exactly webCoRE's fade. Params: [0] starting level (optional — omit to fade
+    from the current level), [1] final level, [2] duration, [3] optional
+    'only if switch is …'. A starting level is set instantly first, then the
+    fade to final runs over `transition`. Reuses the setLevel service/data
+    mapping so brightness_pct comes from command_maps.json."""
+    params = n["params"]
+    if len(params) < 3:
+        raise NotYetImplemented(
+            "fadeLevel needs a final level and a duration", **ctx)
+    if len(params) > 3 and params[3] and (params[3] or {}).get("c") is not None:
+        raise NotYetImplemented(
+            "fadeLevel with an 'only if switch is …' guard is not compiled yet", **ctx)
+    entities = resolver.entities_for_command(n["devices"], "setLevel", ctx)
+    service, data_spec = resolver.service_spec("setLevel", entities[0], ctx)
+    if not data_spec:
+        raise NotYetImplemented("fadeLevel: 'setLevel' has no data mapping on this device", **ctx)
+    nodes = []
+    start = (params[0] or {}).get("c")
+    if isinstance(start, (int, float)) and not isinstance(start, bool):
+        nodes.append({"kind": "service", "service": service, "entities": entities,
+                      "data": {k: _param_value(v, [params[0]], ctx) for k, v in data_spec.items()}})
+    final = (params[1] or {}).get("c")
+    if not isinstance(final, (int, float)) or isinstance(final, bool):
+        raise NotYetImplemented("fadeLevel with a non-constant final level", **ctx)
+    data = {k: _param_value(v, [params[1]], ctx) for k, v in data_spec.items()}
+    data["transition"] = _duration_seconds(params[2], ctx, "fade duration")
+    nodes.append({"kind": "service", "service": service, "entities": entities, "data": data})
+    return nodes
+
+
+def _set_hsl(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """setHSLColor -> HA `light.turn_on` with hs_color + brightness. webCoRE's
+    hue/saturation are 0-100 (same convention as the hue_hs/sat_hs transforms
+    the plain setHue/setSaturation use — HA hue is 0-360, so ×3.6; saturation
+    stays 0-100), and its L is a brightness percent -> brightness_pct.
+    Params: [0] hue, [1] saturation, [2] level, [3] optional 'only if switch'."""
+    params = n["params"]
+    if len(params) < 3:
+        raise NotYetImplemented("setHSLColor needs hue, saturation and level", **ctx)
+    if len(params) > 3 and params[3] and (params[3] or {}).get("c") is not None:
+        raise NotYetImplemented(
+            "setHSLColor with an 'only if switch is …' guard is not compiled yet", **ctx)
+    entities = resolver.entities_for_command(n["devices"], "setColor", ctx)
+    service, _ = resolver.service_spec("setColor", entities[0], ctx)
+
+    def num(p, label):
+        v = (p or {}).get("c")
+        if not isinstance(v, (int, float)) or isinstance(v, bool):
+            raise NotYetImplemented(f"setHSLColor with a non-constant {label}", **ctx)
+        return v
+
+    hue, sat, level = num(params[0], "hue"), num(params[1], "saturation"), num(params[2], "level")
+    data = {"hs_color": _json_dumps([round(float(hue) * 3.6, 1), round(float(sat), 1)]),
+            "brightness_pct": level}
+    return {"kind": "service", "service": service, "entities": entities, "data": data}
 
 
 def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
