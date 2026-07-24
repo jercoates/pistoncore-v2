@@ -595,6 +595,22 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
             node["for"] = hold
         return node
 
+    # ── parity family ── (becomes_even/odd = edge into that parity;
+    # remains_even/odd, stays_even/odd = same edge held for a duration —
+    # PyScript treats stays_* as a synonym of remains_*, emit_pyscript.py:535)
+    PARITY = ("becomes_even", "becomes_odd", "remains_even", "remains_odd",
+              "stays_even", "stays_odd")
+    if co in PARITY:
+        want = 0 if co.endswith("even") else 1
+        joiner = " and " if trig.get("aggregation") == "all" else " or "
+        parts = [f"states('{e}') | is_number and states('{e}') | int(0) % 2 == {want}"
+                 for e in entities]
+        body = parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
+        node = {"kind": "template", "template": "{{ " + body + " }}", "id": trig_id}
+        if hold and co not in ("becomes_even", "becomes_odd"):
+            node["for"] = hold
+        return node
+
     # ── time ──
     if co == "happens_daily_at" and _is_number(value):
         return {"kind": "time", "at": _minutes_hms(int(value)), "id": trig_id}

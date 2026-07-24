@@ -49,6 +49,9 @@
 {%- elif t.kind == 'template' -%}
 - trigger: template
   value_template: "{{ t.template }}"
+{%- if t.get('for') %}
+  for: "{{ t.get('for') }}"
+{%- endif %}
 {%- elif t.kind == 'sun' -%}
 - trigger: sun
   event: {{ t.event }}
