@@ -900,7 +900,7 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] in ("flashLevel", "flashColor"):
                 out.append(_flash(n, resolver, ctx))
                 continue
-            if n["command"] == "fadeLevel":
+            if n["command"] in ("fadeLevel", "fadeColorTemperature", "fadeHue", "fadeSaturation"):
                 out.extend(_fade(n, resolver, ctx))
                 continue
             if n["command"] == "setHSLColor":
@@ -1041,25 +1041,36 @@ def _duration_seconds(op: dict, ctx: dict, what: str = "duration"):
     return int(secs) if float(secs).is_integer() else round(secs, 3)
 
 
+# fade<X> -> the base set<X> command whose service/data it ramps. HA
+# `light.turn_on` carries a general `transition:` (seconds) that smoothly ramps
+# ANY of its target attributes — brightness, color_temp, hs_color — so every
+# fade is the same shape: the base command's data spec + transition. (The
+# adjust<X> family is NOT here: only brightness has a native step field
+# (brightness_step_pct); color-temp/hue/saturation adjust-by-delta has no
+# confirmed HA field and stays research-gated.)
+_FADE_BASE = {"fadeLevel": "setLevel", "fadeColorTemperature": "setColorTemperature",
+              "fadeHue": "setHue", "fadeSaturation": "setSaturation"}
+
+
 def _fade(n: dict, resolver: Resolver, ctx: dict) -> list:
-    """fadeLevel -> HA's native brightness transition. HA `light.turn_on`
-    carries a `transition:` (seconds) that ramps brightness smoothly, which is
-    exactly webCoRE's fade. Params: [0] starting level (optional — omit to fade
-    from the current level), [1] final level, [2] duration, [3] optional
-    'only if switch is …'. A starting level is set instantly first, then the
-    fade to final runs over `transition`. Reuses the setLevel service/data
-    mapping so brightness_pct comes from command_maps.json."""
+    """fade<X> -> HA's native `transition:` ramp on light.turn_on. Params:
+    [0] starting value (optional — omit to fade from the current value),
+    [1] final value, [2] duration, [3] optional 'only if switch is …'. A
+    starting value is set instantly first, then the fade to final runs over
+    `transition`. Reuses the base set<X> service/data mapping (command_maps.json)
+    so the attribute key + any transform stay data-driven."""
+    cmd = n["command"]
+    base = _FADE_BASE[cmd]
     params = n["params"]
     if len(params) < 3:
-        raise NotYetImplemented(
-            "fadeLevel needs a final level and a duration", **ctx)
+        raise NotYetImplemented(f"{cmd} needs a final value and a duration", **ctx)
     if len(params) > 3 and params[3] and (params[3] or {}).get("c") is not None:
         raise NotYetImplemented(
-            "fadeLevel with an 'only if switch is …' guard is not compiled yet", **ctx)
-    entities = resolver.entities_for_command(n["devices"], "setLevel", ctx)
-    service, data_spec = resolver.service_spec("setLevel", entities[0], ctx)
+            f"{cmd} with an 'only if switch is …' guard is not compiled yet", **ctx)
+    entities = resolver.entities_for_command(n["devices"], base, ctx)
+    service, data_spec = resolver.service_spec(base, entities[0], ctx)
     if not data_spec:
-        raise NotYetImplemented("fadeLevel: 'setLevel' has no data mapping on this device", **ctx)
+        raise NotYetImplemented(f"{cmd}: '{base}' has no data mapping on this device", **ctx)
     nodes = []
     start = (params[0] or {}).get("c")
     if isinstance(start, (int, float)) and not isinstance(start, bool):
@@ -1067,7 +1078,7 @@ def _fade(n: dict, resolver: Resolver, ctx: dict) -> list:
                       "data": {k: _param_value(v, [params[0]], ctx) for k, v in data_spec.items()}})
     final = (params[1] or {}).get("c")
     if not isinstance(final, (int, float)) or isinstance(final, bool):
-        raise NotYetImplemented("fadeLevel with a non-constant final level", **ctx)
+        raise NotYetImplemented(f"{cmd} with a non-constant final value", **ctx)
     data = {k: _param_value(v, [params[1]], ctx) for k, v in data_spec.items()}
     data["transition"] = _duration_seconds(params[2], ctx, "fade duration")
     nodes.append({"kind": "service", "service": service, "entities": entities, "data": data})
