@@ -826,6 +826,24 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "wait":
                 out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
                 continue
+            if n["command"] == "setSwitch":
+                # "Set switch to on/off" — a constant on/off value is just the
+                # on/off command, resolved through the same on/off mapping any
+                # other device command uses. A NON-constant value (variable/
+                # expression) would need a choose: picking turn_on vs turn_off
+                # at runtime — routed to PyScript for now (it evaluates the
+                # value and calls the service directly), an honest band choice,
+                # never a dropped action.
+                p0 = n["params"][0] if n["params"] else {}
+                val = str(p0.get("c") or "").strip().lower()
+                if val not in ("on", "off"):
+                    raise NotYetImplemented(
+                        "setSwitch with a non-constant on/off value requires PyScript", **ctx)
+                entities = resolver.entities_for_command(n["devices"], val, ctx)
+                service, _ = resolver.service_spec(val, entities[0], ctx)
+                out.append({"kind": "service", "service": service,
+                            "entities": entities, "data": None})
+                continue
             if n["command"] == "setLocationMode":
                 mode = (n["params"][0] or {}).get("c") if n["params"] else None
                 if not isinstance(mode, str):
