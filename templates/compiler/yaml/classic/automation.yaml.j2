@@ -115,7 +115,12 @@
 
 {%- macro action_block(a) -%}
 {%- if a.kind == 'delay' -%}
+{%- if a.get('delay_ms') is not none -%}
+- delay:
+    milliseconds: {{ a.get('delay_ms') }}
+{%- else -%}
 - delay: "{{ a.delay }}"
+{%- endif -%}
 {%- elif a.kind == 'service' -%}
 - action: {{ a.service }}
 {%- if a.get('data') %}

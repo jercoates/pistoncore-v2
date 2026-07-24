@@ -879,6 +879,9 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] in ("pausePiston", "resumePiston"):
                 out.append(_piston_pause_resume(n, ctx))
                 continue
+            if n["command"] in ("flashLevel", "flashColor"):
+                out.append(_flash(n, resolver, ctx))
+                continue
             if n["command"] == "wolRequest":
                 # no device target — a pure data call to wake_on_lan.send_magic_packet
                 # (VERIFIED: home-assistant.io/actions/wake_on_lan.send_magic_packet/,
@@ -957,6 +960,76 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
     return out
+
+
+def _flash_delay_ms(op: dict, ctx: dict) -> int:
+    """A flash half-duration -> whole milliseconds. Flashes run on sub-second
+    times, so unlike the coarse _delay_hms (whole seconds, for `wait`) this
+    keeps millisecond resolution — HA `delay:` takes a `milliseconds:` mapping."""
+    op = op or {}
+    n = op.get("c")
+    if not isinstance(n, (int, float)) or isinstance(n, bool):
+        raise NotYetImplemented("flash duration must be a fixed number", **ctx)
+    unit = op.get("vt", "s")
+    ms = {"ms": n, "s": n * 1000, "m": n * 60000, "h": n * 3600000}.get(unit, n * 1000)
+    return int(ms)
+
+
+def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """flashLevel/flashColor -> a counted `repeat:` alternating two light states.
+
+    HA's own light `flash:` param is only `short`/`long` — a fixed
+    notification blink with no count and no custom levels/colors (VERIFIED,
+    home-assistant.io/actions/light.turn_on/), so webCoRE's "flash A for t1 /
+    B for t2, N times" has no single-call equivalent. The faithful
+    reproduction is a counted repeat whose body sets state A, waits, sets
+    state B, waits — the exact shape of HA's own flashing-light example in the
+    scripts docs.
+
+    Params (vocab): [0] level/color A, [1] duration A, [2] level/color B,
+    [3] duration B, [4] flash count, [5] optional "only if switch is on/off".
+    The level/color halves reuse the SAME setLevel/setColor service+data spec
+    the plain commands compile through (command_maps.json), so a band edit to
+    those maps carries into flash for free.
+
+    Deliberately does NOT restore prior state afterward (leaves the light in
+    state B): HA has no auto-restore, and a scene snapshot/restore around the
+    block would make the compiled automation carry hidden state — documented
+    in the help file, not silently approximated."""
+    params = n["params"]
+    if len(params) < 5:
+        raise NotYetImplemented(
+            f"{n['command']} needs five parameters (two states, two durations, "
+            f"a count)", **ctx)
+    base = "setLevel" if n["command"] == "flashLevel" else "setColor"
+    entities = resolver.entities_for_command(n["devices"], base, ctx)
+    service, data_spec = resolver.service_spec(base, entities[0], ctx)
+    if not data_spec:
+        raise NotYetImplemented(
+            f"{n['command']}: '{base}' has no data mapping on this device", **ctx)
+    raw_count = (params[4] or {}).get("c")
+    try:
+        count = int(float(raw_count))
+    except (TypeError, ValueError):
+        raise NotYetImplemented(f"{n['command']} with a non-constant flash count", **ctx)
+    if params[5] and (params[5] or {}).get("c") is not None:
+        # "only if switch is on/off" gate — deliberately unhandled for now
+        # rather than silently dropped; it needs a condition wrapping the whole
+        # repeat, and no corpus piston exercises it. Honest NYI (routes to
+        # PyScript), never a quiet omission of the guard.
+        raise NotYetImplemented(
+            f"{n['command']} with an 'only if switch is …' guard is not compiled "
+            f"yet", **ctx)
+
+    def half(value_param, dur_param):
+        data = {k: _param_value(v, [value_param], ctx) for k, v in data_spec.items()}
+        return [
+            {"kind": "service", "service": service, "entities": entities, "data": data},
+            {"kind": "delay", "delay_ms": _flash_delay_ms(dur_param, ctx)},
+        ]
+
+    body = half(params[0], params[1]) + half(params[2], params[3])
+    return {"kind": "repeat", "count": count, "body": body}
 
 
 def _piston_pause_resume(n: dict, ctx: dict) -> dict:
