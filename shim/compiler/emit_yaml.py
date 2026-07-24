@@ -167,6 +167,21 @@ def _is_number(v) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def _num_str(v) -> bool:
+    """True if v is a number OR a string that parses as one. webCoRE stores
+    comparison values as strings ("50"), so a value guard needs this, not
+    _is_number — which requires a real int/float and is relied on ELSEWHERE to
+    mean exactly that (e.g. distinguishing a numeric time bound from a sunrise
+    preset), so it must not be loosened globally."""
+    if v is None or isinstance(v, bool):
+        return False
+    try:
+        float(v)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
 def compile_yaml(piston: dict, piston_id: str, piston_name: str,
                  resolution_map: dict, globals_map: dict | None = None) -> dict:
     """Returns {"target": "yaml", "yaml": str, "reasons": [], "auto_ids": [...]}.
@@ -377,7 +392,12 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     if co in _NUMERIC_OPS:
         op = _NUMERIC_OPS[co]
         parts = [_num_cmp(e, op, cond["value"]) for e in entities]
-    elif co == "is_between" and _is_number(cond["value"]) and _is_number(cond["value2"]):
+    elif co == "is_between" and _num_str(cond["value"]) and _num_str(cond["value2"]):
+        # webCoRE stores bounds as strings; _is_number rejected every real case,
+        # so numeric is_between silently routed to PyScript instead of compiling
+        # to a native YAML template like its siblings is_not_between /
+        # is_inside_of_range do. (Round E, 2026-07-23 — same string-vs-number
+        # class as the boundary "=" fix.)
         parts = [_num_between(e, cond["value"], cond["value2"]) for e in entities]
     elif co in _EQUALITY_OPS:
         op = _EQUALITY_OPS[co]
