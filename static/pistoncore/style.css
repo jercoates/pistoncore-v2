@@ -168,6 +168,9 @@ button {
 .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid transparent; }
 .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
 
+.btn-ghost.piston-delete { color: var(--red); border-color: rgba(244, 67, 54, 0.6); margin-left: 6px; }
+.btn-ghost.piston-delete:hover { background: rgba(244, 67, 54, 0.12); border-color: var(--red); color: var(--red); }
+
 .btn-sm { padding: 4px 10px; font-size: 12px; }
 
 /* ── Page header — title + page-specific actions (list.js pattern) ── */
