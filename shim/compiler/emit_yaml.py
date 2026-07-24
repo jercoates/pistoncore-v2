@@ -236,10 +236,22 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
         cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]]
         els = _resolve_actions(br["else"], resolver, ctx)
         if cond_nodes:
-            actions.append({"kind": "if", "conditions": cond_nodes,
-                            "then": body, "else": els})
+            stmt = [{"kind": "if", "conditions": cond_nodes,
+                     "then": body, "else": els}]
         else:
-            actions.extend(body)
+            stmt = body
+        # RESTRICTIONS on the script path. A script has no automation-level
+        # conditions to hang these on, so the restriction wraps the WHOLE
+        # statement — its else included — in a gate with no else of its own:
+        # a failed restriction runs nothing at all. Omitting this silently
+        # dropped the gate, the same failure the restriction work exists to
+        # prevent (found 2026-07-23 while auditing the automation-path fix).
+        rest_nodes = [_condition(r, resolver, ctx)
+                      for r in (br.get("restrictions") or [])]
+        if rest_nodes:
+            stmt = [{"kind": "if", "conditions": rest_nodes,
+                     "then": stmt, "else": []}]
+        actions.extend(stmt)
     script_id = f"pistoncore_{piston_id}"
     block = _env.get_template("script.yaml.j2").render(
         script_id=script_id,
