@@ -225,17 +225,20 @@
   "stop": {
     "media_player": "media_player.media_stop",
     "cover": "cover.stop_cover",
-    "vacuum": "vacuum.stop"
+    "vacuum": "vacuum.stop",
+    "timer": "timer.finish"
   },
   "pause": {
     "media_player": "media_player.media_pause",
-    "vacuum": "vacuum.pause"
+    "vacuum": "vacuum.pause",
+    "timer": "timer.pause"
   },
   "play": {
     "media_player": "media_player.media_play"
   },
   "start": {
-    "vacuum": "vacuum.start"
+    "vacuum": "vacuum.start",
+    "timer": "timer.start"
   },
   "mute": {
     "media_player": {
@@ -464,5 +467,24 @@
         "brightness_step_pct": "$1"
       }
     }
+  },
+  "startActivity": {
+    "remote": {
+      "service": "remote.turn_on",
+      "data": {
+        "activity": "$1"
+      }
+    }
+  },
+  "setTimeRemaining": {
+    "timer": {
+      "service": "timer.start",
+      "data": {
+        "duration": "$1"
+      }
+    }
+  },
+  "cancel": {
+    "timer": "timer.cancel"
   }
 }

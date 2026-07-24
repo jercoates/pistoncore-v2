@@ -879,6 +879,21 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] in ("pausePiston", "resumePiston"):
                 out.append(_piston_pause_resume(n, ctx))
                 continue
+            if n["command"] == "wolRequest":
+                # no device target — a pure data call to wake_on_lan.send_magic_packet
+                # (VERIFIED: home-assistant.io/actions/wake_on_lan.send_magic_packet/,
+                # mac required, secureon_password optional 6-byte hex "00:aa:22:bb:33:cc").
+                params = n["params"]
+                mac = (params[0] or {}).get("c") if params else None
+                if not isinstance(mac, str) or not mac.strip():
+                    raise NotYetImplemented("wolRequest without a MAC address", **ctx)
+                data = {"mac": _json_dumps(mac)}
+                secure = (params[1] or {}).get("c") if len(params) > 1 else None
+                if isinstance(secure, str) and secure.strip():
+                    data["secureon_password"] = _json_dumps(secure)
+                out.append({"kind": "service", "service": "wake_on_lan.send_magic_packet",
+                            "entities": [], "data": data})
+                continue
             if not n["devices"] or n["command"] in resolver.command_maps.get("_piston_scope", []):
                 # piston-scope command (setVariable, log, setState, tiles, ...)
                 # — piston state has no YAML equivalent, whatever devices the
