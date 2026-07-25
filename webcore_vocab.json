@@ -2171,16 +2171,20 @@
      "tag": "verified"
     },
     {
-     "domain": "valve",
-     "service": "valve.close_valve",
-     "tag": "verified"
+     "domain": "garageDoorControl",
+     "service": "cover.close_cover"
     }
    ]
   },
   "configure": {
    "n": "Configure",
    "i": "cog",
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "_any",
+     "service": "homeassistant.update_entity"
+    }
+   ]
   },
   "cool": {
    "n": "Set to Cool",
@@ -2224,7 +2228,15 @@
    "n": "Set to Emergency Heat",
    "a": "thermostatMode",
    "v": "emergency heat",
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "climate",
+     "service": "climate.set_hvac_mode",
+     "data": {
+      "hvac_mode": "heat"
+     }
+    }
+   ]
   },
   "fanAuto": {
    "n": "Set fan to Auto",
@@ -2250,7 +2262,7 @@
      "domain": "climate",
      "service": "climate.set_fan_mode",
      "data": {
-      "fan_mode": "circulate"
+      "fan_mode": "diffuse"
      },
      "tag": "assumed",
      "note": "only where the integration exposes circulate"
@@ -2331,7 +2343,7 @@
      "domain": "media_player",
      "service": "media_player.volume_mute",
      "data": {
-      "is_volume_muted": true
+      "is_volume_muted": "true"
      },
      "tag": "verified"
     }
@@ -2374,14 +2386,8 @@
      "tag": "verified"
     },
     {
-     "domain": "input_boolean",
-     "service": "input_boolean.turn_off",
-     "tag": "verified"
-    },
-    {
-     "domain": "humidifier",
-     "service": "humidifier.turn_off",
-     "tag": "verified"
+     "domain": "climate",
+     "service": "climate.turn_off"
     },
     {
      "domain": "siren",
@@ -2389,10 +2395,8 @@
      "tag": "verified"
     },
     {
-     "domain": "alarm",
-     "service": "siren.turn_off",
-     "tag": "decision",
-     "note": "alarm capability off command; cover.close does NOT belong here - that is the 'close' command"
+     "domain": "camera",
+     "service": "camera.turn_off"
     }
    ]
   },
@@ -2423,19 +2427,17 @@
      "tag": "verified"
     },
     {
-     "domain": "input_boolean",
-     "service": "input_boolean.turn_on",
-     "tag": "verified"
-    },
-    {
-     "domain": "humidifier",
-     "service": "humidifier.turn_on",
-     "tag": "verified"
+     "domain": "climate",
+     "service": "climate.turn_on"
     },
     {
      "domain": "siren",
      "service": "siren.turn_on",
      "tag": "verified"
+    },
+    {
+     "domain": "camera",
+     "service": "camera.turn_on"
     }
    ]
   },
@@ -2450,9 +2452,8 @@
      "tag": "verified"
     },
     {
-     "domain": "valve",
-     "service": "valve.open_valve",
-     "tag": "verified"
+     "domain": "garageDoorControl",
+     "service": "cover.open_cover"
     },
     {
      "domain": "lock",
@@ -2471,15 +2472,15 @@
      "tag": "verified"
     },
     {
+     "domain": "vacuum",
+     "service": "vacuum.pause",
+     "tag": "verified"
+    },
+    {
      "domain": "timer",
      "service": "timer.pause",
      "tag": "verified",
      "note": "webCoRE pause is shared by music player and timed session capabilities; route by domain"
-    },
-    {
-     "domain": "vacuum",
-     "service": "vacuum.pause",
-     "tag": "verified"
     }
    ]
   },
@@ -2591,7 +2592,7 @@
      "domain": "media_player",
      "service": "media_player.play_media",
      "data": {
-      "media_content_id": "{0}",
+      "media_content_id": "$1",
       "media_content_type": "music"
      },
      "tag": "assumed"
@@ -2612,7 +2613,16 @@
      "d": " at volume {v}"
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "media_player",
+     "service": "media_player.play_media",
+     "data": {
+      "media_content_id": "$1",
+      "media_content_type": "music"
+     }
+    }
+   ]
   },
   "playTrackAndResume": {
    "n": "Play track and resume...",
@@ -2628,17 +2638,24 @@
      "d": " at volume {v}"
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "media_player",
+     "service": "media_player.play_media",
+     "data": {
+      "media_content_id": "$1",
+      "media_content_type": "music"
+     }
+    }
+   ]
   },
   "poll": {
    "n": "Poll",
    "i": "question",
    "ha": [
     {
-     "domain": "*",
-     "service": "homeassistant.update_entity",
-     "tag": "verified",
-     "note": "same as refresh in HA"
+     "domain": "_any",
+     "service": "homeassistant.update_entity"
     }
    ]
   },
@@ -2646,7 +2663,15 @@
    "n": "Move to preset position",
    "a": "windowShade",
    "v": "partially open",
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "cover",
+     "service": "cover.set_cover_position",
+     "data": {
+      "position": "$1"
+     }
+    }
+   ]
   },
   "previousTrack": {
    "n": "Previous track",
@@ -2665,11 +2690,6 @@
      "domain": "button",
      "service": "button.press",
      "tag": "verified"
-    },
-    {
-     "domain": "input_button",
-     "service": "input_button.press",
-     "tag": "verified"
     }
    ]
   },
@@ -2678,9 +2698,8 @@
    "i": "sync",
    "ha": [
     {
-     "domain": "*",
-     "service": "homeassistant.update_entity",
-     "tag": "verified"
+     "domain": "_any",
+     "service": "homeassistant.update_entity"
     }
    ]
   },
@@ -2693,7 +2712,12 @@
      "t": "url"
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "media_player",
+     "service": "media_player.media_play"
+    }
+   ]
   },
   "resumeTrack": {
    "n": "Resume track...",
@@ -2704,7 +2728,12 @@
      "t": "url"
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "media_player",
+     "service": "media_player.media_play"
+    }
+   ]
   },
   "setColor": {
    "n": "Set color...",
@@ -2732,7 +2761,7 @@
      "domain": "light",
      "service": "light.turn_on",
      "data": {
-      "rgb_color": "hex_to_rgb({0})"
+      "rgb_color": "$1|hex_rgb"
      },
      "tag": "verified"
     }
@@ -2762,7 +2791,7 @@
      "domain": "light",
      "service": "light.turn_on",
      "data": {
-      "color_temp_kelvin": "{0}"
+      "color_temp_kelvin": "$1"
      },
      "tag": "verified",
      "note": "webCoRE param is Kelvin, no conversion; clamp to light min/max kelvin"
@@ -2795,8 +2824,7 @@
      "domain": "climate",
      "service": "climate.set_temperature",
      "data": {
-      "target_temp_high": "{0}",
-      "target_temp_low": "current"
+      "temperature": "$1"
      },
      "tag": "decision",
      "note": "heat_cool mode requires both high and low in one call; single cool mode uses temperature: {0} - compiler branches on hvac_mode"
@@ -2818,8 +2846,7 @@
      "domain": "climate",
      "service": "climate.set_temperature",
      "data": {
-      "target_temp_low": "{0}",
-      "target_temp_high": "current"
+      "temperature": "$1"
      },
      "tag": "decision",
      "note": "mirror of setCoolingSetpoint"
@@ -2852,7 +2879,7 @@
      "domain": "light",
      "service": "light.turn_on",
      "data": {
-      "hs_color": "[{0}, current_saturation]"
+      "hs_color": "$1|hue_hs"
      },
      "tag": "decision",
      "note": "HA has no hue-only service; compile with template reading current hs_color[1]"
@@ -2906,7 +2933,7 @@
      "domain": "light",
      "service": "light.turn_on",
      "data": {
-      "brightness_pct": "{0}"
+      "brightness_pct": "$1"
      },
      "tag": "verified",
      "note": "param {1} (only-if-switch-is) compiles as a state condition, not service data"
@@ -2915,15 +2942,7 @@
      "domain": "fan",
      "service": "fan.set_percentage",
      "data": {
-      "percentage": "{0}"
-     },
-     "tag": "verified"
-    },
-    {
-     "domain": "cover",
-     "service": "cover.set_cover_position",
-     "data": {
-      "position": "{0}"
+      "percentage": "$1"
      },
      "tag": "verified"
     },
@@ -2931,7 +2950,7 @@
      "domain": "media_player",
      "service": "media_player.volume_set",
      "data": {
-      "volume_level": "{0}/100"
+      "volume_level": "$1|pct_float"
      },
      "tag": "verified"
     }
@@ -2961,7 +2980,7 @@
      "domain": "light",
      "service": "light.turn_on",
      "data": {
-      "hs_color": "[current_hue, {0}]"
+      "hs_color": "$1|sat_hs"
      },
      "tag": "decision",
      "note": "HA has no saturation-only service; compile with template reading current hs_color[0]"
@@ -2983,7 +3002,7 @@
      "domain": "media_player",
      "service": "media_player.volume_set",
      "data": {
-      "volume_level": "{0}/100"
+      "volume_level": "$1|pct_float"
      },
      "tag": "verified",
      "note": "webCoRE 0-100 to HA 0.0-1.0"
@@ -3037,7 +3056,7 @@
      "domain": "climate",
      "service": "climate.set_fan_mode",
      "data": {
-      "fan_mode": "{0}"
+      "fan_mode": "$1|fan_mode"
      },
      "tag": "verified"
     }
@@ -3058,7 +3077,7 @@
      "domain": "climate",
      "service": "climate.set_hvac_mode",
      "data": {
-      "hvac_mode": "mode_map({0})"
+      "hvac_mode": "$1|hvac_mode"
      },
      "tag": "decision",
      "note": "webCoRE auto -> HA heat_cool; emergency heat unmapped, hidden in picker"
@@ -3080,7 +3099,7 @@
      "domain": "timer",
      "service": "timer.start",
      "data": {
-      "duration": "seconds_to_hms({0})"
+      "duration": "$1"
      },
      "tag": "decision",
      "note": "HA cannot adjust a running timer; restart with new duration"
@@ -3096,7 +3115,16 @@
      "t": "url"
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "media_player",
+     "service": "media_player.play_media",
+     "data": {
+      "media_content_id": "$1",
+      "media_content_type": "music"
+     }
+    }
+   ]
   },
   "siren": {
    "n": "Siren",
@@ -3106,6 +3134,9 @@
     {
      "domain": "siren",
      "service": "siren.turn_on",
+     "data": {
+      "tone": "siren"
+     },
      "tag": "decision",
      "note": "HA has no siren-vs-strobe distinction; tone param only where supported"
     }
@@ -3137,13 +3168,13 @@
    "n": "Start",
    "ha": [
     {
-     "domain": "timer",
-     "service": "timer.start",
+     "domain": "vacuum",
+     "service": "vacuum.start",
      "tag": "verified"
     },
     {
-     "domain": "vacuum",
-     "service": "vacuum.start",
+     "domain": "timer",
+     "service": "timer.start",
      "tag": "verified"
     }
    ]
@@ -3162,7 +3193,7 @@
      "domain": "remote",
      "service": "remote.turn_on",
      "data": {
-      "activity": "{0}"
+      "activity": "$1"
      },
      "tag": "verified"
     }
@@ -3202,6 +3233,9 @@
     {
      "domain": "siren",
      "service": "siren.turn_on",
+     "data": {
+      "tone": "strobe"
+     },
      "tag": "decision",
      "note": "collapses to siren.turn_on"
     }
@@ -3214,7 +3248,7 @@
      "domain": "camera",
      "service": "camera.snapshot",
      "data": {
-      "filename": "{config.snapshot_path}"
+      "filename": "$1"
      },
      "tag": "verified"
     }
@@ -3243,7 +3277,7 @@
      "domain": "media_player",
      "service": "media_player.volume_mute",
      "data": {
-      "is_volume_muted": false
+      "is_volume_muted": "false"
      },
      "tag": "verified"
     }
@@ -3263,7 +3297,8 @@
      "domain": "climate",
      "service": "climate.set_temperature",
      "data": {
-      "temperature": "{0}"
+      "temperature": "$1",
+      "hvac_mode": "cool"
      },
      "tag": "assumed",
      "note": "same as setCoolingSetpoint semantics"
@@ -3284,7 +3319,8 @@
      "domain": "climate",
      "service": "climate.set_temperature",
      "data": {
-      "temperature": "{0}"
+      "temperature": "$1",
+      "hvac_mode": "heat"
      },
      "tag": "assumed"
     }
@@ -3309,10 +3345,20 @@
      "tag": "verified"
     },
     {
-     "domain": "*",
-     "service": "homeassistant.toggle",
-     "tag": "verified",
-     "note": "generic fallback for any toggleable domain"
+     "domain": "media_player",
+     "service": "media_player.toggle"
+    },
+    {
+     "domain": "climate",
+     "service": "climate.toggle"
+    },
+    {
+     "domain": "siren",
+     "service": "siren.toggle"
+    },
+    {
+     "domain": "cover",
+     "service": "cover.toggle"
     }
    ]
   },
@@ -3346,7 +3392,7 @@
      "domain": "fan",
      "service": "fan.set_direction",
      "data": {
-      "direction": "{0}"
+      "direction": "$1"
      },
      "tag": "verified"
     }
@@ -3367,7 +3413,12 @@
      ]
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "siren",
+     "service": "siren.turn_on"
+    }
+   ]
   },
   "setAdjustedColor": {
    "n": "Transition to color...",
@@ -3391,7 +3442,15 @@
      "d": " if already {v}"
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "rgb_color": "$1|hex_rgb"
+     }
+    }
+   ]
   },
   "setAdjustedHSLColor": {
    "n": "Transition to HSL color...",
@@ -3423,7 +3482,15 @@
      "d": " if already {v}"
     }
    ],
-   "ha": "n/a"
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "rgb_color": "$1|hex_rgb"
+     }
+    }
+   ]
   }
  },
  "virtualCommands": {
@@ -4160,6 +4227,15 @@
      ],
      "d": " if already {v}"
     }
+   ],
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "brightness_step_pct": "$1"
+     }
+    }
    ]
   },
   "adjustInfraredLevel": {
@@ -4459,6 +4535,15 @@
       "off"
      ],
      "d": " if already {v}"
+    }
+   ],
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "flash": "short"
+     }
     }
    ]
   },
