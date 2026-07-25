@@ -77,12 +77,14 @@ def main() -> int:
 
 
 def test_else_on_trigger_only_if():
-    """Regression (semantic-audit find + code review, 2026-07-19): an
-    'if X changes to Y THEN..ELSE..' must wake on ANY change of the attribute
-    (webCoRE subscribes to the attribute; the opposite transition runs the
-    else) -> routes to PyScript with exactly ONE plain any-change trigger —
-    never an edge-filtered trigger, never duplicate decorators."""
-    import ast
+    """YAML-FIRST (foundational since v1): 'if X changes to Y THEN..ELSE..' must
+    wake on ANY change of the attribute (webCoRE subscribes to the attribute; the
+    opposite transition runs the else) — and YAML expresses that natively with
+    ONE bare any-change state trigger (entity_id, no to/from) + a re-check
+    condition that routes then vs else. NOT PyScript (that's the valve, never the
+    answer when YAML can do it), NOT edge-filtered to:/from: triggers (those miss
+    multi-value transitions), NOT duplicate triggers when two conditions share an
+    entity (deduped)."""
     from shim.compiler import compile_piston
     reso = {":sw:": {"name": "Master", "attr_bindings": {"switch": "switch.master"},
                      "cmd_bindings": {}},
@@ -104,13 +106,17 @@ def test_else_on_trigger_only_if():
                          ("two comparisons same entity", [cond_on, cond_off])]:
         piston["s"][0]["c"] = conds
         r = compile_piston(piston, "mirror01", "Mirror", reso, {})
-        assert r["target"] == "pyscript", f"{label}: expected pyscript, got {r['target']}"
-        ast.parse(r["code"])
-        trigs = [l.strip() for l in r["code"].splitlines()
-                 if l.strip().startswith("@state_trigger")]
-        assert len(trigs) == 1, f"{label}: {len(trigs)} state triggers, want 1 (dedup)"
-        assert '"switch.master"' in trigs[0] and "==" not in trigs[0],             f"{label}: trigger must be plain any-change: {trigs[0]}"
-    print("PASS — else-on-trigger-only-if: any-change wake, single deduped trigger")
+        assert r["target"] == "yaml", f"{label}: expected yaml (YAML-first), got {r['target']}"
+        y = r["yaml"]
+        trigs = [l for l in y.splitlines() if l.strip().startswith("- trigger:")]
+        assert len(trigs) == 1, f"{label}: {len(trigs)} triggers, want 1 (deduped bare any-change)"
+        assert "trigger: state" in trigs[0], f"{label}: want a state trigger: {trigs[0]}"
+        # bare any-change: the switch entity is the wake, with NO to:/from: filter
+        assert "switch.master" in y and "\n      to:" not in y and "\n      from:" not in y, \
+            f"{label}: trigger must be a bare any-change (no to/from filter)"
+        # the re-check condition routes then vs else on each change
+        assert "states('switch.master') == 'on'" in y, f"{label}: missing re-check condition"
+    print("PASS — else-on-trigger-only-if: YAML bare any-change wake + re-check, deduped")
     return 0
 
 

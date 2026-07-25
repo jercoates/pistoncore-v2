@@ -1574,18 +1574,19 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                 elif "above" in node and "below" not in node:
                     triggers.append({"kind": "numeric_state", "entities": node["entities"],
                                      "below": node["above"], "id": node.get("id")})
-            elif kind == "state" and node.get("to") is not None and node.get("from") is None:
-                # equality condition (door open/closed, presence, lock, mode,
-                # a switch used as a condition): to:X wakes on ENTERING X, add
-                # from:X so LEAVING X wakes the else too. Works for binary and
-                # multi-state values alike — the inner if re-decides on each.
-                triggers.append({"kind": "state", "entities": node["entities"],
-                                 "from": node["to"], "id": node.get("id")})
-            elif kind == "state" and node.get("from") is not None and node.get("to") is None:
-                # the mirror image: stays_away_from/changes_away_from wake on
-                # LEAVING X (from:X) — add to:X so ENTERING X wakes the else too.
-                triggers.append({"kind": "state", "entities": node["entities"],
-                                 "to": node["from"], "id": node.get("id")})
+            elif kind == "state" and (node.get("to") is not None or node.get("from") is not None):
+                # equality/change trigger (switch, contact, presence, lock, mode)
+                # with an ELSE: webCoRE subscribes to the whole ATTRIBUTE and
+                # re-decides on ANY change. A to:X + from:X pair only catches
+                # transitions involving X — correct for a binary attribute, but
+                # for a multi-value attribute a change between two OTHER values
+                # never wakes it and the else silently can't run. So collapse to
+                # ONE bare any-change state trigger (drop to/from); the re-check
+                # condition (cond_nodes) then routes then vs else on every change.
+                # YAML-FIRST: this is fully faithful in YAML — no PyScript needed
+                # (that's the whole point; PyScript is the valve, not the answer).
+                node.pop("to", None)
+                node.pop("from", None)
         actions = [{"kind": "if", "conditions": cond_nodes,
                     "then": then_actions, "else": else_actions}]
     elif else_actions:
@@ -1600,13 +1601,24 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         conditions.extend(cond_nodes)
         actions = then_actions
 
+    # De-dup triggers: collapsing to bare any-change (else path) can produce
+    # identical triggers when two conditions target the same entity — one wake
+    # is enough, the re-check decides.
+    all_triggers = []
+    seen = set()
+    for t in triggers + cancel_triggers:
+        key = _json_dumps(t)
+        if key not in seen:
+            seen.add(key)
+            all_triggers.append(t)
+
     auto_id = f"pistoncore_{piston_id}_s{br['stmt_id']}"
     auto_ids.append(auto_id)
     block = _env.get_template("automation.yaml.j2").render(
         auto_id=auto_id,
         alias=f"PistonCore: {piston_name} — ${br['stmt_id']}",
         mode="restart" if br["tcp"] == "c" else "queued",
-        triggers=triggers + cancel_triggers,
+        triggers=all_triggers,
         conditions=conditions,
         actions=actions,
     )
