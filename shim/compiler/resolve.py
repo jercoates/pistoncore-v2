@@ -21,6 +21,22 @@ def _load_band_json(name: str) -> dict:
         return json.load(f)
 
 
+def _load_command_ha() -> dict:
+    """Command -> HA-service translation, read from the VOCAB's per-command
+    "ha" arrays (the one translation source). Returns {command: [ha entry, ...]}
+    where each entry is {domain, service, data?}. Band-agnostic — the vocab
+    knows nothing about yaml vs pyscript."""
+    with open(customize.path("webcore_vocab.json"), encoding="utf-8") as f:
+        vocab = json.load(f)
+    out = {}
+    for section in ("commands", "virtualCommands"):
+        for name, d in vocab.get(section, {}).items():
+            ha = d.get("ha")
+            if isinstance(ha, list):
+                out[name] = ha
+    return out
+
+
 class Resolver:
     def __init__(self, piston: dict, resolution_map: dict, globals_map: dict | None = None):
         self.resolution_map = resolution_map
@@ -35,6 +51,11 @@ class Resolver:
         self.system_values = maps.get("system_values", {})
         self.alarm_commands = maps.get("alarm_commands", {})
         self.command_maps = _load_band_json("command_maps.json")
+        # Command->HA translation now lives in the VOCAB (one source, memory:
+        # one_translation_source_decision). Read it here; command_maps stays as
+        # the fallback until the vocab route is fully tested (Jeremy: leave the
+        # abandoned file until testing is done).
+        self.command_ha = _load_command_ha()
         self.local_var_names = {v.get("n") for v in piston.get("v", [])}
         self.unresolved: list[dict] = []   # devices kept but not currently in HA
         self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
@@ -171,17 +192,37 @@ class Resolver:
         return service
 
     def service_spec(self, command: str, entity_id: str, ctx: dict) -> tuple[str, dict | None]:
-        """(service, data-template-or-None). command_maps.json values are a
-        plain service string or {service, data} — data values carry $1/$2
-        param tokens the emitter substitutes (see the map's _comment)."""
+        """(service, data-template-or-None). Reads command->HA translation from
+        the VOCAB's "ha" arrays first (the one source), falling back to
+        command_maps.json for anything the vocab doesn't yet cover (the real
+        orphans setPosition/setSpeed, until they're folded in). data values
+        carry $1/$2 param tokens the emitter substitutes.
+
+        Only EXECUTABLE vocab entries are used — an entry whose data still holds
+        the vocab's older declarative form ({0}, hex_to_rgb(...), .../100) is
+        skipped so it behaves exactly as before this consolidation (errors /
+        routes to PyScript), keeping output byte-identical until those get
+        migrated to executable form in the improvement pass."""
         domain = entity_id.split(".", 1)[0]
+
+        def _executable(entry: dict) -> bool:
+            data = entry.get("data")
+            if not data:
+                return True
+            return not any("{" in str(v) for v in data.values())
+
+        for entry in self.command_ha.get(command, []):
+            if entry.get("domain") in (domain, "_any", "*") and _executable(entry):
+                return entry["service"], entry.get("data")
+
+        # fallback: command_maps (orphans + anything the vocab lacks) — retired
+        # once the vocab route is fully tested (Jeremy pulls command_maps then).
         per_domain = self.command_maps.get(command) or {}
-        # "_any": commands that work on any entity (refresh/poll -> update_entity)
         spec = per_domain.get(domain) or per_domain.get("_any")
         if not spec:
             raise UnresolvableDevice(
                 f"no HA service mapping for command '{command}' on domain '{domain}' "
-                f"(command_maps.json)", ha_domain=domain, **ctx)
+                f"(vocab 'ha' + command_maps.json)", ha_domain=domain, **ctx)
         if isinstance(spec, str):
             return spec, None
         return spec["service"], spec.get("data")

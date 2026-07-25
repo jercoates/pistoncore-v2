@@ -10,7 +10,7 @@
   "outcome": "error"
  },
  "02_Alarm_Intrusion_Albert.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -26,7 +26,7 @@
   "outcome": "compiled"
  },
  "05_Basement_Person_Detection.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -128,12 +128,12 @@
   "outcome": "compiled"
  },
  "23_Door_Motion_Alert.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "24_Entertainment_alarm.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -144,17 +144,17 @@
   "outcome": "compiled"
  },
  "26_File_sound_test.json": {
-  "error": "no HA service mapping for command 'playTrackAndRestore' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'playTrackAndRestore' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "27_Food_Temp_NEW.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "28_Fridge_temp.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -188,7 +188,7 @@
   "outcome": "compiled"
  },
  "34_Haloween.json": {
-  "error": "no HA service mapping for command 'playTrackAndRestore' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'playTrackAndRestore' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -223,12 +223,12 @@
   "outcome": "compiled"
  },
  "40_My_Lock.json": {
-  "error": "no HA service mapping for command 'lock' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'lock' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "41_New_Door___Window_chime.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -249,27 +249,27 @@
   "outcome": "error"
  },
  "45_Paul_downstairs.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "46_Paul_in_the_basement.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "47_Pauls_Door_Chime.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "48_Pauls_Led.json": {
-  "error": "no HA service mapping for command 'stopColorLoop' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'stopColorLoop' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "49_Pauls_Windows__vibration_.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -280,17 +280,17 @@
   "outcome": "compiled"
  },
  "51_Phone_Presence_Notifications.json": {
-  "error": "no HA service mapping for command 'departed' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'departed' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "52_Play_pirate_song.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "53_Play_track.json": {
-  "error": "no HA service mapping for command 'playTrack' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'playTrack' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -317,7 +317,7 @@
   "outcome": "error"
  },
  "58_Reloading_Motion.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -356,12 +356,12 @@
   "outcome": "compiled"
  },
  "65_Symphondisk.json": {
-  "error": "no HA service mapping for command 'selectLiveview' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'selectLiveview' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "66_Tamper_alarm.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
@@ -378,42 +378,42 @@
   "outcome": "compiled"
  },
  "69_Washer_Announcement.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "70_Water_Leak_Notification_and_shutt_off.json": {
-  "error": "no HA service mapping for command 'close' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'close' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "71_Welcolm_Lights.json": {
-  "error": "no HA service mapping for command 'allOff' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'allOff' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "72_albert_intrusion_get_out.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "73_audio_track_test.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "74_claude_3.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "75_claude_dont_use.json": {
-  "error": "no HA service mapping for command 'setVolume' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'setVolume' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
  "76_doorbell_pushed_albert.json": {
-  "error": "no HA service mapping for command 'playSound' on domain 'light' (command_maps.json)",
+  "error": "no HA service mapping for command 'playSound' on domain 'light' (vocab 'ha' + command_maps.json)",
   "error_type": "UnresolvableDevice",
   "outcome": "error"
  },
