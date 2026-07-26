@@ -2173,6 +2173,11 @@
     {
      "domain": "garageDoorControl",
      "service": "cover.close_cover"
+    },
+    {
+     "domain": "valve",
+     "service": "valve.close_valve",
+     "tag": "verified"
     }
    ]
   },
@@ -2397,6 +2402,22 @@
     {
      "domain": "camera",
      "service": "camera.turn_off"
+    },
+    {
+     "domain": "input_boolean",
+     "service": "input_boolean.turn_off",
+     "tag": "verified"
+    },
+    {
+     "domain": "humidifier",
+     "service": "humidifier.turn_off",
+     "tag": "verified"
+    },
+    {
+     "domain": "alarm",
+     "service": "siren.turn_off",
+     "tag": "decision",
+     "note": "alarm capability off command; cover.close does NOT belong here - that is the 'close' command"
     }
    ]
   },
@@ -2438,6 +2459,16 @@
     {
      "domain": "camera",
      "service": "camera.turn_on"
+    },
+    {
+     "domain": "input_boolean",
+     "service": "input_boolean.turn_on",
+     "tag": "verified"
+    },
+    {
+     "domain": "humidifier",
+     "service": "humidifier.turn_on",
+     "tag": "verified"
     }
    ]
   },
@@ -2460,6 +2491,11 @@
      "service": "lock.open",
      "tag": "assumed",
      "note": "only locks with the OPEN feature (latch); picker should hide otherwise"
+    },
+    {
+     "domain": "valve",
+     "service": "valve.open_valve",
+     "tag": "verified"
     }
    ]
   },
@@ -2656,6 +2692,12 @@
     {
      "domain": "_any",
      "service": "homeassistant.update_entity"
+    },
+    {
+     "domain": "*",
+     "service": "homeassistant.update_entity",
+     "tag": "verified",
+     "note": "same as refresh in HA"
     }
    ]
   },
@@ -2690,6 +2732,11 @@
      "domain": "button",
      "service": "button.press",
      "tag": "verified"
+    },
+    {
+     "domain": "input_button",
+     "service": "input_button.press",
+     "tag": "verified"
     }
    ]
   },
@@ -2700,6 +2747,11 @@
     {
      "domain": "_any",
      "service": "homeassistant.update_entity"
+    },
+    {
+     "domain": "*",
+     "service": "homeassistant.update_entity",
+     "tag": "verified"
     }
    ]
   },
@@ -2951,6 +3003,14 @@
      "service": "media_player.volume_set",
      "data": {
       "volume_level": "$1|pct_float"
+     },
+     "tag": "verified"
+    },
+    {
+     "domain": "cover",
+     "service": "cover.set_cover_position",
+     "data": {
+      "position": "{0}"
      },
      "tag": "verified"
     }
@@ -3359,6 +3419,12 @@
     {
      "domain": "cover",
      "service": "cover.toggle"
+    },
+    {
+     "domain": "*",
+     "service": "homeassistant.toggle",
+     "tag": "verified",
+     "note": "generic fallback for any toggleable domain"
     }
    ]
   },
