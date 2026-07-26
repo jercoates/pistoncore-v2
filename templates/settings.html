@@ -141,6 +141,111 @@
     <button type="button" class="btn" id="config-yaml-check">Check configuration.yaml</button>
   </form>
 
+  <h2>Translation data</h2>
+  <p class="field-hint">
+    The compiler's knowledge of Home Assistant — every service and field name it
+    uses — lives in editable data files, not in the program. This is where you can
+    see which version is loaded, so you can tell whether an update actually landed.
+  </p>
+  {% if translation.matches_build %}
+    <div class="banner banner-info">
+      <strong>Up to date with this build.</strong>
+      Version <code>{{ translation.live_version }}</code>{% if translation.synced_at %},
+      checked {{ translation.synced_at }}{% endif %}.
+    </div>
+  {% else %}
+    <div class="banner banner-error">
+      <strong>Changed on this install.</strong>
+      Running <code>{{ translation.live_version }}</code>; this build ships
+      <code>{{ translation.build_version }}</code>. That's expected if something here
+      has been edited to fix a Home Assistant rename — those edits are kept and
+      carried across updates.
+    </div>
+  {% endif %}
+  {% if translation.updated %}
+    <p class="field-hint">
+      <strong>Updated on the last restart:</strong>
+      {{ translation.updated | join(', ') }}.
+    </p>
+  {% endif %}
+  {% if translation.reset %}
+    <p class="field-hint">
+      <strong>Replaced an old copy:</strong> {{ translation.reset | join(', ') }}.
+      These predated update tracking, so they were refreshed to this build. The
+      previous versions were kept in <code>{{ translation.backups }}</code>.
+    </p>
+  {% endif %}
+  {% if translation.customized %}
+    <p class="field-hint">
+      <strong>Edited here:</strong> {{ translation.customized | join(', ') }}.
+      These win over what the build ships, and updates still flow into every part
+      of them that wasn't edited.
+    </p>
+  {% endif %}
+  {% if translation.needs_attention %}
+    <div class="banner banner-error">
+      <strong>Needs a look:</strong> {{ translation.needs_attention | join(', ') }}.
+      A newer version shipped, but these were edited here and couldn't be combined
+      automatically, so your version is still being used. It will keep working —
+      it just won't have the newer changes.
+    </div>
+  {% endif %}
+  <p class="field-hint">
+    Files live in <code>{{ translation.location }}</code>.
+  </p>
+
+  <h3>Update</h3>
+  <p class="field-hint">
+    Home Assistant renames things. When it does, the fix is a change to these files
+    — not a new version of PistonCore. Pulling that fix in here means no rebuild and
+    no commands. If PistonCore ever loses its maintainer, this is also how you or
+    anyone else keeps it working.
+  </p>
+  <div class="settings-tools">
+    <button type="button" class="btn btn-primary" id="tr-official">Check for official update</button>
+  </div>
+  <p class="field-hint">Official source: <code>{{ translation.official_repo }}</code>.</p>
+
+  <div class="form-group">
+    <label for="tr-url">Import from a link</label>
+    <input type="text" id="tr-url" placeholder="https://github.com/someone/their-fix">
+    <p class="field-hint">
+      A GitHub repo, a folder inside one, or a direct link to a single file.
+      Use this for a fix someone shares with you.
+    </p>
+  </div>
+  <div class="settings-tools">
+    <button type="button" class="btn" id="tr-check-link">See what this would change</button>
+  </div>
+
+  <div id="tr-banner"></div>
+  <div id="tr-preview" style="display:none">
+    <ul id="tr-list"></ul>
+    <div id="tr-warning"></div>
+    <div class="settings-tools">
+      <button type="button" class="btn btn-primary" id="tr-apply">Import these files</button>
+      <button type="button" class="btn" id="tr-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <h3>Go back</h3>
+  <p class="field-hint">
+    Every import and update saves what was there first, so nothing is a one-way door.
+  </p>
+  <ul class="restore-points">
+    {% for rp in translation.restore_points %}
+    <li>
+      <div>
+        <strong>{{ rp.name }}</strong>
+        {% if rp.needs_network %}<span class="field-hint">(needs internet)</span>{% endif %}
+        <p class="field-hint">{{ rp.detail }}</p>
+      </div>
+      <button type="button" class="btn tr-restore" data-which="{{ rp.id }}"
+              {{ 'disabled' if rp.files == 0 }}>Restore</button>
+    </li>
+    {% endfor %}
+  </ul>
+
   <h2>Tools</h2>
   <div class="settings-tools">
     <a class="btn btn-primary" href="/diagnostics">Diagnostics</a>

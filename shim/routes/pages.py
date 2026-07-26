@@ -17,7 +17,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from .. import deploy_writer, ha_client, storage
+from .. import customize, deploy_writer, ha_client, storage
 
 router = APIRouter()
 
@@ -830,6 +830,10 @@ async def settings_page(request: Request):
     config["email_notify_entity"] = storage.load_settings().get("email_notify_entity", "")
     config["default_band"] = storage.load_settings().get("default_band", "auto")
     config["media"] = storage.load_settings().get("media", {}) or {}
+    # Translation-data state, so an update can be SEEN to have landed rather
+    # than taken on trust (Jeremy, 2026-07-26 — he installs dockers, he does
+    # not read files to find out whether a rebuild worked).
+    config["translation"] = customize.status()
     try:
         regs = await ha_client.fetch_registries()
         from .. import device_pipeline
@@ -921,6 +925,49 @@ async def test_write_target():
         return deploy_writer.probe()
     except deploy_writer.WriteTargetError as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
+
+
+@router.post("/api/translation/preview")
+async def translation_preview(request: Request):
+    """What WOULD change if this source were imported. Nothing is written —
+    the user sees the file list, and any loud warning, before deciding."""
+    body = await request.json()
+    source = (body.get("source") or "link").strip()
+    url = (body.get("url") or "").strip()
+    try:
+        staged = await asyncio.to_thread(customize.stage, source, url)
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    staged.pop("_files", None)          # preview carries no payload
+    return staged
+
+
+@router.post("/api/translation/apply")
+async def translation_apply(request: Request):
+    """Import for real. Re-fetches rather than trusting anything the browser
+    sends back, so what lands is what the source says right now."""
+    body = await request.json()
+    source = (body.get("source") or "link").strip()
+    url = (body.get("url") or "").strip()
+    try:
+        staged = await asyncio.to_thread(customize.stage, source, url)
+        result = await asyncio.to_thread(customize.apply_staged, staged)
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return {**result, "status": customize.status()}
+
+
+@router.post("/api/translation/restore")
+async def translation_restore(request: Request):
+    """Put back a restore point: this build, the latest official, or whatever
+    was in place before the last change."""
+    body = await request.json()
+    which = (body.get("which") or "").strip()
+    try:
+        result = await asyncio.to_thread(customize.restore, which)
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return {**result, "status": customize.status()}
 
 
 @router.get("/setup")

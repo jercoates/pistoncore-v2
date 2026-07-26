@@ -236,13 +236,22 @@ async def _verify_script(script_ids: list) -> tuple[str, str]:
 
 
 async def _reload_ha(script: bool = False) -> str:
+    # webCoRE never had to tell a hub to re-read its config, so there's no
+    # webCoRE word to file these names under — they live in the vocab's
+    # "_ha_names" section instead (Jeremy, 2026-07-26: having no CAUSE in
+    # webCoRE and having no NAME are different things; HA renames these too).
+    from .resolve import ha_name
     try:
-        await ha_client.call_service("script" if script else "automation", "reload")
-        return "script.reload" if script else "automation.reload"
+        full = ha_name("reload_scripts" if script else "reload_automations")
+        domain, service = full.split(".", 1)
+        await ha_client.call_service(domain, service)
+        return full
     except Exception:
         try:
-            await ha_client.call_service("homeassistant", "reload_all")
-            return "reload_all (automation.reload failed)"
+            fallback = ha_name("reload_everything")
+            domain, service = fallback.split(".", 1)
+            await ha_client.call_service(domain, service)
+            return f"{fallback} (targeted reload failed)"
         except Exception as exc:
             return f"reload FAILED: {exc}"
 

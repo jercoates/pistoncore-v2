@@ -21,13 +21,16 @@ def _load_band_json(name: str) -> dict:
         return json.load(f)
 
 
-def _load_command_ha() -> dict:
+def _load_vocab() -> dict:
+    with open(customize.path("webcore_vocab.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _load_command_ha(vocab: dict) -> dict:
     """Command -> HA-service translation, read from the VOCAB's per-command
     "ha" arrays (the one translation source). Returns {command: [ha entry, ...]}
-    where each entry is {domain, service, data?}. Band-agnostic — the vocab
+    where each entry is {domain?, service, data?}. Band-agnostic — the vocab
     knows nothing about yaml vs pyscript."""
-    with open(customize.path("webcore_vocab.json"), encoding="utf-8") as f:
-        vocab = json.load(f)
     out = {}
     for section in ("commands", "virtualCommands"):
         for name, d in vocab.get(section, {}).items():
@@ -35,6 +38,25 @@ def _load_command_ha() -> dict:
             if isinstance(ha, list):
                 out[name] = ha
     return out
+
+
+def ha_name(key: str) -> str:
+    """An HA name that no webCoRE word maps to, read from the vocab's
+    "_ha_names" section.
+
+    Most HA names are filed under the webCoRE word that causes them, because
+    webCoRE's vocabulary is frozen and HA's is not — the frozen word makes a
+    stable handle to look the changing one up by (Jeremy, 2026-07-26). A few
+    names have no webCoRE counterpart at all, because webCoRE never had to do
+    the thing (reloading HA's config after a deploy). Having no CAUSE in
+    webCoRE and having no NAME are different problems: these still get renamed
+    by HA, so they still live in the vocab where a non-programmer can fix them,
+    just in their own labelled section rather than under a command."""
+    names = _load_vocab().get("_ha_names") or {}
+    value = names.get(key)
+    if not isinstance(value, str):
+        raise KeyError(f"vocab '_ha_names' has no entry '{key}'")
+    return value
 
 
 class Resolver:
@@ -55,7 +77,9 @@ class Resolver:
         # one_translation_source_decision). Read it here; command_maps stays as
         # the fallback until the vocab route is fully tested (Jeremy: leave the
         # abandoned file until testing is done).
-        self.command_ha = _load_command_ha()
+        vocab = _load_vocab()
+        self.command_ha = _load_command_ha(vocab)
+        self.virtual_devices = vocab.get("virtualDevices", {})
         self.local_var_names = {v.get("n") for v in piston.get("v", [])}
         self.unresolved: list[dict] = []   # devices kept but not currently in HA
         self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
@@ -186,6 +210,30 @@ class Resolver:
             # real bug and must surface, not be swallowed (review 2026-07-20).
             return None
         return ents if ents and all(e.startswith("media_player.") for e in ents) else None
+
+    def command_ha_entry(self, command: str, ctx: dict) -> dict:
+        """The HA translation for a command that ISN'T aimed at a device the
+        user picked (wake a LAN device, set location mode, pause another
+        piston) — the vocab entry with no `domain` key.
+
+        The caller is already inside the branch that handles this one command,
+        so it knows perfectly well there's no device involved; it doesn't need
+        the vocab to tell it that. It needs the NAME, which is the thing HA
+        renames. Mechanism stays in code, names stay in the vocab (Jeremy,
+        2026-07-26)."""
+        for entry in self.command_ha.get(command, []):
+            if not entry.get("domain"):
+                return entry
+        raise UnresolvableDevice(
+            f"no HA name for command '{command}' in the vocab — add an 'ha' "
+            f"entry to webcore_vocab.json", **ctx)
+
+    def virtual_device_ha(self, name: str) -> dict:
+        """HA names standing in for a webCoRE concept HA has no equivalent of
+        ($mode -> an input_select helper, $alarmSystemStatus -> an
+        alarm_control_panel). Keys: entity and/or domain."""
+        ha = (self.virtual_devices.get(name) or {}).get("ha")
+        return ha if isinstance(ha, dict) else {}
 
     def service_for(self, command: str, entity_id: str, ctx: dict) -> str:
         service, _ = self.service_spec(command, entity_id, ctx)

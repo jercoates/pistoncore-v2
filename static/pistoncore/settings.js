@@ -108,3 +108,100 @@ document.getElementById("config-yaml-apply").addEventListener("click", async () 
       : (d.error || "Reload failed — restart HA manually (Settings → System → Restart)."));
   });
 });
+
+/* ── Translation data: update, import, restore ────────────────────────────
+   The relief valve. A user with no maintainer upstream has to be able to pull
+   in a fix, try it, and back it out — without editing files or running
+   commands. Every path here previews before it writes and can be undone. */
+
+const trBanner = document.getElementById("tr-banner");
+const trPreview = document.getElementById("tr-preview");
+const trList = document.getElementById("tr-list");
+const trWarning = document.getElementById("tr-warning");
+let trPending = null;                       // {source, url} awaiting confirmation
+
+function trShow(kind, html) {
+  trBanner.innerHTML = '<div class="banner banner-' + kind + '">' + html + "</div>";
+}
+
+function trHidePreview() {
+  trPreview.style.display = "none";
+  trWarning.innerHTML = "";
+  trPending = null;
+}
+
+async function trFetch(path, body) {
+  const resp = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return { ok: resp.ok, data: await resp.json() };
+}
+
+async function trCheck(source, url) {
+  trHidePreview();
+  trShow("info", "Looking…");
+  const { ok, data } = await trFetch("/api/translation/preview", { source, url });
+  if (!ok) { trShow("error", data.error || "That didn't work."); return; }
+  if (!data.any_change) {
+    trShow("success", "Nothing to do — you already have everything from that source.");
+    return;
+  }
+  trList.innerHTML = "";
+  (data.changes || []).forEach((c) => {
+    if (c.state === "unchanged") return;
+    const li = document.createElement("li");
+    li.textContent = c.file + " — " + (c.state === "new" ? "new file" : "would change")
+      + (c.risky ? "  ⚠ template" : "");
+    trList.appendChild(li);
+  });
+  if (data.risky) {
+    /* Loud, but never a block: the user chooses (Jeremy's rule). */
+    trWarning.innerHTML =
+      '<div class="banner banner-error"><strong>Careful — this includes templates.</strong> ' +
+      "Templates are closer to program code than to data: they run as part of your " +
+      "compiler. Only import these from somewhere you actually trust. The data-only " +
+      "files (the <code>.json</code> ones) don't carry this risk.</div>";
+  }
+  trShow("info", "Nothing has been changed yet. What's currently in place will be saved "
+    + "first, so you can go back.");
+  trPending = { source, url };
+  trPreview.style.display = "";
+}
+
+document.getElementById("tr-official").addEventListener("click", () => trCheck("official", ""));
+
+document.getElementById("tr-check-link").addEventListener("click", () => {
+  const url = document.getElementById("tr-url").value.trim();
+  if (!url) { trShow("error", "Paste a link first."); return; }
+  trCheck("link", url);
+});
+
+document.getElementById("tr-cancel").addEventListener("click", () => {
+  trHidePreview();
+  trShow("info", "Cancelled — nothing was changed.");
+});
+
+document.getElementById("tr-apply").addEventListener("click", async () => {
+  if (!trPending) return;
+  trShow("info", "Importing…");
+  const { ok, data } = await trFetch("/api/translation/apply", trPending);
+  if (!ok) { trShow("error", data.error || "Import failed — nothing was changed."); return; }
+  trHidePreview();
+  trShow("success", "Imported " + (data.written || []).length + " file(s). "
+    + "Recompile a piston to use it. Use <strong>Go back</strong> below if it "
+    + "misbehaves. <a href='/settings'>Refresh this page</a> to see the new version.");
+});
+
+document.querySelectorAll(".tr-restore").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    trHidePreview();
+    trShow("info", "Restoring…");
+    const { ok, data } = await trFetch("/api/translation/restore",
+                                       { which: btn.dataset.which });
+    if (!ok) { trShow("error", data.error || "Restore failed — nothing was changed."); return; }
+    trShow("success", "Restored " + data.restored + " (" + (data.written || []).length
+      + " file(s)). <a href='/settings'>Refresh this page</a> to see it.");
+  });
+});

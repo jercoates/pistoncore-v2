@@ -848,9 +848,11 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 mode = (n["params"][0] or {}).get("c") if n["params"] else None
                 if not isinstance(mode, str):
                     raise NotYetImplemented("setLocationMode with a computed mode", **ctx)
-                ent = resolver.system_entity("mode") or                     "input_select.pistoncore_location_mode"
-                out.append({"kind": "service", "service": "input_select.select_option",
-                            "entities": [ent], "data": {"option": _json_dumps(mode)}})
+                spec = resolver.command_ha_entry("setLocationMode", ctx)
+                ent = resolver.system_entity("mode") or _mode_entity(resolver)
+                field = next(iter(spec["data"]))
+                out.append({"kind": "service", "service": spec["service"],
+                            "entities": [ent], "data": {field: _json_dumps(mode)}})
                 continue
             if n["command"] == "sendNotificationToContacts":
                 out.append(_send_notification(n["params"], resolver, ctx,
@@ -868,8 +870,10 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                     raise NotYetImplemented(
                         f"alarm status '{status}' has no service mapping "
                         f"(value_maps.json alarm_commands)", **ctx)
+                svc_domain = resolver.command_ha_entry(
+                    "setAlarmSystemStatus", ctx)["service_domain"]
                 out.append({"kind": "service",
-                            "service": f"alarm_control_panel.{service}",
+                            "service": f"{svc_domain}.{service}",
                             "entities": [alarm], "data": None})
                 continue
             if n["command"] == "setVariable":
@@ -895,7 +899,7 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 out.append(_speak(n, resolver, ctx))
                 continue
             if n["command"] in ("pausePiston", "resumePiston"):
-                out.append(_piston_pause_resume(n, ctx))
+                out.append(_piston_pause_resume(n, resolver, ctx))
                 continue
             if n["command"] in ("flashLevel", "flashColor"):
                 out.append(_flash(n, resolver, ctx))
@@ -937,18 +941,21 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 out.append({"kind": "wait_for_time", "at": _minutes_hms(int(val))})
                 continue
             if n["command"] == "wolRequest":
-                # no device target — a pure data call to wake_on_lan.send_magic_packet
-                # (VERIFIED: home-assistant.io/actions/wake_on_lan.send_magic_packet/,
-                # mac required, secureon_password optional 6-byte hex "00:aa:22:bb:33:cc").
+                # no device target at all — a pure data call. The service and
+                # field names come from the vocab (VERIFIED against
+                # home-assistant.io/actions/wake_on_lan.send_magic_packet/: mac
+                # required, secure code optional 6-byte hex "00:aa:22:bb:33:cc").
                 params = n["params"]
                 mac = (params[0] or {}).get("c") if params else None
                 if not isinstance(mac, str) or not mac.strip():
                     raise NotYetImplemented("wolRequest without a MAC address", **ctx)
-                data = {"mac": _json_dumps(mac)}
+                spec = resolver.command_ha_entry("wolRequest", ctx)
+                field = {tok: name for name, tok in spec["data"].items()}
+                data = {field["$1"]: _json_dumps(mac)}
                 secure = (params[1] or {}).get("c") if len(params) > 1 else None
                 if isinstance(secure, str) and secure.strip():
-                    data["secureon_password"] = _json_dumps(secure)
-                out.append({"kind": "service", "service": "wake_on_lan.send_magic_packet",
+                    data[field["$2"]] = _json_dumps(secure)
+                out.append({"kind": "service", "service": spec["service"],
                             "entities": [], "data": data})
                 continue
             if not n["devices"] or n["command"] in resolver.command_maps.get("_piston_scope", []):
@@ -1225,7 +1232,7 @@ def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
     return {"kind": "repeat", "count": count, "body": body}
 
 
-def _piston_pause_resume(n: dict, ctx: dict) -> dict:
+def _piston_pause_resume(n: dict, resolver: Resolver, ctx: dict) -> dict:
     """pausePiston/resumePiston target ANOTHER piston by reference (webCoRE's
     "piston" param type — same colon-wrapped id convention the PyScript band's
     executePiston already assumes, emit_pyscript.py "target.strip(':')").
@@ -1259,7 +1266,9 @@ def _piston_pause_resume(n: dict, ctx: dict) -> dict:
             f"{n['command']} targets a piston (id {target_id}) that compiled to "
             f"a script, not an automation — scripts have no enabled/disabled "
             f"state to pause", **ctx)
-    service = "automation.turn_off" if n["command"] == "pausePiston" else "automation.turn_on"
+    # pausePiston and resumePiston each carry their own HA name in the vocab,
+    # so picking one is just a lookup on the command already in hand.
+    service = resolver.command_ha_entry(n["command"], ctx)["service"]
     # single-quoted Python/Jinja list literal, not _json_dumps — the whole
     # expression gets wrapped in DOUBLE quotes by the template (matching every
     # other value_template in this codebase), so nothing inside may use them.
@@ -1363,13 +1372,18 @@ def _text_param(op: dict, resolver: Resolver, ctx: dict, piston: dict | None = N
     return _json.dumps("{{ " + jt.transpile_operand(op) + " }}")
 
 
+def _mode_entity(resolver: Resolver) -> str:
+    """The helper entity standing in for webCoRE's location mode, named in the
+    vocab under virtualDevices.mode — HA has no location mode of its own."""
+    return resolver.virtual_device_ha("mode").get("entity")
+
+
 def _jinja(resolver: Resolver, ctx: dict, piston: dict | None) -> JinjaTranspiler:
     locals_ = set(getattr(resolver, "local_var_names", set()) or set())
     arrays = {v.get("n") for v in (piston or {}).get("v", [])
               if str(v.get("t", "")).endswith("]")}
     return JinjaTranspiler(locals_, resolver.globals_map, resolver, ctx,
-                           "input_select.pistoncore_location_mode",
-                           array_vars=arrays)
+                           _mode_entity(resolver), array_vars=arrays)
 
 
 def _push_notification(n: dict, resolver: Resolver, ctx: dict) -> dict:

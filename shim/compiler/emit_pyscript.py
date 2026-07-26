@@ -35,8 +35,6 @@ _env = Environment(
     loader=ChoiceLoader([FileSystemLoader(d) for d in customize.search_dirs(_BAND_REL)]),
     trim_blocks=False, lstrip_blocks=False)
 
-MODE_ENTITY = "input_select.pistoncore_location_mode"
-
 _NUMERIC_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
                 "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
 _EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
@@ -93,8 +91,11 @@ class _PyEmitter:
         self.decorators: list[dict] = []
         array_vars = {v.get("n") for v in piston.get("v", [])
                       if str(v.get("t", "")).endswith("]")}
+        # HA has no location mode; the helper entity standing in for it is
+        # named in the vocab (virtualDevices.mode), never in this file.
+        self.mode_entity = resolver.virtual_device_ha("mode").get("entity")
         self.expr = ExprTranspiler(resolver.local_var_names, resolver.globals_map,
-                                   resolver, self._ctx(None), MODE_ENTITY,
+                                   resolver, self._ctx(None), self.mode_entity,
                                    array_vars=array_vars)
 
     def _ctx(self, sid) -> dict:
@@ -621,7 +622,7 @@ class _PyEmitter:
         for c in stmt.get("c", []):
             lo = c.get("lo") or {}
             if c.get("t") == "event" and lo.get("t") == "v" and lo.get("v") == "mode":
-                self._add_state_trigger([MODE_ENTITY], sid, False)
+                self._add_state_trigger([self.mode_entity], sid, False)
             elif c.get("t") == "event" and lo.get("t") == "p" and lo.get("d"):
                 entities = self.resolver.entities_for_attr(lo.get("d"), lo.get("a"), ctx)
                 self._add_state_trigger(list(entities), sid, False)
@@ -729,10 +730,13 @@ class _PyEmitter:
                 mode = (params[0] or {}).get("c") if params else None
                 if not isinstance(mode, str):
                     raise NotYetImplemented("setLocationMode with non-constant mode", **ctx)
-                mode_ent = self.resolver.system_entity("mode") or MODE_ENTITY
-                out.append({"kind": "service", "domain": "input_select",
-                            "service": "select_option", "entities": [mode_ent],
-                            "data": {"option": repr(mode)}})
+                mode_ent = self.resolver.system_entity("mode") or self.mode_entity
+                spec = self.resolver.command_ha_entry("setLocationMode", ctx)
+                svc_domain, svc = spec["service"].split(".", 1)
+                field = next(iter(spec["data"]))
+                out.append({"kind": "service", "domain": svc_domain,
+                            "service": svc, "entities": [mode_ent],
+                            "data": {field: repr(mode)}})
             elif cmd == "setAlarmSystemStatus":
                 alarm = self.resolver.system_entity("alarmSystemStatus")
                 if not alarm:
@@ -745,7 +749,9 @@ class _PyEmitter:
                     raise NotYetImplemented(
                         f"alarm status '{status}' has no service mapping "
                         f"(value_maps.json alarm_commands)", **ctx)
-                out.append({"kind": "service", "domain": "alarm_control_panel",
+                svc_domain = self.resolver.command_ha_entry(
+                    "setAlarmSystemStatus", ctx)["service_domain"]
+                out.append({"kind": "service", "domain": svc_domain,
                             "service": service, "entities": [alarm], "data": {}})
             elif cmd == "executePiston":
                 target = (params[0] or {}).get("c") if params else None

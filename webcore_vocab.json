@@ -3652,6 +3652,13 @@
      "n": "Piston",
      "t": "piston"
     }
+   ],
+   "ha": [
+    {
+     "service": "automation.turn_off",
+     "tag": "verified",
+     "note": "no domain key = not aimed at a picked device; the compiler finds the target piston's automations itself"
+    }
    ]
   },
   "resumePiston": {
@@ -3664,6 +3671,12 @@
     {
      "n": "Piston",
      "t": "piston"
+    }
+   ],
+   "ha": [
+    {
+     "service": "automation.turn_on",
+     "tag": "verified"
     }
    ]
   },
@@ -4212,6 +4225,16 @@
      "n": "Mode",
      "t": "mode"
     }
+   ],
+   "ha": [
+    {
+     "service": "input_select.select_option",
+     "data": {
+      "option": "$1"
+     },
+     "tag": "verified",
+     "note": "no domain key = not aimed at a picked device; the target entity is the location-mode helper named under virtualDevices.mode"
+    }
    ]
   },
   "setAlarmSystemStatus": {
@@ -4225,11 +4248,13 @@
      "t": "alarmSystemStatus"
     }
    ],
-   "ha": {
-    "ha": "alarm_control_panel.alarm_arm_home / alarm_arm_away / alarm_arm_night / alarm_disarm on the designated HSM panel",
-    "tag": "verified",
-    "note": "HSM maps to a designated alarm_control_panel per locked v2 decision"
-   }
+   "ha": [
+    {
+     "service_domain": "alarm_control_panel",
+     "tag": "verified",
+     "note": "no domain key = not aimed at a picked device; the target panel is named under virtualDevices.alarmSystemStatus. service_domain (not service) because the rest of the service name comes from the status: alarm_arm_home / alarm_arm_away / alarm_arm_night / alarm_disarm"
+    }
+   ]
   },
   "sendEmail": {
    "n": "Send email...",
@@ -4265,6 +4290,17 @@
      "n": "Secure code",
      "t": "string",
      "d": " with secure code {v}"
+    }
+   ],
+   "ha": [
+    {
+     "service": "wake_on_lan.send_magic_packet",
+     "data": {
+      "mac": "$1",
+      "secureon_password": "$2"
+     },
+     "tag": "verified",
+     "note": "no domain key = no device target at all; this is a pure data call. secureon_password is dropped when the piston leaves the secure code blank"
     }
    ]
   },
@@ -5715,7 +5751,12 @@
   "mode": {
    "n": "Location mode",
    "t": "enum",
-   "o": []
+   "o": [],
+   "ha": {
+    "entity": "input_select.pistoncore_location_mode",
+    "tag": "decision",
+    "note": "HA has no location mode. PistonCore uses an input_select helper; this is the name it falls back to when Settings hasn't designated one"
+   }
   },
   "alarmSystemStatus": {
    "n": "Alarm system status",
@@ -7143,6 +7184,8 @@
   "purpose": "HA read/write translation rules living alongside the locked webCoRE vocab. The webCoRE fields (n,t,o,r,u,p,d,i,a) are law and must never be edited; the 'ha' key is additive and editable. Absence of 'ha' on a key means not yet mapped; 'ha': 'n/a' means confirmed no HA equivalent (never offered in picker/wizard).",
   "attribute_rule": "domain, optional device_class list, read ('state' or 'attr:<name>'), optional map (HA value -> webCoRE value; '*' = any other value), optional scale (expression on raw value), tag (verified|assumed|decision), optional note. Rule order = match priority. domain '*' = any domain.",
   "command_rule": "domain, service, optional data ({0},{1}.. reference webCoRE command params in p-array order; {target} = configured target entity), tag, optional note. Rule order = domain match priority.",
+  "device_less_command_rule": "An 'ha' entry with NO domain key is a command that is not aimed at a device the user picked in the editor (wake a LAN device, set location mode, pause another piston). It carries the same service/data keys as any other entry; it simply has no device domain to be matched against, so the device-matching path never selects it. Where the entity comes from is the compiler's business and is not described here — this file holds names, not mechanisms. Where only part of the service name is fixed (the rest depending on a value, as with the alarm panel), the fixed part is given as service_domain instead of service.",
+  "virtual_device_rule": "virtualDevices entries may carry an 'ha' object naming the HA entity or domain that stands in for a webCoRE concept HA has no direct equivalent of (location mode, alarm system status). Keys: entity (a specific entity_id) and/or domain.",
   "consumers": "shim device-payload builder uses attribute read rules to decide which capabilities an entity advertises; compiler uses command write rules for service routing. One file, both directions.",
   "known_helpers": [
    "rgb_to_hex",
@@ -7153,5 +7196,11 @@
    "round(x*...)"
   ],
   "pending": "webCoRE places family (places, currentPlace, previousPlace, closestPlace, closestPlaceDistance, arrivingAtPlace, leavingAtPlace, distance, eta) intentionally unmapped: candidate future mapping is HA zones + proximity integration, decision deferred"
+ },
+ "_ha_names": {
+  "_comment": "Home Assistant names PistonCore itself needs, that no webCoRE word maps to. A webCoRE command or variable is the natural place to file an HA name, but some names have no webCoRE counterpart because webCoRE never had to do the thing at all. They still get renamed by HA, so they still live here and not in code. If Home Assistant renames one of these, change it here — nothing in the code knows these words.",
+  "reload_automations": "automation.reload",
+  "reload_scripts": "script.reload",
+  "reload_everything": "homeassistant.reload_all"
  }
 }
