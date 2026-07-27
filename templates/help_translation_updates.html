@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}PistonCore Help — Updating the translation data{% endblock %}
+
+{% block content %}
+<div class="page active help-article">
+  <div class="list-header">
+    <h1>Updating the translation data</h1>
+  </div>
+
+  <p>
+    Everything PistonCore knows about Home Assistant — the name of every service
+    it calls and every field it fills in — lives in <strong>data files</strong>,
+    not inside the program. That's deliberate. Home Assistant renames things
+    regularly, and when it does, the repair is a change to those files rather
+    than a new version of PistonCore.
+  </p>
+  <p>
+    This page explains how those files get updated, how to tell whether an update
+    actually arrived, and how to undo one. It's all on
+    <strong>Settings → Translation data</strong>.
+  </p>
+
+  <h2>Two ways in — and you rarely need both</h2>
+  <table class="help-table">
+    <tr><th>Route</th><th>What it updates</th><th>When you'd use it</th></tr>
+    <tr>
+      <td><strong>Rebuild the container</strong></td>
+      <td><strong>Everything</strong> — the program <em>and</em> the translation
+          data. The data files refresh themselves on startup.</td>
+      <td>When the program itself changed. This already covers the data, so
+          there's no second step.</td>
+    </tr>
+    <tr>
+      <td><strong>Check for official update</strong></td>
+      <td><strong>Just the translation data.</strong></td>
+      <td>When a Home Assistant rename has been fixed and you want it now,
+          without rebuilding anything.</td>
+    </tr>
+  </table>
+  <p class="field-hint">
+    If you rebuild, you do <strong>not</strong> also need to press the button —
+    the rebuild already brought the data with it. The button exists so that
+    people who don't rebuild containers can still get fixes.
+  </p>
+
+  <h2>How to tell an update actually landed</h2>
+  <p>
+    The <strong>Translation data</strong> panel shows a version code and when it
+    was last checked. Reload Settings after an update and look at it. If it says
+    <em>Up to date with this build</em>, the files match the program you're
+    running.
+  </p>
+  <p>
+    It also lists anything that changed on the last restart, so an update isn't
+    something you have to take on trust — you can see it.
+  </p>
+
+  <h2>Your own changes are kept</h2>
+  <p>
+    If you (or an AI acting for you) edit one of these files to fix something,
+    that edit <strong>wins</strong> and survives future updates. Updates still
+    flow into every part of the file you didn't touch. So fixing one command
+    doesn't freeze the rest of the file in time.
+  </p>
+  <p>
+    Templates are the one exception. They're closer to program code than to data,
+    so PistonCore can't safely merge someone else's changes into yours. If you've
+    edited a template and a newer one ships, <strong>yours is kept</strong> and
+    the panel says so, rather than silently overwriting your work.
+  </p>
+
+  <h2>Importing a fix someone shares</h2>
+  <p>
+    <strong>Import from a link</strong> takes a GitHub repo, a folder inside one,
+    or a direct link to a single file. Paste it and press
+    <em>See what this would change</em> — you get the list of files first, and
+    nothing is written until you say so.
+  </p>
+  <div class="banner banner-error">
+    <strong>Be careful with templates from strangers.</strong> The
+    <code>.json</code> files are data and are safe to import. Templates are not:
+    they run as part of your compiler, so importing one means running someone
+    else's work on your system. PistonCore warns you when an import includes a
+    template but <strong>won't stop you</strong> — you're allowed to make that
+    call, because being able to is the point.
+  </div>
+
+  <h2>Undoing an update</h2>
+  <p>
+    Nothing here is a one-way door. Whatever is in place gets saved before any
+    change, and <strong>Go back</strong> offers three ways out:
+  </p>
+  <table class="help-table">
+    <tr><th>Restore point</th><th>What it is</th></tr>
+    <tr>
+      <td><strong>Shipped with this build</strong></td>
+      <td>The copies that came inside the version you're running. Needs no
+          internet and can never go stale — the reliable floor if anything else
+          goes wrong.</td>
+    </tr>
+    <tr>
+      <td><strong>Latest official</strong></td>
+      <td>Fetched fresh from the PistonCore repo.</td>
+    </tr>
+    <tr>
+      <td><strong>Previous version</strong></td>
+      <td>Whatever was in place immediately before the last change. This is the
+          one-click undo, and it works in both directions — restore it, change
+          your mind, restore again.</td>
+    </tr>
+  </table>
+  <p class="field-hint">
+    Older copies are also kept on disk under <code>customize/.replaced</code>,
+    with the date in the filename.
+  </p>
+
+  <h2>If there's nobody left to update it</h2>
+  <p>
+    This is the reason all of the above exists. If PistonCore ever stops being
+    maintained, the compiler is still repairable by whoever is using it: the
+    names Home Assistant changed are in a file you can edit, an AI can be pointed
+    at that file to make the change for you, and a fix that works can be shared
+    with everyone else through a link. No release, and nobody upstream required.
+  </p>
+
+  <p><a href="/help">← All help</a> · <a href="/settings">Settings → Translation data</a></p>
+</div>
+{% endblock %}

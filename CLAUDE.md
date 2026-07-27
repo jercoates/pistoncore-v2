@@ -109,14 +109,22 @@ never treat it as gospel.
   2026-07-21 — a bare `git clone` dumping files at `/` bit both him and a tester):
   source in `pistoncore-v2-src`, the persistent `/data` volume in
   `pistoncore-v2-data`.
+  **The steps are ONE `&&` chain, and that is not cosmetic (2026-07-26 — it happened
+  again, worse).** Run as separate lines, a failed `cd`/`git pull`/`docker build` does
+  NOT stop `docker rm -f` from killing the running container, and `docker run` then
+  starts the OLD image against a data path that Docker silently creates empty — the app
+  comes up with zero pistons and looks wiped. Chained, any failure stops before the
+  container is touched. The `ls .../pistons` line is a guard that the data folder is the
+  REAL one; leave it in.
   ```bash
   # first time only:
   #   mkdir -p /mnt/user/appdata/pistoncore-v2-src /mnt/user/appdata/pistoncore-v2-data
   #   git clone https://github.com/jercoates/pistoncore-v2.git /mnt/user/appdata/pistoncore-v2-src
-  cd /mnt/user/appdata/pistoncore-v2-src
-  git pull
-  docker build -t pistoncore-v2 .
-  docker rm -f pistoncore-v2
+  cd /mnt/user/appdata/pistoncore-v2-src && \
+  git pull && \
+  docker build -t pistoncore-v2 . && \
+  ls /mnt/user/appdata/pistoncore-v2-data/pistons >/dev/null && \
+  docker rm -f pistoncore-v2 && \
   docker run -d --name pistoncore-v2 \
     -p 7778:7777 \
     -v /mnt/user/appdata/pistoncore-v2-data:/data \
@@ -124,6 +132,12 @@ never treat it as gospel.
     pistoncore-v2
   ```
   Port stays `7778` on the host side — an old v1 `pistoncore` container still holds `7777`.
+  **Claude: these paths are documentation, not evidence.** Before handing Jeremy anything
+  containing `docker rm`, `docker run`, or a bind mount, confirm the container's ACTUAL
+  config — `docker inspect -f '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}'
+  pistoncore-v2`, or the Unraid template in `/boot/config/plugins/dockerMan/templates-user/`.
+  His real data folder was `pistoncore-data`, not the `pistoncore-v2-data` written above,
+  and `pistoncore-v2-src` did not exist at all.
 - **Commits:** Jeremy pushes via GitHub Desktop, single combined commit per session.
 - License: this repo is GPL-3.0 (required by the vendored dashboard). Keep upstream
   copyright headers intact.

@@ -1330,6 +1330,11 @@ async def help_editing_compiler(request: Request):
     return templates.TemplateResponse(request, "help_editing_compiler.html", {})
 
 
+@router.get("/help/translation-updates")
+async def help_translation_updates(request: Request):
+    return templates.TemplateResponse(request, "help_translation_updates.html", {})
+
+
 @router.get("/help/media-files")
 async def help_media_files(request: Request):
     return templates.TemplateResponse(request, "help_media_files.html", {})
