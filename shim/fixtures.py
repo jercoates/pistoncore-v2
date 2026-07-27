@@ -227,8 +227,11 @@ def get_db() -> dict:
     if _db_cache is None:
         with open(_REPO_ROOT / "webcore_vocab.json", encoding="utf-8") as f:
             vocab = json.load(f)
-        vocab.pop("_ha_translation", None)
-        vocab.pop("_ha_names", None)
+        # every underscore-prefixed section is shim-internal HA data — strip by
+        # PREFIX, not by name, so a section added later can't leak to the
+        # sealed dashboard by being forgotten here (it has happened twice).
+        for key in [k for k in vocab if k.startswith("_")]:
+            vocab.pop(key, None)
         for section in ("attributes", "commands", "virtualCommands", "virtualDevices"):
             for entry in vocab[section].values():
                 entry.pop("ha", None)

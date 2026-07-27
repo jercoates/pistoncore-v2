@@ -35,11 +35,6 @@ _env = Environment(
     trim_blocks=False, lstrip_blocks=False)
 
 
-def _band_json(name):
-    import json as _json
-    with open(customize.path(_BAND_REL + "/" + name), encoding="utf-8") as f:
-        return _json.load(f)
-
 # the piston currently being compiled — the text/expression helpers need its
 # variable declarations, and threading it through every call site would touch
 # a dozen signatures for one read-only lookup.
@@ -106,35 +101,43 @@ _EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
 def _hex_rgb(value):
     v = str(value)
     if not v.startswith("#"):
-        import json as _json
-        maps = _band_json("value_maps.json")
-        v = maps.get("color_names", {}).get(v.strip().lower(), v)
+        from .resolve import color_hex
+        v = color_hex(v) or v
     v = v.lstrip("#")
     try:
         return [int(v[0:2], 16), int(v[2:4], 16), int(v[4:6], 16)]
     except ValueError:
         raise NotYetImplemented(
             f"colour value {value!r} isn't a hex code or a known colour name — "
-            f"add it to value_maps.json color_names")
+            f"add it to webcore_vocab.json under _value_maps.color_aliases")
 
 
 def _mode_value(kind):
-    """webCoRE mode word -> HA mode word, via value_maps.mode_values."""
+    """webCoRE mode word -> HA mode word, from the vocab's _value_maps."""
     def xform(v):
-        import json as _json
-        maps = _band_json("value_maps.json")
-        table = maps.get("mode_values", {}).get(kind, {})
+        from .resolve import value_map
+        table = value_map(kind)
         key = str(v).strip()
         return table.get(key, table.get(key.lower(), v))
     return xform
 
 
+def _rescaled(name):
+    """Scale conversions whose RANGES live in the vocab (_value_maps.scales),
+    so an HA scale change is a number edit rather than a code change."""
+    def xform(v):
+        from .resolve import rescale
+        return rescale(name, v)
+    return xform
+
+
+# hue_hs / sat_hs pad out to HA's [hue, saturation] pair. The padding values
+# are NOT scales — setting hue alone can't know the saturation, so it assumes
+# full, and vice versa. That's a modelling compromise and stays in code.
 _PARAM_TRANSFORMS = {"hex_rgb": _hex_rgb,
-                     # webCoRE volume/level 0-100 -> HA volume_level 0.0-1.0
-                     "pct_float": lambda v: round(float(v) / 100.0, 2),
-                     # hue/saturation are 0-100 in webCoRE; HA wants [hue0-360, sat0-100]
-                     "hue_hs": lambda v: [round(float(v) * 3.6, 1), 100],
-                     "sat_hs": lambda v: [0, round(float(v), 1)],
+                     "pct_float": _rescaled("pct_float"),
+                     "hue_hs": lambda v: [_rescaled("hue_hs")(v), 100],
+                     "sat_hs": lambda v: [0, _rescaled("sat_hs")(v)],
                      "hvac_mode": _mode_value("hvac_mode"),
                      "fan_mode": _mode_value("fan_mode"),
                      "speed_pct": _mode_value("fan_speed")}
@@ -870,7 +873,7 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 if not service:
                     raise NotYetImplemented(
                         f"alarm status '{status}' has no service mapping "
-                        f"(value_maps.json alarm_commands)", **ctx)
+                        f"(add it under setAlarmSystemStatus in webcore_vocab.json)", **ctx)
                 svc_domain = resolver.command_ha_entry(
                     "setAlarmSystemStatus", ctx)["service_domain"]
                 out.append({"kind": "service",

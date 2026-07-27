@@ -757,7 +757,7 @@ class _PyEmitter:
                 if not service:
                     raise NotYetImplemented(
                         f"alarm status '{status}' has no service mapping "
-                        f"(value_maps.json alarm_commands)", **ctx)
+                        f"(add it under setAlarmSystemStatus in webcore_vocab.json)", **ctx)
                 svc_domain = self.resolver.command_ha_entry(
                     "setAlarmSystemStatus", ctx)["service_domain"]
                 out.append({"kind": "service", "domain": svc_domain,

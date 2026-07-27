@@ -1204,9 +1204,12 @@ _REPAIR_MAP = [
      "picked omits \"domain\". This one file holds every HA name the compiler "
      "uses — there is no second place to edit."),
     ("alarm status",
-     "templates/compiler/yaml/classic/value_maps.json",
-     "Add the webCoRE alarm status -> HA alarm_control_panel service under "
-     "\"alarm_commands\"."),
+     "webcore_vocab.json",
+     "Under virtualCommands.setAlarmSystemStatus, add the webCoRE alarm status "
+     "to \"service_by_value\" with the alarm_control_panel service that puts "
+     "the panel in it (alarm_arm_away / alarm_arm_home / alarm_arm_night / "
+     "alarm_disarm). Comparing the CURRENT status is a different table — that "
+     "one is \"state_map\" under virtualDevices.alarmSystemStatus."),
     ("expression function",
      "templates/compiler/pyscript/2.x/expr_runtime.py.j2",
      "Implement the missing webCoRE function as a def _fn_<name>(...) in this "
@@ -1223,9 +1226,12 @@ _REPAIR_MAP = [
      "This lists the webCoRE JSON signatures that force the PyScript band. "
      "Usually nothing to change — but if HA has since gained native support "
      "for the construct, removing its signature here lets it compile to YAML."),
-    ("state value", "templates/compiler/yaml/classic/value_maps.json",
-     "Add the webCoRE attribute value -> HA state value under "
-     "\"attribute_values\"."),
+    ("state value", "webcore_vocab.json",
+     "Find the attribute under \"attributes\" and fix the \"map\" on its "
+     "\"ha\" rule. That map is written HA-value -> webCoRE-word (the direction "
+     "the device list needs); the compiler reads it backwards when writing, so "
+     "you only maintain it once. Where several HA values mean the same webCoRE "
+     "word, the FIRST one listed is the one written back."),
 ]
 
 

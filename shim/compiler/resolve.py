@@ -13,17 +13,40 @@ from .errors import UnresolvableDevice
 
 from .. import customize
 
-_BAND_REL = "templates/compiler/yaml/classic"
+# The opposite of a binary webCoRE value, used to emit a reverse trigger.
+# NOT translation and deliberately not in the vocab: no Home Assistant name
+# appears here, so no HA rename can break it. "off" is the opposite of "on"
+# in webCoRE's own vocabulary, which is frozen (Jeremy's file-split rule
+# 2026-07-26: split by why something changes; this never does).
+_BINARY_OPPOSITES = {"on": "off", "off": "on"}
 
 
-def _load_band_json(name: str) -> dict:
-    with open(customize.path(_BAND_REL + "/" + name), encoding="utf-8") as f:
-        return json.load(f)
+
+
+_vocab_cache: tuple | None = None
 
 
 def _load_vocab() -> dict:
-    with open(customize.path("webcore_vocab.json"), encoding="utf-8") as f:
-        return json.load(f)
+    """The vocab, cached but NEVER stale.
+
+    It's read on every transform, every value lookup and every service
+    resolution, and it's a big file — re-parsing it each time made a compile
+    thousands of file reads. Cached on (path, mtime, size) instead of blindly,
+    so the standing promise still holds: edit the file, next compile uses it,
+    no restart (COMPILER_DECISIONS_HOLDING §E1)."""
+    global _vocab_cache
+    path = customize.path("webcore_vocab.json")
+    try:
+        stat = path.stat()
+        stamp = (str(path), stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        stamp = None
+    if _vocab_cache is not None and stamp is not None and _vocab_cache[0] == stamp:
+        return _vocab_cache[1]
+    with open(path, encoding="utf-8") as f:
+        vocab = json.load(f)
+    _vocab_cache = (stamp, vocab)
+    return vocab
 
 
 def _load_command_ha(vocab: dict) -> dict:
@@ -38,6 +61,99 @@ def _load_command_ha(vocab: dict) -> dict:
             if isinstance(ha, list):
                 out[name] = ha
     return out
+
+
+def _attribute_value_maps(vocab: dict) -> dict:
+    """webCoRE value -> HA value, per attribute, DERIVED by flipping the
+    vocab's own read rules.
+
+    The vocab stores HA->webCoRE because that's the direction the device
+    payload needs ("this sensor says on, show it as active"). Writing needs
+    the reverse ("the piston says active, emit on"). It is the same table, so
+    it is stored once and flipped here rather than kept twice — keeping both
+    directions on disk is what let the old value_maps.json drift.
+
+    FIRST LISTED WINS. Several HA states can collapse to one webCoRE word
+    (a lock reports jammed/locking/unlocking and all mean 'unknown'), so the
+    flip is ambiguous by nature; rule order in the vocab picks the canonical
+    one to write. The '*' catch-all is skipped — it is a read-side wildcard
+    and means nothing when writing."""
+    out: dict = {}
+    for attr, entry in vocab.get("attributes", {}).items():
+        for rule in (entry.get("ha") or []):
+            if not isinstance(rule, dict):
+                continue
+            for ha_value, wc_value in (rule.get("map") or {}).items():
+                if ha_value == "*":
+                    continue
+                out.setdefault(attr, {}).setdefault(str(wc_value), ha_value)
+    return out
+
+
+def _system_value_maps(vocab: dict) -> dict:
+    """webCoRE value -> HA value for the stand-in entities behind system
+    variables ($alarmSystemStatus and friends)."""
+    out = {}
+    for name, entry in vocab.get("virtualDevices", {}).items():
+        ha = entry.get("ha")
+        if isinstance(ha, dict) and isinstance(ha.get("state_map"), dict):
+            out[name] = ha["state_map"]
+    return out
+
+
+def _alarm_service_map(vocab: dict) -> dict:
+    """Requested alarm status -> the service that puts the panel in it."""
+    for rule in (vocab.get("virtualCommands", {})
+                 .get("setAlarmSystemStatus", {}).get("ha") or []):
+        by_value = rule.get("service_by_value")
+        if isinstance(by_value, dict):
+            return by_value
+    return {}
+
+
+def value_map(name: str) -> dict:
+    """A shared webCoRE->HA value table from the vocab's "_value_maps"
+    (thermostat modes, fan speeds). Shared by several commands, so filed once
+    rather than repeated on each."""
+    table = (_load_vocab().get("_value_maps") or {}).get(name) or {}
+    return {k: v for k, v in table.items() if not k.startswith("_")}
+
+
+def rescale(name: str, value):
+    """Convert a number between webCoRE's scale and HA's, using the ranges in
+    the vocab's _value_maps.scales.
+
+    The arithmetic is here and the numbers are in the vocab, deliberately
+    (Jeremy, 2026-07-26). What can change is the RANGE — if HA moved volume to
+    0-100 the fix is one number in a JSON file someone can read; a division
+    stays a division forever, so moving it into a template would put the fixed
+    part where it is hardest to read and leave the changeable part in code."""
+    spec = (_load_vocab().get("_value_maps") or {}).get("scales", {}).get(name)
+    if not isinstance(spec, dict):
+        raise KeyError(f"vocab _value_maps.scales has no entry '{name}'")
+    src, dst = float(spec["from"]), float(spec["to"])
+    digits = int(spec.get("round", 2))
+    # Multiply by the ratio rather than dividing then multiplying. Dividing
+    # first perturbs the float and changes the answer at exact .5 boundaries —
+    # with equal scales, 0.85/100*100 rounds to 0.9 where plain 0.85 rounds to
+    # 0.8. Caught by comparing against the previous arithmetic across the whole
+    # input range; equal scales now short-circuit to no arithmetic at all.
+    if src == dst:
+        return round(float(value), digits)
+    return round(float(value) * dst / src, digits)
+
+
+def color_hex(name: str) -> str | None:
+    """A webCoRE colour name -> hex, from the vocab's own colour list (the
+    full webCoRE set), plus the few spellings webCoRE itself doesn't use."""
+    vocab = _load_vocab()
+    wanted = str(name).strip().lower()
+    for colour in (vocab.get("colors", {}).get("standard") or []):
+        if str(colour.get("n", "")).lower() == wanted:
+            return colour.get("rgb")
+    aliases = (vocab.get("_value_maps") or {}).get("color_aliases") or {}
+    value = aliases.get(wanted)
+    return value if isinstance(value, str) else None
 
 
 def ha_name(key: str) -> str:
@@ -67,15 +183,16 @@ class Resolver:
             v["n"]: ((v.get("v") or {}).get("d") or [])
             for v in piston.get("v", []) if v.get("t") == "device"
         }
-        maps = _load_band_json("value_maps.json")
-        self.value_maps = maps["attribute_values"]
-        self.binary_opposites = maps["binary_opposites"]
-        self.system_values = maps.get("system_values", {})
-        self.alarm_commands = maps.get("alarm_commands", {})
-        # Command->HA translation lives in the VOCAB and nowhere else. The old
-        # per-band command_maps.json was deleted 2026-07-26 (memory:
-        # one_translation_source_decision) — one file to edit, band-agnostic.
+        # ONE read, one source. Commands AND values both come from the vocab;
+        # the per-band command_maps.json and value_maps.json were deleted
+        # 2026-07-26 (memory: one_translation_source_decision).
+        # Attribute states are not stored twice either — the vocab holds
+        # HA->webCoRE for reading, and _attribute_value_maps flips it for
+        # writing.
         vocab = _load_vocab()
+        self.value_maps = _attribute_value_maps(vocab)
+        self.system_values = _system_value_maps(vocab)
+        self.alarm_commands = _alarm_service_map(vocab)
         self.command_ha = _load_command_ha(vocab)
         self.virtual_devices = vocab.get("virtualDevices", {})
         self.local_var_names = {v.get("n") for v in piston.get("v", [])}
@@ -191,7 +308,7 @@ class Resolver:
         return self.value_maps.get(attr, {}).get(value, value)
 
     def opposite_state(self, value: str) -> str | None:
-        return self.binary_opposites.get(value)
+        return _BINARY_OPPOSITES.get(value)
 
     def speaker_targets(self, drefs: list[str], ctx: dict) -> list[str] | None:
         """If these devices are media_players that can speak, return their

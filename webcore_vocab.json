@@ -4349,6 +4349,16 @@
    "ha": [
     {
      "service_domain": "alarm_control_panel",
+     "service_by_value": {
+      "away": "alarm_arm_away",
+      "armAway": "alarm_arm_away",
+      "stay": "alarm_arm_home",
+      "armHome": "alarm_arm_home",
+      "night": "alarm_arm_night",
+      "armNight": "alarm_arm_night",
+      "off": "alarm_disarm",
+      "disarm": "alarm_disarm"
+     },
      "tag": "verified",
      "note": "no domain key = not aimed at a picked device; the target panel is named under virtualDevices.alarmSystemStatus. service_domain (not service) because the rest of the service name comes from the status: alarm_arm_home / alarm_arm_away / alarm_arm_night / alarm_disarm"
     }
@@ -5877,7 +5887,22 @@
     "armed_away",
     "armed_night",
     "triggered"
-   ]
+   ],
+   "ha": {
+    "state_map": {
+     "armedAway": "armed_away",
+     "armedHome": "armed_home",
+     "armedNight": "armed_night",
+     "disarmed": "disarmed",
+     "allDisarmed": "disarmed",
+     "away": "armed_away",
+     "stay": "armed_home",
+     "night": "armed_night",
+     "off": "disarmed"
+    },
+    "tag": "verified",
+    "note": "webCoRE word -> the state HA's alarm panel reports, for COMPARING the current status. Several webCoRE words mean the same state. Setting the status is a different thing and lives on the setAlarmSystemStatus command"
+   }
   },
   "powerSource": {
    "n": "Hub power source",
@@ -7306,6 +7331,71 @@
    "round(x*...)"
   ],
   "pending": "webCoRE places family (places, currentPlace, previousPlace, closestPlace, closestPlaceDistance, arrivingAtPlace, leavingAtPlace, distance, eta) intentionally unmapped: candidate future mapping is HA zones + proximity integration, decision deferred"
+ },
+ "_value_maps": {
+  "_comment": "webCoRE value -> Home Assistant value, for values that are shared by several commands rather than belonging to one. Per-attribute state translation is NOT here — it lives on each attribute's own 'ha' rule (the 'map' key) and the compiler reads it backwards when writing. Colour NAMES are not here either: the full list is the 'colors' section above, straight from webCoRE. color_aliases only covers spellings webCoRE itself doesn't use.",
+  "hvac_mode": {
+   "heat": "heat",
+   "cool": "cool",
+   "auto": "heat_cool",
+   "heat_cool": "heat_cool",
+   "off": "off",
+   "emergency heat": "heat",
+   "emergencyHeat": "heat",
+   "dry": "dry",
+   "fan only": "fan_only",
+   "fanonly": "fan_only"
+  },
+  "fan_mode": {
+   "auto": "auto",
+   "on": "on",
+   "circulate": "diffuse",
+   "fanAuto": "auto",
+   "fanOn": "on",
+   "fanCirculate": "diffuse",
+   "low": "low",
+   "medium": "medium",
+   "high": "high"
+  },
+  "fan_speed": {
+   "_note": "TO VERIFY (2026-07-26): these are fixed percentages, but fans differ — Jeremy's report percentage_step 20 (five speeds) while he describes them as three-speed, and 'auto' here becomes 66% even on a fan that has a real 'auto' preset. The right fix is reading the fan's own preset_modes/percentage_step at compile time rather than a fixed table; until then these are the previous behaviour, unchanged.",
+   "low": 33,
+   "medium": 66,
+   "medium-low": 50,
+   "medium-high": 80,
+   "high": 100,
+   "max": 100,
+   "off": 0,
+   "on": 100,
+   "auto": 66
+  },
+  "scales": {
+   "_note": "Number ranges, where webCoRE and Home Assistant measure the same thing on different scales. The compiler does value / from * to and rounds — the ARITHMETIC is fixed and lives in the compiler, because a division stays a division forever. What can change is these NUMBERS: if HA ever moved volume from 0.0-1.0 to 0-100, the fix is 'to': 100 here and nothing else. Only scales that depend on Home Assistant belong here; maths that is true regardless (parsing a hex colour) stays in the compiler.",
+   "pct_float": {
+    "from": 100,
+    "to": 1,
+    "round": 2,
+    "note": "webCoRE volume/level 0-100 -> HA volume_level 0.0-1.0"
+   },
+   "hue_hs": {
+    "from": 100,
+    "to": 360,
+    "round": 1,
+    "note": "webCoRE hue 0-100 -> HA hue 0-360 (the first half of hs_color)"
+   },
+   "sat_hs": {
+    "from": 100,
+    "to": 100,
+    "round": 1,
+    "note": "webCoRE and HA both use 0-100 for saturation, so this is 1:1 today — it is listed so a change on either side is still a number edit rather than a code change"
+   }
+  },
+  "color_aliases": {
+   "_note": "Spellings that are NOT in webCoRE's own colour list but were accepted before, so they keep working. Everything else resolves from the 'colors' section.",
+   "black": "#000000",
+   "goldenrod": "#DAA520",
+   "magenta": "#FF00FF"
+  }
  },
  "_ha_names": {
   "_comment": "Home Assistant names PistonCore itself needs, that no webCoRE word maps to. A webCoRE command or variable is the natural place to file an HA name, but some names have no webCoRE counterpart because webCoRE never had to do the thing at all. They still get renamed by HA, so they still live here and not in code. If Home Assistant renames one of these, change it here — nothing in the code knows these words.",
