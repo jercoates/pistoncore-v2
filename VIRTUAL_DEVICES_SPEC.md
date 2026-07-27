@@ -163,7 +163,9 @@ already delivers most of what we need, VERIFIED from its docs (2026-07-20):
 1. **The device kinds the compiler targets that `hass-virtual` does NOT cover.**
    The authoritative "needed devices" list is the set of HA domains the compiler
    actually emits services against — extracted 2026-07-20 from
-   `templates/compiler/yaml/classic/command_maps.json`:
+   `templates/compiler/yaml/classic/command_maps.json` (that file was deleted
+   2026-07-26; the same mappings now live in `webcore_vocab.json` per-command
+   `"ha"` entries, so re-extract from there if this list is ever refreshed):
    `button, camera, climate, cover, fan, humidifier, light, lock, media_player,
    siren, switch, vacuum` (`homeassistant` = the generic cross-domain
    turn_on/off, not a device kind), plus `alarm_control_panel` (HSM/arm state,

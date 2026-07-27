@@ -140,3 +140,42 @@ nextSchedule` — everything else can arrive incrementally.
   Hubitat backend has **zero** websocket code. It's cloud-only (`api-us-*.webcore.co:9297`,
   the commercial webcore.co relay), so the dashboard already has to tolerate it being
   absent for any self-hosted install. Nothing to build.
+
+## 8. YAML-band live feedback (IDEA — Jeremy, 2026-07-26; NOT BUILT, NOT DESIGNED)
+
+**The gap this addresses.** Everything above (§4, §6) assumes per-statement trace is a
+PyScript-band capability: the compiled piston reports its own execution. The YAML band gets
+exactly ONE key out of that — `lastExecuted`, read from the automation entity's
+`last_triggered` (§6). So a YAML-compiled piston's status/view page in the dashboard is
+effectively DEAD while open: no logs, no trace overlay, no sign it did anything. Since YAML
+is the default target (YAML-first is a day-one rule; PyScript is the valve), the majority of
+pistons land on the blind path.
+
+**Jeremy's idea.** While a piston is open on the dashboard's status/view page, the shim
+watches Home Assistant's OWN live record of that automation and turns it into the log/
+activity entries the dashboard already knows how to render (§1, §2). Not a reimplementation
+of the webCoRE engine's trace — an APPROXIMATION assembled from what HA already stores, so
+the open page shows real signal ("triggered at …", "condition met", "turned on X") instead
+of nothing.
+
+**Candidate sources — TO VERIFY, none confirmed this session:**
+
+| Source | What it could give | Notes |
+|---|---|---|
+| **HA automation traces** | Per-run detail: which trigger fired, condition results, which actions ran, timings, changed variables | Richest by far. Believed reachable over the websocket connection the shim already opens (`trace/list` / `trace/get`). **TO VERIFY:** exact payload shape, retention/limits, whether script-kind output traces the same way. |
+| **Logbook** | Coarse "automation triggered" + resulting device state changes | REST, simple, low fidelity. Useful fallback if traces don't pan out. |
+| **`last_triggered`** | Timestamp only | Already used for `lastExecuted` (§6). No per-run detail. |
+
+**The open question that decides the ceiling (TO VERIFY).** HA's trace entries identify
+steps by their position/path in the emitted automation. The compiler already stamps piston
+statement (`$`) ids on triggers, and §4's `trace.points` is keyed by exactly those ids. IF
+emitted YAML steps can be mapped back to the statement ids that produced them, this stops
+being a coarse feed and becomes a real per-statement trace overlay for the YAML band —
+the same surface §4 assumes only PyScript can paint. If they can't be mapped, it degrades
+to the coarse log feed, which is still a large improvement over a dead page.
+
+**Explicitly NOT decided:** whether this polls or pushes, how often, whether it runs only
+while a piston page is open, retention, or what happens for a piston compiled to several
+automations (TCP scoping, COMPILER_SPEC §2.5). No design work has been done — this section
+exists so the idea isn't lost, per the authority chain (an idea captured is not a spec'd
+decision).

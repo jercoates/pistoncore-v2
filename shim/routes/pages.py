@@ -1195,11 +1195,14 @@ async def diagnostics_bundle(piston_id: str):
 # by editing DATA, not by a coding session). Order matters: first match wins.
 _REPAIR_MAP = [
     ("no HA service mapping for command",
-     "templates/compiler/yaml/classic/command_maps.json",
-     "Add the missing webCoRE command -> HA service mapping for that device "
-     "domain. Values are either a plain \"domain.service\" string, or "
-     "{\"service\": \"domain.service\", \"data\": {...}} where data values may "
-     "use $1/$2 for the task's parameters (optionally |hex_rgb or |pct_float)."),
+     "webcore_vocab.json",
+     "Find that command under \"commands\" or \"virtualCommands\" and add an "
+     "\"ha\" entry for the device domain it's missing. Each entry is "
+     "{\"domain\": \"light\", \"service\": \"light.turn_on\", \"data\": {...}}, "
+     "where data values may use $1/$2 for the command's parameters (optionally "
+     "|hex_rgb or |pct_float). A command that isn't aimed at a device the user "
+     "picked omits \"domain\". This one file holds every HA name the compiler "
+     "uses — there is no second place to edit."),
     ("alarm status",
      "templates/compiler/yaml/classic/value_maps.json",
      "Add the webCoRE alarm status -> HA alarm_control_panel service under "
@@ -1328,6 +1331,11 @@ async def help_best_practices(request: Request):
 @router.get("/help/editing-compiler")
 async def help_editing_compiler(request: Request):
     return templates.TemplateResponse(request, "help_editing_compiler.html", {})
+
+
+@router.get("/help/editable-files")
+async def help_editable_files(request: Request):
+    return templates.TemplateResponse(request, "help_editable_files.html", {})
 
 
 @router.get("/help/translation-updates")

@@ -35,7 +35,9 @@ ifs/else/else-if (HA if/then/else actions), equality + numeric + is_between
 comparisons with any/all aggregation, $time between (HA time condition),
 changes/changes_away_from/rises_above/drops_below triggers, condition
 promotion for trigger-less statements, `every` (time_pattern/time triggers),
-setLevel/setColor service data ($-token specs in command_maps.json).
+setLevel/setColor service data ($-token specs in webcore_vocab.json's per-command
+"ha" entries — command_maps.json was deleted 2026-07-26, the vocab is the one
+translation source).
 PyScript band (templates/compiler/pyscript/2.x/, shapes per
 PYSCRIPT_COMPILER_RESEARCH.md §4) covers: nested if/else-if, switch
 (ctp i + fallthrough), for (constant bounds), do, every (period/cron), `on`

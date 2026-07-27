@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}PistonCore Help — The editable files{% endblock %}
+
+{% block content %}
+<div class="page active help-article">
+  <div class="list-header">
+    <h1>The editable files</h1>
+  </div>
+
+  <p>
+    PistonCore's compiler keeps its knowledge in <strong>data files</strong> rather
+    than buried in the program. That's what makes it repairable by whoever is using
+    it — including after there's nobody maintaining it. This page is the reference
+    for <em>which file holds what</em>, so a change lands in the right place.
+  </p>
+  <p>
+    They all live in <code>customize/</code> on PistonCore's data folder. Editing one
+    takes effect on the next compile — no rebuild, no restart. Your changes survive
+    updates, and you can undo any of it from
+    <a href="/settings">Settings → Translation data</a>.
+    <a href="/help/translation-updates">How updates and restoring work →</a>
+  </p>
+  <p class="field-hint">
+    You are not expected to hand-write these. The intended way is to describe the
+    problem to an AI and let it make the edit —
+    <a href="/help/editing-compiler">see extending the compiler with an AI</a>.
+    This page exists so you (or it) can tell which file is the right one.
+  </p>
+
+  <h2>The short version</h2>
+  <table class="help-table">
+    <tr><th>If the problem is…</th><th>Edit</th></tr>
+    <tr>
+      <td>Home Assistant renamed a service or a field, or a command does nothing /
+          the wrong thing</td>
+      <td><code>webcore_vocab.json</code></td>
+    </tr>
+    <tr>
+      <td>A state or value comes out wrong — "open" vs "on", an alarm mode, a fan
+          speed, a colour name</td>
+      <td><code>value_maps.json</code></td>
+    </tr>
+    <tr>
+      <td>A device doesn't show up, or shows up missing something it can do</td>
+      <td><code>picker_capability_map.json</code></td>
+    </tr>
+    <tr>
+      <td>A piston is using PyScript when it shouldn't have to (or the reverse)</td>
+      <td><code>routing_table.json</code></td>
+    </tr>
+    <tr>
+      <td>The generated automation is shaped wrong, or a webCoRE function is
+          missing</td>
+      <td>the <code>.j2</code> template files</td>
+    </tr>
+  </table>
+
+  <h2>webcore_vocab.json — the translation</h2>
+  <p>
+    <strong>The big one, and the one that gets edited most.</strong> It holds
+    webCoRE's entire vocabulary — every command, attribute and capability — and,
+    against each one, the Home Assistant name it translates to.
+  </p>
+  <p>
+    Two halves, and the difference matters. The webCoRE half is <strong>frozen</strong>:
+    webCoRE is finished software, its words never change, so those must not be edited.
+    The <code>"ha"</code> entries beside them are the editable half, because Home
+    Assistant renames things regularly. That's the whole design — the frozen word is
+    a stable handle to look up the changing one.
+  </p>
+  <p>
+    An entry says which service to call and which fields to fill in, for example
+    "turn on a light" → <code>light.turn_on</code>. Where a command isn't aimed at a
+    device you picked — waking a PC over the network, setting location mode — the
+    entry simply has no domain. There's also a small <code>_ha_names</code> section
+    at the bottom for names that have no webCoRE counterpart at all, because webCoRE
+    never had to do that thing.
+  </p>
+  <p class="field-hint">
+    Every HA name the compiler uses is in this one file. If you're hunting for a
+    service name somewhere else, it isn't there.
+  </p>
+
+  <h2>value_maps.json — what values mean</h2>
+  <p>
+    Names versus <em>values</em>. The vocab says a lock is operated with
+    <code>lock.lock</code>; this file says webCoRE's "unlocked" is HA's
+    <code>unlocked</code>, that the opposite of "open" is "closed", which service
+    arms an alarm to a given mode, and what "low" means as a fan speed.
+  </p>
+  <p>
+    Edit this when a piston triggers at the wrong time, or a mode lands on the wrong
+    setting, even though the right service is clearly being called.
+  </p>
+
+  <h2>picker_capability_map.json — what your devices can do</h2>
+  <p>
+    Home Assistant describes a device with a domain, a device class, and a set of
+    supported features. webCoRE describes it with capabilities and attributes. This
+    file is the bridge, and it decides <strong>what you see in the device picker</strong>
+    and which attributes each device offers.
+  </p>
+  <p>
+    Edit it when a device is missing from the picker, or is there but doesn't offer
+    something it can plainly do.
+  </p>
+
+  <h2>routing_table.json — which engine a piston uses</h2>
+  <p>
+    PistonCore compiles to plain Home Assistant automations wherever it can, and
+    falls back to PyScript for the things YAML genuinely can't express. This file is
+    the list of what forces that fallback.
+  </p>
+  <p>
+    It's deliberately separate from translation, because it's the part that
+    <strong>moves</strong>: every time Home Assistant gains an ability, something can
+    come off this list and compile natively instead. Editing it changes which engine
+    is used, never what the piston means.
+  </p>
+
+  <h2>The .j2 template files — the shape of the output</h2>
+  <p>
+    These decide how the finished automation is written out: the layout of the YAML,
+    or the structure of the PyScript. The translation supplies the names; these
+    decide the arrangement.
+  </p>
+  <p>
+    <code>expr_runtime.py.j2</code> is the odd one out and worth knowing about: it
+    holds webCoRE's <em>functions</em> — the maths, text and date helpers pistons can
+    call. A missing function gets added there.
+  </p>
+  <div class="banner banner-error">
+    <strong>Templates are the risky ones.</strong> They're closer to program code
+    than to data, and they run as part of your compiler. Editing your own is fine;
+    importing one from a source you don't trust means running someone else's code.
+    PistonCore warns you when an import includes a template, and lets you decide.
+  </div>
+
+  <h2>How to tell you got it right</h2>
+  <p>
+    Recompile a piston and look at the result. The compiler reads these files fresh
+    every time, so there's no restart step and no waiting. If an edit makes things
+    worse, <strong>Go back</strong> in Settings restores what was there before.
+  </p>
+
+  <p>
+    <a href="/help">← All help</a> ·
+    <a href="/help/editing-compiler">Extending the compiler with an AI</a> ·
+    <a href="/settings">Settings → Translation data</a>
+  </p>
+</div>
+{% endblock %}

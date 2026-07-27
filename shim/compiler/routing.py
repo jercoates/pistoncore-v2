@@ -18,6 +18,18 @@ def _load() -> dict:
         return json.load(f)
 
 
+def piston_scope_commands() -> list:
+    """Commands that act on PISTON state (variables, tiles, logs, piston
+    control) rather than on a device. YAML has no way to express them, so they
+    route to PyScript.
+
+    This is ROUTING, not translation, which is why it lives in the routing
+    table and not in the vocab — the vocab says what a command is CALLED in
+    Home Assistant, this says which band can express it (Jeremy's split:
+    translation is band-agnostic, routing is the moving target)."""
+    return _load().get("piston_scope_commands", [])
+
+
 def pyscript_reasons(piston: dict) -> list[str]:
     t = _load()
     reasons: list[str] = []

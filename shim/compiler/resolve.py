@@ -72,11 +72,9 @@ class Resolver:
         self.binary_opposites = maps["binary_opposites"]
         self.system_values = maps.get("system_values", {})
         self.alarm_commands = maps.get("alarm_commands", {})
-        self.command_maps = _load_band_json("command_maps.json")
-        # Command->HA translation now lives in the VOCAB (one source, memory:
-        # one_translation_source_decision). Read it here; command_maps stays as
-        # the fallback until the vocab route is fully tested (Jeremy: leave the
-        # abandoned file until testing is done).
+        # Command->HA translation lives in the VOCAB and nowhere else. The old
+        # per-band command_maps.json was deleted 2026-07-26 (memory:
+        # one_translation_source_decision) — one file to edit, band-agnostic.
         vocab = _load_vocab()
         self.command_ha = _load_command_ha(vocab)
         self.virtual_devices = vocab.get("virtualDevices", {})
@@ -228,6 +226,21 @@ class Resolver:
             f"no HA name for command '{command}' in the vocab — add an 'ha' "
             f"entry to webcore_vocab.json", **ctx)
 
+    def ha_spec(self, command: str, ctx: dict) -> dict:
+        """The vocab's HA translation for a command the emitter handles with
+        its own code path (speak, the notification family, setHSLColor).
+
+        Those paths can't go through service_spec because the service isn't
+        aimed at the piston's devices — Speak targets the TTS engine and puts
+        the speakers in the data; a notification targets nothing at all. They
+        still need the NAMES, which is all this returns. Which command it is
+        is already known by the caller, so the first entry is the answer."""
+        for entry in self.command_ha.get(command, []):
+            return entry
+        raise UnresolvableDevice(
+            f"no HA name for command '{command}' in the vocab — add an 'ha' "
+            f"entry to webcore_vocab.json", **ctx)
+
     def virtual_device_ha(self, name: str) -> dict:
         """HA names standing in for a webCoRE concept HA has no equivalent of
         ($mode -> an input_select helper, $alarmSystemStatus -> an
@@ -240,17 +253,21 @@ class Resolver:
         return service
 
     def service_spec(self, command: str, entity_id: str, ctx: dict) -> tuple[str, dict | None]:
-        """(service, data-template-or-None). Reads command->HA translation from
-        the VOCAB's "ha" arrays first (the one source), falling back to
-        command_maps.json for anything the vocab doesn't yet cover (the real
-        orphans setPosition/setSpeed, until they're folded in). data values
-        carry $1/$2 param tokens the emitter substitutes.
+        """(service, data-template-or-None) for a command aimed at a device,
+        picked by that device's domain. data values carry $1/$2 param tokens
+        the emitter substitutes.
 
-        Only EXECUTABLE vocab entries are used — an entry whose data still holds
-        the vocab's older declarative form ({0}, hex_to_rgb(...), .../100) is
-        skipped so it behaves exactly as before this consolidation (errors /
-        routes to PyScript), keeping output byte-identical until those get
-        migrated to executable form in the improvement pass."""
+        The vocab is now the ONLY source: command_maps.json was deleted
+        2026-07-26 once the golden-snapshot harness showed no drift with it
+        emptied. A permanent fallback would have been two sources again — the
+        exact thing this consolidation existed to kill (Jeremy: "leaving it
+        after testing is just lazy").
+
+        Entries whose data still uses the vocab's older DECLARATIVE spelling
+        ({0} rather than $1) are skipped rather than emitted wrong. Nothing in
+        the shipped vocab is written that way any more, but a hand-edit or an
+        imported fix could be, and a skipped entry fails loudly here instead of
+        producing a broken service call."""
         domain = entity_id.split(".", 1)[0]
 
         def _executable(entry: dict) -> bool:
@@ -263,14 +280,7 @@ class Resolver:
             if entry.get("domain") in (domain, "_any", "*") and _executable(entry):
                 return entry["service"], entry.get("data")
 
-        # fallback: command_maps (orphans + anything the vocab lacks) — retired
-        # once the vocab route is fully tested (Jeremy pulls command_maps then).
-        per_domain = self.command_maps.get(command) or {}
-        spec = per_domain.get(domain) or per_domain.get("_any")
-        if not spec:
-            raise UnresolvableDevice(
-                f"no HA service mapping for command '{command}' on domain '{domain}' "
-                f"(vocab 'ha' + command_maps.json)", ha_domain=domain, **ctx)
-        if isinstance(spec, str):
-            return spec, None
-        return spec["service"], spec.get("data")
+        raise UnresolvableDevice(
+            f"no HA service mapping for command '{command}' on domain '{domain}' "
+            f"— add an 'ha' entry for it in webcore_vocab.json",
+            ha_domain=domain, **ctx)

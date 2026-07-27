@@ -7,7 +7,7 @@ HA's native if/then/else action blocks), `every` timers (time / time_pattern
 triggers), trigger promotion for condition-only pistons, equality + between +
 numeric comparisons with any/all aggregation, the $time is_between window
 (HA time condition), and command data params (setLevel/setColor via
-command_maps.json $-tokens). TCP-default branches emit mode: restart +
+vocab $-tokens). TCP-default branches emit mode: restart +
 auxiliary cancel-triggers gated by `condition: trigger`; `queued` (Jeremy's
 default) governs where TCP doesn't force restart."""
 
@@ -27,6 +27,7 @@ from .analyze import analyze
 from .errors import NotYetImplemented
 from .expression import JinjaTranspiler
 from .resolve import Resolver
+from . import routing as _routing
 
 _BAND_REL = "templates/compiler/yaml/classic"
 _env = Environment(
@@ -958,7 +959,7 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 out.append({"kind": "service", "service": spec["service"],
                             "entities": [], "data": data})
                 continue
-            if not n["devices"] or n["command"] in resolver.command_maps.get("_piston_scope", []):
+            if not n["devices"] or n["command"] in _routing.piston_scope_commands():
                 # piston-scope command (setVariable, log, setState, tiles, ...)
                 # — piston state has no YAML equivalent, whatever devices the
                 # surrounding action block targets.
@@ -969,7 +970,11 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             data = None
             if data_spec:
                 data = {k: _param_value(v, n["params"], ctx) for k, v in data_spec.items()}
-                if service == "media_player.play_media" and data.get("media_content_id"):
+                # "is this the play-a-file service?" — the name it compares
+                # against comes from the vocab, so an HA rename doesn't
+                # silently stop media URLs being rewritten.
+                if service == resolver.ha_spec("playTrack", ctx)["service"] \
+                        and data.get("media_content_id"):
                     data["media_content_id"] = _rewrite_media_url(
                         data["media_content_id"], resolver, ctx)
             out.append({"kind": "service", "service": service,
@@ -1064,7 +1069,7 @@ def _fade(n: dict, resolver: Resolver, ctx: dict) -> list:
     [0] starting value (optional — omit to fade from the current value),
     [1] final value, [2] duration, [3] optional 'only if switch is …'. A
     starting value is set instantly first, then the fade to final runs over
-    `transition`. Reuses the base set<X> service/data mapping (command_maps.json)
+    `transition`. Reuses the base set<X> service/data mapping (the vocab)
     so the attribute key + any transform stay data-driven."""
     cmd = n["command"]
     base = _FADE_BASE[cmd]
@@ -1114,8 +1119,11 @@ def _set_hsl(n: dict, resolver: Resolver, ctx: dict) -> dict:
         return v
 
     hue, sat, level = num(params[0], "hue"), num(params[1], "saturation"), num(params[2], "level")
-    data = {"hs_color": _json_dumps([round(float(hue) * 3.6, 1), round(float(sat), 1)]),
-            "brightness_pct": level}
+    # webCoRE hue is 0-100, HA's is 0-360 — the conversion is compiler work and
+    # stays here. The two FIELD names it fills come from the vocab.
+    colour_field, level_field = list(resolver.ha_spec("setHSLColor", ctx)["data"])
+    data = {colour_field: _json_dumps([round(float(hue) * 3.6, 1), round(float(sat), 1)]),
+            level_field: level}
     return {"kind": "service", "service": service, "entities": entities, "data": data}
 
 
@@ -1189,7 +1197,7 @@ def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
     Params (vocab): [0] level/color A, [1] duration A, [2] level/color B,
     [3] duration B, [4] flash count, [5] optional "only if switch is on/off".
     The level/color halves reuse the SAME setLevel/setColor service+data spec
-    the plain commands compile through (command_maps.json), so a band edit to
+    the plain commands compile through (the vocab), so an edit to
     those maps carries into flash for free.
 
     Deliberately does NOT restore prior state afterward (leaves the light in
@@ -1336,17 +1344,21 @@ def _send_email(n: dict, resolver: Resolver, ctx: dict) -> dict:
             "select it as PistonCore's email notifier", **ctx)
     params = n["params"]
     piston = n.get("_piston")
+    # field names by the webCoRE param they carry ($1 recipient, $2 subject,
+    # $3 body); which ones get sent is compiler logic and stays here.
+    spec = resolver.ha_spec("sendEmail", ctx)
+    field = {tok: name for name, tok in spec["data"].items()}
     body = params[2] if len(params) > 2 else {}
-    data = {"message": _text_param(body or {}, resolver, ctx, piston)}
+    data = {field["$3"]: _text_param(body or {}, resolver, ctx, piston)}
     subject = params[1] if len(params) > 1 else None
     if subject and (subject or {}).get("c") not in (None, ""):
-        data["title"] = _text_param(subject, resolver, ctx, piston)
+        data[field["$2"]] = _text_param(subject, resolver, ctx, piston)
     recipient = params[0] if len(params) > 0 else None
     if recipient and (recipient or {}).get("c") not in (None, ""):
-        # per-call recipient override (notify.send_message data.target); a single
-        # address as a scalar is valid, HA also accepts a list.
-        data["target"] = _text_param(recipient, resolver, ctx, piston)
-    return {"kind": "service", "service": "notify.send_message",
+        # per-call recipient override; a single address as a scalar is valid,
+        # HA also accepts a list.
+        data[field["$1"]] = _text_param(recipient, resolver, ctx, piston)
+    return {"kind": "service", "service": spec["service"],
             "entities": [entity], "data": data}
 
 
@@ -1396,8 +1408,10 @@ def _push_notification(n: dict, resolver: Resolver, ctx: dict) -> dict:
     if n["command"] == "deviceNotification" and resolver.speaker_targets(n["devices"], ctx):
         return _speak(n, resolver, ctx)
     p0 = n["params"][0] if n["params"] else {}
-    return {"kind": "service", "service": "notify.notify", "entities": [],
-            "data": {"message": _text_param(p0, resolver, ctx, n.get("_piston"))}}
+    spec = resolver.ha_spec(n["command"], ctx)
+    return {"kind": "service", "service": spec["service"], "entities": [],
+            "data": {next(iter(spec["data"])):
+                     _text_param(p0, resolver, ctx, n.get("_piston"))}}
 
 
 def _speak(n: dict, resolver: Resolver, ctx: dict) -> dict:
@@ -1414,10 +1428,16 @@ def _speak(n: dict, resolver: Resolver, ctx: dict) -> dict:
         raise NotYetImplemented("Speak with no speaker devices", **ctx)
     players = resolver.entities_for_command(n["devices"], n["command"], ctx)
     p0 = n["params"][0] if n["params"] else {}
-    return {"kind": "service", "service": "tts.speak", "entities": [engine],
-            "data": {"media_player_entity_id": players,
-                     "message": _text_param(p0, resolver, ctx, n.get("_piston")),
-                     "cache": "true"}}
+    # $target = the speakers the piston picked, $1 = the message. Anything else
+    # in the vocab's data is a literal. Field NAMES come from the vocab; which
+    # value belongs in each is the compiler's business.
+    spec = resolver.ha_spec(n["command"], ctx)
+    slots = {"$target": players,
+             "$1": _text_param(p0, resolver, ctx, n.get("_piston"))}
+    data = {k: slots.get(v, "true" if v is True else v)
+            for k, v in spec["data"].items()}
+    return {"kind": "service", "service": spec["service"], "entities": [engine],
+            "data": data}
 
 
 def _send_notification(params: list, resolver: Resolver, ctx: dict,
@@ -1431,9 +1451,11 @@ def _send_notification(params: list, resolver: Resolver, ctx: dict,
     engine."""
     import json as _json
     p = params[0] if params else {}
-    return {"kind": "service", "service": "notify.persistent_notification",
+    spec = resolver.ha_spec("sendNotification", ctx)
+    return {"kind": "service", "service": spec["service"],
             "entities": [],
-            "data": {"message": _text_param(p, resolver, ctx, piston)}}
+            "data": {next(iter(spec["data"])):
+                     _text_param(p, resolver, ctx, piston)}}
 
 
 def _lit(value) -> str:
@@ -1464,7 +1486,7 @@ def _switch_subject(lo: dict, resolver: Resolver, ctx: dict) -> str:
 
 
 def _param_value(token: str, params: list, ctx: dict):
-    """$1/$2 (+|transform) tokens from command_maps.json data specs."""
+    """$1/$2 (+|transform) tokens from the vocab's data specs."""
     raw = str(token)
     transform = None
     if "|" in raw:

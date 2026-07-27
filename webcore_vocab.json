@@ -2220,12 +2220,12 @@
    "ha": [
     {
      "domain": "*",
-     "service": "notify.{target}",
+     "service": "notify.notify",
      "data": {
-      "message": "{0}"
+      "message": "$1"
      },
-     "tag": "assumed",
-     "note": "notify implementation blocked pending phone on test HA per COMPILER_DECISIONS_HOLDING"
+     "tag": "verified",
+     "note": "goes out the same door as push. EXCEPTION handled in the compiler, not here: if the devices it targets are speakers, webCoRE's device notification is a SPOKEN message, so it compiles as Speak instead. Per-device notify targeting (notify.<device>) remains the future intent, blocked pending a phone on the test HA"
     }
    ]
   },
@@ -2549,11 +2549,12 @@
      "domain": "media_player",
      "service": "tts.speak",
      "data": {
-      "media_player_entity_id": "{target}",
-      "message": "{0}"
+      "media_player_entity_id": "$target",
+      "message": "$1",
+      "cache": true
      },
      "tag": "verified",
-     "note": "volume param {1} compiles as a preceding media_player.volume_set"
+     "note": "volume param $2 compiles as a preceding media_player.volume_set"
     }
    ]
   },
@@ -3010,9 +3011,53 @@
      "domain": "cover",
      "service": "cover.set_cover_position",
      "data": {
-      "position": "{0}"
+      "position": "$1"
+     },
+     "tag": "verified",
+     "note": "a shade's 'level' is how far open it is. webCoRE level and HA cover position are both 0-100, so the number passes straight through"
+    }
+   ]
+  },
+  "setPosition": {
+   "n": "Move to position",
+   "d": "Set position to {0}",
+   "a": "position",
+   "p": [
+    {
+     "n": "Position",
+     "t": "position"
+    }
+   ],
+   "ha": [
+    {
+     "domain": "cover",
+     "service": "cover.set_cover_position",
+     "data": {
+      "position": "$1"
      },
      "tag": "verified"
+    }
+   ]
+  },
+  "setSpeed": {
+   "n": "Set fan speed...",
+   "d": "Set fan speed to {0}",
+   "a": "speed",
+   "p": [
+    {
+     "n": "Fan Speed",
+     "t": "speed"
+    }
+   ],
+   "ha": [
+    {
+     "domain": "fan",
+     "service": "fan.set_percentage",
+     "data": {
+      "percentage": "$1|speed_pct"
+     },
+     "tag": "verified",
+     "note": "webCoRE names fan speeds (low/medium/high); HA wants a percentage, so the speed_pct transform converts"
     }
    ]
   },
@@ -3216,11 +3261,12 @@
      "domain": "media_player",
      "service": "tts.speak",
      "data": {
-      "media_player_entity_id": "{target}",
-      "message": "{0}"
+      "media_player_entity_id": "$target",
+      "message": "$1",
+      "cache": true
      },
      "tag": "verified",
-     "note": "targets the configured tts entity; see SPEAK_ACTION_SPEC. verify_ssl caveat applies on local HA certs"
+     "note": "the service is aimed at the TTS engine chosen in Settings; the speakers the piston picked go in media_player_entity_id ($target). See SPEAK_ACTION_SPEC. verify_ssl caveat applies on local HA certs"
     }
    ]
   },
@@ -3762,6 +3808,18 @@
      ],
      "d": " if already {v}"
     }
+   ],
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "hs_color": "$1",
+      "brightness_pct": "$3"
+     },
+     "tag": "verified",
+     "note": "hs_color carries hue and saturation together as a pair. webCoRE's hue is 0-100 and HA's is 0-360, so the compiler converts before filling this in — the conversion is compiler work, this file only names the field"
+    }
    ]
   },
   "toggleLevel": {
@@ -3791,6 +3849,16 @@
      "n": "Message",
      "t": "string"
     }
+   ],
+   "ha": [
+    {
+     "service": "notify.persistent_notification",
+     "data": {
+      "message": "$1"
+     },
+     "tag": "verified",
+     "note": "webCoRE's 'Send notification' is the hub's IN-APP notification, not a push. HA's equivalent is the notifications panel, which every install has with zero setup (NOTIFY_ACTION_SPEC). No domain key: no device is involved"
+    }
    ]
   },
   "sendPushNotification": {
@@ -3809,6 +3877,16 @@
      "t": "boolean",
      "d": " and store in Messages",
      "s": 1
+    }
+   ],
+   "ha": [
+    {
+     "service": "notify.notify",
+     "data": {
+      "message": "$1"
+     },
+     "tag": "verified",
+     "note": "webCoRE push went to the hub's phone app; HA's equivalent is notify.notify, which fans out to every notifier configured (the companion app registers itself there). No domain key: no device is involved"
     }
    ]
   },
@@ -3833,6 +3911,16 @@
      "d": " and store in Messages",
      "s": 1
     }
+   ],
+   "ha": [
+    {
+     "service": "notify.notify",
+     "data": {
+      "message": "$1"
+     },
+     "tag": "verified",
+     "note": "HA has no SMS service of its own; an SMS integration registers itself as a notifier like any other, so this goes out the same door as push. The phone number ($2) has no HA equivalent and is not sent. No domain key: no device is involved"
+    }
    ]
   },
   "sendNotificationToContacts": {
@@ -3855,6 +3943,16 @@
      "t": "boolean",
      "d": " and store in Messages",
      "s": 1
+    }
+   ],
+   "ha": [
+    {
+     "service": "notify.persistent_notification",
+     "data": {
+      "message": "$1"
+     },
+     "tag": "verified",
+     "note": "webCoRE contacts were a SmartThings feature that was retired; there is nothing to map them to, so the contact list ($2) is not sent and the message goes to the notifications panel like an ordinary Send notification. No domain key: no device is involved"
     }
    ]
   },
@@ -4273,6 +4371,18 @@
     {
      "n": "Message body",
      "t": "string"
+    }
+   ],
+   "ha": [
+    {
+     "service": "notify.send_message",
+     "data": {
+      "message": "$3",
+      "title": "$2",
+      "target": "$1"
+     },
+     "tag": "verified",
+     "note": "aimed at the email notifier chosen in Settings — HA cannot tell an email notifier from a Telegram or Slack one. title and target are only sent when the piston fills them in. No domain key: no device is involved"
     }
    ]
   },

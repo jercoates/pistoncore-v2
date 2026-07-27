@@ -29,6 +29,7 @@ from .. import customize
 from .errors import NotYetImplemented
 from .expression import ExprTranspiler
 from .resolve import Resolver
+from . import routing as _routing
 
 _BAND_REL = "templates/compiler/pyscript/2.x"
 _env = Environment(
@@ -651,14 +652,19 @@ class _PyEmitter:
                         raise NotYetImplemented(
                             "spoken device notification needs a TTS engine "
                             "(PistonCore Settings)", **ctx)
-                    out.append({"kind": "service", "domain": "tts", "service": "speak",
+                    spec = self.resolver.ha_spec("speak", ctx)
+                    dom, svc = spec["service"].split(".", 1)
+                    slots = {"$target": repr(players), "$1": f"str({msg})"}
+                    out.append({"kind": "service", "domain": dom, "service": svc,
                                 "entities": [engine],
-                                "data": {"media_player_entity_id": repr(players),
-                                         "message": f"str({msg})", "cache": "True"}})
+                                "data": {k: slots.get(v, "True" if v is True else v)
+                                         for k, v in spec["data"].items()}})
                 else:
-                    out.append({"kind": "service", "domain": "notify",
-                                "service": "notify", "entities": [],
-                                "data": {"message": f"str({msg})"}})
+                    nspec = self.resolver.ha_spec(cmd, ctx)
+                    ndom, nsvc = nspec["service"].split(".", 1)
+                    out.append({"kind": "service", "domain": ndom,
+                                "service": nsvc, "entities": [],
+                                "data": {next(iter(nspec["data"])): f"str({msg})"}})
             elif cmd in ("sendNotification", "sendNotificationToContacts"):
                 p0 = params[0] if params else {}
                 # in-app notification == HA notifications panel (NOTIFY_ACTION_SPEC)
@@ -722,10 +728,13 @@ class _PyEmitter:
                     raise NotYetImplemented("Speak with no speaker devices", **ctx)
                 players = self.resolver.entities_for_command(devices, cmd, ctx)
                 msg = self._string_param(params[0] if params else {"t": "c", "c": ""}, ctx)
-                out.append({"kind": "service", "domain": "tts", "service": "speak",
+                spec = self.resolver.ha_spec(cmd, ctx)
+                dom, svc = spec["service"].split(".", 1)
+                slots = {"$target": repr(players), "$1": f"str({msg})"}
+                out.append({"kind": "service", "domain": dom, "service": svc,
                             "entities": [engine],
-                            "data": {"media_player_entity_id": repr(players),
-                                     "message": f"str({msg})", "cache": "True"}})
+                            "data": {k: slots.get(v, "True" if v is True else v)
+                                     for k, v in spec["data"].items()}})
             elif cmd == "setLocationMode":
                 mode = (params[0] or {}).get("c") if params else None
                 if not isinstance(mode, str):
@@ -769,7 +778,7 @@ class _PyEmitter:
                 out.append({"kind": "log",
                             "msg": _q(f"[{self.piston_id}] cancelTasks: no-op under "
                                       f"restart execution model")})
-            elif cmd in self.resolver.command_maps.get("_piston_scope", []):
+            elif cmd in _routing.piston_scope_commands():
                 raise NotYetImplemented(f"piston-scope command '{cmd}' not compiled yet", **ctx)
             else:
                 if not devices:

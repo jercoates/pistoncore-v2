@@ -1,5 +1,5 @@
 {
- "_comment": "webCoRE-JSON signatures that FORCE the PyScript band (COMPILER_SPEC \u00a73.2). YAML/classic is the default; these are the exceptions. Data-driven on purpose (COMPILER_DECISIONS_HOLDING \u00a7E1) - edit here, never in compiler code. Checked by shim/compiler/routing.py. cancelTasks was removed 2026-07-20: mode:restart already cancels this automation's pending delays when it retriggers, so the YAML band expresses it natively (as a no-op).",
+ "_comment": "webCoRE-JSON signatures that FORCE the PyScript band (COMPILER_SPEC §3.2). YAML/classic is the default; these are the exceptions. Data-driven on purpose (COMPILER_DECISIONS_HOLDING §E1) - edit here, never in compiler code. Checked by shim/compiler/routing.py. cancelTasks was removed 2026-07-20: mode:restart already cancels this automation's pending delays when it retriggers, so the YAML band expresses it natively (as a no-op). piston_scope_commands moved here from command_maps.json 2026-07-26: it is ROUTING (which commands the YAML band cannot express, so they go to PyScript), not translation, and translation now lives solely in webcore_vocab.json.",
  "statement_types": [
   "on",
   "break"
@@ -23,5 +23,39 @@
   "tsp": [
    "a"
   ]
- }
+ },
+ "piston_scope_commands": [
+  "setVariable",
+  "setState",
+  "saveStateLocally",
+  "saveState",
+  "loadStateLocally",
+  "loadState",
+  "log",
+  "setPistonState",
+  "setTileColor",
+  "setTileTitle",
+  "setTileText",
+  "setTile",
+  "clearTile",
+  "exit",
+  "break",
+  "cancelTasks",
+  "cancelPendingTasks",
+  "executePiston",
+  "pausePiston",
+  "resumePiston",
+  "httpRequest",
+  "setLocationMode",
+  "storeMedia",
+  "wolRequest",
+  "iftttMaker",
+  "writeToFuelStream",
+  "comment",
+  "waitForTime",
+  "waitForDateTime",
+  "repeatAction",
+  "followUp",
+  "setHSMStatus"
+ ]
 }
