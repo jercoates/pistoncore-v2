@@ -119,24 +119,27 @@ The `was` / `stays` distinction is critical and has real edge cases:
 
 ### A Fixed Percentage Can Silently Reach No Device At All (MEASURED 2026-07-26)
 
-Devices that take a percentage often only accept discrete steps, and they report the step
-size in `percentage_step`. Home Assistant **rounds the requested value to the nearest step**
-— and if the rounded value equals where the device already is, **no command is sent at
-all**.
-
-Measured on a real fan reporting `percentage_step: 20` (five steps): with the fan on
-medium, sending 33 (a fixed table's value for "low") produced **no command to the device**
-— the hub's `Last Command Time` never moved. The piston compiled, deployed and "ran"
-successfully, and the fan did not move.
+Measured on a real fan reporting `percentage_step: 20` (five steps), reached through a
+Hubitat bridge: with the fan on medium, sending 33 (a fixed table's value for "low")
+produced **no command to the device at all** — the hub's `Last Command Time` never moved.
+The piston compiled, deployed and "ran" successfully, and the fan did not move.
 
 This is the worst shape of failure PistonCore can produce: nothing errors anywhere.
 
-**Implication:** a fixed value table cannot be correct across devices — a three-speed and a
-five-speed fan need different numbers, and the same physical device reports different step
-counts depending on which integration or bridge it arrives through. Values that map onto
-discrete steps must be **derived from what the device reports** (`percentage_step`,
-`preset_modes`), resolved at compile time. Deriving 20/60/100 from the step size above makes
-all three speeds land, because each is genuinely distinct from the others.
+**The rounding is NOT done by Home Assistant** (corrected same day, by testing a virtual
+fan with identical attributes). HA passed 33 straight through to the virtual fan, which
+reported 33 back. `percentage_step` is a HINT that integrations and dashboards may use — it
+is **not enforced by HA core**. The absorption happened inside the bridge integration,
+which normalised the value to the speed it already had and sent nothing onward.
+
+**Implication:** the behaviour depends on the INTEGRATION, not just on the entity's
+attributes. A fixed value table cannot be correct across devices — a three-speed and a
+five-speed fan need different numbers, and the same physical device behaves differently
+depending on which integration or bridge it arrives through. Values that map onto discrete
+steps must be **derived from what the device reports** (`percentage_step`, `preset_modes`)
+and should where possible land on a value that is unambiguously distinct, so an integration
+cannot fold it into the current one. Deriving 20/60/100 from the step size above does that;
+33 does not.
 
 **Related trap:** an entity may advertise a capability it has not declared. The same fans
 list `preset_modes: ['auto']` while `supported_features` does not include the preset-mode
