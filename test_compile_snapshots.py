@@ -56,12 +56,65 @@ def _collect(node, hashes, attrs, cmds, globs):
             _collect(node[key], hashes, attrs, cmds, globs)
 
 
+def _vocab():
+    with open(os.path.join(os.path.dirname(SNAPSHOT), "webcore_vocab.json"),
+              encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _domain_choices(vocab):
+    """command -> the HA domain it's actually for, and attribute -> likewise,
+    read from the vocab's own translation rules.
+
+    WHY (2026-07-26): the map used to bind EVERY command to `light.dev0`, so
+    47 of 84 pistons "errored" with 'no HA service mapping for lock on domain
+    light' — an artefact of the fake map, not a real result. That made the
+    harness a drift detector wearing a coverage number's clothes: it never
+    exercised the emission path for anything that isn't a light, which is
+    where the silent bugs have actually been. Binding each command to a domain
+    the vocab says it belongs to makes the harness compile those pistons for
+    real."""
+    cmd_domain, attr_domain = {}, {}
+    for section in ("commands", "virtualCommands"):
+        for name, entry in vocab.get(section, {}).items():
+            for rule in (entry.get("ha") or []):
+                if not isinstance(rule, dict):
+                    continue
+                dom = rule.get("domain")
+                if dom and dom not in ("*", "_any"):
+                    cmd_domain[name] = dom
+                    break
+    for name, entry in vocab.get("attributes", {}).items():
+        for rule in (entry.get("ha") or []):
+            if not isinstance(rule, dict):
+                continue
+            dom = rule.get("domain")
+            if dom and dom not in ("*", "_any"):
+                attr_domain[name] = dom
+                break
+    return cmd_domain, attr_domain
+
+
+# Stand-ins for the entities PistonCore resolves from Settings rather than from
+# the piston (the TTS engine, the email notifier, the location-mode helper, the
+# alarm panel). Without these, every Speak / Send email / alarm / location-mode
+# piston errors on missing configuration instead of compiling — so the harness
+# never covered them, including the command translation migrated this session.
+_SYSTEM_ENTITIES = {
+    "tts": "tts.dev_engine",
+    "email": "notify.dev_email",
+    "mode": "input_select.dev_location_mode",
+    "alarmSystemStatus": "alarm_control_panel.dev_panel",
+}
+
+
 def _synthetic_maps(piston):
     """A deterministic resolution map covering every device ref in the piston.
 
-    Deliberately over-broad: every device gets every attribute and every command
-    seen anywhere in that piston. The point is a STABLE input, not a realistic
-    one — the snapshot records whatever the compiler does with it."""
+    Every device gets every attribute and every command seen anywhere in that
+    piston — deliberately over-broad, because the point is a STABLE input. The
+    entity DOMAINS are realistic though (see _domain_choices): a lock command
+    binds to a lock entity, so the compiler runs its real emission path."""
     hashes, attrs, cmds, globs = set(), set(), set(), set()
     _collect(piston.get("s") or [], hashes, attrs, cmds, globs)
     # local device variables resolve to hashes
@@ -81,34 +134,41 @@ def _synthetic_maps(piston):
     # synthetic map must too, or these pistons error on a missing base binding
     # that wouldn't be missing in production. Fold each seen command's `r`
     # requirements into the binding set.
+    cmd_domain, attr_domain = {}, {}
     try:
-        _vocab = json.load(open(os.path.join(os.path.dirname(SNAPSHOT),
-                                             "webcore_vocab.json"), encoding="utf-8"))
-        _vc = {**_vocab.get("commands", {}), **_vocab.get("virtualCommands", {})}
+        vocab = _vocab()
+        _vc = {**vocab.get("commands", {}), **vocab.get("virtualCommands", {})}
         for c in list(cmds):
             for base in (_vc.get(c, {}) or {}).get("r", []) or []:
                 cmds.add(str(base))
+        cmd_domain, attr_domain = _domain_choices(vocab)
     except (OSError, ValueError):
         pass
 
     attrs = sorted(attrs) or ["switch"]
     cmds = sorted(cmds) or ["on"]
+
+    def _bindings(slug):
+        # attributes read from an entity of their own domain; commands act on
+        # one of theirs. Anything the vocab has no domain for keeps the old
+        # stand-in, so unmapped things still produce a stable, recorded result.
+        return (
+            {a: f"{attr_domain.get(a, 'sensor')}.{slug}_{a.lower()}" for a in attrs},
+            {c: f"{cmd_domain.get(c, 'light')}.{slug}" for c in cmds},
+        )
+
     reso = {}
     for i, h in enumerate(real):
         slug = f"dev{i}"
-        reso[h] = {
-            "name": f"Device {i}",
-            "attr_bindings": {a: f"sensor.{slug}_{a.lower()}" for a in attrs},
-            "cmd_bindings": {c: f"light.{slug}" for c in cmds},
-        }
+        attr_b, cmd_b = _bindings(slug)
+        reso[h] = {"name": f"Device {i}", "attr_bindings": attr_b, "cmd_bindings": cmd_b}
     globals_map = {g: {"t": "device", "v": {"d": real[:1] or [":synthetic:"]}}
                    for g in sorted(globs)}
     if not real:
-        reso[":synthetic:"] = {
-            "name": "Device 0",
-            "attr_bindings": {a: f"sensor.dev0_{a.lower()}" for a in attrs},
-            "cmd_bindings": {c: "light.dev0" for c in cmds},
-        }
+        attr_b, cmd_b = _bindings("dev0")
+        reso[":synthetic:"] = {"name": "Device 0",
+                               "attr_bindings": attr_b, "cmd_bindings": cmd_b}
+    reso["$system"] = dict(_SYSTEM_ENTITIES)
     return reso, globals_map
 
 

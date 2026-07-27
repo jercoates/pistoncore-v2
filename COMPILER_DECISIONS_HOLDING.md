@@ -460,6 +460,95 @@ documentation. Verify live at the v2 compiler spec — HA helper capabilities mo
 
 ---
 
+## A-TRANS. ONE TRANSLATION SOURCE — COMPLETE (2026-07-26)
+
+The per-band `command_maps.json` and `value_maps.json` are **DELETED**.
+`templates/compiler/` now holds only `.j2` templates. `webcore_vocab.json` is the single
+source for every Home Assistant name AND every Home Assistant value, band-agnostic, with
+nothing to fall back to. Each deletion was proven safe by emptying the file first and
+confirming the golden-snapshot harness showed no drift BEFORE removing it.
+
+1. **Names are filed under the FROZEN webCoRE word.** webCoRE is finished software so its
+   vocabulary never changes; HA renames things constantly. The frozen word is therefore the
+   stable handle to look the changing one up by (Jeremy, 2026-07-26). Commands not aimed at
+   a picked device (wake-on-LAN, set location mode, pause another piston) carry an `ha`
+   entry with **no `domain` key** — the code is already inside that command's branch and
+   knows there's no device; it needs only the NAME.
+2. **`_ha_names`** holds names with no webCoRE counterpart at all (the HA reload services).
+   Having no CAUSE in webCoRE and having no NAME are different problems: HA still renames
+   these, so they still live in the vocab, just in their own labelled section.
+3. **Attribute values are stored ONCE.** The vocab holds HA→webCoRE (the direction the
+   device payload needs); the compiler FLIPS it for writing. **First listed wins**, because
+   the flip is ambiguous by nature — a lock reports `jammed`/`locking`/`unlocking`, all
+   meaning `unknown`. `*` wildcards are read-side only and skipped when writing.
+4. **Scales: numbers in the vocab, arithmetic in the compiler** (`_value_maps.scales`).
+   What can change is the RANGE — if HA moved volume to 0-100 the fix is one number in a
+   file a non-programmer can read. A division stays a division forever, so moving it into a
+   template would put the fixed part where it is hardest to read and leave the changeable
+   part in code. Maths that is true regardless of HA (parsing a hex colour) stays in code.
+5. **on↔off opposites live in CODE, not the vocab** — no HA name appears in them, so no HA
+   rename can break them. They are frozen webCoRE semantics, not translation.
+6. **File-split rule: split by WHY SOMETHING CHANGES, not by what kind of data it is.**
+   `routing_table.json` is rightly separate because it changes when HA GAINS AN ABILITY
+   (something moves off the PyScript list) — a different clock from renames. A rule's
+   device_class and its state map are fields on the same line and change in the same HA
+   release, so they stay together. Lookup tables go in JSON, never templates.
+7. **`fixtures.py` strips shim-internal vocab data by UNDERSCORE PREFIX** before serving the
+   sealed dashboard. Adding sections by name leaked twice; prefix-stripping means a future
+   `_`-section cannot leak by being forgotten.
+
+## A-CAPS. DEVICE CAPABILITIES ARE READ FROM HA, AT COMPILE TIME (2026-07-26)
+
+**DECISION (Jeremy):** where the translation offers more than one possibility, the compiler
+reads what the device itself reports and picks — resolved ONCE at compile time and baked
+into the emitted YAML, never a runtime check. It goes stale only if the device or its
+integration changes, and a RECOMPILE is the refresh. This is the same pattern already used
+to resolve device entities, widened from *which entity* to *which capability and value*.
+See also the standing rule that emitted automations must never depend on PistonCore at
+runtime.
+
+- **Prefer a SETTING over a percentage.** Named speeds/presets/discrete levels first;
+  a percentage only when nothing better exists. Percentages disagree between integrations
+  because each layer derives its own step count — so a percentage is always somebody's
+  translation, whereas the named setting is what the device actually speaks.
+- **Where HA contradicts itself, trust `supported_features`** over an advertised attribute.
+  MEASURED on real hardware: both of Jeremy's fans list `preset_modes: ['auto']` while
+  `supported_features` (49) does NOT declare PRESET_MODE. Calling `set_preset_mode` there
+  would be calling an undeclared capability; failing toward the working fallback is the
+  safe direction.
+- **What HA sees is the only input that matters** (Jeremy). Not the Zigbee cluster, not the
+  datasheet, not what another hub reports — the compiler only ever talks to HA.
+- **Never tune to one install.** Jeremy runs Hubitat BRIDGED to HA, so his entities are the
+  bridge's rendering. The same Inovelli fan has at least three different shapes depending
+  on how it reaches HA. Fan/device variants must be exercised on the virtual device bench,
+  not against his hardware alone.
+- **WORKED EXAMPLE, measured 2026-07-26:** the fixed `fan_speed` table sends 33 for "low".
+  On a fan reporting `percentage_step: 20`, HA rounds 33 up, concludes the fan is already
+  there, and **sends no command at all** — Hubitat's `Last Command Time` did not move.
+  A piston asking for low silently does NOTHING. Deriving 20/60/100 from the device's own
+  step size makes all three land, because 20 is genuinely a different value.
+
+## A-DRIVER. DRIVER / INTEGRATION COMMANDS (2026-07-26, direction agreed, unbuilt)
+
+Pistons contain commands that appear in NO webCoRE source — `searchAmazonMusic`,
+`clearImages`, `stopColorLoop`, `departed`. They are **Hubitat DRIVER commands**: a driver
+exposes whatever it likes and webCoRE simply offers them. So they can never be "missing
+from the vocab" — there was no webCoRE definition to translate from. (Correcting an earlier
+misreading that filed these under the SmartThings carve-out group.)
+
+**Jeremy's direction: feed HA's integrations in the same way.** HA's service registry
+(`get_services`) lists every service every installed integration provides, with its fields —
+the same information Hubitat's device page shows for a driver. VERIFIED live against a real
+install: 68 domains, shaped `domain → service → {name, description, fields, target}`.
+Repair prompts now include the services the user's own install actually has for the domain
+in question, which turns "invent a mapping" into "pick from what exists" and makes it
+impossible for an AI to suggest a service that isn't installed.
+
+Consequence for where these live: **not the frozen webCoRE section.** Driver commands are
+install-specific — `searchAmazonMusic` maps to something different on an Echo Speaks box
+than on a Music Assistant one, and that is correct rather than a problem. The home for them
+is still open.
+
 ## D. OPEN — not decided, do not treat as settled
 
 - **Execution-mode default — DECIDED (Jeremy, 2026-07-18): `queued`, webCoRE's own

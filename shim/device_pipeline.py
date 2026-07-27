@@ -520,6 +520,49 @@ def extract_notify_target_services(registries: dict) -> list[str]:
     return sorted(key for key in notify_services if key.startswith("mobile_app_"))
 
 
+def describe_domain_services(services: dict, domain: str, limit: int = 60) -> list[dict]:
+    """What THIS install can actually do in one HA domain: every service the
+    user's integrations register there, with its fields.
+
+    WHY (Jeremy, 2026-07-26 — "feeding the new things into webcore is a huge
+    fix and a key to unlocking ha"): a Hubitat DRIVER exposes custom commands
+    and webCoRE simply offers them, which is why pistons contain things like
+    clearImages or searchAmazonMusic that appear in no webCoRE source. HA
+    integrations do the same thing through the service registry, so the same
+    trick works from the HA side — instead of asking someone to invent a
+    mapping for an unknown command, show them the services their own install
+    provides and let them (or an AI) pick. An AI cannot hallucinate a service
+    that isn't in this list, which is the real value.
+
+    Shape per HA's get_services: {domain: {service: {name, description,
+    fields, target}}}. Read defensively — integrations vary in what they fill
+    in, and HA has changed field metadata across versions."""
+    found = (services or {}).get(domain) or {}
+    out = []
+    for name in sorted(found):
+        spec = found.get(name) or {}
+        fields = spec.get("fields") or {}
+        required = sorted(f for f, meta in fields.items()
+                          if isinstance(meta, dict) and meta.get("required"))
+        out.append({
+            "service": f"{domain}.{name}",
+            "name": spec.get("name") or name,
+            "description": (spec.get("description") or "").strip(),
+            "fields": sorted(fields),
+            "required": required,
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
+def domains_offering(services: dict, service_name: str) -> list[str]:
+    """Which domains register a service of this name — for the case where the
+    piston's command is known but the right domain isn't."""
+    return sorted(d for d, entries in (services or {}).items()
+                  if isinstance(entries, dict) and service_name in entries)
+
+
 def _build_notify_device(service_key: str, vocab: dict) -> tuple[str, dict, dict]:
     """
     One synthetic picker device per notify target service -- same shape as

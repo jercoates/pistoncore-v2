@@ -7,6 +7,7 @@ Vanilla HTML/CSS/JS + Jinja2, no frontend framework, no build step (CLAUDE.md).
 import asyncio
 import json
 import os
+import re
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -1235,6 +1236,56 @@ _REPAIR_MAP = [
 ]
 
 
+_DOMAIN_IN_MESSAGE = re.compile(r"on domain '([a-z_]+)'")
+
+
+async def _available_services_section(message: str) -> list[str]:
+    """The services THIS install actually has, for the domain the error names.
+
+    A missing mapping is usually not a missing translation — it's a Hubitat
+    DRIVER command (clearImages, searchAmazonMusic) that never existed in
+    webCoRE at all, so there is nothing to look up. What the person needs is
+    the list of services their own integrations provide, so they can pick the
+    one that does the same job (Jeremy, 2026-07-26). Handing an AI the real
+    list also stops it inventing a plausible service that isn't installed.
+
+    Best-effort: HA being unreachable must never break the repair prompt, so
+    every failure degrades to a plain note."""
+    match = _DOMAIN_IN_MESSAGE.search(message or "")
+    if not match:
+        return []
+    domain = match.group(1)
+    try:
+        from .. import device_pipeline
+        services = await ha_client.get_services()
+    except Exception as exc:
+        return ["", "== WHAT THIS INSTALL CAN DO ==",
+                f"(could not ask Home Assistant for its {domain} services: {exc})"]
+    found = device_pipeline.describe_domain_services(services, domain)
+    if not found:
+        return ["", "== WHAT THIS INSTALL CAN DO ==",
+                f"Home Assistant reports NO services at all in the '{domain}' "
+                f"domain on this install. The integration that would provide "
+                f"them may not be installed — check that before mapping "
+                f"anything, because a service that isn't installed will fail "
+                f"at runtime rather than at compile time."]
+    lines = ["", "== WHAT THIS INSTALL CAN DO ==",
+             f"These are the '{domain}' services Home Assistant actually has "
+             f"here. The mapping MUST use one of these — do not invent a "
+             f"service name, and do not assume one exists because it does on "
+             f"another install:"]
+    for svc in found:
+        bits = [f"  {svc['service']}"]
+        if svc["name"] and svc["name"].lower() != svc["service"].split(".")[1]:
+            bits.append(f" — {svc['name']}")
+        lines.append("".join(bits))
+        if svc["required"]:
+            lines.append(f"      required fields: {', '.join(svc['required'])}")
+        elif svc["fields"]:
+            lines.append(f"      fields: {', '.join(svc['fields'][:8])}")
+    return lines
+
+
 def _repair_target(message: str):
     for needle, path, guidance in _REPAIR_MAP:
         if needle.lower() in (message or "").lower():
@@ -1283,6 +1334,7 @@ async def diagnostics_repair(piston_id: str):
             parts.append(text if len(text) < 20000 else text[:20000] + "\n…(truncated)")
         except OSError as exc:
             parts.append(f"(could not read: {exc})")
+        parts += await _available_services_section(message)
         parts += ["", "The full editing guide (rules + file shapes) is at "
                   "/help/editing-compiler on this PistonCore instance.",
                   "Please reply with the edited section of this file, "

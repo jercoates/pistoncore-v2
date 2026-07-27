@@ -117,6 +117,32 @@ The `was` / `stays` distinction is critical and has real edge cases:
 
 ## 3. Device and Entity Limitations
 
+### A Fixed Percentage Can Silently Reach No Device At All (MEASURED 2026-07-26)
+
+Devices that take a percentage often only accept discrete steps, and they report the step
+size in `percentage_step`. Home Assistant **rounds the requested value to the nearest step**
+— and if the rounded value equals where the device already is, **no command is sent at
+all**.
+
+Measured on a real fan reporting `percentage_step: 20` (five steps): with the fan on
+medium, sending 33 (a fixed table's value for "low") produced **no command to the device**
+— the hub's `Last Command Time` never moved. The piston compiled, deployed and "ran"
+successfully, and the fan did not move.
+
+This is the worst shape of failure PistonCore can produce: nothing errors anywhere.
+
+**Implication:** a fixed value table cannot be correct across devices — a three-speed and a
+five-speed fan need different numbers, and the same physical device reports different step
+counts depending on which integration or bridge it arrives through. Values that map onto
+discrete steps must be **derived from what the device reports** (`percentage_step`,
+`preset_modes`), resolved at compile time. Deriving 20/60/100 from the step size above makes
+all three speeds land, because each is genuinely distinct from the others.
+
+**Related trap:** an entity may advertise a capability it has not declared. The same fans
+list `preset_modes: ['auto']` while `supported_features` does not include the preset-mode
+flag. Trust `supported_features` — calling an undeclared capability fails at runtime, where
+it is hardest to notice.
+
 ### Entity ID Changes Break Deployed Pistons
 
 If a user renames a device in HA, the entity ID may change. This breaks any piston
