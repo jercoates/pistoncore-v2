@@ -36,6 +36,7 @@ by attribute type:
 import hashlib
 import json
 import logging
+import os
 import re
 from pathlib import Path
 
@@ -600,6 +601,190 @@ def _build_notify_device(service_key: str, vocab: dict) -> tuple[str, dict, dict
     return hashed_id, device_obj, resolution_entry
 
 
+def _field_applies(meta: dict, features: int, attributes: dict) -> bool:
+    """Does this service FIELD apply to this entity?
+
+    HA declares field-level applicability the same way it declares
+    service-level: a `filter` carrying either `supported_features` bits or an
+    `attribute` requirement (VERIFIED live 2026-07-27 — light.turn_on's
+    rgb_color needs supported_color_modes in hs/xy/rgb/…, effect needs feature
+    bit 4, transition needs 32).
+
+    Without this a plain "turn the light on" offers fifteen fields including
+    colour options a brightness-only bulb cannot use — unusable, and Jeremy
+    said so on sight. With it, HA itself says which ones are real."""
+    filt = meta.get("filter")
+    if not isinstance(filt, dict):
+        return True
+    required = filt.get("supported_features")
+    if required:
+        bits = required if isinstance(required, list) else [required]
+        if not any(isinstance(b, int) and features & b for b in bits):
+            return False
+    attr_filter = filt.get("attribute")
+    if isinstance(attr_filter, dict):
+        for attr_name, allowed in attr_filter.items():
+            have = attributes.get(attr_name)
+            allowed_list = allowed if isinstance(allowed, list) else [allowed]
+            if isinstance(have, list):
+                if not set(have) & set(allowed_list):
+                    return False
+            elif have not in allowed_list:
+                return False
+    return True
+
+
+def _service_params(spec: dict, features: int = 0,
+                    attributes: dict | None = None) -> list[dict]:
+    """An HA service's fields as a webCoRE command parameter list.
+
+    Hubitat built `p` from the DRIVER's own parameter metadata, never from
+    webCoRE's dictionary (webcore.groovy:3604 getDevDetails) — name, a `*`
+    prefix for mandatory, type, description, constraints. HA's service fields
+    carry the same information under different keys, so this is a rename, not
+    a design."""
+    out = []
+    attributes = attributes or {}
+
+    def _flatten(fields: dict) -> list[tuple[str, dict]]:
+        """HA groups fields into containers — an entry with its own nested
+        `fields`, often `collapsed: true` (light.turn_on hides rgbw_color,
+        brightness, profile and friends that way).
+
+        The container itself is UI structure, never a parameter — emitting it
+        would put a field literally named 'additional_fields' in front of the
+        user. A COLLAPSED group is dropped entirely: Home Assistant hides those
+        by default precisely because they're rarely wanted, and reproducing its
+        judgement keeps the list short. A non-collapsed group is flattened in.
+        """
+        flat = []
+        for name, meta in sorted((fields or {}).items()):
+            if not isinstance(meta, dict):
+                continue
+            nested = meta.get("fields")
+            if isinstance(nested, dict):
+                if not meta.get("collapsed"):
+                    flat.extend(_flatten(nested))
+                continue
+            flat.append((name, meta))
+        return flat
+
+    for field, meta in _flatten(spec.get("fields") or {}):
+        if not _field_applies(meta, features, attributes):
+            continue
+        param = {"n": field, "t": "string"}
+        selector = meta.get("selector") or {}
+        if "number" in selector:
+            param["t"] = "integer"
+        elif "boolean" in selector:
+            param["t"] = "boolean"
+        elif "select" in selector:
+            options = (selector.get("select") or {}).get("options") or []
+            param["t"] = "enum"
+            param["o"] = [o.get("value", o) if isinstance(o, dict) else o
+                          for o in options]
+        if meta.get("required"):
+            param["m"] = 1          # Hubitat's '*' mandatory marker
+        if meta.get("description"):
+            param["h"] = str(meta["description"])[:200]
+        out.append(param)
+    return out
+
+
+def _service_allowed(spec: dict, domain: str, features: int) -> bool:
+    """Can THIS entity actually run this service?
+
+    HA's service registry declares its own requirements — a service's
+    `target.entity[]` carries `supported_features` bitmasks (VERIFIED live
+    2026-07-27: fan.set_preset_mode requires [8], fan.oscillate [2],
+    siren.turn_on [1]). So the filter is read from Home Assistant rather than
+    maintained by hand, and it updates itself when HA does.
+
+    Without this, the registry is per-DOMAIN and every fan gets offered
+    oscillate and set_direction whether it can do them or not — measurably
+    worse than the hand-built picker map it would otherwise replace. Hubitat
+    asked the DEVICE what it supported; this is how the same question gets a
+    true answer out of HA.
+
+    An entry with no supported_features requirement is unrestricted. Multiple
+    entries are alternatives — matching any one is enough.
+    """
+    entries = (spec.get("target") or {}).get("entity") or []
+    if not entries:
+        return True
+    for entry in entries:
+        domains = entry.get("domain")
+        if domains and domain not in (domains if isinstance(domains, list) else [domains]):
+            continue
+        required = entry.get("supported_features")
+        if not required:
+            return True
+        for bit in (required if isinstance(required, list) else [required]):
+            if isinstance(bit, int) and features & bit:
+                return True
+    return False
+
+
+def entity_features(states: dict, entity_ids: list[str], domain: str) -> int:
+    """Union of supported_features across this device's entities in a domain —
+    a device offers a capability if any of its entities in that domain has it."""
+    total = 0
+    for entity_id in entity_ids:
+        if not entity_id.startswith(domain + "."):
+            continue
+        state = states.get(entity_id) or {}
+        value = (state.get("attributes") or {}).get("supported_features")
+        if isinstance(value, int):
+            total |= value
+    return total
+
+
+def entity_attributes(states: dict, entity_ids: list[str], domain: str) -> dict:
+    """Merged attributes of this device's entities in a domain — what the
+    field-level filters test against (supported_color_modes and friends).
+    List-valued attributes are unioned, the same first-wins rule as elsewhere."""
+    merged: dict = {}
+    for entity_id in entity_ids:
+        if not entity_id.startswith(domain + "."):
+            continue
+        for key, value in ((states.get(entity_id) or {}).get("attributes") or {}).items():
+            if isinstance(value, list) and isinstance(merged.get(key), list):
+                merged[key] = sorted(set(merged[key]) | set(value))
+            else:
+                merged.setdefault(key, value)
+    return merged
+
+
+def ha_service_commands(services: dict, domains: set[str],
+                        states: dict | None = None,
+                        members: list[str] | None = None) -> list[dict]:
+    """Every HA service for these domains, as webCoRE command entries.
+
+    EXPERIMENT (Jeremy, 2026-07-27): feed HA in the way Hubitat fed drivers —
+    all of them, unfiltered, parameters from the source rather than the vocab.
+    Names stay DOMAIN-QUALIFIED (`light.turn_on`), which removes the name
+    collisions Hubitat needed commandOverrides() for, and makes the command
+    self-describing: the name IS the service, so nothing needs translating.
+
+    Opt-in only; see PISTONCORE_FEED_HA_SERVICES."""
+    out = []
+    live = states is not None and members is not None
+    for domain in sorted(domains):
+        features = entity_features(states, members, domain) if live else 0
+        attributes = entity_attributes(states, members, domain) if live else {}
+        for name in sorted((services.get(domain) or {})):
+            spec = (services[domain] or {}).get(name) or {}
+            if live and not _service_allowed(spec, domain, features):
+                continue
+            entry = {"n": f"{domain}.{name}"}
+            params = _service_params(spec, features, attributes) if live \
+                else _service_params(spec)
+            if params:
+                entry["p"] = params
+            out.append(entry)
+    return out
+
+
 def build_device_payload(registries: dict) -> dict:
     """
     Run Stages 1, 3, 4, 6, 7, 8. One device per HA device_id, always.
@@ -637,6 +822,26 @@ def build_device_payload(registries: dict) -> dict:
                 "error": f"{type(exc).__name__}: {exc}",
             })
             continue
+        # EXPERIMENT, opt-in via PISTONCORE_FEED_HA_SERVICES=1. Append every HA
+        # service for the domains this device actually has entities in, as
+        # extra commands — the Hubitat model (all of them, params from source).
+        # The editor treats anything it doesn't recognise as a custom command
+        # (piston.module.js:2840, cm/$custom), so this needs no vocab entry.
+        if os.environ.get("PISTONCORE_FEED_HA_SERVICES") == "1":
+            try:
+                domains = {e.split(".", 1)[0]
+                           for e in resolution_entry.get("members") or []}
+                known = {c.get("n") for c in device_obj.get("c") or []}
+                members = resolution_entry.get("members") or []
+                extra = [c for c in ha_service_commands(
+                    registries.get("services") or {}, domains,
+                    states=state_map, members=members)
+                    if c["n"] not in known]
+                device_obj["c"] = (device_obj.get("c") or []) + extra
+            except Exception:
+                logger.exception("HA-service feed skipped for %s",
+                                 group.get("display_name"))
+
         devices[hashed_id] = device_obj
         resolution_map[hashed_id] = resolution_entry
 
