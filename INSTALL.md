@@ -284,8 +284,8 @@ an automation reload alone.
    actually happens.
 
 PistonCore runs HA's own `check_config` before a deploy goes live and stops the deploy on a
-failure — but that validates schema, not behavior. Step 5 is the part that matters.
-Compiling is not the same as tested.
+failure — but that validates schema, not behavior. **Point 5 above — actually triggering it
+and watching — is the part that matters.** Compiling is not the same as tested.
 
 ---
 
@@ -320,10 +320,11 @@ There are two kinds of update and they work differently.
 
 ### Compiler data — no rebuild needed
 
-The compiler's knowledge lives in editable data on your data volume under `customize/` —
-templates, command and value maps, the vocab, the routing table. PistonCore can pull the
-current official versions from the repo without any Docker commands at all. This is the
-normal way to get a translation fix.
+The compiler's knowledge lives in editable data on your data volume under `customize/` — the
+vocab (every Home Assistant service and field name the compiler uses), the picker capability
+map, the routing table, and the emission templates. PistonCore can pull the current official
+versions from the repo without any Docker commands at all. This is the normal way to get a
+translation fix.
 
 Your edits are safe. On every startup PistonCore compares three copies of each file: what
 the image ships, what it shipped last time, and what you're actually running. If you never

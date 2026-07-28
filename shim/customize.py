@@ -89,7 +89,9 @@ _IMPORTS_FILE = CUSTOMIZE_DIR / ".imports.json"
 # relative to the repo root; the same relative layout is mirrored under
 # CUSTOMIZE_DIR so the editable copy is easy to find.
 CUSTOMIZABLE = [
-    "templates/compiler",          # emission templates + per-band JSON maps
+    "templates/compiler",          # emission templates (.j2 only — the per-band
+                                   # command_maps/value_maps JSON was deleted
+                                   # 2026-07-26; translation lives in the vocab)
     "webcore_vocab.json",
     "picker_capability_map.json",
     "routing_table.json",
