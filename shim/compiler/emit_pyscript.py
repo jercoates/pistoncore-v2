@@ -639,7 +639,24 @@ class _PyEmitter:
         for task in action_stmt.get("k", []):
             cmd = task.get("c")
             params = task.get("p", [])
-            if cmd == "wait":
+            if task.get("cm") and "." in str(cmd):
+                # CUSTOM command whose name is an HA service, offered straight
+                # from the device. The DOT is the discriminator, not the cm
+                # flag — webCoRE also sets cm on commands it does know when the
+                # original hub's driver advertised them, and those keep their
+                # normal translation. (See emit_yaml._custom_service for why
+                # parameters are refused rather than guessed at.)
+                if params:
+                    raise NotYetImplemented(
+                        f"'{cmd}' was given parameters, and custom commands can't "
+                        f"carry them yet — webCoRE stores them by position, and a "
+                        f"Home Assistant update that adds a field would silently "
+                        f"move them", **ctx)
+                dom, svc = str(cmd).split(".", 1)
+                out.append({"kind": "service", "domain": dom, "service": svc,
+                            "entities": self.resolver.entities_for_domain(devices, dom, ctx),
+                            "data": {}})
+            elif cmd == "wait":
                 out.append({"kind": "sleep", "seconds": _wait_seconds(params)})
             elif cmd in ("sendPushNotification", "sendSMSNotification",
                          "deviceNotification"):

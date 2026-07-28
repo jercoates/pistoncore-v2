@@ -304,6 +304,29 @@ class Resolver:
                 out.append(ent)
         return out
 
+    def entities_for_domain(self, drefs: list[str], domain: str, ctx: dict) -> list[str]:
+        """This device's entities in a given HA domain.
+
+        Custom (`cm`) commands name an HA service directly — `light.turn_on` —
+        so there is no webCoRE command to look up in cmd_bindings. The target
+        is simply whichever of the device's entities lives in that service's
+        domain. A device with several (a fan hub with a fan and a light) can
+        legitimately return more than one; the emitter targets them all, which
+        is what webCoRE does for any multi-entity device."""
+        out = []
+        for dref in drefs:
+            for h in self._hashes(dref, ctx):
+                entry = self.resolution_map.get(h) or {}
+                members = [e for e in (entry.get("members") or [])
+                           if e.split(".", 1)[0] == domain]
+                if members:
+                    out.extend(members)
+                else:
+                    raise UnresolvableDevice(
+                        f"'{self._device_label(h)}' has no {domain} entity, so it "
+                        f"cannot run a {domain} service", ha_domain=domain, **ctx)
+        return out
+
     def ha_state_value(self, attr: str, value):
         return self.value_maps.get(attr, {}).get(value, value)
 

@@ -827,6 +827,14 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
     out = []
     for n in nodes:
         if n["kind"] == "task":
+            # A CUSTOM (`cm`) task whose name is an HA service. The dot is the
+            # discriminator, NOT the cm flag: webCoRE also sets cm on commands
+            # its own dictionary DOES know, when the original hub's driver
+            # advertised them (found via 79_sound_Test_2, where `playText` is
+            # flagged custom). Those must keep their normal translation.
+            if n.get("custom") and "." in str(n["command"]):
+                out.append(_custom_service(n, resolver, ctx))
+                continue
             if n["command"] == "wait":
                 out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
                 continue
@@ -1241,6 +1249,37 @@ def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
 
     body = half(params[0], params[1]) + half(params[2], params[3])
     return {"kind": "repeat", "count": count, "body": body}
+
+
+def _custom_service(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """A CUSTOM (`cm`) task — an HA service the editor offered directly.
+
+    webCoRE has always let a hub advertise commands its own dictionary doesn't
+    know (Hubitat driver commands); PistonCore uses the same door to offer HA
+    services (piston.module.js:2840). The command name IS the service, so
+    there is nothing to translate — no vocab entry, no mapping table.
+
+    PARAMETERS ARE NOT SUPPORTED YET and that is deliberate. webCoRE stores
+    task parameters POSITIONALLY, with no field names, and resolves them
+    against the command's parameter list. For a vocab command that is safe
+    because the list is frozen; for an HA service the list is live, so a field
+    added by an HA update would shift positions and land a value in the wrong
+    field silently. The fix is a per-service record of the advertised field
+    order (decided 2026-07-27, unbuilt). Until then a parameterised custom
+    command fails LOUDLY here rather than compiling to something wrong."""
+    service = n["command"]
+    if "." not in service:
+        raise NotYetImplemented(
+            f"custom command '{service}' is not a Home Assistant service name", **ctx)
+    if n.get("params"):
+        raise NotYetImplemented(
+            f"'{service}' was given parameters, and custom commands can't carry "
+            f"them yet — webCoRE stores them by position, and a Home Assistant "
+            f"update that adds a field would silently move them. Use the "
+            f"equivalent built-in command, or leave the parameters empty", **ctx)
+    domain = service.split(".", 1)[0]
+    entities = resolver.entities_for_domain(n["devices"], domain, ctx)
+    return {"kind": "service", "service": service, "entities": entities, "data": None}
 
 
 def _piston_pause_resume(n: dict, resolver: Resolver, ctx: dict) -> dict:

@@ -132,7 +132,13 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
         if at == "action":
             for task in a.get("k", []):
                 out.append({"kind": "task", "command": task.get("c"),
-                            "params": task.get("p", []), "devices": a.get("d", [])})
+                            "params": task.get("p", []), "devices": a.get("d", []),
+                            # `cm` marks a CUSTOM command — one the editor
+                            # offered from the device itself rather than from
+                            # webCoRE's dictionary (PISTON_JSON_REFERENCE §5).
+                            # Its name is an HA service, so it resolves without
+                            # any vocab lookup.
+                            "custom": bool(task.get("cm"))})
         elif at == "if":
             conds = [_cond_node(c, kwargs) for c in a.get("c", [])]
             if a.get("o", "and") == "or" and len(conds) > 1:
