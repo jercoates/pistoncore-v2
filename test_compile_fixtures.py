@@ -329,9 +329,77 @@ def test_readings_inside_entities():
     return 0
 
 
+def test_ha_service_feed():
+    """Raw HA services offered as commands, and the hybrid rule that keeps
+    them from duplicating the vocab.
+
+    WHY (2026-07-30): this feed shipped ON by default with NO automated
+    coverage — it had only ever been checked by hand against Jeremy's live
+    install. The compiler tests don't touch it: they start from a resolution
+    map, and this runs earlier, building the payload the editor sees.
+
+    The hybrid rule is the part worth guarding. Vocab wins where it has a
+    command; raw fills the gaps. If dedupe breaks, every dimmer sprouts a
+    `light.turn_on` next to webCoRE's own `on`, and the editor becomes a mess
+    nobody can navigate — which is exactly the failure Jeremy would see first
+    and could not diagnose."""
+    from shim.device_pipeline import ha_service_commands, services_covered_by_vocab
+    import json as _json
+
+    services = {
+        "light": {
+            "turn_on": {"fields": {"brightness_pct": {"selector": {"number": {}}}}},
+            "turn_off": {"fields": {}},
+            "some_odd_service": {"fields": {}},
+        },
+        "vacuum": {
+            "send_command": {"fields": {"command": {"selector": {"text": {}}},
+                                        "params": {"selector": {"object": {}}}}},
+        },
+    }
+    states = {"light.l": {"entity_id": "light.l", "state": "on", "attributes": {}}}
+    failures = []
+
+    cmds = ha_service_commands(services, {"light"}, states=states, members=["light.l"])
+    names = [c["n"] for c in cmds]
+    if "light.turn_on" not in names:
+        failures.append(f"a plain service was not offered at all: {names}")
+    if any("." not in n for n in names):
+        failures.append(f"names must stay domain-qualified (the name IS the service): {names}")
+    # parameters come from the service's own fields, not the vocab
+    on = next((c for c in cmds if c["n"] == "light.turn_on"), None)
+    if on is not None and not on.get("p"):
+        failures.append("light.turn_on offered no parameters, but the service declares "
+                        "brightness_pct — parameters must come from HA's own field list")
+
+    # the hybrid rule: a device whose vocab command already reaches turn_on
+    # must not ALSO be offered the raw service
+    try:
+        with open("webcore_vocab.json", encoding="utf-8") as f:
+            vocab = _json.load(f)
+    except OSError:
+        print("SKIP — vocab unavailable"); return 0
+    covered = services_covered_by_vocab({"on": "light.l", "off": "light.l"}, vocab)
+    if "light.turn_on" not in covered:
+        failures.append("a device bound to webCoRE 'on' did not mark light.turn_on as "
+                        f"covered — the raw service would duplicate it. covered={sorted(covered)}")
+    # ...and a service the vocab has no word for stays available
+    if "light.some_odd_service" in covered:
+        failures.append("a service the vocab cannot reach was wrongly treated as covered")
+
+    if failures:
+        print("FAIL — HA service feed:")
+        for f in failures:
+            print(f"   {f}")
+        return 1
+    print("PASS — HA services feed as commands; vocab-covered ones are not duplicated")
+    return 0
+
+
 if __name__ == "__main__":
     rc = main()
     rc = test_else_on_trigger_only_if() or rc
     rc = test_unavailable_sensor_fails_closed() or rc
     rc = test_readings_inside_entities() or rc
+    rc = test_ha_service_feed() or rc
     sys.exit(rc)

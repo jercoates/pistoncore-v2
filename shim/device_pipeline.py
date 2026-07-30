@@ -1008,7 +1008,8 @@ def ha_service_commands(services: dict, domains: set[str],
     collisions Hubitat needed commandOverrides() for, and makes the command
     self-describing: the name IS the service, so nothing needs translating.
 
-    Opt-in only; see PISTONCORE_FEED_HA_SERVICES."""
+    ON BY DEFAULT since 2026-07-30 (Jeremy: "there is no reason to gate it").
+    Set PISTONCORE_FEED_HA_SERVICES=0 to turn it back off without a rebuild."""
     out = []
     live = states is not None and members is not None
     for domain in sorted(domains):
@@ -1066,12 +1067,19 @@ def build_device_payload(registries: dict) -> dict:
                 "error": f"{type(exc).__name__}: {exc}",
             })
             continue
-        # EXPERIMENT, opt-in via PISTONCORE_FEED_HA_SERVICES=1. Append every HA
-        # service for the domains this device actually has entities in, as
-        # extra commands — the Hubitat model (all of them, params from source).
-        # The editor treats anything it doesn't recognise as a custom command
-        # (piston.module.js:2840, cm/$custom), so this needs no vocab entry.
-        if os.environ.get("PISTONCORE_FEED_HA_SERVICES") == "1":
+        # Append every HA service for the domains this device actually has
+        # entities in, as extra commands — the Hubitat model (all of them,
+        # params from source). The editor treats anything it doesn't recognise
+        # as a custom command (piston.module.js:2840, cm/$custom), so this
+        # needs no vocab entry.
+        #
+        # ON BY DEFAULT (Jeremy, 2026-07-30). It was opt-in while unproven;
+        # it has since been verified end to end on real hardware (`take` via
+        # hubitat.send_command produced a picture, 2026-07-29) and the
+        # attribute feed already shipped on, so the gate was just
+        # inconsistency. PISTONCORE_FEED_HA_SERVICES=0 disables it without a
+        # rebuild, for an install where the extra commands cause trouble.
+        if os.environ.get("PISTONCORE_FEED_HA_SERVICES", "1") != "0":
             try:
                 domains = {e.split(".", 1)[0]
                            for e in resolution_entry.get("members") or []}
