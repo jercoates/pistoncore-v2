@@ -304,6 +304,50 @@ class Resolver:
                 out.append(ent)
         return out
 
+    def has_command_binding(self, drefs: list[str], command: str, ctx: dict) -> bool:
+        """Does any of these devices actually offer this webCoRE command?
+
+        A command can exist in the vocab and still be unreachable on a given
+        device — `take` is in the vocab, but a camera arriving through a bridge
+        has no camera entity to call it on. That is the difference between "use
+        the vocab" and "fall back to the driver passthrough"."""
+        for dref in drefs:
+            for h in self._hashes(dref, ctx):
+                entry = self.resolution_map.get(h) or {}
+                if (entry.get("cmd_bindings") or {}).get(command):
+                    return True
+        return False
+
+    def passthrough(self, drefs: list[str], ctx: dict) -> dict | None:
+        """The integration's own command passthrough for this device, if it has
+        one — how a DRIVER command (a webCoRE task naming something only the
+        device's driver knows, like `clearImages`) reaches the device.
+
+        Recorded per device by the payload builder, which is the only place with
+        the service registry. See device_pipeline.detect_passthroughs."""
+        for dref in drefs:
+            for h in self._hashes(dref, ctx):
+                spec = (self.resolution_map.get(h) or {}).get("passthrough")
+                if isinstance(spec, dict) and spec.get("service"):
+                    return spec
+        return None
+
+    def field_order(self, drefs: list[str], service: str, ctx: dict) -> list | None:
+        """The parameter boxes the editor offered for this service on this
+        device, in order, as recorded when the piston was saved.
+
+        Read-only — the SAVE path writes it (storage.record_ha_field_order).
+        Tried against every device the task targets; the first recorded order
+        wins, which is right because a task's devices all had to offer the same
+        command for the editor to show it."""
+        from .. import storage
+        for dref in drefs:
+            for h in self._hashes(dref, ctx):
+                order = storage.ha_field_order(h, service)
+                if order is not None:
+                    return order
+        return None
+
     def entities_for_domain(self, drefs: list[str], domain: str, ctx: dict) -> list[str]:
         """This device's entities in a given HA domain.
 

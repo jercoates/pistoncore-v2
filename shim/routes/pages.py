@@ -1391,6 +1391,11 @@ async def help_editing_compiler(request: Request):
     return templates.TemplateResponse(request, "help_editing_compiler.html", {})
 
 
+@router.get("/help/start-here")
+async def help_start_here(request: Request):
+    return templates.TemplateResponse(request, "help_start_here.html", {})
+
+
 @router.get("/help/editable-files")
 async def help_editable_files(request: Request):
     return templates.TemplateResponse(request, "help_editable_files.html", {})

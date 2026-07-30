@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}PistonCore Help — Start here{% endblock %}
+
+{% block content %}
+<div class="page active help-article">
+  <div class="list-header">
+    <h1>Start here</h1>
+  </div>
+
+  <p>
+    <strong>If you read one page, read this one.</strong> The short version is the top
+    third; everything below it is detail you can come back for.
+  </p>
+
+  <h2>The short version</h2>
+  <ul>
+    <li><strong>It's the real webCoRE editor.</strong> Not a lookalike. Your pistons are
+      stock webCoRE JSON, and the editor is the same one you already know.</li>
+    <li><strong>There is no webCoRE engine.</strong> Pistons are <em>compiled</em> into
+      native Home Assistant automations. Nothing interprets them at runtime.</li>
+    <li><strong>Compiling is not running.</strong> A piston can save and compile perfectly
+      and still not do what you meant. Test it.</li>
+    <li><strong>Your automations survive PistonCore.</strong> Delete it tomorrow and the
+      automations it wrote keep working — they're ordinary HA files.</li>
+    <li><strong>Commands come in two kinds.</strong> Plain ones (<em>Turn on</em>) and ones
+      tagged <span class="vartype">custom</span> (<code>light.turn_on</code>).
+      <strong>Prefer the plain ones.</strong> <a href="#commands">Why →</a></li>
+    <li><strong>Some pistons need PyScript.</strong> Simple ones don't. Formulas, loops and
+      variables do. Nothing breaks until you use one.</li>
+    <li><strong>It's alpha.</strong> Don't put anything safety-critical on it yet.</li>
+  </ul>
+
+  <p class="field-hint">
+    That's the whole picture. The rest of this page explains the parts that surprise people.
+  </p>
+
+  <h2>How this differs from webCoRE on a hub</h2>
+  <table class="help-table">
+    <tr><th>On Hubitat / SmartThings</th><th>Here</th></tr>
+    <tr>
+      <td>webCoRE <em>runs</em> your piston, step by step, forever</td>
+      <td>Your piston is <em>translated once</em> into an HA automation. Home Assistant runs
+          that. PistonCore isn't in the loop.</td>
+    </tr>
+    <tr>
+      <td>Edit a piston, it takes effect immediately</td>
+      <td>Same — saving recompiles and deploys. But it must <em>compile</em> first, and a
+          failure is shown rather than ignored.</td>
+    </tr>
+    <tr>
+      <td>Every command your device driver offers is available</td>
+      <td>Same idea, from Home Assistant instead: services your devices actually support are
+          offered, tagged <span class="vartype">custom</span>.</td>
+    </tr>
+    <tr>
+      <td>If webCoRE stops, your automations stop</td>
+      <td>If PistonCore stops, your automations keep running.</td>
+    </tr>
+  </table>
+
+  <h2 id="commands">The two kinds of command — and which to pick</h2>
+  <p>
+    When you add a task you'll see commands tagged three ways:
+  </p>
+  <table class="help-table">
+    <tr><th>Tag</th><th>What it is</th></tr>
+    <tr><td><span class="vartype">device</span></td>
+        <td>webCoRE's own command, e.g. <em>Turn on</em>. <strong>Prefer these.</strong></td></tr>
+    <tr><td><span class="vartype">emulated</span></td>
+        <td>webCoRE builds it from simpler ones, e.g. <em>Toggle</em>. Also fine.</td></tr>
+    <tr><td><span class="vartype">custom</span></td>
+        <td>A Home Assistant service offered directly, e.g. <code>light.turn_on</code>.
+            Use when nothing above does what you need.</td></tr>
+  </table>
+
+  <h3>Why prefer the plain ones</h3>
+  <p>
+    <strong>They're more portable, and that's the real reason.</strong> <em>Turn on</em>
+    means "turn this thing on" whatever it turns out to be — swap a bulb for a smart switch
+    and the piston still works. <code>light.turn_on</code> is pinned to a light, and stops
+    making sense the moment the device isn't one.
+  </p>
+  <p>
+    They also read better, they carry proper descriptions, and they're the ones that survive
+    Home Assistant renaming things underneath you.
+  </p>
+
+  <h3>Why the custom ones exist anyway</h3>
+  <p>
+    Because webCoRE's vocabulary was finished years ago, and Home Assistant keeps growing.
+    Lawn mowers, voice assistants, to-do lists, media grouping — webCoRE has no words for
+    any of it, and never will. The custom commands are how you reach them.
+  </p>
+  <p>
+    They're also an <strong>escape hatch</strong>. If a plain command ever does the wrong
+    thing for your device, the raw service is right there and you can work around it
+    yourself instead of waiting for someone to fix it.
+  </p>
+  <p class="field-hint">
+    Only services your device actually supports are offered — Home Assistant is asked what
+    each device can do, so you shouldn't see options that would just fail.
+  </p>
+
+  <h2>What PistonCore writes to Home Assistant</h2>
+  <p>
+    Four things, no fifth: its own compiled automations, two include lines in
+    <code>configuration.yaml</code> (shown to you before it touches anything), a
+    location-mode helper, and the test-devices integration if you ask for it. All listed
+    with removal instructions in the install guide.
+  </p>
+
+  <h2>When something doesn't work</h2>
+  <ul>
+    <li><strong>The piston list</strong> shows a status on every row — that's the first
+      place a problem appears.</li>
+    <li><strong>The piston's own page</strong> shows the error in full.</li>
+    <li><strong>Settings → Diagnostics</strong> checks the whole instance and can hand you a
+      ready-made repair prompt to give an AI.</li>
+  </ul>
+  <p class="field-hint">
+    Errors are never silent, and never hidden in a log you'd have to know about.
+  </p>
+
+  <p>
+    <a href="/help">← All help</a> ·
+    <a href="/help/best-practices">Getting started in more detail</a> ·
+    <a href="/help/editable-files">The editable files</a>
+  </p>
+</div>
+{% endblock %}

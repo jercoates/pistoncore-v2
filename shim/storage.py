@@ -680,3 +680,51 @@ def band_prefs() -> dict:
 
 def save_settings(settings: dict):
     write_json_atomic(SETTINGS_FILE, settings)
+
+
+# ---------------------------------------------------------------------------
+# HA custom-command field order (the sidecar)
+# ---------------------------------------------------------------------------
+
+FIELD_ORDER_FILE = DATA_DIR / "ha_field_order.json"
+
+
+def record_ha_field_order(device_hash: str, service: str, fields: list) -> None:
+    """Write down which parameter boxes the editor offered, in order, for this
+    device and this HA service.
+
+    WHY THIS EXISTS. webCoRE saves a task's parameters POSITIONALLY — "first
+    value 50, second value 2" — and works out what they mean by counting along
+    the command's parameter list. That is safe for webCoRE's own commands
+    because their lists are frozen forever. It is NOT safe for an HA service:
+    the field list is read live from Home Assistant and filtered by what the
+    device supports, so a field added by an HA update would shift the positions
+    and land a value in the wrong field silently.
+
+    Storing the NAMES in order fixes it outright rather than merely detecting
+    it — the compiler reads position 1 back as `brightness_pct` regardless of
+    what Home Assistant offers today.
+
+    KEYED PER DEVICE AND SERVICE, not per service alone: the field list is
+    filtered per device, so `light.turn_on` genuinely differs between bulbs
+    (VERIFIED on real data 2026-07-29 — five different lists across one
+    install, where position 3 was `transition` on one light and
+    `color_temp_kelvin` on another).
+
+    Written by the SAVE path, never by the compiler — the compiler stays
+    read-only (COMPILER_DECISIONS_HOLDING §A1).
+    """
+    store = read_json_safe(FIELD_ORDER_FILE, dict, "ha_field_order.json")
+    key = f"{device_hash}|{service}"
+    if store.get(key) != list(fields):
+        store[key] = list(fields)
+        write_json_atomic(FIELD_ORDER_FILE, store)
+
+
+def ha_field_order(device_hash: str, service: str) -> list | None:
+    """The parameter boxes offered for this device+service when the piston was
+    saved, in order. None when nothing was recorded — the compiler must refuse
+    rather than guess."""
+    store = read_json_safe(FIELD_ORDER_FILE, dict, "ha_field_order.json")
+    value = store.get(f"{device_hash}|{service}")
+    return value if isinstance(value, list) else None

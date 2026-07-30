@@ -832,9 +832,22 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             # its own dictionary DOES know, when the original hub's driver
             # advertised them (found via 79_sound_Test_2, where `playText` is
             # flagged custom). Those must keep their normal translation.
-            if n.get("custom") and "." in str(n["command"]):
-                out.append(_custom_service(n, resolver, ctx))
-                continue
+            if n.get("custom"):
+                cmd = str(n["command"])
+                if "." in cmd:
+                    # an HA service the editor offered directly
+                    out.append(_custom_service(n, resolver, ctx))
+                    continue
+                if not resolver.has_command_binding(n["devices"], cmd, ctx):
+                    # A driver command. Either webCoRE has no word for it at all
+                    # (clearImages), or it has one the device can't reach here
+                    # (`take` on a camera arriving through a bridge, which has no
+                    # camera entity). Route it to the integration's passthrough.
+                    out.append(_driver_command(n, resolver, ctx))
+                    continue
+                # otherwise it IS a normal command on this device — webCoRE also
+                # flags cm when the hub's driver advertised something it knows
+                # (playText) — so fall through to normal translation.
             if n["command"] == "wait":
                 out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
                 continue
@@ -1251,6 +1264,52 @@ def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
     return {"kind": "repeat", "count": count, "body": body}
 
 
+def _driver_command(n: dict, resolver: Resolver, ctx: dict) -> dict:
+    """A DRIVER command — a task naming something only the device's own driver
+    knows (`clearImages`, `take`, `selectLiveview`). webCoRE offered it because
+    the hub advertised it; Home Assistant has no vocabulary for it.
+
+    Routed through the integration's own command passthrough, detected by shape
+    from the service registry (device_pipeline.detect_passthroughs): a bridged
+    device goes via `hubitat.send_command`, a `remote.` entity via the CORE
+    `remote.send_command` (which is how Harmony activities work for everyone),
+    a vacuum via `vacuum.send_command`.
+
+    VERIFIED WORKING 2026-07-29 on Jeremy's real hardware: `take` through
+    hubitat.send_command produced a picture and populated the camera's image
+    attribute.
+
+    KNOWN LIMITATION, deliberately accepted (Jeremy 2026-07-29 — "we can only do
+    so much"): a passthrough accepts any command name and fails at RUNTIME, not
+    at compile. A command the driver doesn't have will silently do nothing. The
+    name came from the device's own advertised list when the piston was written,
+    so it is right for the device it was authored against — but a device swapped
+    for a different model will fail quietly. Documented in HA_LIMITATIONS."""
+    command = n["command"]
+    spec = resolver.passthrough(n["devices"], ctx)
+    if not spec:
+        raise NotYetImplemented(
+            f"'{command}' is a command only the device's own driver knows, and "
+            f"this device's integration offers no way to pass one through — "
+            f"there is no Home Assistant equivalent to compile it to", **ctx)
+
+    data = {spec["command_field"]: _json_dumps(command)}
+    if spec.get("target_field"):
+        data[spec["target_field"]] = _json_dumps(spec["entity_id"])
+    args = [p for p in (n.get("params") or [])
+            if (p or {}).get("c") not in (None, "")]
+    if args:
+        if not spec.get("args_field"):
+            raise NotYetImplemented(
+                f"'{command}' was given values, but "
+                f"{spec['service']} takes no arguments field", **ctx)
+        values = [(p or {}).get("c") for p in args]
+        data[spec["args_field"]] = _json_dumps(
+            values[0] if len(values) == 1 else values)
+    return {"kind": "service", "service": spec["service"],
+            "entities": [], "data": data}
+
+
 def _custom_service(n: dict, resolver: Resolver, ctx: dict) -> dict:
     """A CUSTOM (`cm`) task — an HA service the editor offered directly.
 
@@ -1269,17 +1328,39 @@ def _custom_service(n: dict, resolver: Resolver, ctx: dict) -> dict:
     command fails LOUDLY here rather than compiling to something wrong."""
     service = n["command"]
     if "." not in service:
-        raise NotYetImplemented(
-            f"custom command '{service}' is not a Home Assistant service name", **ctx)
-    if n.get("params"):
-        raise NotYetImplemented(
-            f"'{service}' was given parameters, and custom commands can't carry "
-            f"them yet — webCoRE stores them by position, and a Home Assistant "
-            f"update that adds a field would silently move them. Use the "
-            f"equivalent built-in command, or leave the parameters empty", **ctx)
+        return _driver_command(n, resolver, ctx)
     domain = service.split(".", 1)[0]
     entities = resolver.entities_for_domain(n["devices"], domain, ctx)
-    return {"kind": "service", "service": service, "entities": entities, "data": None}
+    params = n.get("params") or []
+    if not params:
+        return {"kind": "service", "service": service, "entities": entities, "data": None}
+
+    # Parameters are matched back to FIELD NAMES from the order recorded when
+    # the piston was saved, never by counting along today's field list — that
+    # list is live and filtered, so counting would put values in the wrong
+    # fields after any HA change (storage.record_ha_field_order).
+    order = resolver.field_order(n["devices"], service, ctx)
+    if order is None:
+        raise NotYetImplemented(
+            f"'{service}' has parameters but PistonCore has no record of which "
+            f"fields the editor offered for it — open the piston and save it "
+            f"again so the field names are recorded, then recompile", **ctx)
+    if len(params) > len(order):
+        raise NotYetImplemented(
+            f"'{service}' was saved with {len(params)} values but only "
+            f"{len(order)} fields are recorded for it — open the piston, check "
+            f"the command's values, and save it again", **ctx)
+
+    data = {}
+    for index, param in enumerate(params):
+        value = (param or {}).get("c")
+        if value is None:
+            value = (param or {}).get("s")
+        if value is None or value == "":
+            continue                      # an untouched optional box
+        data[order[index]] = _json_dumps(value) if isinstance(value, str) else value
+    return {"kind": "service", "service": service, "entities": entities,
+            "data": data or None}
 
 
 def _piston_pause_resume(n: dict, resolver: Resolver, ctx: dict) -> dict:

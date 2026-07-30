@@ -691,6 +691,90 @@ def _service_params(spec: dict, features: int = 0,
     return out
 
 
+def detect_passthroughs(services: dict) -> dict:
+    """Services that take a COMMAND NAME as data — an integration's own escape
+    hatch for driver commands Home Assistant has no vocabulary for.
+
+    Detected by SHAPE, not by a list of integrations: any service with a field
+    whose name contains "command" is passing a command through rather than
+    doing one specific thing. VERIFIED live 2026-07-29 — this finds
+    `hubitat.send_command` (entity_id/command/args), the CORE
+    `remote.send_command` (device/command/...) which is how Harmony activities
+    are driven, and the CORE `vacuum.send_command` (command/params).
+
+    Returns {key: spec} where key is the entity domain it serves ("remote",
+    "vacuum") or, for integration-level passthroughs, the platform name
+    ("hubitat"). spec names which field carries the command, which carries the
+    arguments, and which carries the target.
+    """
+    out = {}
+    for domain in sorted(services):
+        for name, spec in (services.get(domain) or {}).items():
+            fields = list((spec.get("fields") or {}).keys())
+            command_field = next((f for f in fields if "command" in f), None)
+            if not command_field or not name.endswith("send_command"):
+                continue
+            args_field = next((f for f in fields if f in ("args", "params")), None)
+            target_field = next((f for f in fields if f in ("entity_id", "device")), None)
+            out[domain] = {
+                "service": f"{domain}.{name}",
+                "command_field": command_field,
+                "args_field": args_field,
+                "target_field": target_field,
+            }
+    return out
+
+
+def passthrough_for(passthroughs: dict, members: list, entity_platforms: dict) -> dict | None:
+    """Which passthrough can drive this device's driver commands.
+
+    Entity DOMAIN wins first — a `remote.` entity is driven by
+    remote.send_command, a `vacuum.` by vacuum.send_command. Otherwise fall
+    back to the INTEGRATION that supplied the entity, which is how a bridged
+    device reaches its hub (hubitat.send_command). Returns the spec plus the
+    entity to aim it at."""
+    for entity_id in members or []:
+        domain = entity_id.split(".", 1)[0]
+        if domain in passthroughs:
+            return {**passthroughs[domain], "entity_id": entity_id}
+    for entity_id in members or []:
+        platform = entity_platforms.get(entity_id)
+        if platform and platform in passthroughs:
+            return {**passthroughs[platform], "entity_id": entity_id}
+    return None
+
+
+def services_covered_by_vocab(cmd_bindings: dict, vocab: dict) -> set:
+    """The HA services this device already reaches through webCoRE's own
+    commands.
+
+    THE HYBRID RULE (Jeremy, firm 2026-07-28): "simpler setup for lights etc is
+    worth keeping the json hands down. it's the things that map cleaner as raw
+    because they don't fit in or are not in it." So the vocab wins wherever it
+    covers the same service, and the raw feed fills only the gaps — otherwise
+    the editor lists `Turn on` and `light.turn_on` side by side, which is the
+    duplication Jeremy objected to on sight.
+
+    Derived, never a maintained list: the vocab already says what each command
+    compiles to, so the set of already-covered services falls out of the
+    device's own command bindings.
+    """
+    commands = {**vocab.get("commands", {}), **vocab.get("virtualCommands", {})}
+    covered = set()
+    for command, entity in (cmd_bindings or {}).items():
+        domain = str(entity).split(".", 1)[0]
+        for rule in (commands.get(command, {}) or {}).get("ha") or []:
+            if not isinstance(rule, dict):
+                continue
+            if rule.get("domain") not in (domain, "*", "_any"):
+                continue
+            service = rule.get("service")
+            if service:
+                covered.add(service)
+            break
+    return covered
+
+
 def _service_allowed(spec: dict, domain: str, features: int) -> bool:
     """Can THIS entity actually run this service?
 
@@ -800,6 +884,8 @@ def build_device_payload(registries: dict) -> dict:
     state_map = {s["entity_id"]: s for s in registries["states"]}
     entity_map = {e["entity_id"]: e for e in registries["entities"]}
     groups = group_entities(registries)
+    _passthroughs = detect_passthroughs(registries.get("services") or {})
+    _entity_platforms = {e["entity_id"]: e.get("platform") for e in registries["entities"]}
 
     devices: dict[str, dict] = {}
     resolution_map: dict[str, dict] = {}
@@ -832,6 +918,11 @@ def build_device_payload(registries: dict) -> dict:
                 domains = {e.split(".", 1)[0]
                            for e in resolution_entry.get("members") or []}
                 known = {c.get("n") for c in device_obj.get("c") or []}
+                # HYBRID: don't offer a raw service the vocab already reaches
+                # on this device — the friendly command is better (it reads
+                # properly and stays correct if the device type changes).
+                known |= services_covered_by_vocab(
+                    resolution_entry.get("cmd_bindings") or {}, vocab)
                 members = resolution_entry.get("members") or []
                 extra = [c for c in ha_service_commands(
                     registries.get("services") or {}, domains,
@@ -841,6 +932,14 @@ def build_device_payload(registries: dict) -> dict:
             except Exception:
                 logger.exception("HA-service feed skipped for %s",
                                  group.get("display_name"))
+
+        # How this device's DRIVER commands can be reached — the integration's
+        # own command passthrough, if it has one. Recorded here because the
+        # compiler has no access to the service registry, only this map.
+        through = passthrough_for(_passthroughs, resolution_entry.get("members") or [],
+                                 _entity_platforms)
+        if through:
+            resolution_entry["passthrough"] = through
 
         devices[hashed_id] = device_obj
         resolution_map[hashed_id] = resolution_entry

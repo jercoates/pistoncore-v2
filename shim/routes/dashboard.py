@@ -307,6 +307,55 @@ def piston_set_chunk(request: Request):
     return jsonp(request, {"status": "ST_SUCCESS"})
 
 
+def _custom_services_used(node, out: set) -> None:
+    """Every HA service this piston drives through a CUSTOM command — a task
+    whose name is dotted (an HA service) rather than a webCoRE word."""
+    if isinstance(node, list):
+        for item in node:
+            _custom_services_used(item, out)
+        return
+    if not isinstance(node, dict):
+        return
+    if node.get("t") == "action":
+        for task in node.get("k") or []:
+            name = str(task.get("c") or "")
+            if "." in name and task.get("p"):
+                out.add(name)
+    for key in ("s", "e", "ei", "cs", "c", "r", "k"):
+        if key in node:
+            _custom_services_used(node[key], out)
+
+
+async def _record_custom_field_order(piston_json: dict) -> None:
+    """Note which parameter boxes the editor offered for each custom command in
+    this piston, so the compiler can read the values back by NAME instead of by
+    position (see storage.record_ha_field_order for why that matters).
+
+    Recorded from the same device payload the editor was given, which is what
+    the user actually saw. Recorded for every device that offers the service,
+    not just the ones this piston names — the piston's device references can be
+    variables or globals, and resolving them here would duplicate the compiler's
+    job for no gain. Over-recording costs a few lines in one small file.
+
+    Best-effort: a failure here must never block a save. Worst case the compiler
+    refuses a parameterised custom command, which is what it does today anyway.
+    """
+    try:
+        services = set()
+        _custom_services_used(piston_json.get("s") or [], services)
+        if not services:
+            return
+        payload = await _get_device_payload()
+        for hashed_id, device in (payload.get("devices") or {}).items():
+            for command in device.get("c") or []:
+                if command.get("n") in services:
+                    storage.record_ha_field_order(
+                        hashed_id, command["n"],
+                        [p.get("n") for p in command.get("p") or []])
+    except Exception:
+        logger.exception("could not record custom-command field order")
+
+
 @router.get("/piston/set.end")
 async def piston_set_end(request: Request):
     global _pending_save
@@ -317,6 +366,7 @@ async def piston_set_end(request: Request):
     piston_id = _pending_save["piston_id"]
     entry = storage.save_piston(piston_id, piston_json)
     _pending_save = None
+    await _record_custom_field_order(piston_json)        # before compiling — it reads this
     await compiler_deploy.compile_and_deploy(piston_id)  # compile-on-save (§1)
     return jsonp(request, _save_response(entry))
 

@@ -148,6 +148,19 @@ def _synthetic_maps(piston):
     attrs = sorted(attrs) or ["switch"]
     cmds = sorted(cmds) or ["on"]
 
+    # Only VOCAB commands get bound. Real cmd_bindings come from mapping HA
+    # entity signals to webCoRE capabilities, so a DRIVER command (clearImages,
+    # stopColorLoop) is never bound on a real device — it has to reach the
+    # integration's passthrough instead. Binding everything made the harness
+    # claim those were ordinary commands and hid that path entirely.
+    _vocab_cmds = set()
+    try:
+        _v = _vocab()
+        _vocab_cmds = set(_v.get("commands", {})) | set(_v.get("virtualCommands", {}))
+    except (OSError, ValueError):
+        _vocab_cmds = set(cmds)
+    cmds = [c for c in cmds if c in _vocab_cmds] or ["on"]
+
     def _bindings(slug):
         # attributes read from an entity of their own domain; commands act on
         # one of theirs. Anything the vocab has no domain for keeps the old
@@ -168,6 +181,21 @@ def _synthetic_maps(piston):
         attr_b, cmd_b = _bindings("dev0")
         reso[":synthetic:"] = {"name": "Device 0",
                                "attr_bindings": attr_b, "cmd_bindings": cmd_b}
+    # A command passthrough, as a real bridged/remote/vacuum device has — the
+    # route a DRIVER command takes when Home Assistant has no vocabulary for it
+    # (device_pipeline.detect_passthroughs). Without this the harness never
+    # exercises that path, and every driver command in the corpus just errors.
+    for hashed_id, entry in reso.items():
+        if hashed_id == "$system":
+            continue
+        members = entry.get("attr_bindings") or {}
+        entry["passthrough"] = {
+            "service": "hubitat.send_command",
+            "command_field": "command",
+            "args_field": "args",
+            "target_field": "entity_id",
+            "entity_id": sorted(members.values())[0] if members else "switch.dev0",
+        }
     reso["$system"] = dict(_SYSTEM_ENTITIES)
     return reso, globals_map
 
