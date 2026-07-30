@@ -125,18 +125,24 @@ import urllib.parse
 
 task.unique("{{ unique_name }}")  # kill in-flight old version on redeploy
 state.persist("pyscript.{{ unique_name }}_state", default_value="idle")
-try:
-    _saved = state.getattr("pyscript.{{ unique_name }}_state") or {}
-    for _k, _v in (_saved.get("vars") or {}).items():
-        pv[_k] = _v
-except Exception as _e:
-    log.warning(f"[{{ piston_id }}] could not restore variables: {_e}")
 
 # piston local variables (from the piston's define section). Declared values
 # are the defaults; anything the piston has since set is restored from the
 # persisted state entity so variables survive HA restarts and recompiles —
 # webCoRE keeps piston variables in state, so this matches it.
 pv = {{ variables }}
+
+# ORDER MATTERS (fixed 2026-07-30): the restore used to run ABOVE this line,
+# so it wrote into a `pv` that did not exist yet — a NameError swallowed by
+# the except, logged as a warning nobody reads — and then `pv = ...` would
+# have overwritten it anyway. Persisted variables never survived a restart.
+# Defaults first, saved values overlaid on top.
+try:
+    _saved = state.getattr("pyscript.{{ unique_name }}_state") or {}
+    for _k, _v in (_saved.get("vars") or {}).items():
+        pv[_k] = _v
+except Exception as _e:
+    log.warning(f"[{{ piston_id }}] could not restore variables: {_e}")
 {%- if global_values is defined and global_values %}
 # global variable values, snapshotted at compile time (recompile refreshes)
 gv = {{ global_values }}

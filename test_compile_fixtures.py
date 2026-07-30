@@ -286,12 +286,46 @@ def test_readings_inside_entities():
                         "current_temperature — it is reading the entity state "
                         f"({out.get('target')} band)")
 
+    # TRIGGERS, not just reads. A pyscript @state_trigger built from the bare
+    # entity watches its STATE — a thermostat trigger would fire on mode
+    # changes and compare against "heat". DOMAIN.name.attr is pyscript's
+    # documented attribute form (VERIFIED 2026-07-30 against the pyscript
+    # reference: "you can also use state variable attributes in the trigger
+    # expression, with an identifier of the form DOMAIN.name.attr").
+    trig_cases = [
+        # (device, attr, threshold, must appear, must NOT appear)
+        (":c:", "temperature", 72, "climate.t.current_temperature", None),
+        # scaled: the THRESHOLD converts into HA units (webCoRE 50 of 100 ->
+        # 127.5 of 255), never the reading, which would blow up on a light
+        # that is off and has no brightness at all.
+        (":l:", "level", 50, "light.l.brightness", "> 50"),
+    ]
+    for dref, a, thresh, must, must_not in trig_cases:
+        em = EP._PyEmitter.__new__(EP._PyEmitter)
+        em.resolver = r; em.decorators = []; em.piston_id = "u"; em.piston_name = "U"
+        cond = {"t": "condition", "ct": "t", "co": "rises_above",
+                "lo": {"t": "p", "d": [dref], "a": a, "g": "any"},
+                "ro": {"t": "c", "c": thresh, "vt": "integer"}}
+        try:
+            em._trigger_decorator(cond, 1, {})
+        except Exception as exc:                                   # noqa: BLE001
+            failures.append(f"trigger on {a}: raised {type(exc).__name__}: {exc}")
+            continue
+        exprs = " ".join(x for d in em.decorators for x in d.get("exprs", []))
+        if must not in exprs:
+            failures.append(f"trigger on {a}: watches the entity state, not the "
+                            f"field — {exprs[:120]}")
+        if must_not and must_not in exprs:
+            failures.append(f"trigger on {a}: compares HA units against a webCoRE "
+                            f"threshold — {exprs[:120]}")
+
     if failures:
         print("FAIL — readings that live inside an entity:")
         for f in failures:
             print(f"   {f}")
         return 1
-    print("PASS — field-backed readings read the field, both bands, with units")
+    print("PASS — field-backed readings read the field, both bands, "
+          "with units, in conditions and triggers")
     return 0
 
 

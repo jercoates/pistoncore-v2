@@ -990,6 +990,12 @@
      "domain": "climate",
      "read": "attr:current_humidity",
      "tag": "verified"
+    },
+    {
+     "domain": "weather",
+     "read": "attr:humidity",
+     "tag": "verified",
+     "note": "weather entities carry humidity as a field — VERIFIED on Jeremy's Forecast entity 2026-07-30"
     }
    ]
   },
@@ -1748,6 +1754,12 @@
      "read": "state",
      "tag": "assumed",
      "note": "no uv_index device_class in HA; match by entity naming/unit 'UV index'"
+    },
+    {
+     "domain": "weather",
+     "read": "attr:uv_index",
+     "tag": "verified",
+     "note": "weather entities carry uv_index as a field — VERIFIED on Jeremy's Forecast entity 2026-07-30"
     }
    ]
   },

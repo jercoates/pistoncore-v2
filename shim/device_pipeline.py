@@ -46,13 +46,41 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 
 _EXCLUDED_ENTITY_CATEGORIES = {"diagnostic", "config"}
 
+
+def _is_battery(entity: dict, state_map: dict) -> bool:
+    """A battery level, whatever HA filed it under.
+
+    HA tags battery sensors entity_category=diagnostic by convention, so
+    excluding diagnostics wholesale made batteries invisible on every NATIVE
+    integration (found 2026-07-29 on Jeremy's YoLink sensors: 4 entities on
+    his install, but most batteries for anyone not coming through a bridge —
+    his Hubitat ones are plain sensors and were fine). "Low battery" is about
+    the most common piston there is, and Jeremy uses it, so battery is carved
+    out of the exclusion. Nothing else is: config entities and other
+    diagnostics stay out."""
+    state = state_map.get(entity["entity_id"]) or {}
+    if (state.get("attributes") or {}).get("device_class") == "battery":
+        return True
+    return entity.get("original_device_class") == "battery"
+
 # Declaration attributes picker_capability_map.json's by_declaration_attr
 # rules check for (climate/device_tracker/person domains) — read straight
 # off the entity's state.attributes dict.
-_DECLARATION_ATTR_KEYS = [
-    "current_temperature", "fan_mode", "target_temp_high", "target_temp_low",
-    "temperature", "latitude", "zone_id",
-]
+def _declaration_attr_keys(capability_map: dict) -> list[str]:
+    """Which HA fields count as declaration signals — read from the picker
+    map's OWN by_declaration_attr rules.
+
+    This used to be a hardcoded list, and it drifted (2026-07-30): the map
+    grew rules for media_player.media_title and climate.current_humidity that
+    the pipeline never evaluated, because their keys weren't in the list. A
+    rule nobody reads looks exactly like a rule that doesn't match — the
+    editor just quietly offered `⌂ media_title` instead of webCoRE's
+    trackDescription. Deriving it means adding a rule to the map is enough to
+    make it live, which is what anyone editing that file would expect."""
+    keys = set()
+    for rules in (capability_map.get("domains") or {}).values():
+        keys.update((rules or {}).get("by_declaration_attr") or {})
+    return sorted(keys)
 
 
 def _load_json(filename: str) -> dict:
@@ -260,7 +288,8 @@ def group_entities(registries: dict) -> list[dict]:
         if entity.get("disabled_by") is not None:
             excluded.append((entity["entity_id"], "disabled"))
             continue
-        if entity.get("entity_category") in _EXCLUDED_ENTITY_CATEGORIES:
+        if entity.get("entity_category") in _EXCLUDED_ENTITY_CATEGORIES \
+                and not _is_battery(entity, state_map):
             excluded.append((entity["entity_id"], f"entity_category={entity['entity_category']}"))
             continue
 
@@ -304,16 +333,17 @@ def group_entities(registries: dict) -> list[dict]:
 # Stage 3 — picker_capability_map.json rule evaluator
 # ---------------------------------------------------------------------------
 
-def _entity_signals(entity_id: str, state: dict | None) -> dict:
+def _entity_signals(entity_id: str, state: dict | None, capability_map: dict | None = None) -> dict:
     domain = entity_id.split(".", 1)[0]
     attrs = state["attributes"] if state else {}
+    keys = _declaration_attr_keys(capability_map or {})
     return {
         "domain": domain,
         "device_class": attrs.get("device_class"),
         "supported_color_modes": attrs.get("supported_color_modes"),
         "supported_features": attrs.get("supported_features"),
         "unit_of_measurement": attrs.get("unit_of_measurement"),
-        "declaration_attrs": {k: attrs.get(k) for k in _DECLARATION_ATTR_KEYS if attrs.get(k) is not None},
+        "declaration_attrs": {k: attrs.get(k) for k in keys if attrs.get(k) is not None},
     }
 
 
@@ -456,7 +486,7 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
 
     for entity_id in member_ids_sorted:
         state = state_map.get(entity_id)
-        signals = _entity_signals(entity_id, state)
+        signals = _entity_signals(entity_id, state, picker_map)
         entity_attr_keys = attribute_keys_for_entity(signals, picker_map)
 
         # Stage 3.3 — command-only capabilities, evaluated independently of

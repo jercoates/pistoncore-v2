@@ -540,6 +540,36 @@ class _PyEmitter:
         attr = lo.get("a")
         hold = _hold_seconds(cond.get("to"))
 
+        # A reading that lives in a FIELD has to be named as one in the trigger
+        # expression, or the trigger watches the entity's STATE — a thermostat
+        # temperature trigger would fire on mode changes and compare against
+        # "heat" (2026-07-30; same bug as the reads, one path over).
+        # DOMAIN.name.attr is pyscript's documented form, and "attributes
+        # maintain their original type", so the float()/unknown guards the
+        # branches below already apply stay valid.
+        refs, scales = [], []
+        for e in entities:
+            field, scale = self.resolver.read_spec(e, attr) if attr else (None, None)
+            refs.append(f"{e}.{field.split('[')[0]}" if field else e)
+            scales.append(scale)
+        scale = next((s for s in scales if s), None)
+        if scale and len(set(scales)) > 1:
+            raise NotYetImplemented(
+                f"'{attr}' needs a different unit conversion on each of these "
+                f"devices — one trigger can't carry both", **ctx)
+        if scale:
+            # Convert the THRESHOLD into HA's units rather than the reading
+            # into webCoRE's. Doing the arithmetic in the trigger expression
+            # would raise on a null attribute (a light that is off has no
+            # brightness); moving a constant is exact and can't blow up.
+            mult, div = self.resolver.scale_factors(scale, f" on {attr}")
+            def _to_ha(v):
+                try:
+                    return float(v) * div / mult
+                except (TypeError, ValueError):
+                    return v
+            value, value2 = _to_ha(value), _to_ha(value2)
+
         def mv(v):
             return self.resolver.ha_state_value(attr, v)
 
@@ -547,21 +577,21 @@ class _PyEmitter:
         # the docs' own definition of state_hold IS webCoRE's `stays`)
         STAYS_EQ = ("stays", "stays_equal_to")
         if co in STAYS_EQ and hold:
-            self._add_state_trigger([f"{e} == {_q(mv(value))}" for e in entities],
+            self._add_state_trigger([f"{e} == {_q(mv(value))}" for e in refs],
                                     sid, True, hold)
             return
         if co == "stays_any_of" and hold:
             vals = value if isinstance(value, list) else [value]
             opts = ", ".join(_q(mv(v)) for v in vals)
-            self._add_state_trigger([f"{e} in ({opts},)" for e in entities],
+            self._add_state_trigger([f"{e} in ({opts},)" for e in refs],
                                     sid, True, hold)
             return
         if co in ("stays_away_from", "stays_different_than") and hold:
-            self._add_state_trigger([f"{e} != {_q(mv(value))}" for e in entities],
+            self._add_state_trigger([f"{e} != {_q(mv(value))}" for e in refs],
                                     sid, True, hold)
             return
         if co == "stays_unchanged" and hold:
-            self._add_state_trigger(list(entities), sid, False, hold)
+            self._add_state_trigger(list(refs), sid, False, hold)
             return
         NUM_HOLD = {"stays_greater_than": ">", "stays_greater_than_or_equal_to": ">=",
                     "stays_less_than": "<", "stays_less_than_or_equal_to": "<=",
@@ -571,24 +601,24 @@ class _PyEmitter:
             op = NUM_HOLD[co]
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown','unavailable') "
-                 f"and float({e}) {op} {value}" for e in entities], sid, True, hold)
+                 f"and float({e}) {op} {value}" for e in refs], sid, True, hold)
             return
         if co in ("changes_to_any_of", "changes_away_from_any_of"):
             vals = value if isinstance(value, list) else [value]
             opts = ", ".join(_q(mv(v)) for v in vals)
             inop = "in" if co == "changes_to_any_of" else "not in"
-            self._add_state_trigger([f"{e} {inop} ({opts},)" for e in entities],
+            self._add_state_trigger([f"{e} {inop} ({opts},)" for e in refs],
                                     sid, True)
             return
         if co in ("rises", "rises_to_or_above"):
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown','unavailable') "
-                 f"and float({e}) >= {value}" for e in entities], sid, True)
+                 f"and float({e}) >= {value}" for e in refs], sid, True)
             return
         if co in ("drops", "drops_to_or_below"):
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown','unavailable') "
-                 f"and float({e}) <= {value}" for e in entities], sid, True)
+                 f"and float({e}) <= {value}" for e in refs], sid, True)
             return
         if co in ("enters_range", "exits_range", "remains_inside_of_range",
                   "stays_inside_of_range", "remains_outside_of_range",
@@ -598,7 +628,7 @@ class _PyEmitter:
                     else f"not ({value} <= float({{e}}) <= {value2})")
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown','unavailable') and "
-                 + body.replace("{e}", e) for e in entities], sid, True,
+                 + body.replace("{e}", e) for e in refs], sid, True,
                 hold if "remains" in co or "stays" in co else None)
             return
         if co == "happens_daily_at" and _is_number(value):
@@ -612,22 +642,22 @@ class _PyEmitter:
             want = 0 if co.endswith("even") else 1
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown','unavailable') "
-                 f"and int(float({e})) % 2 == {want}" for e in entities], sid, True,
+                 f"and int(float({e})) % 2 == {want}" for e in refs], sid, True,
                 hold if ("remains" in co or "stays" in co) else None)
             return
         if co == "changes_to":
             mapped = self.resolver.ha_state_value(attr, value)
-            self._add_state_trigger([f"{e} == {_q(mapped)}" for e in entities], sid, True)
+            self._add_state_trigger([f"{e} == {_q(mapped)}" for e in refs], sid, True)
         elif co == "changes":
-            self._add_state_trigger(list(entities), sid, False)
+            self._add_state_trigger(list(refs), sid, False)
         elif co == "changes_away_from":
             mapped = self.resolver.ha_state_value(attr, value)
-            self._add_state_trigger([f"{e} != {_q(mapped)}" for e in entities], sid, True)
+            self._add_state_trigger([f"{e} != {_q(mapped)}" for e in refs], sid, True)
         elif co in ("rises_above", "drops_below"):
             op = ">" if co == "rises_above" else "<"
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown', 'unavailable') "
-                 f"and float({e}) {op} {value}" for e in entities], sid, True)
+                 f"and float({e}) {op} {value}" for e in refs], sid, True)
         else:
             raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
 
@@ -1124,11 +1154,31 @@ class _PyEmitter:
         # template is its entry point — nothing else is needed.
 
         variables = {}
+        var_exprs = []
         for v in self.piston.get("v", []):
             if v.get("t") == "device":
                 continue
             init = v.get("v")
             if isinstance(init, dict):
+                # An EXPRESSION initializer (`t: "x"`), not a constant: the
+                # piston declared `hsm_status = $hsmStatus`. Only `.c`
+                # (constants) was ever read, so every expression-initialized
+                # variable compiled to None and the piston went on to notify
+                # with the literal string "None" (2026-07-30, found in
+                # 81_test). Evaluated per run, in the event body, because the
+                # expression can read entity state that changes.
+                if init.get("t") in ("x", "e", "u") and (
+                        init.get("x") or init.get("e") or init.get("u")):
+                    try:
+                        var_exprs.append({
+                            "name": repr(v["n"]),
+                            "value": self._operand_expr(init, self._ctx(None))})
+                        variables[v["n"]] = None
+                        continue
+                    except NotYetImplemented:
+                        # keep the old behaviour for expressions this band
+                        # can't transpile rather than failing the whole piston
+                        pass
                 init = init.get("c")
             variables[v["n"]] = init if isinstance(init, (str, int, float, bool)) else None
 
@@ -1137,6 +1187,11 @@ class _PyEmitter:
         for name in sorted(self.expr.used_globals):
             g = self.globals_map_value(name)
             global_values[name] = g
+        # expression-initialized variables assign at the TOP of each run, so
+        # the piston body sees them already computed
+        if var_exprs:
+            event_body = [{"kind": "setvar", "name": e["name"], "value": e["value"]}
+                          for e in var_exprs] + list(event_body)
         return {"decorators": self.decorators, "event_body": event_body,
                 "guarded": guarded, "variables": variables,
                 "global_values": global_values,

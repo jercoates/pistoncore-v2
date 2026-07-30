@@ -74,6 +74,15 @@
       "always": { "attributes": ["valve"], "status": "verified" }
     },
 
+    "weather": {
+      "_note": "A weather entity keeps every reading as a FIELD (its state is the condition, e.g. 'sunny'), so all rules here are by_declaration_attr. Only the three readings webCoRE actually has words for are mapped -- pressure, dew_point, wind_speed, wind_bearing and cloud_coverage have NO webCoRE attribute, so they stay raw rather than inventing vocabulary (Jeremy 2026-07-30; the piston JSON is law, PistonCore adapts to it). Do not map wind_bearing onto webCoRE 'bearing': that is a device_tracker heading, a different thing wearing a similar name.",
+      "by_declaration_attr": {
+        "temperature": { "attributes": ["temperature"], "status": "verified" },
+        "humidity": { "attributes": ["humidity"], "status": "verified" },
+        "uv_index": { "attributes": ["ultravioletIndex"], "status": "verified" }
+      }
+    },
+
     "lock": {
       "always": { "attributes": ["lock"], "status": "verified" }
     },
