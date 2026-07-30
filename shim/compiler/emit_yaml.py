@@ -127,6 +127,14 @@ def _rescaled(name):
     so an HA scale change is a number edit rather than a code change."""
     def xform(v):
         from .resolve import rescale
+        if v is None or (isinstance(v, str) and not v.strip()):
+            # A parameter the piston left empty. Scaling it raised a raw
+            # TypeError out of the compiler (2026-07-29, surfaced once
+            # 19_Claude_Alarm_checks got far enough to reach it); a missing
+            # value is a piston problem to report, not a crash.
+            raise NotYetImplemented(
+                f"a '{name}' parameter has no value to convert — set it in "
+                f"the editor, or remove the command")
         return rescale(name, v)
     return xform
 

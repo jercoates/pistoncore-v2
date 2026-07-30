@@ -235,6 +235,15 @@ class _PyEmitter:
         drefs = [str(d) for d in (lo.get("d") or [])]
         runtime_ref = next((d for d in drefs
                             if d in ("$device", "$currentEventDevice")), None)
+        # $device is only a RUNTIME reference when nothing has bound it. Inside
+        # an unrolled `each` it IS bound, to that iteration's device — and then
+        # the normal path below is not just usable but required: bindings are
+        # per device, so the entity holding `smoke` differs per detector, and
+        # the value has to be mapped (webCoRE 'detected' -> HA 'on'). The old
+        # shortcut emitted _s(_device) == 'detected', which compiled clean and
+        # could never be true (2026-07-29).
+        if runtime_ref == "$device" and self.resolver.local_device_vars.get("$device"):
+            runtime_ref = None
         if runtime_ref:
             # the subject is the loop / triggering entity — known only at
             # runtime, so compare its live state directly
@@ -801,7 +810,10 @@ class _PyEmitter:
                 if not devices:
                     raise NotYetImplemented(
                         f"command '{cmd}' with no target devices", **ctx)
-                if any(str(d) in ("$device", "$currentEventDevice") for d in devices):
+                _bound_each = ("$device" in [str(d) for d in devices]
+                               and self.resolver.local_device_vars.get("$device"))
+                if not _bound_each and any(
+                        str(d) in ("$device", "$currentEventDevice") for d in devices):
                     var = "_device" if "$device" in [str(d) for d in devices] else "var_name"
                     svc = {"on": "turn_on", "off": "turn_off", "toggle": "toggle"}.get(cmd)
                     if not svc:
@@ -907,20 +919,43 @@ class _PyEmitter:
                 hashes = []
                 for dref in lo["d"]:
                     hashes.extend(self.resolver._hashes(str(dref), ctx))
-                ents = []
-                for h in hashes:
-                    entry = self.resolver.resolution_map.get(h) or {}
-                    binds = entry.get("cmd_bindings") or {}
-                    first = next((v for v in (binds.get(k) for k in
-                                  ("on", "off", "lock", "unlock", "open", "close"))
-                                  if v), None)
-                    if first:
-                        ents.append(first)
-                if not ents:
+                # UNROLL: emit the body once per device, with $device bound to
+                # that device. Two reasons this is the right shape, not a
+                # shortcut (2026-07-29, from Jeremy's smoke pistons):
+                #
+                # 1. It's the only CORRECT one. Bindings are per device — each
+                #    detector's `smoke` lives on its own entity — so a runtime
+                #    loop over a flat entity list can't know which entity holds
+                #    which reading for the device it's currently on.
+                # 2. The old code resolved each device to a CONTROLLABLE entity
+                #    (on/off/lock/...) and gave up when there wasn't one. That
+                #    assumed `each` means "do something to these devices". It
+                #    equally means "ask each of these devices something", which
+                #    is what a smoke-detector loop does — and a smoke detector
+                #    has nothing controllable, so those pistons died on a
+                #    premise that was never true.
+                #
+                # Freezing the list at compile time matches the standing rule
+                # that capability resolution is compile-time and recompiling is
+                # the refresh (no runtime PistonCore dependency).
+                if not hashes:
+                    raise NotYetImplemented("'each' over an empty device list", **ctx)
+                if len(hashes) > 50:
                     raise NotYetImplemented(
-                        "'each' over devices with no controllable entities", **ctx)
-                return [{"kind": "foreach_device", "items": repr(ents),
-                         "body": self._block(stmt.get("s", []), ctx)}]
+                        f"'each' over {len(hashes)} devices — too many to unroll", **ctx)
+                out = []
+                had = "$device" in self.resolver.local_device_vars
+                prev = self.resolver.local_device_vars.get("$device")
+                try:
+                    for h in hashes:
+                        self.resolver.local_device_vars["$device"] = [h]
+                        out.extend(self._block(stmt.get("s", []), ctx))
+                finally:
+                    if had:
+                        self.resolver.local_device_vars["$device"] = prev
+                    else:
+                        self.resolver.local_device_vars.pop("$device", None)
+                return out
             raise NotYetImplemented(f"'each' over {lo.get('t')} not compiled yet", **ctx)
         if t == "repeat":
             # repeat N times (lo = count) or repeat-while (c = conditions)

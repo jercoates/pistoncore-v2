@@ -460,6 +460,18 @@ class ExprTranspiler:
             return f"_fn_arrayitem({idx}, {self.variable(m.group(1))})"
         if name.startswith("$"):
             low = name.lower()
+            # $device inside an unrolled `each` is that iteration's device. Used
+            # as a device REFERENCE the resolver handles it (it's bound in
+            # local_device_vars); used as a VALUE — which is what a piston does
+            # when it builds "Basement Smoke detector - detected" — webCoRE
+            # gives the device's name. Without this it fell through to the
+            # _SYSVARS placeholder and emitted a bare `_device`, an undefined
+            # name that would have raised at runtime.
+            if low == "$device":
+                bound = getattr(self.resolver, "local_device_vars", {}).get("$device")
+                if bound:
+                    entry = self.resolver.resolution_map.get(bound[0]) or {}
+                    return repr(str(entry.get("name") or ""))
             if low in _SYSVARS:
                 return _SYSVARS[low]
             if low.split(".")[0].split("[")[0] in (
