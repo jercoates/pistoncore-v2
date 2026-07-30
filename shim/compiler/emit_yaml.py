@@ -305,18 +305,21 @@ def _sun_bound(cond, which):
     return None
 
 
-def _num_cmp(entity: str, op: str, value) -> str:
+def _num_cmp(read: str, op: str, value) -> str:
     """A numeric comparison that is FALSE when the sensor is unavailable, for
-    ANY operator (fail-closed). states('x') | is_number is false for
-    unknown/unavailable, so the `and` short-circuits."""
-    return (f"states('{entity}') | is_number and "
-            f"states('{entity}') | float(0) {op} {value}")
+    ANY operator (fail-closed). `x | is_number` is false for
+    unknown/unavailable, so the `and` short-circuits.
+
+    Takes the READ EXPRESSION, not an entity — some readings are the entity's
+    state and some are a field inside it (Resolver.read_expr decides which)."""
+    return (f"{read} | is_number and "
+            f"{read} | float(0) {op} {value}")
 
 
-def _num_between(entity: str, lo, hi, negate: bool = False) -> str:
-    inside = f"{lo} <= states('{entity}') | float(0) <= {hi}"
+def _num_between(read: str, lo, hi, negate: bool = False) -> str:
+    inside = f"{lo} <= {read} | float(0) <= {hi}"
     body = f"not ({inside})" if negate else f"({inside})"
-    return f"states('{entity}') | is_number and {body}"
+    return f"{read} | is_number and {body}"
 
 
 def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
@@ -394,42 +397,53 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
             f"condition on variable '{var}' ({co}) requires PyScript", **ctx)
 
     entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
+    # How each reading is actually spelled: states('x') when the value IS the
+    # entity's state, state_attr('x','field') when it rides inside the entity
+    # (Resolver.read_expr — the one place that decision is made).
+    reads = [resolver.read_expr(e, cond["attr"]) for e in entities]
+    # A duration condition ("stays above 72 for 5 minutes") needs a timestamp
+    # for when the reading last moved. HA tracks last_changed per ENTITY state
+    # only — there is no per-attribute timestamp — so a field-backed reading
+    # uses last_updated, which at least moves when the attributes do. Exact
+    # per-attribute timing needs PyScript; this is the honest YAML answer.
+    stamps = [f"states.{e}.{'last_changed' if r.startswith('states(') else 'last_updated'}"
+              for e, r in zip(entities, reads)]
     joiner = " and " if cond.get("aggregation") == "all" else " or "
 
     if co in _NUMERIC_OPS:
         op = _NUMERIC_OPS[co]
-        parts = [_num_cmp(e, op, cond["value"]) for e in entities]
+        parts = [_num_cmp(e, op, cond["value"]) for e in reads]
     elif co == "is_between" and _num_str(cond["value"]) and _num_str(cond["value2"]):
         # webCoRE stores bounds as strings; _is_number rejected every real case,
         # so numeric is_between silently routed to PyScript instead of compiling
         # to a native YAML template like its siblings is_not_between /
         # is_inside_of_range do. (Round E, 2026-07-23 — same string-vs-number
         # class as the boundary "=" fix.)
-        parts = [_num_between(e, cond["value"], cond["value2"]) for e in entities]
+        parts = [_num_between(e, cond["value"], cond["value2"]) for e in reads]
     elif co in _EQUALITY_OPS:
         op = _EQUALITY_OPS[co]
         value = cond["value"]
         if _is_number(value):
-            parts = [_num_cmp(e, op, value) for e in entities]
+            parts = [_num_cmp(e, op, value) for e in reads]
         else:
             mapped = resolver.ha_state_value(cond["attr"], value)
-            parts = [f"states('{e}') {op} '{mapped}'" for e in entities]
+            parts = [f"{e} {op} '{mapped}'" for e in reads]
     elif co in ("is_any_of", "is_not_any_of", "is_any"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
         mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
         neg = "not " if co == "is_not_any_of" else ""
-        parts = [f"{neg}states('{e}') in {mapped!r}" for e in entities]
+        parts = [f"{neg}{e} in {mapped!r}" for e in reads]
     elif co in ("is_even", "is_odd"):
         want = 0 if co == "is_even" else 1
-        parts = [f"states('{e}') | int(default=-1) % 2 == {want}" for e in entities]
+        parts = [f"{e} | int(default=-1) % 2 == {want}" for e in reads]
     elif co == "is_not_between":
         parts = [_num_between(e, cond["value"], cond["value2"], negate=True)
-                 for e in entities]
+                 for e in reads]
     elif co in ("is_inside_of_range",):
-        parts = [_num_between(e, cond["value"], cond["value2"]) for e in entities]
+        parts = [_num_between(e, cond["value"], cond["value2"]) for e in reads]
     elif co in ("is_outside_of_range",):
         parts = [_num_between(e, cond["value"], cond["value2"], negate=True)
-                 for e in entities]
+                 for e in reads]
     elif co in ("stays_greater_than", "stays_greater_than_or_equal_to",
                 "stays_less_than", "stays_less_than_or_equal_to",
                 "remains_above", "remains_below"):
@@ -440,9 +454,9 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         hold = _duration_hms(cond.get("duration")) or "00:00:00"
         h, m, sec = (int(x) for x in hold.split(":"))
         secs = h * 3600 + m * 60 + sec
-        parts = [f"({_num_cmp(e, op, cond['value'])} and "
-                 f"(as_timestamp(now()) - as_timestamp(states.{e}.last_changed)) >= {secs})"
-                 for e in entities]
+        parts = [f"({_num_cmp(r, op, cond['value'])} and "
+                 f"(as_timestamp(now()) - as_timestamp({s})) >= {secs})"
+                 for r, s in zip(reads, stamps)]
     elif co in ("stays", "stays_equal_to", "stays_any_of", "was", "was_not"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
         mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
@@ -450,38 +464,38 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         h, m, sec = (int(x) for x in hold.split(":"))
         secs = h * 3600 + m * 60 + sec
         neg = "not " if co == "was_not" else ""
-        parts = [f"({neg}states('{e}') in {mapped!r} and "
-                 f"(as_timestamp(now()) - as_timestamp(states.{e}.last_changed)) >= {secs})"
-                 for e in entities]
+        parts = [f"({neg}{r} in {mapped!r} and "
+                 f"(as_timestamp(now()) - as_timestamp({s})) >= {secs})"
+                 for r, s in zip(reads, stamps)]
     elif co in ("changes_to", "gets", "arrives", "stays", "stays_equal_to"):
         mapped = resolver.ha_state_value(cond["attr"], cond["value"])
-        parts = [f"states('{e}') == '{mapped}'" for e in entities]
+        parts = [f"{e} == '{mapped}'" for e in reads]
     elif co in ("changes_away_from", "stays_away_from"):
         mapped = resolver.ha_state_value(cond["attr"], cond["value"])
-        parts = [f"states('{e}') != '{mapped}'" for e in entities]
+        parts = [f"{e} != '{mapped}'" for e in reads]
     elif co in ("changes_to_any_of", "stays_any_of"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
         mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
-        parts = [f"states('{e}') in {mapped!r}" for e in entities]
+        parts = [f"{e} in {mapped!r}" for e in reads]
     elif co in ("changes", "changed"):
         parts = ["true"]      # the automation only ran because something changed
     elif co in ("rises_above", "rises", "rises_to_or_above"):
-        parts = [f"states('{e}') | float(default=-1.0e9) > {cond['value']}"
-                 for e in entities]
+        parts = [f"{e} | float(default=-1.0e9) > {cond['value']}"
+                 for e in reads]
     elif co in ("drops_below", "drops", "drops_to_or_below"):
-        parts = [_num_cmp(e, "<", cond["value"]) for e in entities]
+        parts = [_num_cmp(e, "<", cond["value"]) for e in reads]
     elif co in ("was_greater_than", "was_greater_than_or_equal_to",
                 "was_less_than", "was_less_than_or_equal_to"):
         OPS = {"was_greater_than": ">", "was_greater_than_or_equal_to": ">=",
                "was_less_than": "<", "was_less_than_or_equal_to": "<="}
-        parts = [_num_cmp(e, OPS[co], cond["value"]) for e in entities]
+        parts = [_num_cmp(e, OPS[co], cond["value"]) for e in reads]
     elif co in ("was_equal_to", "was_any_of"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
         mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
-        parts = [f"states('{e}') in {mapped!r}" for e in entities]
+        parts = [f"{e} in {mapped!r}" for e in reads]
     elif co == "is_different_than":
         mapped = resolver.ha_state_value(cond["attr"], cond["value"])
-        parts = [f"states('{e}') != '{mapped}'" for e in entities]
+        parts = [f"{e} != '{mapped}'" for e in reads]
     else:
         raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
 
@@ -599,6 +613,42 @@ def _recheck_condition(trig: dict, resolver: Resolver, ctx: dict) -> dict | None
 
 
 def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
+    """Wrapper over _trigger_node that tags field-backed readings.
+
+    HA's state and numeric_state triggers take a native `attribute:` key, so a
+    reading that lives inside an entity (a thermostat's current_temperature, a
+    lock's last_code_name) fires correctly without leaving YAML. Applied here
+    rather than at the twenty-odd return sites below, so every trigger shape
+    gets it and none can be forgotten."""
+    node = _trigger_node(trig, resolver, ctx, trig_id)
+    if not isinstance(node, dict) or node.get("kind") not in ("state", "numeric_state"):
+        return node
+    attr = trig.get("attr")
+    entities = node.get("entities") or []
+    if not attr or not entities:
+        return node
+    fields = {resolver.read_field(e, attr) for e in entities}
+    if fields == {None}:
+        return node                       # every one is a plain state read
+    if len(fields) > 1:
+        # One webCoRE name reaching different HA fields across the devices in
+        # this trigger (a light's `level` is brightness, a fan's is
+        # percentage). One YAML trigger can carry one attribute, so this needs
+        # the band that can branch per device.
+        raise NotYetImplemented(
+            f"'{attr}' reads from a different field on each of these devices "
+            f"({', '.join(sorted(str(f) for f in fields))}) — needs PyScript", **ctx)
+    field = fields.pop()
+    if field and field.endswith("]") and "[" in field:
+        raise NotYetImplemented(
+            f"triggering on '{attr}' means watching one slot of HA's "
+            f"{field.split('[')[0]} list, which a YAML trigger can't express "
+            f"— needs PyScript", **ctx)
+    node["attribute"] = field
+    return node
+
+
+def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     co = trig["co"]
     if trig.get("lo_type") == "v":
         var = trig.get("lo_var")
@@ -989,18 +1039,49 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 # surrounding action block targets.
                 raise NotYetImplemented(
                     f"piston-scope command '{n['command']}' requires PyScript", **ctx)
-            entities = resolver.entities_for_command(n["devices"], n["command"], ctx)
-            service, data_spec = resolver.service_spec(n["command"], entities[0], ctx)
-            data = None
-            if data_spec:
-                data = {k: _param_value(v, n["params"], ctx) for k, v in data_spec.items()}
-                # "is this the play-a-file service?" — the name it compares
-                # against comes from the vocab, so an HA rename doesn't
-                # silently stop media URLs being rewritten.
-                if service == resolver.ha_spec("playTrack", ctx)["service"] \
-                        and data.get("media_content_id"):
-                    data["media_content_id"] = _rewrite_media_url(
-                        data["media_content_id"], resolver, ctx)
+            # A command this device doesn't offer as a webCoRE capability. The
+            # vocab route cannot work — there's no binding to resolve — so if
+            # the device's integration has a command passthrough, send it there.
+            # That covers a command webCoRE never knew (allOff, playSound,
+            # searchAmazonMusic) and one it knows but this device can't serve
+            # (`take` on a camera arriving through a bridge).
+            #
+            # NOT gated on the `cm` flag: webCoRE sets it inconsistently — the
+            # same driver command is flagged in one piston and not in another
+            # (VERIFIED across the corpus), so it cannot be trusted to decide
+            # this. "The device doesn't bind it" is the reliable signal.
+            #
+            # Where there's no passthrough, nothing changes: the clear
+            # "no HA service mapping" error still comes out below.
+            if not resolver.has_command_binding(n["devices"], n["command"], ctx) \
+                    and resolver.passthrough(n["devices"], ctx):
+                out.append(_driver_command(n, resolver, ctx))
+                continue
+            try:
+                entities = resolver.entities_for_command(n["devices"], n["command"], ctx)
+                service, data_spec = resolver.service_spec(n["command"], entities[0], ctx)
+                data = None
+                if data_spec:
+                    data = {k: _param_value(v, n["params"], ctx)
+                            for k, v in data_spec.items()}
+            except NotYetImplemented:
+                # The vocab claims to know this command but its mapping cannot
+                # be used here — a broken data spec (`take` asks for a $1 the
+                # command has no parameter for), or a service this device
+                # can't take. If the integration has a command passthrough,
+                # the device's own driver still knows the command, so send it
+                # there rather than failing.
+                if resolver.passthrough(n["devices"], ctx):
+                    out.append(_driver_command(n, resolver, ctx))
+                    continue
+                raise
+            # "is this the play-a-file service?" — the name it compares
+            # against comes from the vocab, so an HA rename doesn't silently
+            # stop media URLs being rewritten.
+            if data and service == resolver.ha_spec("playTrack", ctx)["service"] \
+                    and data.get("media_content_id"):
+                data["media_content_id"] = _rewrite_media_url(
+                    data["media_content_id"], resolver, ctx)
             out.append({"kind": "service", "service": service,
                         "entities": entities, "data": data})
         elif n["kind"] == "switch":
@@ -1663,7 +1744,8 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                 opposite = resolver.opposite_state(node["to"])
                 if opposite is not None:
                     cancel_triggers.append({"kind": "state", "entities": node["entities"],
-                                            "to": opposite, "id": "tcp_cancel"})
+                                            "to": opposite, "id": "tcp_cancel",
+                                            **({"attribute": node["attribute"]} if node.get("attribute") else {})})
         if not triggers:
             # condition-only statement -> promote (subscription equivalence)
             for cond in br["conditions"]:
@@ -1727,12 +1809,17 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
             if kind == "numeric_state":
                 # level comparison (temp/humidity/battery/lux/... any sensor):
                 # below:N wakes on the down-crossing, add above:N for the up.
+                # `attribute` rides along: the opposite-direction twin has to
+                # watch the same field, or the else wakes on the entity's
+                # state instead of the reading it was written about.
                 if "below" in node and "above" not in node:
                     triggers.append({"kind": "numeric_state", "entities": node["entities"],
-                                     "above": node["below"], "id": node.get("id")})
+                                     "above": node["below"], "id": node.get("id"),
+                                     **({"attribute": node["attribute"]} if node.get("attribute") else {})})
                 elif "above" in node and "below" not in node:
                     triggers.append({"kind": "numeric_state", "entities": node["entities"],
-                                     "below": node["above"], "id": node.get("id")})
+                                     "below": node["above"], "id": node.get("id"),
+                                     **({"attribute": node["attribute"]} if node.get("attribute") else {})})
             elif kind == "state" and (node.get("to") is not None or node.get("from") is not None):
                 # equality/change trigger (switch, contact, presence, lock, mode)
                 # with an ELSE: webCoRE subscribes to the whole ATTRIBUTE and

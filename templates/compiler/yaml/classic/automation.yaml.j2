@@ -14,6 +14,9 @@
 {%- if t.kind == 'state' -%}
 - trigger: state
 {{- entity_ids(t.entities, '  ') }}
+{%- if t.get('attribute') %}
+  attribute: {{ t.get('attribute') }}
+{%- endif %}
 {%- if t.get('to') %}
 {%- if t.get('to') is not sequence or t.get('to') is string %}
   to: "{{ t.get('to') }}"
@@ -37,6 +40,9 @@
 {%- elif t.kind == 'numeric_state' -%}
 - trigger: numeric_state
 {{- entity_ids(t.entities, '  ') }}
+{%- if t.get('attribute') %}
+  attribute: {{ t.get('attribute') }}
+{%- endif %}
 {%- if t.get('above') is not none %}
   above: {{ t.get('above') }}
 {%- endif %}

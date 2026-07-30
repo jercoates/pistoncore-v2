@@ -7,6 +7,7 @@ d-array entries resolve as: hashed id | local device-variable name | @global
 name (PISTON_JSON_REFERENCE §4 — never assume already-a-hash)."""
 
 import json
+import re
 from pathlib import Path
 
 from .errors import UnresolvableDevice
@@ -190,6 +191,7 @@ class Resolver:
         # HA->webCoRE for reading, and _attribute_value_maps flips it for
         # writing.
         vocab = _load_vocab()
+        self.vocab = vocab
         self.value_maps = _attribute_value_maps(vocab)
         self.system_values = _system_value_maps(vocab)
         self.alarm_commands = _alarm_service_map(vocab)
@@ -200,6 +202,133 @@ class Resolver:
         self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
         sys_ent = resolution_map.get("$system")
         self.system_entities = sys_ent if isinstance(sys_ent, dict) else {}
+        # (entity_id, webCoRE attribute) -> the HA FIELD inside that entity,
+        # for readings the device pipeline fed in raw. Flattened from each
+        # device's attr_field_bindings so read_field() needs only what the
+        # emitters already have in hand (an entity and an attribute name).
+        self._raw_fields: dict[tuple[str, str], str] = {}
+        for entry in resolution_map.values():
+            if not isinstance(entry, dict):
+                continue
+            binds = entry.get("attr_bindings") or {}
+            for attr, field in (entry.get("attr_field_bindings") or {}).items():
+                ent = binds.get(attr)
+                if ent:
+                    self._raw_fields[(ent, attr)] = field
+
+    def read_field(self, entity: str, attr: str) -> str | None:
+        """The HA field holding this reading, or None to read the entity state.
+
+        WHY (Jeremy, 2026-07-29): HA reports a device's readings in two shapes.
+        Some are their own entity, whose STATE is the value
+        (sensor.front_lock_battery -> "97.0"). Others ride as a FIELD on
+        another entity — a thermostat's current temperature is inside
+        climate.x, whose state is "heat". The compiler read the state for
+        both, so every field-shaped reading silently compared against the
+        wrong thing (a thermostat condition tested "heat" > 72 and never
+        fired). The vocab has said which is which all along, in `read`:
+        "state" vs "attr:current_temperature", 30 of them tagged verified —
+        nothing had ever consumed the field.
+
+        Two sources, checked in that order:
+          1. attr_field_bindings, for readings the pipeline fed in raw
+             (last_code_name, media_title) — the pipeline knows the field
+             because it read it off the entity itself.
+          2. the vocab's own `read` rule for the entity's DOMAIN, since one
+             webCoRE name covers several (level is attr:brightness on a
+             light, attr:volume_level on a media_player, attr:percentage on
+             a fan, and the state on a dimmer sensor).
+
+        Returns the field name, possibly with a `[n]` index suffix for the
+        packed ones (hue is hs_color[0])."""
+        raw = self._raw_fields.get((entity, attr))
+        if raw:
+            return raw
+        rule = self._read_rule(entity, attr)
+        read = str((rule or {}).get("read") or "")
+        return read[5:] if read.startswith("attr:") else None
+
+    def _read_rule(self, entity: str, attr: str) -> dict | None:
+        """The vocab `ha` rule governing how this entity's reading is read."""
+        domain = entity.split(".", 1)[0]
+        exact = wildcard = None
+        for rule in ((self.vocab.get("attributes", {}).get(attr) or {}).get("ha") or []):
+            if not isinstance(rule, dict):
+                continue
+            rule_domain = rule.get("domain")
+            # An EXACT domain match wins whatever it says, including "state" —
+            # a wildcard rule must never override it. battery is the case that
+            # proved this: sensor/state (verified) alongside */attr:battery_level
+            # (a guess for entities that carry the field). Preferring the
+            # wildcard made every battery sensor read a field it doesn't have.
+            if rule_domain == domain and exact is None:
+                exact = rule
+            elif rule_domain in ("*", "_any", None) and wildcard is None:
+                wildcard = rule
+        return exact if exact is not None else wildcard
+
+    @staticmethod
+    def _scale_read(expr: str, formula: str, entity: str, attr: str) -> str:
+        """Apply a vocab read `scale` to a Jinja read expression.
+
+        webCoRE and HA disagree on units for the same reading: a light's level
+        is 0-100 in webCoRE and 0-255 in HA, a volume is 0-100 vs 0.0-1.0. The
+        vocab records the conversion next to the field it belongs to
+        ("scale": "round(x*100/255)"). Only the two shapes the vocab actually
+        uses are accepted — an unrecognised formula raises rather than
+        silently emitting an unscaled comparison, because a level test that is
+        wrong by 2.55x looks plausible and fails quietly."""
+        m = re.fullmatch(r"round\(\s*x\s*\*\s*([0-9.]+)\s*(?:/\s*([0-9.]+)\s*)?\)",
+                         (formula or "").replace(" ", ""))
+        if not m:
+            raise UnresolvableDevice(
+                f"vocab scale '{formula}' on {attr} ({entity}) isn't a form the "
+                f"compiler knows how to apply when reading")
+        mult, div = m.group(1), m.group(2)
+        arith = f"({expr} | float(0)) * {mult}" + (f" / {div}" if div else "")
+        return f"(({arith}) | round(0) | int)"
+
+    def ha_field_name(self, attr: str) -> str:
+        """Best guess at the HA field name for a webCoRE attribute, when the
+        entity ISN'T known at compile time ($currentEventDevice).
+
+        Three sources, in order: the vocab's own `attr:` rule; the pipeline's
+        raw feed, where the attribute name IS the HA field; otherwise
+        camelCase -> snake_case, which is the convention both Hubitat's
+        bridge and HA itself follow (lastCodeName -> last_code_name,
+        VERIFIED against Jeremy's lock 2026-07-29). Pistons imported from
+        Hubitat webCoRE carry the Hubitat spelling, so this is the bridge
+        between a piston written years ago and the entity in front of us."""
+        for rule in ((self.vocab.get("attributes", {}).get(attr) or {}).get("ha") or []):
+            if isinstance(rule, dict) and str(rule.get("read") or "").startswith("attr:"):
+                return rule["read"][5:].split("[", 1)[0]
+        if attr in {f for f in self._raw_fields.values()}:
+            return attr
+        out = []
+        for i, ch in enumerate(attr):
+            if ch.isupper() and i:
+                out.append("_")
+            out.append(ch.lower())
+        return "".join(out)
+
+    def read_expr(self, entity: str, attr: str) -> str:
+        """Jinja that yields this reading — the ONE place a read is spelled.
+
+        Every emitter goes through here rather than writing states() inline,
+        so the state-vs-field decision is made once (compiler policy: one
+        canonical function per job, COMPILER_DECISIONS_HOLDING §A)."""
+        field = self.read_field(entity, attr)
+        if not field:
+            return f"states('{entity}')"
+        if field.endswith("]") and "[" in field:
+            name, _, idx = field[:-1].partition("[")
+            # `or [0,0]` keeps an unset packed value from raising on the
+            # subscript — same fail-closed spirit as the numeric guards.
+            expr = f"(state_attr('{entity}','{name}') or [0,0])[{idx}]"
+        else:
+            expr = f"state_attr('{entity}','{field}')"
+        scale = (self._read_rule(entity, attr) or {}).get("scale")
+        return self._scale_read(expr, scale, entity, attr) if scale else expr
 
     def system_entity(self, var: str) -> str | None:
         """HA entity backing a webCoRE system variable ($mode,

@@ -123,6 +123,116 @@ def _custom_attribute(entity_id: str, entity: dict, state: dict | None) -> dict 
     return {"n": key, "t": attr_type}
 
 
+# HA fields that describe the entity rather than report a reading. Offering
+# these as pickable attributes would be noise — nobody writes "if the light's
+# supported_color_modes changes".
+_PLUMBING_FIELDS = frozenset({
+    "friendly_name", "icon", "entity_picture", "device_class", "state_class",
+    "unit_of_measurement", "supported_features", "supported_color_modes",
+    "attribution", "assumed_state", "editable", "restored", "hidden_by",
+    "id", "options", "min", "max", "step", "mode", "pattern",
+    "device_trackers", "entity_id",
+    # Lists of what the device COULD do — the same kind of thing as
+    # supported_features above, just spelled per-domain. Nobody writes "if the
+    # thermostat's hvac_modes changes"; the reading is `hvac_mode`, singular,
+    # which the vocab already owns.
+    "source_list", "hvac_modes", "fan_modes", "preset_modes", "swing_modes",
+    "effect_list", "event_types", "operation_list", "available_tones",
+    "sound_mode_list", "swing_horizontal_modes",
+    # Range/step declarations: the device's limits, not its state.
+    "min_temp", "max_temp", "min_humidity", "max_humidity", "target_temp_step",
+    "min_color_temp_kelvin", "max_color_temp_kelvin", "min_mireds",
+    "max_mireds", "percentage_step", "code_format", "code_arm_required",
+    # Unit declarations. The reading is the number next to them.
+    "temperature_unit", "precipitation_unit", "pressure_unit",
+    "visibility_unit", "wind_speed_unit",
+})
+
+
+def _field_type(value) -> str:
+    """webCoRE attribute type for a raw HA field value.
+
+    Types are the vocab's own vocabulary (enum/decimal/integer/string/...);
+    piston.module.js:3234 lowercases whatever we send and maps number ->
+    decimal, so anything outside that set degrades to a text comparison
+    rather than breaking."""
+    if isinstance(value, bool):
+        return "string"
+    if isinstance(value, int):
+        return "integer"
+    if isinstance(value, float):
+        return "decimal"
+    if isinstance(value, (dict, list)):
+        return "object"
+    return "string"
+
+
+def _vocab_covered_fields(attr_bindings: dict, entity_id: str, vocab: dict) -> set[str]:
+    """The HA fields on this entity that a vocab attribute already reads.
+
+    The vocab's `read: "attr:current_temperature"` rules say exactly which HA
+    field each webCoRE attribute comes from, so a device whose `temperature`
+    is already bound must not ALSO sprout a raw `current_temperature` — the
+    user would see the same reading twice under two names. Mirror of
+    services_covered_by_vocab on the command side: vocab wins where it has a
+    rule, raw fills the gaps (Jeremy, 2026-07-29)."""
+    domain = entity_id.split(".", 1)[0]
+    covered: set[str] = set()
+    for attr_key, bound_entity in attr_bindings.items():
+        if bound_entity != entity_id:
+            continue
+        for rule in (vocab["attributes"].get(attr_key, {}).get("ha") or []):
+            if not isinstance(rule, dict):
+                continue
+            if rule.get("domain") not in (domain, "*", "_any", None):
+                continue
+            read = str(rule.get("read") or "")
+            if read.startswith("attr:"):
+                covered.add(read[5:].split("[", 1)[0])
+    return covered
+
+
+def _entity_field_attributes(entity_id: str, state: dict | None,
+                             attr_bindings: dict, vocab: dict) -> list[tuple[dict, str]]:
+    """Readings that live INSIDE an entity, offered as custom attributes.
+
+    WHY (Jeremy, 2026-07-29, found chasing a lock's `last_code_name`): HA
+    reports a device's readings in two shapes — some are their own entity
+    (sensor.front_lock_battery, state "97.0"), others ride as fields on
+    another entity (lock.front_lock carries last_code_name, codes,
+    max_codes). This pipeline only ever walked the entity list, so the second
+    shape was invisible end to end: the editor never offered it and the
+    compiler had nothing to read. Nothing was lost by the Hubitat bridge —
+    the data was there the whole time, one level down.
+
+    Custom attributes are a first-class webCoRE path, not a workaround:
+    piston.module.js:3217-3236 has an explicit branch for an attribute the
+    central vocab doesn't know, renders it with a ⌂ prefix, and keeps every
+    field we send (so `t` and `o` still drive the editor's input type).
+    VERIFIED 2026-07-29 by reading that branch, plus the two other places an
+    attribute is looked up (the [device : attr] expression autocomplete at
+    845-847 and the operand fallback at 3689-3701) — none of the three drops
+    an unknown name.
+
+    Returns (attribute_object, ha_field_name) pairs; the field name is what
+    the compiler needs to emit state_attr(entity, field) instead of reading
+    the entity's state."""
+    if state is None:
+        return []
+    covered = _vocab_covered_fields(attr_bindings, entity_id, vocab)
+    out = []
+    for field, value in sorted((state.get("attributes") or {}).items()):
+        if field in _PLUMBING_FIELDS or field.startswith("_") or field in covered:
+            continue
+        if value is None:
+            # Nothing to type-sniff and nothing to compare against. Unlike an
+            # entity (which is real even when its state reads unknown), a
+            # null field is usually one the integration simply doesn't fill.
+            continue
+        out.append(({"n": field, "t": _field_type(value)}, field))
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Stage 1 — grouping
 # ---------------------------------------------------------------------------
@@ -334,6 +444,10 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
     member_ids_sorted = sorted(group["member_entity_ids"])
 
     attr_bindings: dict[str, str] = {}
+    # attribute name -> the HA FIELD inside that entity holding the value.
+    # Only populated for readings that aren't the entity's own state; absence
+    # means "read the state", which keeps every existing binding unchanged.
+    attr_field_bindings: dict[str, str] = {}
     sub_device_members: dict[str, list[str]] = {}
     cmd_bindings: dict[str, str] = {}
     capability_keys: set[str] = set()
@@ -384,6 +498,19 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
             # at least one of its OTHER attribute keys is unclaimed; a command
             # that only two entities could ever offer under the same name
             # keeps routing to whichever entity won that name first.
+
+    # Readings that live inside an entity rather than as one of their own.
+    # Runs after the loop above so the vocab-covered check sees this group's
+    # FINAL bindings — otherwise a field would be offered raw just because
+    # its vocab attribute happened to bind on a later member entity.
+    for entity_id in member_ids_sorted:
+        for field_attr, ha_field in _entity_field_attributes(
+                entity_id, state_map.get(entity_id), attr_bindings, vocab):
+            if field_attr["n"] in attr_bindings:
+                continue        # first contributor wins, as everywhere else
+            custom_attrs.append(field_attr)
+            attr_bindings[field_attr["n"]] = entity_id
+            attr_field_bindings[field_attr["n"]] = ha_field
 
     # Sub-device members were accumulated in member_ids_sorted (lexicographic)
     # order — re-sort numerically so index N actually means physical button N.
@@ -458,6 +585,7 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
         "name": group["display_name"],
         "members": member_ids_sorted,
         "attr_bindings": attr_bindings,
+        "attr_field_bindings": attr_field_bindings,
         "sub_device_bindings": sub_device_members,
         "cmd_bindings": cmd_bindings,
     }

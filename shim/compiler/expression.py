@@ -721,7 +721,18 @@ class JinjaTranspiler(ExprTranspiler):
         if dref == "$currentEventDevice":
             if not attr:
                 return "state_attr(trigger.entity_id, 'friendly_name')"
-            return "trigger.to_state.state"
+            # [$currentEventDevice : someAttribute] asks the TRIGGERING device
+            # for a named reading — which is often NOT the reading that woke
+            # the piston. Jeremy's alarm pistons ask a lock for lastCodeName
+            # (who unlocked it) while the trigger fired on lock/unlock; this
+            # used to return the lock state, so the message said "Disarmed by:
+            # unlocked". The entity isn't known until runtime, so decide in
+            # Jinja: use the field when the entity has one, else the state
+            # (which is the right answer when the attribute IS the state).
+            field = self.resolver.ha_field_name(attr)
+            return (f"(state_attr(trigger.entity_id, '{field}') "
+                    f"if state_attr(trigger.entity_id, '{field}') is not none "
+                    f"else trigger.to_state.state)")
         if not attr or attr == "?":
             if item.get("id"):
                 entry = self.resolver.resolution_map.get(item["id"]) or {}
@@ -730,8 +741,8 @@ class JinjaTranspiler(ExprTranspiler):
                 "device reference without an attribute in a template", **self.ctx)
         entities = self.resolver.entities_for_attr([dref], attr, self.ctx)
         if len(entities) == 1:
-            return "states('" + entities[0] + "')"
-        joined = ", ".join("states('" + e + "')" for e in entities)
+            return self.resolver.read_expr(entities[0], attr)
+        joined = ", ".join(self.resolver.read_expr(e, attr) for e in entities)
         return "[" + joined + "] | join(', ')"
 
     def function(self, item: dict) -> str:
