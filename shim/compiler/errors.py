@@ -31,6 +31,17 @@ class NotYetImplemented(CompilerError):
     code = "NOT_YET_IMPLEMENTED"
 
 
+class PistonDefect(CompilerError):
+    """The piston itself is incomplete — a parameter left blank, a value the
+    editor never got. Distinct from NotYetImplemented on purpose (2026-07-30):
+    the command emitters fall back to the integration's driver passthrough
+    when a vocab mapping can't be used on a device, and that fallback catches
+    NotYetImplemented. A blank volume must NOT take that route — it would emit
+    a send_command carrying nonsense instead of telling the user to fill the
+    field in. Nothing catches this; it reaches the status banner."""
+    code = "PISTON_DEFECT"
+
+
 class UnresolvableDevice(CompilerError):
     """Hash/name with no resolution-map entry (A2/A7): a trigger on a
     nonexistent entity silently never fires, so this is a hard error."""

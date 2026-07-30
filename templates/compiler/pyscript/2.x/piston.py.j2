@@ -164,6 +164,48 @@ def _f(name):
         return None
 
 
+def _sa(name, field, mult=None, div=None):
+    """Forgiving read of a reading that lives INSIDE an entity -> string/None.
+
+    HA reports some readings as their own entity (state IS the value) and
+    others as a field on another entity: a thermostat's current temperature
+    is inside climate.x, whose state is "heat". Same rule the YAML band
+    applies with state_attr(); the compiler decides which via one shared
+    Resolver.read_spec(), and each band only spells it (Jeremy, 2026-07-29).
+
+    state.getattr() is used rather than pyscript's dotted state.get()
+    attribute form so this doesn't depend on that syntax behaving as
+    expected. mult/div apply the vocab's unit conversion (HA brightness is
+    0-255 where webCoRE's level is 0-100)."""
+    try:
+        v = (state.getattr(name) or {}).get(field)
+    except Exception:
+        return None
+    if v is None:
+        return None
+    if mult is None:
+        return str(v)
+    try:
+        return str(int(round(float(v) * mult / (div or 1))))
+    except Exception:
+        return None
+
+
+def _fa(name, field, mult=None, div=None):
+    """Numeric form of _sa -> float or None."""
+    try:
+        v = (state.getattr(name) or {}).get(field)
+    except Exception:
+        return None
+    if v is None:
+        return None
+    try:
+        v = float(v)
+    except Exception:
+        return None
+    return v if mult is None else round(v * mult / (div or 1))
+
+
 def _time_between(a, b):
     """$time between two times, minutes since midnight, wraps past midnight."""
     now = datetime.datetime.now()

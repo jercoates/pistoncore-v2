@@ -199,8 +199,105 @@ def test_unavailable_sensor_fails_closed():
     return 0
 
 
+def test_readings_inside_entities():
+    """A reading that lives in a FIELD must be read as a field, in BOTH bands,
+    with the vocab's unit conversion applied.
+
+    WHY THIS EXISTS (2026-07-30): the snapshot corpus cannot catch this. Its
+    synthetic map binds attributes to sensor.* entities, where reading the
+    entity's state is already correct — so a thermostat reading "heat" instead
+    of 72, or a dimmer reading "on" instead of 60, produced NO drift. The bug
+    shipped in the YAML band, was found by hand against Jeremy's live install,
+    and then shipped again in the PyScript band for the same reason. Three
+    times the pass count said everything was fine.
+
+    Also asserts the two bands AGREE, which is the actual property that
+    matters: Resolver.read_spec() is the single decision and each band only
+    spells it (one translation source, routing separate)."""
+    from shim.compiler.resolve import Resolver
+    import shim.compiler.emit_pyscript as EP
+
+    reso = {
+        ":c:": {"name": "Stat", "cmd_bindings": {},
+                "attr_bindings": {"temperature": "climate.t"}},
+        ":l:": {"name": "Lamp", "cmd_bindings": {"on": "light.l"},
+                "attr_bindings": {"level": "light.l"}},
+        ":m:": {"name": "Spk", "cmd_bindings": {},
+                "attr_bindings": {"volume": "media_player.m"}},
+        ":k:": {"name": "Lock", "cmd_bindings": {},
+                "attr_bindings": {"lock": "lock.k", "last_code_name": "lock.k"},
+                "attr_field_bindings": {"last_code_name": "last_code_name"}},
+        "$system": {},
+    }
+    r = Resolver({"v": []}, reso, {})
+    cls = next(c for _, c in vars(EP).items()
+               if isinstance(c, type) and hasattr(c, "_read"))
+    py = cls.__new__(cls); py.resolver = r
+
+    # (entity, attr, expected field, expected scale factors or None)
+    cases = [
+        ("climate.t", "temperature", "current_temperature", None),
+        ("light.l", "level", "brightness", (100.0, 255.0)),
+        ("media_player.m", "volume", "volume_level", (100.0, 1.0)),
+        ("lock.k", "last_code_name", "last_code_name", None),   # raw feed
+        ("lock.k", "lock", None, None),                         # state-backed
+        ("sensor.b", "battery", None, None),                    # state-backed
+    ]
+    failures = []
+    for entity, attr, want_field, want_scale in cases:
+        field, scale = r.read_spec(entity, attr)
+        if field != want_field:
+            failures.append(f"{attr} on {entity}: field {field!r}, expected {want_field!r}")
+            continue
+        got_scale = r.scale_factors(scale, "") if scale else None
+        if got_scale != want_scale:
+            failures.append(f"{attr} on {entity}: scale {got_scale}, expected {want_scale}")
+            continue
+        yaml_read = r.read_expr(entity, attr)
+        py_read = py._read(entity, attr)
+        if want_field is None:
+            # state-backed: neither band may reach for an attribute
+            if "state_attr" in yaml_read or "_sa(" in py_read:
+                failures.append(f"{attr} on {entity}: read as a field but its "
+                                f"value IS the state — {yaml_read} / {py_read}")
+        else:
+            if "state_attr" not in yaml_read or want_field not in yaml_read:
+                failures.append(f"{attr} on {entity}: YAML did not read the field — {yaml_read}")
+            if "_sa(" not in py_read or want_field not in py_read:
+                failures.append(f"{attr} on {entity}: PyScript did not read the field — {py_read}")
+            if want_scale and (str(int(want_scale[0])) not in yaml_read
+                               or str(want_scale[0]) not in py_read):
+                failures.append(f"{attr} on {entity}: unit conversion missing — "
+                                f"{yaml_read} / {py_read}")
+
+    # end to end: a condition on a thermostat must not compile to states()
+    from shim.compiler import compile_piston
+    piston = {"v": [], "s": [{
+        "t": "if", "$": 1,
+        "c": [{"t": "condition", "ct": "c", "co": "is_greater_than",
+               "lo": {"t": "p", "d": [":c:"], "a": "temperature", "g": "any"},
+               "ro": {"t": "c", "c": 72, "vt": "integer"}}],
+        "s": [{"t": "action", "$": 2, "d": [":l:"], "k": [{"c": "on", "p": []}]}],
+        "e": []}]}
+    out = compile_piston(piston, "u", "U", reso, {})
+    body = out.get("yaml") or out.get("pyscript") or ""
+    if "current_temperature" not in body:
+        failures.append("end-to-end: a thermostat condition never mentioned "
+                        "current_temperature — it is reading the entity state "
+                        f"({out.get('target')} band)")
+
+    if failures:
+        print("FAIL — readings that live inside an entity:")
+        for f in failures:
+            print(f"   {f}")
+        return 1
+    print("PASS — field-backed readings read the field, both bands, with units")
+    return 0
+
+
 if __name__ == "__main__":
     rc = main()
     rc = test_else_on_trigger_only_if() or rc
     rc = test_unavailable_sensor_fails_closed() or rc
+    rc = test_readings_inside_entities() or rc
     sys.exit(rc)

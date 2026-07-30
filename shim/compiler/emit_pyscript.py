@@ -138,6 +138,62 @@ class _PyEmitter:
 
     # ── operands ───────────────────────────────────────────────────────────
 
+    def _driver_command(self, cmd: str, devices, params, ctx: dict) -> dict:
+        """A driver command routed through the integration's passthrough.
+
+        The PyScript spelling of emit_yaml._driver_command — same passthrough
+        spec, same fields, same accepted limitation (a passthrough takes any
+        command name and fails at RUNTIME, not compile). VERIFIED on Jeremy's
+        hardware 2026-07-29: `take` via hubitat.send_command produced a
+        picture."""
+        spec = self.resolver.passthrough(devices, ctx)
+        if not spec:
+            raise NotYetImplemented(
+                f"'{cmd}' is a command only the device's own driver knows, and "
+                f"this device's integration offers no way to pass one through",
+                **ctx)
+        data = {spec["command_field"]: _q(cmd)}
+        if spec.get("target_field"):
+            data[spec["target_field"]] = _q(spec["entity_id"])
+        args = [p for p in (params or []) if (p or {}).get("c") not in (None, "")]
+        if args:
+            if not spec.get("args_field"):
+                raise NotYetImplemented(
+                    f"'{cmd}' was given values, but {spec['service']} takes no "
+                    f"arguments field", **ctx)
+            values = [(p or {}).get("c") for p in args]
+            data[spec["args_field"]] = repr(values[0] if len(values) == 1 else values)
+        domain, svc = spec["service"].split(".", 1)
+        return {"kind": "service", "domain": domain, "service": svc,
+                "entities": [], "data": data}
+
+    def _read(self, entity: str, attr: str, numeric: bool = False) -> str:
+        """Read one device reading — the ONLY way this band spells a read.
+
+        Asks the shared Resolver.read_spec() where the value lives and what
+        units it's in, then spells it for PyScript: _s/_f when the value is
+        the entity's state, _sa/_fa when it lives in a field inside the
+        entity. The YAML band asks the same question and spells it
+        state_attr(); the decision is made once, in one place, for both
+        (Jeremy, 2026-07-29 — one translation source, routing separate)."""
+        field, scale = self.resolver.read_spec(entity, attr) if attr else (None, None)
+        fn = "_f" if numeric else "_s"
+        if not field:
+            return f"{fn}({_q(entity)})"
+        if field.endswith("]") and "[" in field:
+            # a packed pair (hue is hs_color[0]) — index after the lookup
+            name, _, idx = field[:-1].partition("[")
+            base = f"({fn}a({_q(entity)}, {_q(name)}) or [0, 0])[{idx}]"
+            return base
+        args = f"{_q(entity)}, {_q(field)}"
+        if scale:
+            mult, div = self.resolver.scale_factors(scale, f" on {attr} ({entity})")
+            args += f", {mult!r}, {div!r}"
+        return f"{fn}a({args})"
+
+    def _reads(self, entities, attr, numeric: bool = False) -> list[str]:
+        return [self._read(e, attr, numeric) for e in entities]
+
     def _operand_expr(self, op: dict, ctx: dict) -> str:
         """A right-side / value operand -> python expression."""
         t = op.get("t")
@@ -146,7 +202,7 @@ class _PyEmitter:
             return repr(v) if not isinstance(v, str) else _q(v)
         if t == "p":
             entities = self.resolver.entities_for_attr(op.get("d", []), op.get("a"), ctx)
-            return f"_s({_q(entities[0])})"
+            return self._read(entities[0], op.get("a"))
         if t == "s":
             # preset operand (color names etc.) — value lives in the s field
             return repr(op.get("s"))
@@ -254,29 +310,34 @@ class _PyEmitter:
         joiner = " and " if lo.get("g") == "all" else " or "
         attr = lo.get("a")
         value = ro.get("c")
+        # How each reading is spelled in this band. `entities` is still the
+        # raw entity list — some branches below need the ENTITY itself (age,
+        # var_name identity), which is not the same thing as its value.
+        sread = self._reads(entities, attr)
+        fread = self._reads(entities, attr, numeric=True)
 
         if co in _NUMERIC_OPS or (co in ("rises_above", "drops_below")):
             op = _NUMERIC_OPS.get(co) or (">" if co == "rises_above" else "<")
-            parts = [f"(_f({_q(e)}) is not None and _f({_q(e)}) {op} {value})"
-                     for e in entities]
+            parts = [f"({r} is not None and {r} {op} {value})"
+                     for r in fread]
         elif co == "is_between" and _is_number(value) and _is_number(ro2.get("c")):
-            parts = [f"(_f({_q(e)}) is not None and {value} <= _f({_q(e)}) <= {ro2.get('c')})"
-                     for e in entities]
+            parts = [f"({r} is not None and {value} <= {r} <= {ro2.get('c')})"
+                     for r in fread]
         elif co in _EQUALITY_OPS:
             op = _EQUALITY_OPS[co]
             if _is_number(value):
-                parts = [f"(_f({_q(e)}) is not None and _f({_q(e)}) {op} {value})"
-                         for e in entities]
+                parts = [f"({r} is not None and {r} {op} {value})"
+                         for r in fread]
             else:
                 mapped = self.resolver.ha_state_value(attr, value)
-                parts = [f"_s({_q(e)}) {op} {_q(mapped)}" for e in entities]
+                parts = [f"{r} {op} {_q(mapped)}" for r in sread]
         elif co in ("changes_to",):
             # current-state approximation of the originating event (Tier-3)
             mapped = self.resolver.ha_state_value(attr, value)
-            parts = [f"_s({_q(e)}) == {_q(mapped)}" for e in entities]
+            parts = [f"{r} == {_q(mapped)}" for r in sread]
         elif co == "changes_away_from":
             mapped = self.resolver.ha_state_value(attr, value)
-            parts = [f"_s({_q(e)}) != {_q(mapped)}" for e in entities]
+            parts = [f"{r} != {_q(mapped)}" for r in sread]
         elif co == "changes":
             ids = ", ".join(_q(e) for e in entities)
             parts = [f"(var_name is None or var_name in ({ids},))"]
@@ -284,24 +345,24 @@ class _PyEmitter:
             vals = value if isinstance(value, list) else [value]
             opts = ", ".join(_q(self.resolver.ha_state_value(attr, v)) for v in vals)
             neg = "not " if "not" in co else ""
-            parts = [f"({neg}_s({_q(e)}) in ({opts},))" for e in entities]
+            parts = [f"({neg}{r} in ({opts},))" for r in sread]
         elif co in ("is_even", "is_odd", "was_even", "was_odd"):
             want = 0 if co.endswith("even") else 1
-            parts = [f"(_f({_q(e)}) is not None and int(_f({_q(e)})) % 2 == {want})"
-                     for e in entities]
+            parts = [f"({r} is not None and int({r}) % 2 == {want})"
+                     for r in fread]
         elif co in ("is_not_between", "is_outside_of_range", "was_outside_of_range"):
             v2 = ro2.get("c")
             # fail-closed: an unavailable sensor must NOT satisfy an
             # outside-range check (was a fail-open `is None or` — review 2026-07-20)
-            parts = [f"(_f({_q(e)}) is not None and not ({value} <= _f({_q(e)}) <= {v2}))"
-                     for e in entities]
+            parts = [f"({r} is not None and not ({value} <= {r} <= {v2}))"
+                     for r in fread]
         elif co in ("is_inside_of_range", "was_inside_of_range"):
             v2 = ro2.get("c")
-            parts = [f"(_f({_q(e)}) is not None and {value} <= _f({_q(e)}) <= {v2})"
-                     for e in entities]
+            parts = [f"({r} is not None and {value} <= {r} <= {v2})"
+                     for r in fread]
         elif co == "is_different_than":
-            parts = [f"_s({_q(e)}) != {_q(self.resolver.ha_state_value(attr, value))}"
-                     for e in entities]
+            parts = [f"{r} != {_q(self.resolver.ha_state_value(attr, value))}"
+                     for r in sread]
         elif co in ("changed", "did_not_change"):
             ids = ", ".join(_q(e) for e in entities)
             neg = "not " if co == "did_not_change" else ""
@@ -315,11 +376,11 @@ class _PyEmitter:
                    "was_equal_to": "==", "was_different_than": "!="}
             op = OPS[co]
             if op in ("==", "!="):
-                parts = [f"(_s({_q(e)}) {op} {_q(self.resolver.ha_state_value(attr, value))})"
-                         for e in entities]
+                parts = [f"({r} {op} {_q(self.resolver.ha_state_value(attr, value))})"
+                         for r in sread]
             else:
-                parts = [f"(_f({_q(e)}) is not None and _f({_q(e)}) {op} {value})"
-                         for e in entities]
+                parts = [f"({r} is not None and {r} {op} {value})"
+                         for r in fread]
         elif co in ("stays_greater_than", "stays_greater_than_or_equal_to",
                     "stays_less_than", "stays_less_than_or_equal_to",
                     "remains_above", "remains_below"):
@@ -328,14 +389,16 @@ class _PyEmitter:
                    "remains_above": ">", "remains_below": "<"}
             op = OPS[co]
             hold = _hold_seconds(cond.get("to")) or 0
-            parts = [f"(_f({_q(e)}) is not None and _f({_q(e)}) {op} {value} and "
-                     f"(_fn_age({_q(e)}) or 0) >= {hold * 1000})" for e in entities]
+            parts = [f"({r} is not None and {r} {op} {value} and "
+                     f"(_fn_age({_q(e)}) or 0) >= {hold * 1000})"
+                     for e, r in zip(entities, fread)]
         elif co in ("stays", "stays_equal_to", "stays_any_of"):
             vals = value if isinstance(value, list) else [value]
             opts = ", ".join(_q(self.resolver.ha_state_value(attr, v)) for v in vals)
             hold = _hold_seconds(cond.get("to")) or 0
-            parts = [f"(_s({_q(e)}) in ({opts},) and "
-                     f"(_fn_age({_q(e)}) or 0) >= {hold * 1000})" for e in entities]
+            parts = [f"({r} in ({opts},) and "
+                     f"(_fn_age({_q(e)}) or 0) >= {hold * 1000})"
+                     for e, r in zip(entities, sread)]
         elif co in ("was", "was_not"):
             # "was (not) X for T": exact via last_changed — the state has been
             # its CURRENT value since last_changed, so current-check + age
@@ -349,8 +412,9 @@ class _PyEmitter:
             qual = ">=" if (cond.get("to") or {}).get("f", "g") == "g" else "<"
             mapped = self.resolver.ha_state_value(attr, value)
             eq = "==" if co == "was" else "!="
-            parts = [f"(_s({_q(e)}) {eq} {_q(mapped)} and "
-                     f"(_fn_age({_q(e)}) or 0) {qual} {dur})" for e in entities]
+            parts = [f"({r} {eq} {_q(mapped)} and "
+                     f"(_fn_age({_q(e)}) or 0) {qual} {dur})"
+                     for e, r in zip(entities, sread)]
         else:
             raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
 
@@ -823,13 +887,35 @@ class _PyEmitter:
                     out.append({"kind": "raw", "code":
                                 f"service.call('homeassistant', '{svc}', entity_id={var})"})
                     continue
-                entities = self.resolver.entities_for_command(devices, cmd, ctx)
-                service, data_spec = self.resolver.service_spec(cmd, entities[0], ctx)
-                domain, svc = service.split(".", 1)
-                data = {}
-                if data_spec:
-                    from .emit_yaml import _param_value
-                    data = {k: repr(_param_value(v, params, ctx)) for k, v in data_spec.items()}
+                # DRIVER command (take, clearImages, selectLiveview): a name
+                # only the device's own driver knows, which HA has no
+                # vocabulary for. Same decision the YAML band makes — is this
+                # a vocab command on this device, and if not does the
+                # integration offer a passthrough — just spelled for PyScript.
+                if (not self.resolver.has_command_binding(devices, cmd, ctx)
+                        and self.resolver.passthrough(devices, ctx)):
+                    out.append(self._driver_command(cmd, devices, params, ctx))
+                    continue
+                try:
+                    entities = self.resolver.entities_for_command(devices, cmd, ctx)
+                    service, data_spec = self.resolver.service_spec(cmd, entities[0], ctx)
+                    domain, svc = service.split(".", 1)
+                    data = {}
+                    if data_spec:
+                        # Inside the try: an unfillable data spec is the
+                        # "vocab mapping unusable on this device" signal. A
+                        # blank value raises PistonDefect, which this except
+                        # deliberately does not catch.
+                        from .emit_yaml import _param_value
+                        data = {k: repr(_param_value(v, params, ctx))
+                                for k, v in data_spec.items()}
+                except NotYetImplemented:
+                    # in the vocab, but unreachable on THIS device (a bridged
+                    # camera has no camera entity to call `take` on)
+                    if self.resolver.passthrough(devices, ctx):
+                        out.append(self._driver_command(cmd, devices, params, ctx))
+                        continue
+                    raise
                 out.append({"kind": "service", "domain": domain, "service": svc,
                             "entities": entities, "data": data})
         return out

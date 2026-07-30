@@ -24,7 +24,7 @@ from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 from .. import customize
 
 from .analyze import analyze
-from .errors import NotYetImplemented
+from .errors import NotYetImplemented, PistonDefect
 from .expression import JinjaTranspiler
 from .resolve import Resolver
 from . import routing as _routing
@@ -132,7 +132,11 @@ def _rescaled(name):
             # TypeError out of the compiler (2026-07-29, surfaced once
             # 19_Claude_Alarm_checks got far enough to reach it); a missing
             # value is a piston problem to report, not a crash.
-            raise NotYetImplemented(
+            #
+            # PistonDefect, not NotYetImplemented, so the driver-passthrough
+            # fallback can't swallow it (2026-07-30): a blank volume briefly
+            # started "compiling" into hubitat.send_command.
+            raise PistonDefect(
                 f"a '{name}' parameter has no value to convert — set it in "
                 f"the editor, or remove the command")
         return rescale(name, v)
@@ -1070,6 +1074,12 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 service, data_spec = resolver.service_spec(n["command"], entities[0], ctx)
                 data = None
                 if data_spec:
+                    # Inside the try on purpose: a data spec that can't be
+                    # filled (`take` asks for a $1 the command has no
+                    # parameter for) IS the "vocab mapping unusable here"
+                    # signal, and the driver route is the right answer. A
+                    # blank value raises PistonDefect instead, which this
+                    # except deliberately does not catch.
                     data = {k: _param_value(v, n["params"], ctx)
                             for k, v in data_spec.items()}
             except NotYetImplemented:

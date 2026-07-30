@@ -311,6 +311,33 @@ class Resolver:
             out.append(ch.lower())
         return "".join(out)
 
+    def read_spec(self, entity: str, attr: str) -> tuple[str | None, str | None]:
+        """(field, scale) for this reading — the BAND-AGNOSTIC decision.
+
+        `field` is the HA field holding the value, or None to read the
+        entity's state. `scale` is the vocab conversion formula, or None.
+
+        This is the one place either band asks "where does this reading live
+        and what units is it in" (Jeremy, 2026-07-29: one translation source,
+        routing separate). YAML spells the answer as state_attr(); PyScript
+        spells it as _sa(). Neither decides anything."""
+        return self.read_field(entity, attr), (self._read_rule(entity, attr) or {}).get("scale")
+
+    @staticmethod
+    def scale_factors(formula: str, where: str = "") -> tuple[float, float]:
+        """A vocab read `scale` -> (multiplier, divisor).
+
+        Only the two shapes the vocab actually uses are accepted; anything
+        else raises rather than silently emitting an unscaled comparison,
+        because a level test wrong by 2.55x looks plausible and fails quietly."""
+        m = re.fullmatch(r"round\(\s*x\s*\*\s*([0-9.]+)\s*(?:/\s*([0-9.]+)\s*)?\)",
+                         (formula or "").replace(" ", ""))
+        if not m:
+            raise UnresolvableDevice(
+                f"vocab scale '{formula}'{where} isn't a form the compiler "
+                f"knows how to apply when reading")
+        return float(m.group(1)), float(m.group(2) or 1)
+
     def read_expr(self, entity: str, attr: str) -> str:
         """Jinja that yields this reading — the ONE place a read is spelled.
 
