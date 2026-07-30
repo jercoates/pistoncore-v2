@@ -105,6 +105,7 @@ _SYSTEM_ENTITIES = {
     "email": "notify.dev_email",
     "mode": "input_select.dev_location_mode",
     "alarmSystemStatus": "alarm_control_panel.dev_panel",
+    "hsmStatus": "sensor.dev_hub_hsm_status",
 }
 
 

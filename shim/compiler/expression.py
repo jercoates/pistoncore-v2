@@ -468,6 +468,12 @@ class ExprTranspiler:
                 raise NotYetImplemented(
                     f"system variable '{name}' has no HA equivalent (external "
                     f"data feed) — fetch it into an HA sensor instead", **self.ctx)
+            # Entity-backed system variables ($hsmStatus, $alarmSystemStatus):
+            # the resolution map's $system entry names the entity, and the
+            # value is just its state.
+            sysent = self.resolver.system_entity(name.lstrip("$"))
+            if sysent:
+                return f"_s({sysent!r})"
             raise NotYetImplemented(
                 f"system variable '{name}' not compiled yet", **self.ctx)
         if name.startswith("@"):
@@ -698,6 +704,12 @@ class JinjaTranspiler(ExprTranspiler):
         low = name.lower()
         if low in _JINJA_SYSVARS:
             return _JINJA_SYSVARS[low]
+        # System variables backed by an HA entity rather than a template
+        # builtin ($hsmStatus, $alarmSystemStatus, ...). The resolution map's
+        # $system entry says which entity; reading it is just its state.
+        sysent = self.resolver.system_entity(name.lstrip("$"))
+        if sysent:
+            return "states('" + sysent + "')"
         if name.startswith("$"):
             raise NotYetImplemented(
                 "system variable '%s' has no HA template equivalent" % name,

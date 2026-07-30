@@ -1093,6 +1093,18 @@ def build_device_payload(registries: dict) -> dict:
         system_entities["alarmSystemStatus"] = alarm_panels[0]
         # webCoRE's "alarm system alert" is the same panel reporting triggered
         system_entities["alarmSystemAlert"] = alarm_panels[0]
+    # $hsmStatus — Hubitat Safety Monitor, the HUB's own armed state, which is
+    # not the same thing as a keypad. Jeremy's setup has both: the keypad is
+    # the input device ("Arm/Disarm with Keypad"), while HSM holds the status
+    # pistons actually read (VERIFIED live 2026-07-29 — sensor.hub_hsm_status
+    # reads 'disarmed' while alarm_control_panel.keypad exists separately).
+    # The Hubitat integration publishes it as a plain sensor whose STATE is
+    # the status string, so values pass through as webCoRE already spells
+    # them; nothing to translate.
+    hsm = [s["entity_id"] for s in registries["states"]
+           if s["entity_id"].startswith("sensor.") and s["entity_id"].endswith("hsm_status")]
+    if len(hsm) == 1:
+        system_entities["hsmStatus"] = hsm[0]
     # TTS engine for Speak (SPEAK_ACTION_SPEC §5.4: engine resolved at compile
     # time from a global setting; auto-pick only when unambiguous)
     from . import storage as _storage
