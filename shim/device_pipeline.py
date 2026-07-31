@@ -498,16 +498,34 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
                 capability_keys.add(cap_key)
                 direct_cap_contributors[cap_key] = entity_id
 
-        if not entity_attr_keys:
-            # No picker_capability_map rule matched this entity at all —
-            # don't silently drop it (hard requirement 1, DEVICE_PAYLOAD_SPEC
-            # §0). Falls through as a device-local custom attribute instead.
+        # Is this entity's own STATE represented by any attribute it matched?
+        # Usually yes (a light's `switch`, a thermostat's `thermostatMode`),
+        # but an entity can match only FIELD-backed rules — a weather entity
+        # binds temperature/humidity/uv, all of which live inside it, while
+        # its state is the actual condition ("sunny"). Caught 2026-07-30 by
+        # diffing the payload against main: adding weather picker rules gained
+        # three readings and silently LOST the condition, because matching any
+        # rule skipped the catch-all below. Never silently drop what HA
+        # exposes (DEVICE_PAYLOAD_SPEC §0) — that applies to the state too.
+        state_is_covered = any(
+            (vocab["attributes"].get(k) or {}).get("ha") is None
+            or any(isinstance(r, dict)
+                   and r.get("domain") in (entity_id.split(".", 1)[0], "*", "_any", None)
+                   and str(r.get("read") or "state") == "state"
+                   for r in (vocab["attributes"].get(k) or {}).get("ha") or [])
+            for k in entity_attr_keys)
+
+        if not entity_attr_keys or not state_is_covered:
+            # No picker_capability_map rule matched this entity at all, or the
+            # rules that matched all read fields inside it. Either way the
+            # state itself falls through as a device-local custom attribute.
             entity = entity_map.get(entity_id, {})
             custom_attr = _custom_attribute(entity_id, entity, state)
             if custom_attr and custom_attr["n"] not in attr_bindings:
                 custom_attrs.append(custom_attr)
                 attr_bindings[custom_attr["n"]] = entity_id
-            continue
+            if not entity_attr_keys:
+                continue
 
         for attr_key in entity_attr_keys:
             vocab_attr = vocab["attributes"].get(attr_key, {})
