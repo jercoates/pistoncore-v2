@@ -210,7 +210,12 @@ def run():
             doc = json.load(f)
         piston = doc.get("piston", doc)
         reso, globs = _synthetic_maps(piston)
-        _emit_yaml._MEDIA_CFG = {}          # keep media routing out of snapshots
+        # Pin media config OFF. Setting _MEDIA_CFG alone was not enough —
+        # compile_yaml reloaded it from this machine's settings and the
+        # snapshot then contained that installation's proxy address and
+        # signing signature (2026-07-30). Snapshots must be identical on
+        # every machine.
+        _emit_yaml._MEDIA_CFG_OVERRIDE = {}
         try:
             out = compile_piston(piston, "snap", doc.get("name") or name, reso, globs)
             body = out.get("yaml") or out.get("pyscript") or out.get("code") or ""

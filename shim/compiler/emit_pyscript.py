@@ -162,7 +162,7 @@ class _PyEmitter:
                     f"'{cmd}' was given values, but {spec['service']} takes no "
                     f"arguments field", **ctx)
             from .emit_yaml import _passthrough_arg
-            values = [_passthrough_arg((p or {}).get("c"), spec, cmd, self.resolver) for p in args]
+            values = [_passthrough_arg((p or {}).get("c"), spec, cmd, self.resolver, ctx) for p in args]
             data[spec["args_field"]] = repr(values[0] if len(values) == 1 else values)
         domain, svc = spec["service"].split(".", 1)
         return {"kind": "service", "domain": domain, "service": svc,

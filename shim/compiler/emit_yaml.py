@@ -46,6 +46,10 @@ _PISTON: dict = {"cur": None}
 # PistonCore media server when the user opted in (server mode). See the
 # "Playing media files" help article.
 _MEDIA_CFG: dict = {}
+# When not None, compile_yaml uses this INSTEAD of reading settings from
+# disk. Only tests set it — it keeps emitted output independent of the
+# machine running them.
+_MEDIA_CFG_OVERRIDE: dict | None = None
 _MEDIA_OLD_SCHEMES = ("x-file-cifs://", "smb://", "cifs://")
 
 
@@ -205,8 +209,19 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
     NotYetImplemented raised here falls through to the PyScript band there."""
     _PISTON["cur"] = piston
     global _MEDIA_CFG
-    from .. import storage
-    _MEDIA_CFG = storage.load_settings().get("media", {}) or {}
+    # _MEDIA_CFG_OVERRIDE lets a caller pin the media config instead of
+    # reading this machine's settings. The snapshot harness needs it: it was
+    # setting _MEDIA_CFG = {} before each compile, and this line silently
+    # overwrote that, so emitted output depended on whoever ran the tests.
+    # Caught 2026-07-30 when a snapshot picked up a real installation's proxy
+    # address and signing signature and was about to be committed as test
+    # data — someone else's setup baked into the repo (Jeremy: "hard coding
+    # to my setup only is a bug").
+    if _MEDIA_CFG_OVERRIDE is not None:
+        _MEDIA_CFG = dict(_MEDIA_CFG_OVERRIDE)
+    else:
+        from .. import storage
+        _MEDIA_CFG = storage.load_settings().get("media", {}) or {}
     branches = analyze(piston, piston_id, piston_name)
     resolver = Resolver(piston, resolution_map, globals_map)
     blocks = []
@@ -1379,7 +1394,7 @@ def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
 
 
 def _passthrough_arg(value, spec: dict, command: str = "",
-                     resolver: "Resolver | None" = None):
+                     resolver: "Resolver | None" = None, ctx: dict | None = None):
     """A value on its way through an integration's command passthrough.
 
     Most passthroughs take their arguments in the service payload and the
@@ -1407,6 +1422,15 @@ def _passthrough_arg(value, spec: dict, command: str = "",
     Only for a passthrough that says it needs it (detect_passthroughs sets
     encode_args) — remote./vacuum.send_command take their arguments in the
     service payload, where encoding would corrupt them."""
+    # A share URL going to a DRIVER command gets the same media treatment a
+    # vocab Play track does. It didn't before (found 2026-07-30): the rewrite
+    # was wired only into the vocab path, so a speaker with no controllable
+    # entity — Jeremy's Hubitat-bridged Sonos — sent the raw x-file-cifs://
+    # URL no matter what the media server was set to. Turning the media
+    # server on appeared to do nothing.
+    if isinstance(value, str) and value.startswith(("x-file-cifs://", "smb://")) \
+            and resolver is not None:
+        value = _rewrite_media_url(value, resolver, ctx or {})
     if not spec.get("encode_args") or not isinstance(value, str) or "/" not in value:
         return value
     from urllib.parse import quote
@@ -1452,7 +1476,7 @@ def _driver_command(n: dict, resolver: Resolver, ctx: dict) -> dict:
             raise NotYetImplemented(
                 f"'{command}' was given values, but "
                 f"{spec['service']} takes no arguments field", **ctx)
-        values = [_passthrough_arg(p.get("c"), spec, command, resolver) for p in args]
+        values = [_passthrough_arg(p.get("c"), spec, command, resolver, ctx) for p in args]
         data[spec["args_field"]] = _json_dumps(
             values[0] if len(values) == 1 else values)
     return {"kind": "service", "service": spec["service"],
