@@ -873,12 +873,28 @@ async def save_settings(ha_url: str = "", ha_token: str = "", write_mode: str = 
         except (ValueError, TypeError):
             pass
     storage.save_settings(settings)
+    # BLANK MEANS "LEAVE IT ALONE", for every one of these — the same rule the
+    # token and SMB password already followed, now applied to the rest.
+    #
+    # WHY (2026-07-30): these used to be sent as bare .strip() values, with
+    # write_mode falling back to "local". Both the Settings page and first-run
+    # post EVERY field from whatever is on screen, so one save from a page
+    # where the Samba boxes happened to be empty silently replaced a working
+    # deploy target with "local" and nothing else — every piston then compiled
+    # correctly and had nowhere to be written. Jeremy's install lost its
+    # Samba config this way and nothing reached Home Assistant for days, with
+    # no error pointing at the cause.
+    #
+    # Clearing one of these isn't a real operation (you switch mode instead),
+    # so nothing is lost by treating empty as "unchanged" — and it makes the
+    # destructive case impossible rather than merely unlikely.
     ha_client.save_config(
-        ha_url.strip(), ha_token.strip() or None,
-        write_mode=write_mode.strip() or "local",
-        ha_config_path=ha_config_path.strip(),
-        smb_host=smb_host.strip(), smb_share=smb_share.strip() or "config",
-        smb_username=smb_username.strip(),
+        ha_url.strip() or None, ha_token.strip() or None,
+        write_mode=write_mode.strip() or None,
+        ha_config_path=ha_config_path.strip() or None,
+        smb_host=smb_host.strip() or None,
+        smb_share=smb_share.strip() or None,
+        smb_username=smb_username.strip() or None,
         smb_password=smb_password.strip() or None,
     )
     return {"ok": True}

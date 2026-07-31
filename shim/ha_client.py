@@ -70,16 +70,22 @@ def get_config_for_display() -> dict:
     }
 
 
-def save_config(ha_url: str, ha_token: str | None, **extra) -> None:
+def save_config(ha_url: str | None, ha_token: str | None, **extra) -> None:
     """
-    Settings-page save (shim/routes/pages.py). ha_token / smb_password are
-    None/empty when the user left the field blank to keep the existing one --
-    only overwrite when a real new value was typed. `extra` carries the write
-    transport fields (write_mode, ha_config_path, smb_host/share/username/
-    password — COMPILER_DECISIONS_DEPLOY §2.5).
+    Settings-page save (shim/routes/pages.py). EVERY field here follows one
+    rule: None/empty means "the user left it blank, keep what's already
+    saved". Only a real typed value overwrites.
+
+    That rule used to apply to the secrets only (ha_token, smb_password),
+    while ha_url and the write-transport fields were written unconditionally
+    — so a partial save wiped them. It cost Jeremy his deploy target and
+    days of pistons that compiled fine and went nowhere (2026-07-30).
+    `extra` carries write_mode, ha_config_path, smb_host/share/username/
+    password (COMPILER_DECISIONS_DEPLOY §2.5).
     """
     config = _load_config()
-    config["ha_url"] = ha_url
+    if ha_url:
+        config["ha_url"] = ha_url
     if ha_token:
         config["ha_token"] = ha_token
     for key in ("write_mode", "ha_config_path", "smb_host", "smb_share", "smb_username"):
