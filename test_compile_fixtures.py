@@ -5,6 +5,7 @@ fixture's aliases carry hand-written descriptions); everything else must
 match. Run: .venv/Scripts/python test_compile_fixtures.py"""
 
 import json
+import os
 import re
 import sys
 
@@ -396,10 +397,198 @@ def test_ha_service_feed():
     return 0
 
 
+def test_emitted_output_is_valid():
+    """Everything the compiler emits must PARSE, and the pyscript modules must
+    not reference a name nothing defines.
+
+    WHY (2026-07-30): the snapshot test compares emitted code as TEXT. It has
+    no idea whether that text is valid YAML, valid Python, or refers to
+    variables that exist — so a broken emitter produces confident, stable,
+    unrunnable output and the suite stays green. That is exactly how
+    `_s(_device)` reached the corpus: syntactically fine, `_device` never
+    assigned. Runs over the recorded snapshot, so it covers every piston.
+
+    The undefined-name pass is deliberately conservative — it only flags a
+    Load of a name with no binding anywhere in the module, after allowing
+    builtins and the globals pyscript injects."""
+    import ast
+    import builtins
+    import json as _json
+    try:
+        import yaml as _yaml
+    except ImportError:
+        print("SKIP — pyyaml unavailable"); return 0
+
+    snap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "test-compile-snapshots.json")
+    if not os.path.exists(snap_path):
+        print("SKIP — no snapshot recorded yet"); return 0
+    with open(snap_path, encoding="utf-8") as f:
+        snap = _json.load(f)
+
+    # names pyscript injects into every module's namespace
+    PYSCRIPT_GLOBALS = {
+        "state", "service", "task", "log", "pyscript", "event", "hass", "sun",
+        "state_trigger", "time_trigger", "event_trigger", "service_call",
+        "task_unique", "time_active", "state_active", "mqtt_trigger",
+        "webhook_trigger", "pyscript_compile", "pyscript_executor",
+    }
+
+    def bound_names(tree):
+        out = set()
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                out.add(node.name)
+                args = node.args
+                for a in list(args.args) + list(args.kwonlyargs) + list(args.posonlyargs):
+                    out.add(a.arg)
+                if args.vararg:
+                    out.add(args.vararg.arg)
+                if args.kwarg:
+                    out.add(args.kwarg.arg)
+            elif isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
+                out.add(node.id)
+            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                for a in node.names:
+                    out.add((a.asname or a.name).split(".")[0])
+            elif isinstance(node, ast.ExceptHandler) and node.name:
+                out.add(node.name)
+            elif isinstance(node, ast.Global):
+                out.update(node.names)
+            elif isinstance(node, ast.comprehension):
+                for t in ast.walk(node.target):
+                    if isinstance(t, ast.Name):
+                        out.add(t.id)
+        return out
+
+    failures = []
+    n_yaml = n_py = 0
+    for name, rec in sorted(snap.items()):
+        if rec.get("outcome") != "compiled":
+            continue
+        code = rec.get("code") or ""
+        if rec.get("band") == "yaml":
+            n_yaml += 1
+            try:
+                _yaml.safe_load(code)
+            except Exception as exc:                                # noqa: BLE001
+                failures.append(f"{name}: emitted YAML does not parse — {str(exc)[:100]}")
+        else:
+            n_py += 1
+            try:
+                tree = ast.parse(code)
+            except SyntaxError as exc:
+                failures.append(f"{name}: emitted PyScript does not parse — "
+                                f"line {exc.lineno}: {exc.msg}")
+                continue
+            known = bound_names(tree) | PYSCRIPT_GLOBALS | set(dir(builtins))
+            used = {n.id for n in ast.walk(tree)
+                    if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load)}
+            unknown = sorted(used - known)
+            if unknown:
+                failures.append(f"{name}: references names nothing defines "
+                                f"(NameError at runtime): {unknown}")
+
+    if failures:
+        print("FAIL — emitted output is not valid:")
+        for f in failures:
+            print(f"   {f}")
+        return 1
+    print(f"PASS — all emitted output parses ({n_yaml} YAML, {n_py} PyScript) "
+          f"with no undefined names")
+    return 0
+
+
+def test_templates_render_in_ha():
+    """Every emitted Jinja template, rendered by HOME ASSISTANT'S OWN engine.
+
+    WHY (2026-07-30): nothing else can catch a template that is valid Jinja
+    but wrong about HA. This found `state_attr('sun.sun', 'next_sunrise')` —
+    HA spells it next_rising, there is no next_sunrise, so the attribute came
+    back None, `None | as_datetime` raised, and the whole condition errored at
+    runtime. Two of Jeremy's chicken-coop pistons had been silently dead. The
+    YAML parsed, the snapshot was stable, every unit test passed.
+
+    SKIPS when no HA is configured or reachable — this is a bench check, not
+    a hard dependency. `trigger` is expected to be undefined here: it only
+    exists while an automation is actually firing, so those are filtered."""
+    import urllib.error
+    import urllib.request
+    try:
+        from shim import ha_client
+        cfg = ha_client._load_config() or {}
+        url = (cfg.get("ha_url") or "").rstrip("/")
+        token = cfg.get("ha_token") or ""
+    except Exception:                                              # noqa: BLE001
+        print("SKIP — no HA configured"); return 0
+    if not url or not token:
+        print("SKIP — no HA configured"); return 0
+
+    snap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "test-compile-snapshots.json")
+    if not os.path.exists(snap_path):
+        print("SKIP — no snapshot recorded yet"); return 0
+    with open(snap_path, encoding="utf-8") as f:
+        snap = json.load(f)
+
+    def collect(node, out):
+        if isinstance(node, dict):
+            for v in node.values():
+                if isinstance(v, str) and "{{" in v:
+                    out.append(v)
+                else:
+                    collect(v, out)
+        elif isinstance(node, list):
+            for x in node:
+                collect(x, out)
+
+    templates, seen = [], set()
+    for name, rec in sorted(snap.items()):
+        if rec.get("outcome") != "compiled" or rec.get("band") != "yaml":
+            continue
+        for auto in (yaml.safe_load(rec["code"]) or []):
+            found = []
+            collect(auto, found)
+            for t in found:
+                if t not in seen:
+                    seen.add(t)
+                    templates.append((name, t))
+
+    failures, checked = [], 0
+    for name, t in templates:
+        req = urllib.request.Request(
+            url + "/api/template", method="POST",
+            data=json.dumps({"template": t}).encode(),
+            headers={"Authorization": f"Bearer {token}",
+                     "Content-Type": "application/json"})
+        try:
+            urllib.request.urlopen(req, timeout=20).read()
+            checked += 1
+        except urllib.error.HTTPError as exc:
+            msg = exc.read().decode()[:200]
+            # `trigger` only exists while an automation is firing
+            if "'trigger' is undefined" in msg:
+                checked += 1
+                continue
+            failures.append((name, t[:90], msg))
+        except Exception:                                          # noqa: BLE001
+            print("SKIP — HA unreachable"); return 0
+
+    if failures:
+        print("FAIL — templates Home Assistant cannot render:")
+        for name, t, msg in failures:
+            print(f"   {name}\n      {t}\n      -> {msg[:150]}")
+        return 1
+    print(f"PASS — all {checked} emitted templates render in Home Assistant")
+    return 0
+
+
 if __name__ == "__main__":
     rc = main()
     rc = test_else_on_trigger_only_if() or rc
     rc = test_unavailable_sensor_fails_closed() or rc
     rc = test_readings_inside_entities() or rc
     rc = test_ha_service_feed() or rc
+    rc = test_emitted_output_is_valid() or rc
+    rc = test_templates_render_in_ha() or rc
     sys.exit(rc)

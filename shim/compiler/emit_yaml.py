@@ -515,15 +515,30 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     return {"kind": "template", "template": "{{ " + body + " }}"}
 
 
+# HA's sun entity spells these next_rising / next_setting. It has NO
+# next_sunrise or next_sunset attribute — building the name from webCoRE's
+# word produced state_attr(...) -> None, and `None | as_datetime` raises, so
+# the whole condition errored at runtime and the piston never ran. Two of
+# Jeremy's chicken-coop pistons were silently broken this way; found
+# 2026-07-30 by rendering every emitted template through HA's own engine,
+# which is the only thing that could have caught it. expression.py already
+# had the right names — this path just never used them.
+_SUN_ATTR = {"sunrise": "next_rising", "sunset": "next_setting",
+             "dawn": "next_dawn", "dusk": "next_dusk",
+             "noon": "next_noon", "midnight": "next_midnight"}
+
+
 def _sun_mixed_template(node: dict, cond: dict) -> dict:
     """One bound is a sun event, the other a clock time — HA's sun condition
     can't mix them, so compare against the sun entity's timestamp attribute."""
     parts = []
     if node.get("after"):
-        parts.append(f"now() >= (state_attr('sun.sun', 'next_{node['after']}') | "
+        attr = _SUN_ATTR.get(node["after"], f"next_{node['after']}")
+        parts.append(f"now() >= (state_attr('sun.sun', '{attr}') | "
                      f"as_datetime | as_local)")
     if node.get("before"):
-        parts.append(f"now() <= (state_attr('sun.sun', 'next_{node['before']}') | "
+        attr = _SUN_ATTR.get(node["before"], f"next_{node['before']}")
+        parts.append(f"now() <= (state_attr('sun.sun', '{attr}') | "
                      f"as_datetime | as_local)")
     if node.get("after_time"):
         parts.append(f"now().strftime('%H:%M:%S') >= '{node['after_time']}'")

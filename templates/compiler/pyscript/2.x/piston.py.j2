@@ -143,10 +143,15 @@ try:
         pv[_k] = _v
 except Exception as _e:
     log.warning(f"[{{ piston_id }}] could not restore variables: {_e}")
-{%- if global_values is defined and global_values %}
-# global variable values, snapshotted at compile time (recompile refreshes)
-gv = {{ global_values }}
-{%- endif %}
+# global variable values, snapshotted at compile time (recompile refreshes).
+# ALWAYS defined, even when empty (2026-07-30): _gv() in the runtime falls
+# back to `gv.get(name)` whenever the persisted pyscript entity is missing —
+# which is the NORMAL path on a fresh deploy, before any piston has written
+# that global. Emitting `gv` conditionally meant an always-present helper
+# depended on a sometimes-present variable; consistent today only by
+# accident of how used_globals is collected. An empty dict costs nothing and
+# turns a possible NameError into a missing key.
+gv = {{ global_values if global_values is defined and global_values else {} }}
 _index = 0
 _device = None
 _STATE_ENTITY = "pyscript.{{ unique_name }}_state"
