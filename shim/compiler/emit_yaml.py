@@ -1378,6 +1378,41 @@ def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
     return {"kind": "repeat", "count": count, "body": body}
 
 
+def _passthrough_arg(value, spec: dict, command: str = "",
+                     resolver: "Resolver | None" = None):
+    """A value on its way through an integration's command passthrough.
+
+    Most passthroughs take their arguments in the service payload and the
+    value goes through untouched.
+
+    Hubitat's Maker API is a GET whose URL PATH holds the argument, so a
+    value containing "/" is read as further URL segments and 404s. Percent-
+    encoding it fixes that, and Hubitat DECODES it before handing it on.
+
+    PROVEN END TO END on Jeremy's hardware, 2026-07-30, playing a real file
+    from a live share to a Sonos that can play files:
+        raw      -> HTTP 404 "Not Found"
+        encoded  -> HTTP 200, status "playing", and the speaker reported
+                    uri: x-file-cifs://192.168.1.10/Hubitat/HoistTheColours.mp3
+                    i.e. correctly UNescaped by Hubitat on the way through.
+
+    A cautionary note for anyone changing this: the same pair was tested
+    earlier against a different speaker and "proved" the opposite — encoded
+    was accepted and silent, which looked like the encoding arriving
+    unescaped. That speaker was a gen 1 Sonos Amp which cannot play file
+    URIs at all, so the test could not have succeeded by any route. The
+    conclusion was drawn anyway and was wrong. Test device capability
+    before drawing conclusions about transport.
+
+    Only for a passthrough that says it needs it (detect_passthroughs sets
+    encode_args) — remote./vacuum.send_command take their arguments in the
+    service payload, where encoding would corrupt them."""
+    if not spec.get("encode_args") or not isinstance(value, str) or "/" not in value:
+        return value
+    from urllib.parse import quote
+    return quote(value, safe=":")
+
+
 def _driver_command(n: dict, resolver: Resolver, ctx: dict) -> dict:
     """A DRIVER command — a task naming something only the device's own driver
     knows (`clearImages`, `take`, `selectLiveview`). webCoRE offered it because
@@ -1417,7 +1452,7 @@ def _driver_command(n: dict, resolver: Resolver, ctx: dict) -> dict:
             raise NotYetImplemented(
                 f"'{command}' was given values, but "
                 f"{spec['service']} takes no arguments field", **ctx)
-        values = [(p or {}).get("c") for p in args]
+        values = [_passthrough_arg(p.get("c"), spec, command, resolver) for p in args]
         data[spec["args_field"]] = _json_dumps(
             values[0] if len(values) == 1 else values)
     return {"kind": "service", "service": spec["service"],

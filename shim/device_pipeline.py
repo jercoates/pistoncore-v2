@@ -897,6 +897,18 @@ def detect_passthroughs(services: dict) -> dict:
                 "command_field": command_field,
                 "args_field": args_field,
                 "target_field": target_field,
+                # Hubitat's Maker API is a GET whose URL PATH carries the
+                # command and its argument:
+                #     /apps/api/N/devices/M/playTrack/<arg>?access_token=...
+                # so an argument containing "/" is read as more URL segments
+                # and the call comes back 404. VERIFIED on Jeremy's hardware
+                # 2026-07-30: playTrack with a raw
+                # x-file-cifs://host/share/Siren.mp3 404s; the same value
+                # percent-encoded is accepted. Recorded here, in the layer
+                # that knows the integration, so the emitters stay generic —
+                # remote./vacuum.send_command take their arguments in the
+                # service payload and must NOT be encoded.
+                "encode_args": domain == "hubitat",
             }
     return out
 

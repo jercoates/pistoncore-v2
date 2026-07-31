@@ -161,7 +161,8 @@ class _PyEmitter:
                 raise NotYetImplemented(
                     f"'{cmd}' was given values, but {spec['service']} takes no "
                     f"arguments field", **ctx)
-            values = [(p or {}).get("c") for p in args]
+            from .emit_yaml import _passthrough_arg
+            values = [_passthrough_arg((p or {}).get("c"), spec, cmd, self.resolver) for p in args]
             data[spec["args_field"]] = repr(values[0] if len(values) == 1 else values)
         domain, svc = spec["service"].split(".", 1)
         return {"kind": "service", "domain": domain, "service": svc,
