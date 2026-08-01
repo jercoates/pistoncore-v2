@@ -4,9 +4,10 @@ Virtual devices for testing Home Assistant automations — including **clones of
 your real devices** that report the same abilities, so you can try an automation
 against a stand-in instead of the real thing.
 
-Works entirely on its own from Home Assistant's own **Settings → Actions**. It is
-also the test bench for [PistonCore](https://github.com/jercoates/pistoncore-v2),
-which is what it was built for — but nothing here needs PistonCore installed.
+Works entirely on its own from Home Assistant's own **Developer tools → Actions**.
+It is also the test bench for
+[PistonCore](https://github.com/jercoates/pistoncore-v2), which is what it was
+built for — but nothing here needs PistonCore installed.
 
 > [!IMPORTANT]
 > This is a fork of [twrecked/hass-virtual](https://github.com/twrecked/hass-virtual)
@@ -78,7 +79,7 @@ Settings → Devices & Services → Add Integration.
 ## Usage
 
 Everything is a normal Home Assistant action, so it all works from
-**Settings → Actions** with no other software:
+**Developer tools → Actions** with no other software:
 
 | action | what it does |
 |---|---|
