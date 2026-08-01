@@ -54,7 +54,8 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
                 "value": None, "value2": None, "duration": {},
                 "aggregation": "any", "lo_var": None,
                 "value_vt": None, "value2_vt": None,
-                "value_preset": None, "value2_preset": None}
+                "value_preset": None, "value2_preset": None,
+                **_attached_actions(cond, kwargs)}
     # "restriction" nodes have the SAME comparison anatomy as "condition"
     # (PISTON_JSON_REFERENCE §7) and so reuse this parser verbatim.
     if cond.get("t") not in ("condition", "restriction"):
@@ -80,6 +81,31 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
         "value_expr": ro.get("x"),          # bare expression operand ($sunrise)
         "value2_expr": ro2.get("x"),
         "ct": _classify(cond),
+        **_attached_actions(cond, kwargs),
+    }
+
+
+def _attached_actions(cond: dict, kwargs: dict) -> dict:
+    """Statements hung directly on a condition, run when it tests true (`ts`)
+    or false (`fs`) — PISTON_JSON_REFERENCE §3, and SILENTLY DROPPED here until
+    2026-08-01: `_cond_node` never read them, so 9 corpus pistons compiled
+    clean and lost behaviour. Proof: stripping every ts/fs block produced
+    byte-identical output on both bands.
+
+    SEMANTICS (VERIFIED webcore-piston.groovy:7882-7886 for conditions,
+    :7474-7478 for groups): whenever the node is evaluated, `ts` runs if the
+    result is true, `fs` if false. Not transition-only — the engine computes a
+    changed-flag right above and uses it only for task cancellation.
+
+    ORDERING: they run DURING the test, so BEFORE the owning if's own body.
+
+    Note these are STATEMENTS (each with its own task list, and they may nest
+    whole ifs), never bare tasks."""
+    return {
+        "true_actions": _action_tree(cond.get("ts") or [],
+                                     f"condition ${cond.get('$')} (true)", kwargs),
+        "false_actions": _action_tree(cond.get("fs") or [],
+                                      f"condition ${cond.get('$')} (false)", kwargs),
     }
 
 

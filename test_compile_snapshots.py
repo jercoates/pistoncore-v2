@@ -51,7 +51,12 @@ def _collect(node, hashes, attrs, cmds, globs):
         for k in node.get("k") or []:
             if isinstance(k, dict) and k.get("c"):
                 cmds.add(str(k["c"]))
-    for key in ("s", "e", "ei", "cs", "c", "r", "k"):
+    # "ts"/"fs" carry statements hung off a condition. They were MISSING from
+    # this list until 2026-08-01, so devices used only inside an attached block
+    # never made it into the synthetic map — harmless while the compiler
+    # ignored those blocks, and an instant false failure the moment it stopped
+    # ignoring them (43_Package_delivery's @Speakers).
+    for key in ("s", "e", "ei", "cs", "c", "r", "k", "ts", "fs"):
         if key in node:
             _collect(node[key], hashes, attrs, cmds, globs)
 

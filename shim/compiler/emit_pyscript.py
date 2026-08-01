@@ -224,6 +224,48 @@ class _PyEmitter:
 
     # ── conditions ─────────────────────────────────────────────────────────
 
+    def _attached_nodes(self, conds: list, ctx: dict) -> list:
+        """Statements hung on a condition itself (`ts` true / `fs` false).
+
+        These were read by NOTHING until 2026-08-01 — the compiler opened a
+        condition only to find out what it TESTS, and never looked in this
+        second box. Nine corpus pistons lost behaviour that way, silently,
+        including the whole safety set (smoke, CO, gas, water leak, low
+        battery): their alarms still fired, but the steps that build "which
+        detector, what reading" live here, so the announcement went out empty.
+
+        webCoRE runs them DURING the test — `ts` when the condition comes out
+        true, `fs` when false (VERIFIED webcore-piston.groovy:7882-7886 for a
+        condition, :7474-7478 for a group) — therefore BEFORE the owning if's
+        own body. Emitting them ahead of the if reproduces that order.
+
+        DIVERGENCE, deliberate and documented: webCoRE short-circuits an
+        and/or group (:7452-7456), so a condition it never reaches never runs
+        its attached statements. Here each one is evaluated on its own, so in
+        "A and B" with A false, B's attached statements still run. webCoRE
+        itself disables that optimization whenever a group holds triggers or
+        nested groups, which covers the corpus cases; the gap is narrow and is
+        vastly preferable to dropping the statements entirely."""
+        out = []
+        for c in conds or []:
+            if not isinstance(c, dict):
+                continue
+            if c.get("t") == "group":
+                kids = c.get("c") or c.get("r") or []
+                out.extend(self._attached_nodes(kids, ctx))
+                expr = (self._group_expr(kids, c.get("o", c.get("rop", "and")), ctx)
+                        if kids else None)
+            else:
+                expr = None
+                if c.get("ts") or c.get("fs"):
+                    expr = self._condition_expr(c, ctx)
+            then_nodes = self._block(c.get("ts") or [], ctx)
+            else_nodes = self._block(c.get("fs") or [], ctx)
+            if (then_nodes or else_nodes) and expr:
+                out.append({"kind": "if", "expr": expr,
+                            "then": then_nodes, "else": else_nodes})
+        return out
+
     def _condition_expr(self, cond: dict, ctx: dict) -> str:
         co = cond.get("co")
         lo = cond.get("lo") or {}
@@ -982,6 +1024,8 @@ class _PyEmitter:
         if t == "action":
             return self._task_nodes(stmt, ctx)
         if t == "if":
+            # attached statements run during the TEST, so they precede the body
+            prelude = self._attached_nodes(stmt.get("c", []), ctx)
             node = {"kind": "if",
                     "expr": self._group_expr(stmt.get("c", []), stmt.get("o", "and"), ctx),
                     "then": self._block(stmt.get("s", []), ctx),
@@ -991,7 +1035,8 @@ class _PyEmitter:
                                  "expr": self._group_expr(ei.get("c", []), ei.get("o", "and"), ctx),
                                  "then": self._block(ei.get("s", []), ctx),
                                  "else": node["else"]}]
-            return [node]
+                prelude = self._attached_nodes(ei.get("c", []), ctx) + prelude
+            return prelude + [node]
         if t == "switch":
             lo = stmt.get("lo") or {}
             if lo.get("t") in ("c", "v", "x"):
@@ -1032,9 +1077,18 @@ class _PyEmitter:
                     raise NotYetImplemented("'each' over devices without an attribute", **ctx)
                 return [{"kind": "foreach", "items": repr(ents),
                          "body": self._block(stmt.get("s", []), ctx)}]
-            if lo.get("t") == "d" and lo.get("d"):
+            # `each` over a VARIABLE holding the device list (lo.t == "x", the
+            # name in lo.x) is the same loop as lo.t == "d" — webCoRE just
+            # records the list by reference instead of inline, and the resolver
+            # resolves a device-variable NAME exactly like a hash. Surfaced
+            # 2026-08-01: these loops sit inside condition-attached statements,
+            # so nothing ever compiled them until those started being read.
+            drefs = lo.get("d")
+            if lo.get("t") == "x" and lo.get("x"):
+                drefs = [lo["x"]] if not isinstance(lo["x"], list) else lo["x"]
+            if lo.get("t") in ("d", "x") and drefs:
                 hashes = []
-                for dref in lo["d"]:
+                for dref in drefs:
                     hashes.extend(self.resolver._hashes(str(dref), ctx))
                 # UNROLL: emit the body once per device, with $device bound to
                 # that device. Two reasons this is the right shape, not a
