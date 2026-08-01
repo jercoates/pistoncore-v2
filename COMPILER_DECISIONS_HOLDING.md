@@ -110,12 +110,12 @@ confirms the load-bearing rules survived the context-overload episode.
 
 **REFERENCE MATERIAL Jeremy brought back (2026-07-20) — peer references, NOT
 authority over the specs:**
-- `COMPILER_SOURCE_MINING.md` — distilled facts from adjacent visual→HA-YAML
+- `reference/COMPILER_SOURCE_MINING.md` — distilled facts from adjacent visual→HA-YAML
   projects (Node-RED, blueprints). Mostly CONFIRMS decisions already
   implemented (emit plural keys; entity_id in `target:` not `data:`; unified
   `action: domain.service`). One open ASSUMED item: mixed-device "Toggle" ->
   `homeassistant.turn_on/off/toggle` (needs live-HA test).
-- `OPENCODE_DEPRECATION_SCANNER_REFERENCE.md` — public-domain
+- `reference/OPENCODE_DEPRECATION_SCANNER_REFERENCE.md` — public-domain
   (`magnusoverli/opencode`) pattern-catalog + auto-update design for a
   DEPRECATION SCANNER (regex gate that blocks a deploy on deprecated HA
   syntax, in our output OR imported pistons; flag-never-rewrite; three roles

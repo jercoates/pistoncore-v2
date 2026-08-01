@@ -86,6 +86,14 @@ never treat it as gospel.
   banner (never mutation, never a third announcement surface — see UI split above; a
   drill-in compiler help/debug screen is fine, reached only from those two or Settings),
   Jinja2 everywhere, one canonical variable-substitution function.
+- **NOTHING THAT TRACKS HOME ASSISTANT IS HARD-CODED (COMPILER_SPEC.md "Jinja2
+  everywhere"; scoped by Jeremy 2026-08-01).** Service names, template functions, how a
+  value is read — anything that moves when HA renames or changes things — lives in
+  templates/JSON the USER can edit, never in Python. Compiler internals that HA churn
+  can't touch may stay in code. The reason is the relief valve: a user must be able to
+  repair their own compiler with nobody upstream. **This rule is currently being broken
+  in four files** — see the audit under COMPILER_SPEC.md's "Jinja2 everywhere" bullet;
+  it already shipped one wrong safety automation. Do not add to it.
 - Claims in specs carry tags: VERIFIED (with source/line), ASSUMED, TO VERIFY, DECISION
   (with who/when). Keep tagging new claims the same way.
 

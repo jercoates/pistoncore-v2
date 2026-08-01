@@ -1,7 +1,7 @@
 # SESSION BRIEF — Deprecation Scanner (cheap first deploy gate)
 
 One-time session instructions (move to archive/session-briefs/ when executed).
-Source: Jeremy brought back `OPENCODE_DEPRECATION_SCANNER_REFERENCE.md`
+Source: Jeremy brought back `reference/OPENCODE_DEPRECATION_SCANNER_REFERENCE.md`
 (2026-07-20) — a public-domain pattern-catalog design from
 `magnusoverli/opencode`. This brief turns its adoption proposals into a
 buildable task. Read that reference doc first; it is the authority for the
@@ -63,7 +63,7 @@ check). It guards two boundaries:
    with the right message; a clean piston passes; our own corpus output must
    produce ZERO scanner hits (proves the compiler emits no deprecated syntax).
 
-## Also flagged for a live-HA session (from COMPILER_SOURCE_MINING.md)
+## Also flagged for a live-HA session (from reference/COMPILER_SOURCE_MINING.md)
 
 - **ASSUMED, needs test:** webCoRE "Toggle"/generic on-off across a MIXED
   device list could compile to `homeassistant.turn_on/turn_off/toggle`

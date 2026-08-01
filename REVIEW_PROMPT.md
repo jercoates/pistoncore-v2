@@ -32,8 +32,8 @@ they are the authority chain and they override any general best practice:
      current state of both compiler bands, decisions with who/when)
   3. SHIM_API_SPEC.md, DEVICE_PAYLOAD_SPEC.md, PISTON_JSON_REFERENCE.md,
      COMPILER_SPEC.md, COMPILER_DECISIONS_DEPLOY.md
-  4. The open session briefs: SESSION_BRIEF_YAML_BAND_EXPANSION.md and
-     anything else at the repo root named SESSION_BRIEF_*
+  4. The open session briefs at the repo root, named SESSION_BRIEF_*
+     (executed ones live in archive/session-briefs/ and are NOT current)
 
 Then review the code against them and report:
 
