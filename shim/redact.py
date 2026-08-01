@@ -75,11 +75,36 @@ _URL_RE = re.compile(r"\b(https?|wss?|smb|x-file-cifs)://([^\s/\"'<>\\]+)", re.I
 
 _IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 
-# HA long-lived tokens are JWTs; also catch key=value secrets in query strings.
+# HA long-lived tokens are JWTs.
 _JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]+")
+
+# Named secrets, wherever they appear — a query string, a YAML mapping, a dict.
+#
+# ADDRESSES AND CODES ARE THE PRIORITY (Jeremy, 2026-08-01: "names of devices
+# wil not tell me anything adresses and codes are the problem"). A piston can
+# compile an alarm PIN straight into an emitted disarm action, so this has to
+# work on emitted CODE, not just on structured data.
+#
+# The value may be QUOTED — and it usually is, because that is how yaml writes
+# it. An earlier version excluded quotes from the value pattern, so
+# `code: "2217"` sailed through untouched while `code: 2217` was caught. That is
+# the single most important case there is.
+#
+# Trailing \b keeps `code_format` and `code_arm_required` intact: those are
+# diagnostic, and `code` followed by `_` is not a word boundary.
+_SECRET_KEY_WORDS = (
+    r"access[_-]?tokens?|api[_-]?keys?|webhook[_-]?ids?|passwords?|passwd|"
+    r"secrets?|tokens?|auth|bearer|pins?|codes?|keys?|credentials?"
+)
 _QS_SECRET_RE = re.compile(
-    r"\b(access_token|token|api_key|apikey|password|passwd|secret|code)"
-    r"(\s*[=:]\s*)([^\s&\"'<>,}\]]+)", re.IGNORECASE)
+    r"\b(" + _SECRET_KEY_WORDS + r")\b(\s*[=:]\s*)(['\"]?)([^\s&\"'<>,}\]]+)(['\"]?)",
+    re.IGNORECASE)
+
+# Credentials embedded in a URL — smb://user:pass@host, x-file-cifs://…
+# These survive even when the host is private and therefore kept, which is
+# exactly when they would otherwise slip out.
+_URL_CREDS_RE = re.compile(
+    r"\b([a-z][a-z0-9+.\-]*://)([^\s/@\"'<>]+):([^\s/@\"'<>]+)@", re.IGNORECASE)
 
 
 # ── webCoRE's own anonymisation convention ─────────────────────────────────
@@ -262,7 +287,10 @@ class Redactor:
         # 1. Secrets first — before anything else can rewrite them into a
         #    shape the patterns no longer match.
         out = _JWT_RE.sub(_REDACTED, out)
-        out = _QS_SECRET_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{_REDACTED}", out)
+        out = _URL_CREDS_RE.sub(lambda m: f"{m.group(1)}{_REDACTED}@", out)
+        # Keep the surrounding quotes so the result is still valid yaml/json.
+        out = _QS_SECRET_RE.sub(
+            lambda m: f"{m.group(1)}{m.group(2)}{m.group(3)}{_REDACTED}{m.group(5)}", out)
 
         # 2. Remote hostnames, then URLs whose host is off-network.
         out = _REMOTE_HOST_RE.sub("<remote-host-redacted>", out)
