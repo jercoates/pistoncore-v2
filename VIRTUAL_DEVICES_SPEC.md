@@ -274,6 +274,189 @@ reproducing everything, so don't second-guess the size.
 `sensor` via a free-text box (typing isn't ideal UX — a dropdown of known values
 is a future nicety, but settability is what matters).
 
+### 5.7a FULL-FIDELITY CLONING — abilities, not just entity kinds (BUILT 2026-07-31)
+
+Reproducing every ENTITY was only half of "no trimming". Until this was built the
+clone also dropped every ABILITY: it copied platform, device_class and unit and
+nothing else, so a cloned thermostat came back as a plain single-setpoint heater
+and a cloned speaker as a generic one. VERIFIED against the live test HA:
+`climate.my_ecobee` reports `supported_features` **155** — single setpoint AND
+heat/cool range, fan modes, preset modes — none of which the virtual climate
+platform could express.
+
+**The mechanism.** HA already states a device's abilities as the
+`supported_features` bitmask plus a few list/range attributes. Cloning copies
+those verbatim; every virtual platform now accepts them and falls back to its
+previous hardcoded default when a key is absent (so pre-existing test devices and
+hand-written `virtual.yaml` are unaffected).
+
+**WHERE THE ATTRIBUTE LIST COMES FROM — this is a rule, not a note.** It is taken
+from HA's own `capability_attributes` property on each entity base class, which is
+HA's definition of "the attributes describing what this entity can DO". It must
+NOT be derived by looking at one person's devices. A first pass did exactly that,
+built the table from Jeremy's install, and silently dropped `target_humidity_step`
+(climate AND humidifier) and `swing_horizontal_modes` — because nothing in his
+house reports them. **PistonCore is for other people's houses.** Re-derive by
+printing those properties from a real HA after an HA upgrade; never infer them.
+
+| domain | captured and accepted |
+|---|---|
+| climate | supported_features, hvac/preset/fan/swing/swing-horizontal modes, min/max temp, target temp step, min/max humidity, target humidity step, temperature_unit |
+| media_player | supported_features, source_list, sound_mode_list, device_class |
+| vacuum | supported_features, fan_speed_list |
+| siren | supported_features, available_tones |
+| humidifier | supported_features, available_modes, min/max humidity, target humidity step, device_class |
+| lock | supported_features, code_format |
+| alarm_control_panel | supported_features, code_format, code_arm_required |
+| cover | supported_features (incl. tilt) |
+| light | supported_features, supported_color_modes, effect_list, min/max color temp kelvin |
+| fan | supported_features, preset modes, speed count (from percentage_step) |
+| sensor / number | state_class, options / min, max, step, mode |
+
+**Rules that fall out of it, and why:**
+- **An empty menu is never advertised.** If a clone carries PRESET_MODE but no
+  preset list, the flag is cleared — otherwise HA shows a dropdown with nothing
+  in it.
+- **Everything advertised has a handler.** A clone that claims an ability and
+  then raises when it's used is worse than useless as a bench.
+- **Two exceptions, deliberate:** `BROWSE_MEDIA` and `SEARCH_MEDIA` are stripped
+  from cloned speakers. Jeremy's Sonos reports both (`supported_features`
+  8321599, measured); there is no library behind a virtual speaker, so keeping
+  them would only add UI buttons that raise. Nothing PistonCore emits uses either.
+- **Contradictions are preserved, not tidied.** A bridged fan that populates
+  `preset_modes` while leaving the PRESET_MODE flag unset is cloned exactly like
+  that — reproducing it is the point.
+- **The capture table and the platform schemas move together.** The virtual
+  platforms validate against a closed schema, so a key the platform doesn't
+  declare fails entity creation outright rather than degrading.
+
+**THE CAPABILITY-ATTRIBUTES-ONLY RULE IS ALSO A PRIVACY BOUNDARY — keep it that
+way (found 2026-07-31 by reading the Hubitat bridge on the test HA).** Real
+bridged devices carry driver-level extras beyond anything HA defines, and some of
+them are secrets:
+
+| domain | bridged extras seen | contains |
+|---|---|---|
+| alarm_control_panel | `codes`, `code_length`, `max_codes`, `entry_delay`, `exit_delay`, `alarm` | **plaintext PINs and the people they belong to** |
+| lock | `codes`, `code_length`, `last_code_name`, `max_codes` | **household member names**, who last unlocked the door |
+
+Because §5.7a captures only what HA's own `capability_attributes` names, none of
+this is picked up — the clone spec for a lock carries `code_format` and nothing
+else. **That is currently true by scoping, and must stay true by intent.** Item 17
+exists so a bug report can carry a device clone; a clone that captured `codes`
+would publish a stranger's (or Jeremy's) alarm code to a public GitHub issue.
+Anyone widening the capture table past HA's capability attributes has to reckon
+with this first.
+
+Separately, these extras are the honest reason a clone of a Hubitat lock is not
+a complete stand-in: `last_code_name` in particular is used heavily by real
+webCoRE lock pistons. That belongs with the driver/custom-command work (roadmap
+item 14), not with capability cloning.
+
+**HARD LIMIT — say this plainly, do not oversell the bench (measured 2026-07-26):**
+this clones **SHAPE, not BEHAVIOUR**. It reproduces what a device says it can do;
+it does not reproduce how that device's integration mangles values in flight. The
+fan bug that motivated the whole feature lives in a *bridge*, and an
+attribute-identical clone did **not** reproduce it. Capability and shape bugs are
+catchable here; integration-behaviour bugs are not, and no amount of attribute
+cloning will change that.
+
+**Fixed on the way past:** `lock.open` on a virtual lock called a sync stub and
+raised `NotImplementedError` — it had never worked. It matters now that a clone
+can advertise the OPEN (latch) feature. Also, cloning a device containing a
+`number` entity could never have succeeded: that platform *requires* min/max and
+the clone never sent them. And `VirtualSensor`/`VirtualNumber` are plain `Entity`
+subclasses, not `SensorEntity`/`NumberEntity` — so `_attr_state_class`,
+`_attr_options`, `_attr_native_step` and `_attr_mode` are INERT on them; those
+values reach the state machine only via `extra_state_attributes`.
+
+### 5.7a-i How this is verified (and how to re-verify)
+
+Verified on a **private throwaway HA in Docker**, NOT on Jeremy's test instance —
+his install cannot prove portability, since it has no vacuum, siren, humidifier
+or cover at all, and using it also interferes with his own work.
+
+    docker run -d --name pc-testha -p 8124:8123 \
+      -v <scratch>/ha-config:/config ghcr.io/home-assistant/home-assistant:stable
+    # onboard via /api/onboarding/users, then create the `virtual` config entry
+    # through the REST config-flow — the same calls _ensure_group() makes.
+
+**Crash-safety suite (run before the 2026-07-31 push, all green):** six HA restarts
+with no entity growth and no CRITICAL / integration ERROR / blocking-call warnings;
+five back-to-back config-entry reloads; and the device file deliberately EMPTIED,
+replaced with a non-mapping, and replaced with broken YAML — in every case HA
+reached RUNNING, the entry loaded, the integration degraded to zero devices, and
+restoring the good file brought all devices back. The safety net was also
+triggered directly: handed a value yaml cannot represent, the saver raises and the
+**existing file is left byte-identical**.
+
+Three checks, all green as of 2026-07-31:
+1. **14 clone specs** for devices deliberately NOT in Jeremy's house (Roborock,
+   Denon receiver, outdoor siren, dehumidifier, Venetian blind, RGBWW bulb,
+   cool-only °F thermostat, euro deadbolt...) create successfully and report back
+   every ability requested.
+2. **43/43 service calls** succeed against those clones — every advertised
+   ability is actually drivable.
+3. The deliberate BROWSE_MEDIA/SEARCH_MEDIA strip is confirmed by arithmetic
+   (asked 5242815, reports 917439, difference exactly those two flags).
+
+### 5.7a-ii WHERE THE CLONE ENGINE LIVES — settled 2026-07-31 (Jeremy)
+
+**In the add-on (`custom_components/virtual/clone.py`), exposed as
+`virtual.clone_device`. PistonCore only names a device.**
+
+The deciding argument is not tidiness, it is the closed schema: hand a platform a
+config key it does not declare and entity creation fails outright. The capture
+list and the platform schemas are therefore ONE contract. In one file tree they
+cannot disagree; split across two projects on two release cycles, drift is
+guaranteed — which is exactly how `target_humidity_step` and
+`swing_horizontal_modes` went missing.
+
+Consequences, all deliberate:
+- PistonCore's `create-twin` sends `{label, device_id}` and nothing else. Its
+  discovery list is DISPLAY ONLY and no longer has to track the add-on's schemas.
+- The service declares a `device` selector, so HA's own Actions screen renders a
+  searchable device picker — standalone cloning with no frontend to maintain.
+- An `entity_id` is accepted as well as a device id, for entities with no
+  device-registry entry of their own (PistonCore's singleton groups).
+
+**Rejected: a separate optional external controller** (Jeremy, 2026-07-31) — a
+third component to version, carrying the same drift risk, with no upside over
+bundling. **Deferred: a sidebar panel in the add-on.** Right shape, wrong time:
+its only audience is people who want virtual devices but not webCoRE, and those
+people already have upstream hass-virtual. Deferring costs nothing now that the
+engine sits in the right place — a panel later is purely additive.
+
+**Two behaviours worth knowing, both proven here rather than assumed:**
+- **Cloned limits are enforced.** Setting 70 on a cloned 60–90 °F thermostat from
+  a metric HA is rejected — HA reads it as 70 °C = 158 °F. The clone's range and
+  unit are real, not decoration. Same for a cloned lock's `code_format`: calling
+  `lock.unlock` without a code is correctly refused.
+- **`create_device` used to race itself — FIXED 2026-07-31, no pacing needed now.**
+  Both create and remove did read-modify-write on one yaml file then reloaded the
+  entry. Fired concurrently, every caller loaded before any caller saved:
+  **six concurrent creates produced one device and reported no error at all.**
+  `_mutate_and_reload` now serializes the edit per entry and collapses a burst
+  into one reload (measured: 8 concurrent creates = the same single reload as 1).
+  Proven by rebuilding the whole 14-device bench with 14 simultaneous calls.
+- **CLONED ENTITY NAMES MUST BE QUALIFIED BY THEIR DEVICE — FIXED 2026-07-31.**
+  This integration keys an entity's identity by its NAME within the group, so two
+  devices carrying an identically-named entity fight over one identity and HA
+  re-registers the loser on EVERY restart. Cloning one device twice produced five
+  colliding names and **five brand-new entities per restart, growing without
+  limit** — the entity registry inflating forever, invisibly. Capability-only
+  names collide trivially ("Battery", "Automatic backup"), so a clone names each
+  entity `<device name> <capability>`, which is also what the base integration
+  does when it names entities itself. Verified stable across six restarts.
+- **A failed save used to destroy the device file — FIXED 2026-07-31.** The savers
+  opened the real file in `'w'` (truncating it) and only then serialized, with the
+  exception swallowed at DEBUG. One unserialisable value — an HA enum that reached
+  the config — emptied the file, wiped every test device, and left the integration
+  unable to load, silently. Now: serialize first, temp-file + atomic replace, errors
+  logged and raised, and an unreadable file degrades to "no devices" instead of
+  killing setup. **This is the "looks like it deleted everything" failure class
+  again** — same shape as the 2026-07-12 Docker mount incident.
+
 **Known gaps — capability kinds that still need work (TO-BUILD):**
 1. **Multi-tap / scene button events** (Inovelli, Zooz — double-tap is used
    heavily). These are momentary EVENTS (single/double/held/released/pushed),
@@ -314,10 +497,12 @@ Why both: cloning gives a user what they HAVE; the library gives a developer wha
 they DON'T. Neither alone is the bench. The earlier generic 20-item catalog and
 the "twin-only" idea are both retired by this split.
 
-**Build state (2026-07-21):** clone discovery engine built + proven against real
-devices; still needs create-twin endpoint + the "Your devices" UI + entity-name
-de-dup + end-to-end test. Debug library: not built — vocab-driven generator +
-its own panel + the Diagnostics/Developer links.
+**Build state (2026-07-31):** clone discovery engine, create-twin endpoint, the
+"Your devices" UI and entity-name de-dup all built. Full-fidelity capability
+capture + accept built across all 12 domains (§5.7a) and VERIFIED END TO END on a
+private throwaway HA (§5.7a-i): 14 out-of-house clone specs create correctly,
+43/43 service calls drive them. Debug library: not built — vocab-driven generator
++ its own panel + the Diagnostics/Developer links.
 
 ## 6. Two places to run it
 

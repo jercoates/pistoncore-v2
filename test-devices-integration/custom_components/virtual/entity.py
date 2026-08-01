@@ -29,6 +29,57 @@ _LOGGER = logging.getLogger(__name__)
 
 positive_tick = vol.All(vol.Coerce(float), vol.Range(min=0, min_included=False))
 
+# ── PistonCore full-fidelity cloning (FORK_NOTES.md) ────────────────────────
+#
+# A clone is only useful as a test bench if it advertises the SAME abilities as
+# the device it copies. HA already states those abilities as the
+# `supported_features` bitmask plus a handful of list/range attributes, so a
+# faithful clone takes them verbatim instead of inferring them from booleans.
+#
+# Every platform below accepts `supported_features` and falls back to the
+# default it always used when the key is absent — so existing test devices and
+# hand-written virtual.yaml files are unaffected.
+#
+# KNOWN LIMIT (measured 2026-07-26): this clones SHAPE, not BEHAVIOUR. A clone
+# reproduces what a device says it can do; it does not reproduce how its real
+# integration mangles values on the way through. Capability bugs are catchable
+# here, integration-behaviour bugs are not.
+
+FEATURES_SCHEMA = {
+    vol.Optional(CONF_SUPPORTED_FEATURES): vol.All(vol.Coerce(int), vol.Range(min=0)),
+}
+
+
+def feature_flags(config, flag_enum, default):
+    """The cloned `supported_features` as this domain's flag enum, or `default`.
+
+    Unknown bits are dropped rather than raising: HA adds feature flags over
+    time, and a clone captured from a newer HA must still create a working
+    entity on an older one instead of failing to set up at all.
+    """
+    raw = config.get(CONF_SUPPORTED_FEATURES)
+    if raw is None:
+        return default
+    try:
+        known = 0
+        for flag in flag_enum:
+            known |= int(flag)
+        return flag_enum(int(raw) & known)
+    except (TypeError, ValueError):
+        _LOGGER.warning("ignoring unusable supported_features=%r, using default", raw)
+        return default
+
+
+def optional_list(config, key):
+    """A cloned list attribute (hvac_modes, source_list, ...), or None if the
+    original didn't carry one. None matters: an empty list means 'this device
+    has none', absent means 'this device never said'."""
+    value = config.get(key)
+    if value is None:
+        return None
+    return [str(v) for v in value]
+
+
 def virtual_schema(default_initial_value: str, extra_attrs):
     schema = {
         vol.Required(CONF_NAME): cv.string,

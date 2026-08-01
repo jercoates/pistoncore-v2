@@ -10,7 +10,7 @@ from collections.abc import Callable
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.number import (
     ATTR_MAX, ATTR_MIN, DOMAIN as PLATFORM_DOMAIN,
-    NumberDeviceClass
+    NumberDeviceClass, NumberMode
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -50,18 +50,22 @@ DEPENDENCIES = [COMPONENT_DOMAIN]
 
 DEFAULT_NUMBER_VALUE = "0"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(virtual_schema(DEFAULT_NUMBER_VALUE, {
+CONF_STEP = "step"
+CONF_MODE = "mode"
+
+BASE_SCHEMA = virtual_schema(DEFAULT_NUMBER_VALUE, {
     vol.Optional(CONF_CLASS): cv.string,
     vol.Required(CONF_MIN): vol.Coerce(float),
     vol.Required(CONF_MAX): vol.Coerce(float),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
-}))
-NUMBER_SCHEMA = vol.Schema(virtual_schema(DEFAULT_NUMBER_VALUE, {
-    vol.Optional(CONF_CLASS): cv.string,
-    vol.Required(CONF_MIN): vol.Coerce(float),
-    vol.Required(CONF_MAX): vol.Coerce(float),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
-}))
+    # Cloning: step and box/slider mode are the rest of what a real number
+    # entity advertises alongside its range.
+    vol.Optional(CONF_STEP): vol.Coerce(float),
+    vol.Optional(CONF_MODE): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(BASE_SCHEMA)
+NUMBER_SCHEMA = vol.Schema(BASE_SCHEMA)
 
 UNITS_OF_MEASUREMENT = {
     NumberDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,  # apparent power (VA)
@@ -131,6 +135,17 @@ class VirtualNumber(VirtualEntity, Entity):
 
         self.min_value = config.get(CONF_MIN)
         self.max_value = config.get(CONF_MAX)
+        # NOTE: this class is a plain Entity, NOT NumberEntity — `_attr_native_step`
+        # / `_attr_mode` would be inert here, exactly as min/max already go out
+        # via _update_attributes rather than the NumberEntity machinery.
+        # (Caught end-to-end on a private HA, 2026-07-31.)
+        self.step = config.get(CONF_STEP)
+        self.number_mode = None
+        if (mode := config.get(CONF_MODE)) is not None:
+            if str(mode).lower() in {m.value for m in NumberMode}:
+                self.number_mode = str(mode).lower()
+            else:
+                _LOGGER.warning("ignoring unknown number mode %r", mode)
 
         # Set unit of measurement
         self._attr_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -167,7 +182,9 @@ class VirtualNumber(VirtualEntity, Entity):
                 (ATTR_DEVICE_CLASS, self._attr_device_class),
                 (ATTR_UNIT_OF_MEASUREMENT, self._attr_unit_of_measurement),
                 (ATTR_MIN, self.min_value),
-                (ATTR_MAX, self.max_value)
+                (ATTR_MAX, self.max_value),
+                ("step", self.step),
+                ("mode", self.number_mode),
             ) if value is not None
         })
 

@@ -209,6 +209,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .pistoncore_manage import async_register_manage_services
     async_register_manage_services(hass)
 
+    # --- PistonCore: full-fidelity device cloning (additive; see clone.py) ---
+    from .clone import async_register_clone_service
+    async_register_clone_service(hass)
+
     return True
 
 

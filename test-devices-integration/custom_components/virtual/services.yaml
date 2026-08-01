@@ -118,6 +118,36 @@ create_device:
       selector:
         object:
 
+clone_device:
+  name: Clone a real device (PistonCore)
+  description: >-
+    Make a test copy of one of your real devices that reports the SAME abilities
+    it does — its mode lists, limits and supported features — so a piston can be
+    tried against a stand-in instead of the real thing. Copies what the device
+    says it can DO; it cannot reproduce how the real device's own integration
+    behaves. Never copies lock or alarm codes.
+  fields:
+    device_id:
+      name: Device to copy
+      description: The real device to make a test copy of.
+      required: true
+      selector:
+        device:
+    group_name:
+      name: Group
+      description: Which virtual group to create the copy in. Omit if you only have one.
+      required: false
+      example: 'Test Devices'
+      selector:
+        text:
+    device_name:
+      name: Name for the copy
+      description: What to call the copy. Defaults to "Test — <original name>".
+      required: false
+      example: 'Test — Living Room Thermostat'
+      selector:
+        text:
+
 fire_event:
   name: Fire event (PistonCore)
   description: >-

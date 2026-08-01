@@ -18,6 +18,7 @@ import aiofiles
 import asyncio
 import copy
 import logging
+import os
 import json
 import voluptuous as vol
 import uuid
@@ -74,14 +75,38 @@ async def _async_load_json(file_name):
         return {}
 
 
+async def _atomic_write(file_name, text):
+    """Write via a temp file and rename, so a failure can never leave a
+    half-written or empty file behind.
+
+    PistonCore fix (2026-07-31), after losing every test device on this bench:
+    these savers used to open the real file in 'w' — which TRUNCATES IT TO ZERO —
+    and only then serialize. Serializing anything yaml/json couldn't represent
+    therefore destroyed the existing file, and the exception was swallowed at
+    debug level so nothing said so. The integration then failed to load at all,
+    because reading an empty file yields None.
+
+    Serializing happens before this is called, so a bad value raises with the
+    old file still intact.
+    """
+    tmp = f"{file_name}.tmp"
+    async with aiofiles.open(tmp, 'w') as f:
+        await f.write(text)
+    await asyncio.get_running_loop().run_in_executor(None, os.replace, tmp, file_name)
+
+
 async def _async_save_json(file_name, data):
-    _LOGGER.debug("_async_save_yaml1 file_name for %s", file_name)
     try:
-        async with aiofiles.open(file_name, 'w') as meta_file:
-            data = json.dumps(data, indent=4)
-            await meta_file.write(data)
-    except Exception as e:
-        _LOGGER.debug("_async_load_yaml3 file_name for %s", file_name)
+        text = json.dumps(data, indent=4)      # serialize FIRST
+    except Exception:
+        _LOGGER.exception("virtual: refusing to save unserialisable json to %s "
+                          "(existing file left untouched)", file_name)
+        raise
+    try:
+        await _atomic_write(file_name, text)
+    except Exception:
+        _LOGGER.exception("virtual: could not write %s", file_name)
+        raise
 
 
 async def _async_load_yaml(file_name):
@@ -98,13 +123,17 @@ async def _async_load_yaml(file_name):
 
 
 async def _async_save_yaml(file_name, data):
-    _LOGGER.debug("_async_save_yaml1 file_name for %s", file_name)
     try:
-        async with aiofiles.open(file_name, 'w') as meta_file:
-            data = dump(data)
-            await meta_file.write(data)
-    except Exception as e:
-        _LOGGER.debug("_async_load_yaml3 file_name for %s", file_name)
+        text = dump(data)                      # serialize FIRST — see _atomic_write
+    except Exception:
+        _LOGGER.exception("virtual: refusing to save unserialisable yaml to %s "
+                          "(existing file left untouched)", file_name)
+        raise
+    try:
+        await _atomic_write(file_name, text)
+    except Exception:
+        _LOGGER.exception("virtual: could not write %s", file_name)
+        raise
 
 
 async def _load_meta_data(hass, group_name: str):
@@ -168,6 +197,13 @@ async def _save_user_data(file_name, devices):
 
 async def _load_user_data(file_name):
     entities = await _async_load_yaml(file_name)
+    # An empty or unparseable file yields None, which used to crash setup here
+    # and take the whole integration down with it. Degrade to "no devices"
+    # instead — the file is recoverable, an integration that won't load is not.
+    if not isinstance(entities, dict):
+        if entities is not None:
+            _LOGGER.warning("virtual: %s is not a mapping; ignoring it", file_name)
+        return {}
     # make devices: optional.
     return entities.get(ATTR_DEVICES, entities)
 

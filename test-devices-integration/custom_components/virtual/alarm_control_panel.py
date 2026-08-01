@@ -13,11 +13,13 @@ import logging
 import voluptuous as vol
 from collections.abc import Callable
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as PLATFORM_DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_entity_configs
 from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .entity import FEATURES_SCHEMA, VirtualEntity, feature_flags, virtual_schema
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,8 +38,30 @@ DEPENDENCIES = [COMPONENT_DOMAIN]
 
 DEFAULT_ALARM_VALUE = "disarmed"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(virtual_schema(DEFAULT_ALARM_VALUE, {}))
-ALARM_SCHEMA = vol.Schema(virtual_schema(DEFAULT_ALARM_VALUE, {}))
+CONF_CODE_FORMAT = "code_format"
+CONF_CODE_ARM_REQUIRED = "code_arm_required"
+
+# What the panel could always do, before cloning existed. Jeremy's real keypad
+# reports 7 (home/away/night only) — a clone of it should not offer vacation.
+DEFAULT_FEATURES = (
+    AlarmControlPanelEntityFeature.ARM_HOME
+    | AlarmControlPanelEntityFeature.ARM_AWAY
+    | AlarmControlPanelEntityFeature.ARM_NIGHT
+    | AlarmControlPanelEntityFeature.ARM_VACATION
+    | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    | AlarmControlPanelEntityFeature.TRIGGER
+)
+
+BASE_SCHEMA = virtual_schema(DEFAULT_ALARM_VALUE, {
+    **FEATURES_SCHEMA,
+    vol.Optional(CONF_CODE_FORMAT): vol.Any(None, cv.string),
+    vol.Optional(CONF_CODE_ARM_REQUIRED): cv.boolean,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(BASE_SCHEMA)
+ALARM_SCHEMA = vol.Schema(BASE_SCHEMA)
+
+_CODE_FORMATS = {f.value: f for f in CodeFormat}
 
 # initial_value string -> AlarmControlPanelState (e.g. "armed_away", "disarmed")
 _STATES = {s.value: s for s in AlarmControlPanelState}
@@ -70,18 +94,18 @@ class VirtualAlarmControlPanel(VirtualEntity, AlarmControlPanelEntity):
 
     _attr_code_arm_required = False
     _attr_code_format = None
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
-        | AlarmControlPanelEntityFeature.ARM_VACATION
-        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
-        | AlarmControlPanelEntityFeature.TRIGGER
-    )
 
     def __init__(self, config, old_style: bool):
         """Initialize the Virtual alarm control panel."""
         super().__init__(config, PLATFORM_DOMAIN, old_style)
+
+        self._attr_supported_features = feature_flags(
+            config, AlarmControlPanelEntityFeature, DEFAULT_FEATURES)
+        self._attr_code_format = _CODE_FORMATS.get(
+            (config.get(CONF_CODE_FORMAT) or "").lower())
+        if (required := config.get(CONF_CODE_ARM_REQUIRED)) is not None:
+            self._attr_code_arm_required = required
+
         _LOGGER.info(f"VirtualAlarmControlPanel: {self.name} created")
 
     def _create_state(self, config):

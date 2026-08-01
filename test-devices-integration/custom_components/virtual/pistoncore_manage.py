@@ -28,6 +28,7 @@ Service: virtual.remove_device
                device is deleted from the registry on reload (no orphans).
 """
 
+import asyncio
 import logging
 import voluptuous as vol
 
@@ -81,29 +82,70 @@ def _find_entry(hass: HomeAssistant, group_name):
     raise HomeAssistantError(f"virtual: no group named '{group_name}'")
 
 
+_LOCKS = "pistoncore_mutation_locks"
+_WAITING = "pistoncore_mutation_waiting"
+
+
+async def _mutate_and_reload(hass: HomeAssistant, entry, describe: str, mutate) -> None:
+    """Apply one change to a group's device file, then reload — safely.
+
+    Both services are read-modify-write on a single yaml file followed by a
+    config-entry reload. Called concurrently, EVERY caller loaded the file
+    before ANY caller saved it, so all but the last were silently erased: the
+    service returned success and the device simply never appeared. Measured on
+    a clean HA 2026-07-31 — six concurrent creates produced one device and no
+    error of any kind. PistonCore's clone panel hits this the moment it creates
+    more than one device, and so would any standalone UI.
+
+    Two guarantees here:
+      * the load/change/save runs under a per-entry lock, so no change is lost;
+      * a burst of changes triggers ONE reload at the end, not one each —
+        whoever finds no one else waiting does it. Reloading per call is what
+        made the window wide enough to hit in the first place.
+    """
+    lock = hass.data.setdefault(_LOCKS, {}).setdefault(entry.entry_id, asyncio.Lock())
+    waiting = hass.data.setdefault(_WAITING, {})
+    waiting[entry.entry_id] = waiting.get(entry.entry_id, 0) + 1
+
+    async with lock:
+        try:
+            file_name = entry.data[ATTR_FILE_NAME]
+            devices = await _load_user_data(file_name)
+            if not isinstance(devices, dict):
+                devices = {}
+            mutate(devices)
+            await _save_user_data(file_name, devices)
+            _LOGGER.info("virtual: %s in group '%s'", describe,
+                         entry.data.get(ATTR_GROUP_NAME))
+        finally:
+            waiting[entry.entry_id] -= 1
+            last = waiting[entry.entry_id] <= 0
+
+    # Outside the lock: a reload sets the platforms up again, which must not
+    # block the next caller's file edit.
+    if last:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def _async_create_device(hass: HomeAssistant, call) -> None:
     entry = _find_entry(hass, call.data.get(ATTR_GROUP_NAME))
-    file_name = entry.data[ATTR_FILE_NAME]
-    devices = await _load_user_data(file_name)
-    if not isinstance(devices, dict):
-        devices = {}
-    devices[call.data[CONF_DEVICE_NAME]] = call.data[CONF_ENTITIES]
-    await _save_user_data(file_name, devices)
-    _LOGGER.info("virtual: created test device '%s' in group '%s'",
-                 call.data[CONF_DEVICE_NAME], entry.data.get(ATTR_GROUP_NAME))
-    await hass.config_entries.async_reload(entry.entry_id)
+    name = call.data[CONF_DEVICE_NAME]
+    entities = call.data[CONF_ENTITIES]
+
+    def _add(devices):
+        devices[name] = entities
+
+    await _mutate_and_reload(hass, entry, f"created test device '{name}'", _add)
 
 
 async def _async_remove_device(hass: HomeAssistant, call) -> None:
     entry = _find_entry(hass, call.data.get(ATTR_GROUP_NAME))
-    file_name = entry.data[ATTR_FILE_NAME]
-    devices = await _load_user_data(file_name)
-    if isinstance(devices, dict):
-        devices.pop(call.data[CONF_DEVICE_NAME], None)
-    await _save_user_data(file_name, devices)
-    _LOGGER.info("virtual: removed test device '%s' from group '%s'",
-                 call.data[CONF_DEVICE_NAME], entry.data.get(ATTR_GROUP_NAME))
-    await hass.config_entries.async_reload(entry.entry_id)
+    name = call.data[CONF_DEVICE_NAME]
+
+    def _drop(devices):
+        devices.pop(name, None)
+
+    await _mutate_and_reload(hass, entry, f"removed test device '{name}'", _drop)
 
 
 @callback

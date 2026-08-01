@@ -50,14 +50,21 @@ DEPENDENCIES = [COMPONENT_DOMAIN]
 
 DEFAULT_SENSOR_VALUE = "0"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(virtual_schema(DEFAULT_SENSOR_VALUE, {
+CONF_STATE_CLASS = "state_class"
+CONF_OPTIONS = "options"
+
+BASE_SCHEMA = virtual_schema(DEFAULT_SENSOR_VALUE, {
     vol.Optional(CONF_CLASS): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
-}))
-SENSOR_SCHEMA = vol.Schema(virtual_schema(DEFAULT_SENSOR_VALUE, {
-    vol.Optional(CONF_CLASS): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
-}))
+    # Cloning: an enum sensor's option list and a measurement's state_class are
+    # part of what it IS. Without them a cloned energy meter looks like a plain
+    # number and a cloned mode sensor has no valid values.
+    vol.Optional(CONF_STATE_CLASS): vol.Any(None, cv.string),
+    vol.Optional(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(BASE_SCHEMA)
+SENSOR_SCHEMA = vol.Schema(BASE_SCHEMA)
 
 SERVICE_SET = "set"
 SERVICE_SCHEMA = vol.Schema({
@@ -154,6 +161,15 @@ class VirtualSensor(VirtualEntity, Entity):
         if not self._attr_unit_of_measurement and self._attr_device_class in UNITS_OF_MEASUREMENT.keys():
             self._attr_unit_of_measurement = UNITS_OF_MEASUREMENT[self._attr_device_class]
 
+        # NOTE: this class is a plain Entity, NOT SensorEntity — so `_attr_*` for
+        # these two would be inert. They reach the state machine only by being
+        # published as extra state attributes in _update_attributes below.
+        # (Caught end-to-end on a private HA, 2026-07-31; setting the _attr_
+        # versions looked right and did nothing at all.)
+        self._state_class = config.get(CONF_STATE_CLASS)
+        options = config.get(CONF_OPTIONS)
+        self._options = [str(o) for o in options] if options is not None else None
+
         _LOGGER.info(f"VirtualSensor: {self.name} created")
 
     def _create_state(self, config):
@@ -172,6 +188,8 @@ class VirtualSensor(VirtualEntity, Entity):
             name: value for name, value in (
                 (ATTR_DEVICE_CLASS, self._attr_device_class),
                 (ATTR_UNIT_OF_MEASUREMENT, self._attr_unit_of_measurement),
+                ("state_class", self._state_class),
+                ("options", self._options),
             ) if value is not None
         })
 

@@ -30,7 +30,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_entity_configs
 from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .entity import FEATURES_SCHEMA, VirtualEntity, feature_flags, virtual_schema
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +47,7 @@ CONF_SPEED_COUNT = "speed_count"
 DEFAULT_FAN_VALUE = "off"
 
 BASE_SCHEMA = virtual_schema(DEFAULT_FAN_VALUE, {
+    **FEATURES_SCHEMA,
     vol.Optional(CONF_SPEED, default=False): cv.boolean,
     vol.Optional(CONF_SPEED_COUNT, default=0): cv.positive_int,
     vol.Optional(CONF_OSCILLATE, default=False): cv.boolean,
@@ -105,13 +106,19 @@ class VirtualFan(VirtualEntity, FanEntity):
             self._attr_speed_count = 3
 
         self._enable_turn_on_off_backwards_compatibility = False
-        self._attr_supported_features = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+
+        derived = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
         if self._attr_speed_count > 0:
-            self._attr_supported_features |= FanEntityFeature.SET_SPEED
+            derived |= FanEntityFeature.SET_SPEED
         if config.get(CONF_OSCILLATE, False):
-            self._attr_supported_features |= FanEntityFeature.OSCILLATE
+            derived |= FanEntityFeature.OSCILLATE
         if config.get(CONF_DIRECTION, False):
-            self._attr_supported_features |= FanEntityFeature.DIRECTION
+            derived |= FanEntityFeature.DIRECTION
+        # A cloned fan states its own feature set. Note the contradiction real
+        # bridged fans carry — preset_modes populated while the PRESET_MODE flag
+        # is NOT set — is preserved rather than tidied up, because reproducing
+        # it is the entire point of a clone.
+        self._attr_supported_features = feature_flags(config, FanEntityFeature, derived)
 
         _LOGGER.info(f"VirtualFan: {self.name} created")
 

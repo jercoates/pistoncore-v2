@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import (
     DOMAIN as PLATFORM_DOMAIN,
     LockEntity,
+    LockEntityFeature,
     LockState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_entity_configs
 from .const import *
-from .entity import VirtualEntity, virtual_schema
+from .entity import FEATURES_SCHEMA, VirtualEntity, feature_flags, virtual_schema
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,19 +35,25 @@ DEPENDENCIES = [COMPONENT_DOMAIN]
 
 CONF_CHANGE_TIME = "locking_time"
 CONF_TEST_JAMMING = "jamming_test"
+CONF_CODE_FORMAT = "code_format"
 
 DEFAULT_LOCK_VALUE = "locked"
 DEFAULT_CHANGE_TIME = timedelta(seconds=0)
 DEFAULT_TEST_JAMMING = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(virtual_schema(DEFAULT_LOCK_VALUE, {
+# What the lock could always do, before cloning existed: lock/unlock, no OPEN
+# (latch) support.
+DEFAULT_FEATURES = LockEntityFeature(0)
+
+BASE_SCHEMA = virtual_schema(DEFAULT_LOCK_VALUE, {
+    **FEATURES_SCHEMA,
     vol.Optional(CONF_CHANGE_TIME, default=DEFAULT_CHANGE_TIME): vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_TEST_JAMMING, default=DEFAULT_TEST_JAMMING): cv.positive_int,
-}))
-LOCK_SCHEMA = vol.Schema(virtual_schema(DEFAULT_LOCK_VALUE, {
-    vol.Optional(CONF_CHANGE_TIME, default=DEFAULT_CHANGE_TIME): vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_TEST_JAMMING, default=DEFAULT_TEST_JAMMING): cv.positive_int,
-}))
+    vol.Optional(CONF_CODE_FORMAT): vol.Any(None, cv.string),
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(BASE_SCHEMA)
+LOCK_SCHEMA = vol.Schema(BASE_SCHEMA)
 
 
 async def async_setup_platform(
@@ -86,7 +93,10 @@ class VirtualLock(VirtualEntity, LockEntity):
         self._hass = hass
         self._change_time = config.get(CONF_CHANGE_TIME)
         self._test_jamming = config.get(CONF_TEST_JAMMING)
-        
+        self._attr_supported_features = feature_flags(
+            config, LockEntityFeature, DEFAULT_FEATURES)
+        self._attr_code_format = config.get(CONF_CODE_FORMAT)
+
         _LOGGER.info('VirtualLock: {} created'.format(self.name))
 
     def _create_state(self, config):
@@ -161,5 +171,8 @@ class VirtualLock(VirtualEntity, LockEntity):
             self._start_operation()
 
     async def async_open(self, **kwargs: Any) -> None:
+        # Was `self.unlock()`, which reaches LockEntity's sync stub and raises
+        # NotImplementedError — `lock.open` on a virtual lock has never worked.
+        # It matters now that a clone can advertise the OPEN (latch) feature.
         _LOGGER.debug(f"opening {self.name}")
-        self.unlock()
+        await self.async_unlock(**kwargs)

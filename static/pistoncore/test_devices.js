@@ -134,7 +134,7 @@ function renderCloneList(q) {
     btn.textContent = "Clone";
     btn.onclick = async () => {
       btn.disabled = true; btn.textContent = "Cloning…";
-      const res = await api("/api/test-devices/create-twin", { label: t.label, entities: t.entities });
+      const res = await api("/api/test-devices/create-twin", { label: t.label, device_id: t.device_id });
       if (res.error) { banner("error", res.error); btn.disabled = false; btn.textContent = "Clone"; return; }
       load();
     };

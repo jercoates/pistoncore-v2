@@ -29,6 +29,13 @@ CONF_OPEN_CLOSE_TICK = "open_close_tick"
 CONF_PERSISTENT = "persistent"
 CONF_YAML_CONFIG = "yaml_config"
 
+# PistonCore full-fidelity cloning (FORK_NOTES.md). A real entity advertises its
+# abilities as HA's `supported_features` bitmask; a faithful clone takes that
+# number VERBATIM rather than guessing from booleans. Every platform accepts it
+# and falls back to its own sensible default when it isn't given, so nothing
+# that worked before this change behaves differently.
+CONF_SUPPORTED_FEATURES = "supported_features"
+
 DEFAULT_AVAILABILITY = True
 DEFAULT_PERSISTENT = True
 

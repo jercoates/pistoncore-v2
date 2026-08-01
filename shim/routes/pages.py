@@ -170,6 +170,38 @@ _VIRTUAL_PLATFORM_DOMAINS = {
 }
 
 
+# ── FULL-FIDELITY CLONING: the capture half ────────────────────────────────
+#
+# A twin is only a bench if it can do what the original does. HA already states
+# a device's abilities as `supported_features` plus a few list/range
+# attributes, so cloning is: copy those verbatim, hand them to the virtual
+# integration, which now accepts them (test-devices-integration, per platform).
+#
+# Every key below is one the matching virtual platform declares in its schema.
+# Sending a key a platform does NOT declare makes entity creation fail, so this
+# table and those schemas move together.
+#
+# What it CANNOT do (measured 2026-07-26, do not oversell it): this reproduces
+# SHAPE, not BEHAVIOUR. A clone matches what the device says it can do; it does
+# not reproduce how the real integration mangles values in flight. The fan bug
+# that motivated this lives in a bridge, and an identical clone did not
+# reproduce it.
+#
+# THE CAPTURE TABLE DELIBERATELY DOES NOT LIVE HERE ANY MORE (2026-07-31).
+#
+# It moved into the test-devices integration
+# (test-devices-integration/custom_components/virtual/clone.py), because the
+# platforms there validate against CLOSED schemas: hand one a config key it
+# doesn't declare and entity creation fails outright. The capture list and
+# those schemas are one contract, so they have to live in one place — a copy
+# here would need a matching change in another project on another release
+# cycle, which is drift by construction.
+#
+# PistonCore now just names a device and calls `virtual.clone_device`.
+# Everything about WHAT gets copied — and the privacy boundary about what must
+# never be copied — is documented in clone.py.
+
+
 async def _discover_twin_types() -> list[dict]:
     """Read the user's REAL devices (device_pipeline grouping) and build a
     faithful test-twin spec for each distinct device TYPE: a grouped virtual
@@ -185,6 +217,7 @@ async def _discover_twin_types() -> list[dict]:
     regs = await ha_client.fetch_registries()
     states = {s["entity_id"]: s.get("attributes", {}) for s in regs.get("states", [])}
     ent_reg = {e["entity_id"]: e for e in regs.get("entities", [])}
+    ha_config = regs.get("config") or {}
     groups = device_pipeline.group_entities(regs)
 
     def _cap_name(eid: str, attrs: dict, device_label: str) -> str:
@@ -223,28 +256,34 @@ async def _discover_twin_types() -> list[dict]:
             # faithful twin must carry them, not a tidied-down subset.
             reg = ent_reg.get(eid, {})
             attrs = states.get(eid, {})
+            # DISPLAY ONLY. This list is what the picker shows; it is no longer
+            # what gets created. The add-on reads the real device itself when
+            # asked to clone, so nothing here has to stay in step with its
+            # schemas (see the note above the removed capture table).
             spec = {"platform": dom, "name": _cap_name(eid, attrs, label)}
             dc = attrs.get("device_class") or reg.get("device_class")
             if dc:
                 spec["class"] = dc
-            unit = attrs.get("unit_of_measurement")
-            if unit and dom in ("sensor", "number"):
-                spec["unit_of_measurement"] = unit
+            # What the device can DO, so two otherwise-identical-looking devices
+            # (a 5-speed fan and a 3-speed fan) stay separate rows in the picker.
+            if isinstance(attrs.get("supported_features"), int):
+                spec["features"] = attrs["supported_features"]
             ents.append(spec)
         if not ents:
             continue
-        # Type signature keys on the SHAPE (platform+class+capname), so a
-        # smartDetect camera is a distinct type from a plain motion sensor.
-        sig = tuple(sorted(
-            (e["platform"], e.get("class", ""), e["name"].lower()) for e in ents))
-        rec = types.setdefault(sig, {"label": label, "entities": ents, "count": 0})
+        sig = tuple(sorted(json.dumps(e, sort_keys=True, default=str) for e in ents))
+        rec = types.setdefault(
+            sig, {"label": label, "entities": ents, "count": 0,
+                  # what the add-on needs to find this device for itself
+                  "device_id": g["group_key"]})
         rec["count"] += 1
 
     out = []
     for rec in sorted(types.values(), key=lambda r: -r["count"]):
         caps = [e.get("class") or e["name"] for e in rec["entities"]]
         out.append({"label": rec["label"], "count": rec["count"],
-                    "caps": caps, "entities": rec["entities"]})
+                    "caps": caps, "entities": rec["entities"],
+                    "device_id": rec["device_id"]})
     return out
 
 
@@ -651,36 +690,43 @@ async def api_test_devices_discover():
 
 @router.post("/api/test-devices/create-twin")
 async def api_test_devices_create_twin(request: Request):
-    """Clone one discovered device type into a grouped test device."""
+    """Clone one discovered device into a grouped test device.
+
+    Thin on purpose: the add-on's `virtual.clone_device` reads the real device
+    and decides what to copy, so the capability knowledge stays next to the
+    schemas that have to accept it (see the note where the capture table used
+    to live). PistonCore only says WHICH device.
+    """
     body = await request.json()
     label = (body.get("label") or "").strip()
-    entities = body.get("entities") or []
-    if not label or not entities:
-        return JSONResponse({"error": "Nothing to clone."}, status_code=400)
+    device_id = (body.get("device_id") or "").strip()
+    if not device_id:
+        return JSONResponse(
+            {"error": "Nothing to clone — reload the page and pick a device again."},
+            status_code=400)
     try:
         await _ensure_group()
     except ha_client.HAClientError as exc:
         return JSONResponse({"error": str(exc)}, status_code=400)
+
     tagged = label if label.lower().startswith("test") else f"Test — {label}"
-    seen: dict = {}
-    ents = []
-    for e in entities:
-        plat = e.get("platform")
-        if plat not in _VIRTUAL_PLATFORM_DOMAINS:
-            continue
-        base = (e.get("name") or plat).strip()
-        seen[base] = seen.get(base, 0) + 1
-        uniq = base if seen[base] == 1 else f"{base} {seen[base]}"  # de-dup within device
-        ent = {"platform": plat, "name": f"Test — {uniq}"}
-        if e.get("class"):
-            ent["class"] = e["class"]
-        if e.get("unit_of_measurement") and plat in ("sensor", "number"):
-            ent["unit_of_measurement"] = e["unit_of_measurement"]
-        ents.append(ent)
-    if not ents:
-        return JSONResponse({"error": "No reproducible capabilities on this device."}, status_code=400)
-    await ha_client.call_service("virtual", "create_device", {
-        "group_name": TEST_DEVICES_GROUP, "device_name": tagged, "entities": ents})
+    try:
+        await ha_client.call_service("virtual", "clone_device", {
+            "group_name": TEST_DEVICES_GROUP,
+            "device_id": device_id,
+            "device_name": tagged,
+        })
+    except ha_client.HAClientError as exc:
+        # The commonest cause by far: PistonCore was updated but the test-devices
+        # add-on in Home Assistant wasn't, so the clone action doesn't exist there
+        # yet. Say that, rather than leaving a bare "service not found".
+        message = str(exc)
+        if "clone_device" in message or "not found" in message.lower():
+            message = ("Home Assistant doesn't have the clone action yet — your "
+                       "test-devices add-on is older than PistonCore. Reinstall it "
+                       "from this page (Install / update the test-devices add-on), "
+                       "then try again.")
+        return JSONResponse({"error": message}, status_code=400)
     _bust_device_cache()
     return {"ok": True}
 
