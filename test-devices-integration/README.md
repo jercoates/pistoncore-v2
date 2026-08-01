@@ -39,6 +39,13 @@ adds them.
 that same specification as data — useful for putting "here is what my device
 looks like" into a bug report so somebody else can rebuild it.
 
+> [!NOTE]
+> `describe_device` returns your **real device and entity names**. Nothing is
+> sent anywhere — this integration makes no network requests of any kind, so the
+> only way that leaves your system is if you paste it somewhere. Give it a read
+> before putting it in a public issue. (PistonCore replaces names with stand-ins
+> automatically in the reports it builds; this integration on its own does not.)
+
 ### What cloning will and will not do
 
 It reproduces **shape, not behaviour**: what a device *says it can do*, not how
@@ -49,7 +56,12 @@ no amount of attribute copying will change that.
 It also **never copies lock or alarm codes**. Bridged panels and locks expose
 user code tables — sometimes plaintext PINs with the names attached — and sticking
 to Home Assistant's capability attributes keeps all of it out. That matters if you
-share a clone in a bug report.
+share a clone in a bug report, and it is guarded by a test: feeding the capture a
+real bridged lock and alarm panel and asserting no code, name or PIN survives.
+
+Nothing this integration produces ever leaves your Home Assistant on its own. It
+makes **no network requests at all** — no telemetry, no analytics, no calls home.
+Clones are written to a file in your own config folder and nowhere else.
 
 ---
 

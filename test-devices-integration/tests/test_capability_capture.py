@@ -219,6 +219,33 @@ def test_fan_speed_count_derives_from_percentage_step():
     assert spec["speed_count"] == 3
 
 
+# ── credentials must never reach a clone ────────────────────────────────────
+
+@pytest.mark.parametrize("domain,attrs", [
+    # A Hubitat-bridged LOCK, attributes exactly as HA reports them.
+    ("lock", {"supported_features": 1, "code_format": r"\d{4}",
+              "codes": {"1": {"name": "Jeremy"}, "2": {"name": "Thea"}},
+              "last_code_name": "Jeremy", "code_length": 4, "max_codes": 30}),
+    # A Hubitat-bridged ALARM PANEL — this one carries plaintext PINs.
+    ("alarm_control_panel", {"supported_features": 7, "code_format": "number",
+                             "code_arm_required": False,
+                             "codes": {"1": {"code": "2217", "name": "Jeremy"}},
+                             "code_length": 4, "max_codes": 20}),
+])
+def test_clone_never_captures_codes_or_household_names(domain, attrs):
+    """Bridged locks and alarm panels expose user code tables — sometimes
+    plaintext PINs with the names they belong to. A clone is meant to be
+    shareable in a bug report, so none of it may ever be captured.
+
+    This holds today because the capture is limited to HA's capability
+    attributes. It must keep holding: anyone widening CLONE_ATTRS past that has
+    to reckon with this test.
+    """
+    spec = repr(clone.capability_config(HASS, domain, attrs))
+    for secret in ("Jeremy", "Thea", "2217", "codes", "last_code_name"):
+        assert secret not in spec, f"{domain} clone leaked {secret!r}: {spec}"
+
+
 def test_number_always_gets_a_range():
     """min/max are REQUIRED by the number platform — without them a clone
     containing a number entity can never be created."""
