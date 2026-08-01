@@ -41,7 +41,7 @@ from enum import Enum
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -53,6 +53,7 @@ from .pistoncore_manage import _find_entry, _mutate_and_reload
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_CLONE_DEVICE = "clone_device"
+SERVICE_DESCRIBE_DEVICE = "describe_device"
 
 CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_NAME = "device_name"
@@ -61,6 +62,10 @@ CLONE_DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Optional(ATTR_GROUP_NAME): cv.string,
     vol.Optional(CONF_DEVICE_NAME): cv.string,
+})
+
+DESCRIBE_DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICE_ID): cv.string,
 })
 
 # Domains this integration can reproduce as a settable test entity.
@@ -270,16 +275,36 @@ async def _async_clone_device(hass: HomeAssistant, call) -> None:
     await _mutate_and_reload(hass, entry, f"cloned '{label}' as '{name}'", _add)
 
 
+async def _async_describe_device(hass: HomeAssistant, call) -> dict:
+    """The clone spec for a device, WITHOUT creating anything.
+
+    Exists so a bug report can carry enough to REBUILD the reporter's device on
+    someone else's bench: paste the returned `entities` straight into
+    virtual.create_device. It deliberately reuses build_clone_spec rather than
+    describing devices a second way — one capture implementation, so a described
+    device and a cloned device can never disagree.
+    """
+    label, specs = build_clone_spec(hass, call.data[CONF_DEVICE_ID])
+    return {"device_name": label, "entities": specs}
+
+
 @callback
 def async_register_clone_service(hass: HomeAssistant) -> None:
-    """Register clone_device once (idempotent)."""
+    """Register clone_device / describe_device once (idempotent)."""
     if hass.services.has_service(COMPONENT_DOMAIN, SERVICE_CLONE_DEVICE):
         return
 
     async def clone_device(call):
         await _async_clone_device(hass, call)
 
+    async def describe_device(call):
+        return await _async_describe_device(hass, call)
+
     hass.services.async_register(
         COMPONENT_DOMAIN, SERVICE_CLONE_DEVICE, clone_device,
         schema=CLONE_DEVICE_SCHEMA)
-    _LOGGER.debug("virtual: registered clone_device")
+    hass.services.async_register(
+        COMPONENT_DOMAIN, SERVICE_DESCRIBE_DEVICE, describe_device,
+        schema=DESCRIBE_DEVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY)
+    _LOGGER.debug("virtual: registered clone_device/describe_device")

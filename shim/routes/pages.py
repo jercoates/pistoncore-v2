@@ -753,61 +753,273 @@ async def api_test_devices_set(request: Request):
     return {"ok": True}
 
 
-async def _build_support_report() -> str:
-    """One copyable text bundle a stuck user sends to Jeremy (or pastes to an AI)
-    to get a problem fixed — HA connectivity, the last dashboard-load failure,
-    skipped devices, and every piston's compile status, all in one place."""
+# ── version + environment ──────────────────────────────────────────────────
+#
+# Jeremy pasted a real bundle that carried the piston, its generated YAML and the
+# error — and the error was ENTIRELY an installation problem (the compiled-file
+# write target was set to a URL), which the bundle never mentioned. Every bundle
+# now leads with WHERE IT IS RUNNING.
+#
+# There is no version string in this repo and no release ritual to hang one on,
+# so the build is identified by what it actually IS: when the code arrived plus a
+# fingerprint of the code itself. Two installs on the same commit produce the
+# same fingerprint, which is what triage needs.
+
+_VERSION_CACHE: dict[str, str] = {}
+
+
+def _pistoncore_version() -> str:
+    """A build identity that needs no release ritual to stay honest."""
+    if "v" in _VERSION_CACHE:
+        return _VERSION_CACHE["v"]
+    import hashlib
+    root = Path(__file__).resolve().parent.parent.parent
+    digest = hashlib.sha256()
+    newest = 0.0
+    for folder, patterns in ((root / "shim", ("**/*.py",)),
+                             (root / "templates", ("**/*.html",)),
+                             (root / "static", ("**/*.js",))):
+        if not folder.is_dir():
+            continue
+        for pattern in patterns:
+            for path in sorted(folder.glob(pattern)):
+                if "__pycache__" in str(path):
+                    continue
+                try:
+                    digest.update(path.read_bytes())
+                    newest = max(newest, path.stat().st_mtime)
+                except OSError:
+                    continue
+    built = datetime.fromtimestamp(newest).strftime("%Y-%m-%d") if newest else "unknown"
+    _VERSION_CACHE["v"] = f"build {built} ({digest.hexdigest()[:10]})"
+    return _VERSION_CACHE["v"]
+
+
+def _deployment_kind() -> str:
+    """How this instance is installed — the difference decides where files go
+    and which failures are even possible."""
+    if os.environ.get("SUPERVISOR_TOKEN"):
+        return "Home Assistant add-on (supervisor)"
+    if Path("/.dockerenv").exists() or os.environ.get("PISTONCORE_DATA_DIR") == "/data":
+        return "plain Docker container"
+    return "running from source (development)"
+
+
+async def _environment_lines(red=None) -> list[str]:
+    """The install itself. First thing in every bundle.
+
+    `red` redacts the VALUES only. The report's own labels must never be
+    rewritten: HA ships a device literally called "Home Assistant", so a
+    whole-text pass turned the line "Home Assistant: 2026.7.4" into
+    "Device 1460: 2026.7.4" — the redactor eating the report's scaffolding.
+    """
+    clean = (lambda s: red.text(str(s))) if red else (lambda s: str(s))
+
+    lines = ["== ENVIRONMENT ==",
+             f"PistonCore: {_pistoncore_version()}",
+             f"Deployment: {_deployment_kind()}",
+             f"Data dir:   {clean(os.environ.get('PISTONCORE_DATA_DIR', '(default)'))}"]
+
+    try:
+        regs = await ha_client.fetch_registries()
+        ha_version = (regs.get("config") or {}).get("version") or "unknown"
+    except Exception as exc:
+        ha_version = f"could not ask HA ({type(exc).__name__})"
+    lines.append(f"Home Assistant: {ha_version}")
+
+    # THE one that would have solved his 2026-07-30 bug on sight.
+    try:
+        probe = deploy_writer.probe()
+        lines.append(f"Compiled files are written to: {clean(probe.get('target'))}  [verified OK]")
+    except Exception as exc:
+        lines.append(f"Compiled files are written to: FAILING — {clean(exc)}")
+        lines.append("  ^^ this alone breaks every piston: they compile and go nowhere.")
+
+    cfg = ha_client.get_config_for_display()
+    lines.append(f"Write mode: {cfg.get('write_mode', '?')}"
+                 + (f"  (path: {clean(cfg.get('ha_config_path') or 'unset')})"
+                    if cfg.get("write_mode") == "local" else ""))
+    tts = storage.load_settings().get("tts_engine")
+    lines.append(f"Speech engine: {clean(tts) if tts else 'none picked'}")
+    return lines
+
+
+_DEVICE_REF_RE = re.compile(r":[0-9a-f]{32}:")
+
+
+async def _device_legend_lines(red, piston_json: str) -> list[str]:
+    """The webCoRE LEGEND for the devices this piston uses — plus the recipe to
+    rebuild each one for testing.
+
+    webCoRE's own share flow replaces a device reference with a stand-in and
+    records what it stood for in a legend (piston.module.js:4722). PistonCore
+    does the same, and puts the REBUILD spec in that same legend: a bug report is
+    worthless if the person receiving it can't stand the device up. The spec
+    comes from the add-on's `virtual.describe_device`, which is the same capture
+    `clone_device` uses — so a described device and a cloned one cannot disagree.
+
+    Degrades quietly: an older add-on has no describe_device, and the legend is
+    still useful without it.
+    """
+    referenced = sorted(set(_DEVICE_REF_RE.findall(piston_json)))
+    if not referenced:
+        return []
+
+    lines = ["", "== DEVICES THIS PISTON USES ==",
+             "Names are webCoRE-style stand-ins, so this piston can be imported",
+             "into the editor as-is and real devices attached afterwards.",
+             "`entities:` is what the device WAS — paste it into the",
+             "virtual.create_device action to rebuild it as a test device."]
+
+    for original in referenced:
+        stand_in = red.standin_for(original) if red else None
+        entry = (red.legend.get(stand_in) if (red and stand_in) else None) or {}
+        shown = stand_in or original
+        lines.append(f"\n  {shown}")
+        lines.append(f"    name: {entry.get('n', '(not in the device list)')}")
+        if entry.get("cn"):
+            lines.append(f"    capabilities: {', '.join(entry['cn'])}")
+
+        registry_id = ((red.resolution.get(original) or {}).get("registry_device_id")
+                       if red else None)
+        if not registry_id:
+            continue
+        try:
+            result = await ha_client.call_service(
+                "virtual", "describe_device", {"device_id": registry_id},
+                return_response=True)
+            spec = (result or {}).get("response") or result or {}
+            entities = spec.get("entities") or []
+            if entities:
+                cleaned = red.data(entities) if red else entities
+                lines.append("    entities: " + json.dumps(cleaned))
+        except Exception:
+            lines.append("    entities: (install/update the test-devices add-on "
+                         "to include the rebuild spec)")
+    return lines
+
+
+async def _build_support_report(redacted: bool = True) -> str:
+    """The WHOLE-APP bundle: what this install is, whether it can reach and write
+    to HA, what the dashboard last did, and every piston's status.
+
+    Per-piston bundles cannot describe an instance-wide fault. Every bug found on
+    2026-07-30 — the media rewrite missing from driver commands, the write target
+    misconfigured — would have produced NOTHING on a piston-scoped page, because
+    no single piston was at fault.
+
+    Redacted by default: this is the thing people paste in public.
+    """
     from .dashboard import LAST_LOAD_DIAG
     from ..compiler import deploy as _deploy
+    from .. import redact
 
-    out = [f"PistonCore Support Report — {datetime.utcnow().isoformat(timespec='seconds')}Z",
-           "=" * 60]
+    pistons = storage.list_pistons()
+    statuses = _deploy.load_statuses()
 
-    out.append("\n## Home Assistant")
+    # Build the mapping FIRST, then redact each value as it goes in. Redacting
+    # the finished text instead would also rewrite this report's own labels.
+    red = await redact.build_from_ha(pistons) if redacted else None
+    clean = (lambda s: red.text(str(s))) if red else (lambda s: str(s))
+
+    out = [f"PistonCore Support Report — {datetime.now().isoformat(timespec='seconds')}"]
+    if redacted:
+        out += ["", redact.Redactor.header_note()]
+    out += ["=" * 62, ""]
+    out += await _environment_lines(red)
+
+    out.append("\n== HOME ASSISTANT ==")
     if ha_client.is_configured():
         ok, msg = await ha_client.check_connection()
-        out.append(f"Configured: yes\nReachable: {'yes' if ok else 'NO'} — {msg}")
-        cfg = ha_client.get_config_for_display()
-        out.append(f"Write mode: {cfg.get('write_mode', '?')}")
+        out.append(f"Configured: yes    Reachable: {'yes' if ok else 'NO'} — {clean(msg)}")
     else:
         out.append("Configured: NO — first-run wizard not completed.")
 
     d = LAST_LOAD_DIAG
-    out.append("\n## Last dashboard load")
+    out.append("\n== LAST DASHBOARD LOAD ==")
     if not d.get("ok"):
-        out.append(f"FAILED while: {d.get('stage')}")
-        out.append(f"Error: {d.get('error')}")
+        out.append(f"FAILED while: {clean(d.get('stage'))}")
+        out.append(f"Error: {clean(d.get('error'))}")
         if d.get("traceback"):
-            out.append("Traceback:\n" + str(d.get("traceback")).rstrip())
+            out.append("Traceback:\n" + clean(str(d.get("traceback")).rstrip()))
     else:
         out.append("OK (no load error captured this run).")
     if d.get("skipped"):
         out.append(f"Skipped devices ({len(d['skipped'])} — dashboard loads without them):")
         for s in d["skipped"]:
-            out.append(f"  - {s.get('device')}: {s.get('error')}")
+            out.append(f"  - {clean(s.get('device'))}: {clean(s.get('error'))}")
 
-    out.append("\n## Pistons (compile status)")
-    statuses = _deploy.load_statuses()
-    pistons = storage.list_pistons()
-    if not pistons:
-        out.append("  (none)")
+    # Build the piston list first so the section can lead with a tally — the
+    # first thing anyone reading a report wants is "how bad is it".
+    counts: dict[str, int] = {}
+    piston_lines = []
     for p in pistons:
         s = statuses.get(p["id"], {})
-        line = f"  - {p['name']}: {s.get('status', 'not compiled')}"
+        state = s.get("status", "not compiled")
+        counts[state] = counts.get(state, 0) + 1
+        line = f"  - {clean(p['name'])}: {state}"
         if s.get("message"):
-            line += f" — {s['message']}"
+            line += f" — {clean(s['message'])}"
         if s.get("band"):
             line += f" [band={s['band']}]"
-        out.append(line)
+        piston_lines.append(line)
 
-    out.append("\n----\nSend this whole report to Jeremy, or paste it to an AI and ask it "
-               "to help fix the problem.")
-    return "\n".join(out)
+    out.append("\n== PISTONS ==")
+    if not pistons:
+        out.append("  (none)")
+    else:
+        out.append("  " + ", ".join(f"{n} {k}" for k, n in sorted(counts.items())))
+        out += piston_lines
+
+    text = "\n".join(out)
+    if red:
+        text += f"\n\n---- ({red.summary()}) ----"
+    return text
 
 
 @router.get("/api/support-report", response_class=PlainTextResponse)
 async def api_support_report():
     return await _build_support_report()
+
+
+# Where bug reports go. GitHub Issues was chosen over any inbox or form
+# (Jeremy, 2026-07-30): no infrastructure, no spam handling, threaded and
+# searchable — the only option that adds no maintenance.
+ISSUES_URL = "https://github.com/jercoates/pistoncore-v2/issues/new"
+
+
+@router.get("/api/report-issue")
+async def api_report_issue(piston_id: str = ""):
+    """Everything the browser needs to open a prefilled GitHub issue.
+
+    The bundle CANNOT ride in the URL — browsers and GitHub cap it around 8 KB
+    and a real bundle is far bigger — so the page copies the bundle to the
+    clipboard and the issue body says to paste it. One paste, no infrastructure.
+    """
+    if piston_id:
+        result = await diagnostics_bundle(piston_id)
+        if isinstance(result, JSONResponse):
+            return result
+        body_text = result["text"]
+        title = "Piston fails to compile"
+    else:
+        body_text = await _build_support_report()
+        title = "PistonCore problem"
+
+    template = (
+        "### What went wrong\n\n"
+        "_Describe what you expected and what happened instead. If a piston is\n"
+        "involved, say what it is meant to do — its name has been replaced with\n"
+        "a stand-in, so nobody else can tell._\n\n"
+        "### Diagnostic report\n\n"
+        "_Paste the report here — PistonCore has already copied it to your\n"
+        "clipboard. Device and piston names are stand-ins; check it over before\n"
+        "posting, as free text you typed inside a piston can still appear._\n\n"
+        "```\n\n```\n"
+    )
+    from urllib.parse import urlencode
+    url = f"{ISSUES_URL}?{urlencode({'title': title, 'body': template})}"
+    return {"url": url, "text": body_text, "chars": len(body_text)}
 
 
 @router.get("/whats-wrong")
@@ -1221,19 +1433,48 @@ async def diagnostics_artifact(piston_id: str, name: str):
     return {"name": name, "content": path.read_text(encoding="utf-8")}
 
 
+@router.get("/api/diagnostics/bundle/{piston_id}/download", response_class=PlainTextResponse)
+async def diagnostics_bundle_download(piston_id: str, redacted: bool = True):
+    """The same per-piston bundle as a plain .txt file.
+
+    The MANUAL path matters on its own: someone testing privately sends a file
+    to whoever is helping them and GitHub is never involved (Jeremy,
+    2026-08-01 — he has a friend testing). Copy-to-clipboard covers a chat
+    message; a file covers email and anything long.
+    """
+    result = await diagnostics_bundle(piston_id, redacted=redacted)
+    if isinstance(result, JSONResponse):
+        return PlainTextResponse("No such piston.", status_code=404)
+    return PlainTextResponse(result["text"])
+
+
 @router.get("/api/diagnostics/bundle/{piston_id}")
-async def diagnostics_bundle(piston_id: str):
-    """The complete evidence package as ONE block of text: status record,
-    newest generated artifact, and the piston's own JSON — the three things
-    that make any compile problem diagnosable, assembled for pasting."""
+async def diagnostics_bundle(piston_id: str, redacted: bool = True):
+    """The complete evidence package as ONE block of text: where this instance is
+    running, the status record, the newest generated artifact, and the piston's
+    own JSON — everything that makes a compile problem diagnosable.
+
+    Pseudonymised by default (shim/redact.py). `?redacted=false` gives the raw
+    version for reading locally; the buttons in the UI never ask for that.
+    """
     from ..compiler import deploy as compiler_deploy
+    from .. import redact
     entry = storage.load_piston(piston_id)
     if entry is None:
         return JSONResponse({"error": "no such piston"}, status_code=404)
     rec = compiler_deploy.load_statuses().get(piston_id) or {}
-    parts = [f"PistonCore debug bundle — \"{entry['name']}\" ({piston_id})",
-             f"generated {datetime.now().isoformat(timespec='seconds')}",
-             "", "== COMPILE STATUS ==", json.dumps(rec, indent=1)]
+    # Mapping built first, then applied to values — not to this report's own
+    # labels. See _environment_lines for what that mistake looked like.
+    red = await redact.build_from_ha(storage.list_pistons()) if redacted else None
+    clean = (lambda s: red.text(str(s))) if red else (lambda s: str(s))
+
+    parts = [f"PistonCore debug bundle — \"{clean(entry['name'])}\" ({piston_id})",
+             f"generated {datetime.now().isoformat(timespec='seconds')}"]
+    if redacted:
+        parts += ["", redact.Redactor.header_note()]
+    parts += [""] + await _environment_lines(red)
+    parts += ["", "== COMPILE STATUS ==",
+              json.dumps(red.data(rec) if red else rec, indent=1)]
     pref = storage.band_prefs().get(piston_id) or {}
     if pref.get("band") in ("pyscript", "yaml"):
         parts += ["", "== COMPILE-TARGET OVERRIDE ==",
@@ -1245,12 +1486,23 @@ async def diagnostics_bundle(piston_id: str):
     names = _artifact_list(piston_id)
     if names:
         path = compiler_deploy._DEBUG_DIR / piston_id / names[0]
+        # Generated code and piston JSON ARE redacted wholesale: they're not our
+        # scaffolding, and the same mapping is used, so a device reads
+        # identically here, in the status record and in the JSON. That
+        # cross-referencing is what keeps a redacted bundle diagnosable.
         parts += ["", f"== GENERATED OUTPUT ({names[0]}) ==",
-                  path.read_text(encoding="utf-8")]
+                  clean(path.read_text(encoding="utf-8"))]
     else:
         parts += ["", "== GENERATED OUTPUT ==", "(none kept — this piston has not compiled)"]
-    parts += ["", "== PISTON JSON ==", json.dumps(entry["piston"], indent=1)]
-    return {"text": "\n".join(parts)}
+    raw_piston = json.dumps(entry["piston"], indent=1)
+    parts += await _device_legend_lines(red, raw_piston)
+    parts += ["", "== PISTON JSON ==",
+              clean(json.dumps(red.data(entry["piston"]) if red else entry["piston"], indent=1))]
+
+    text = "\n".join(parts)
+    if red:
+        text += f"\n\n---- ({red.summary()}) ----"
+    return {"text": text}
 
 
 # Which editable file governs which class of compile error. This is the

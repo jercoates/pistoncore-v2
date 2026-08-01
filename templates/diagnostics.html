@@ -9,6 +9,30 @@
     <button type="button" class="btn" id="diag-refresh">Re-run checks</button>
   </div>
 
+  <h2>Report a problem</h2>
+  <p class="field-hint">
+    One report covering this whole instance — what it is, whether it can reach and
+    write to Home Assistant, and every piston's status. Use this when something is
+    wrong generally; use a single piston's <em>Copy debug info</em> below when one
+    piston misbehaves.
+    <br>
+    Device names, areas and piston names are replaced with consistent stand-ins,
+    and any tokens or lock/alarm codes are removed. Free text you typed inside a
+    piston can't be detected reliably — skim it before sending.
+  </p>
+  <div class="settings-tools">
+    <button type="button" class="btn btn-primary" id="diag-report">Copy full report</button>
+    <button type="button" class="btn" id="diag-github">Report on GitHub</button>
+    <a class="btn" href="/api/support-report" download="pistoncore-report.txt">Download</a>
+    <span id="diag-report-ok" class="field-hint"></span>
+  </div>
+  <p class="field-hint">
+    <strong>Copy</strong> or <strong>Download</strong> keep it private — send it to
+    whoever is helping you and nothing is published.
+    <strong>Report on GitHub</strong> opens a public issue for you to paste into,
+    so read it over first.
+  </p>
+
   <h2>System</h2>
   <p class="field-hint">Live checks against this instance — each failure says how to fix it.</p>
   <div id="diag-checks" class="diag-checks">

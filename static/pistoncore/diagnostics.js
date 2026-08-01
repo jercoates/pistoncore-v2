@@ -141,6 +141,15 @@ function pistonRow(p) {
   });
   tools.appendChild(copy);
 
+  // The private path: a file to send to whoever is helping you, no GitHub.
+  const dl = document.createElement("a");
+  dl.className = "btn";
+  dl.textContent = "Download";
+  dl.href = "/api/diagnostics/bundle/" + p.id + "/download";
+  dl.setAttribute("download", "pistoncore-piston-debug.txt");
+  dl.title = "Save this piston's debug info as a file to send to someone";
+  tools.appendChild(dl);
+
   // Compile-target override — the escape hatch for when the YAML translation
   // misbehaves (Jeremy 2026-07-19). Stored in PistonCore settings, never in
   // the piston JSON; changing it recompiles immediately.
@@ -270,4 +279,42 @@ bandDefault.addEventListener("change", async () => {
 });
 
 document.getElementById("diag-refresh").addEventListener("click", load);
+
+// Whole-instance report. A per-piston bundle can't describe an instance-wide
+// fault (a bad write target, an unreachable HA) because no single piston is at
+// fault — that class of bug produced nothing at all on this page before.
+const reportBtn = document.getElementById("diag-report");
+const reportOk = document.getElementById("diag-report-ok");
+reportBtn.addEventListener("click", async () => {
+  reportBtn.textContent = "Building…";
+  try {
+    const text = await (await fetch("/api/support-report")).text();
+    await navigator.clipboard.writeText(text);
+    reportOk.textContent = "copied — paste it into your bug report";
+  } catch (e) {
+    reportOk.textContent = "couldn't copy — use Download instead";
+  }
+  reportBtn.textContent = "Copy full report";
+  setTimeout(() => (reportOk.textContent = ""), 6000);
+});
+
+// GitHub Issues, chosen because it adds no infrastructure to maintain. The
+// report is far too big to travel in the URL (browsers and GitHub both cap it
+// around 8 KB), so it goes via the clipboard and the issue template says to
+// paste. Copy BEFORE opening the tab: some browsers refuse clipboard access
+// once focus has moved.
+const ghBtn = document.getElementById("diag-github");
+ghBtn.addEventListener("click", async () => {
+  ghBtn.textContent = "Preparing…";
+  try {
+    const d = await (await fetch("/api/report-issue")).json();
+    await navigator.clipboard.writeText(d.text);
+    reportOk.textContent = "report copied — paste it into the issue that just opened";
+    window.open(d.url, "_blank", "noopener");
+  } catch (e) {
+    reportOk.textContent = "couldn't copy — use Download, then attach it to a new issue";
+  }
+  ghBtn.textContent = "Report on GitHub";
+  setTimeout(() => (reportOk.textContent = ""), 10000);
+});
 load();

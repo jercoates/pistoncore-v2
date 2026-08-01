@@ -73,6 +73,22 @@ This folder is a **fork of [`twrecked/hass-virtual`](https://github.com/twrecked
   raised, and cloning any device containing a `number` entity could never succeed
   because that platform requires min/max.
 
+## Tests (added 2026-08-01)
+
+`tests/` guards the three silent-data-loss bugs fixed in this fork — the mutation
+race, the truncate-before-serialize save, and a clone dropping abilities. Run them
+inside an HA container (`tests/README.md`); 37 pass, no `pytest-asyncio` needed.
+
+**Tamper-verified**, and that mattered: the first version of the suite passed
+every deliberate break, because `docker exec` silently discards stdin without
+`-i`, so the tampering never ran. A suite nobody has watched fail is not evidence.
+
+**Backward compatibility is covered by design, not by luck**: every cloning key is
+optional and falls back to the platform's original hardcoded default. VERIFIED
+2026-08-01 against a hand-written upstream-style `virtual.yaml` — 8/8 devices
+behaved identically, including the light and fan paths this fork rewrote most
+(`support_color: true` still gives hs mode; `speed: true` still gives 3 speeds).
+
 ## Rules
 
 - **Standalone self-sufficiency is REQUIRED** (§5.6): everything works from HA's own

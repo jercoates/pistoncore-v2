@@ -302,6 +302,96 @@ service — decide whether to neutralize that path (§9 candidate) before shippi
 
 ---
 
+## 8a. Bug reporting — bundles, environment and redaction (BUILT 2026-08-01)
+
+**Three doors, one builder.** The Diagnostics page (now in the top nav, not just a
+button near the bottom of Settings) offers a whole-instance **"Copy full report"**;
+each piston row offers its own **"Copy debug info"**; `/whats-wrong` stays as the
+nothing-else-works door and calls the same whole-app builder. One implementation,
+so they cannot drift.
+
+**Why a whole-app bundle exists at all:** a per-piston bundle cannot describe an
+instance-wide fault. Every bug found 2026-07-30 (media rewrite missing from driver
+commands; write target misconfigured) produced NOTHING on a piston-scoped page,
+because no single piston was at fault.
+
+**Every bundle now leads with the ENVIRONMENT** — build id, deployment kind, HA
+version, and the RESOLVED WRITE TARGET, probed live. Jeremy pasted a real bundle
+whose failure was entirely an installation problem (write target set to a URL) that
+the bundle never mentioned. Re-running the report on that same broken dev config
+now names it on line five.
+
+Build identity is derived, not declared: `build <date> (<fingerprint>)`, the
+fingerprint being a hash of the shipped `shim/`, `templates/` and `static/`. There
+is no release ritual to forget, and two installs on the same commit match.
+
+**Redaction — `shim/redact.py`.** Pseudonymise, never delete: one mapping across
+the whole bundle so `light.master_bedroom` is `light.device_3` in the status
+record, the generated YAML and the piston JSON alike, and the cross-references
+still line up. Deleting instead is what damaged the test-pistons corpus.
+- Stand-ins: entity ids (domain KEPT — it is diagnostic), friendly names, areas,
+  and **piston names** (Jeremy: a name is free text a human chose, "not worth the
+  problems it could cause").
+- Removed outright: tokens, passwords, home coordinates, and **lock/alarm code
+  tables** — a bridged alarm panel exposes plaintext PINs *with names attached*.
+- **Kept deliberately: private IPs** (192.168/10.x/172.16-31/localhost/`.local`).
+  Public IPs and remote hostnames (nabu.casa, DuckDNS…) are removed — a remote
+  hostname exposes as much as the WAN IP.
+- Kept: structure, services, attributes, supported_features, error text.
+- The header **admits the limit**: free text typed inside a piston cannot be
+  reliably detected.
+
+**DEVICE STAND-INS FOLLOW webCoRE, NOT AN INVENTED SCHEME.** Ground truth:
+`piston.module.js:4878` (`anonymizeDevices`) and `app.js:1664`
+(`determineDeviceType`). Two things follow, and the second is the point:
+- A device's stand-in is its **TYPE plus a per-type index** — `Dimmer 1`,
+  `Motion Sensor 30`, `RGB Bulb 1` — never a generic label. The reader of a bug
+  report learns it was a dimmer. The type ladder is ported verbatim (order
+  matters: Color Control is an RGB Bulb *before* it is a Switch) and reads the
+  same `cn` capability names PistonCore already builds.
+- The reference id becomes webCoRE's own placeholder shape,
+  `':' + ('x'*32 + index)[-32:] + ':'` (piston.module.js:4739) — the same shape
+  as a real hashed id. **So a redacted piston stays IMPORTABLE into the editor**
+  (Jeremy, 2026-08-01: "doing it the same lets us inject it native into
+  webcore"), and the recipient attaches their own devices exactly as they would
+  to an AI-authored piston (roadmap item 2's stand-in convention).
+
+**A BUG REPORT CARRIES ENOUGH TO REBUILD THE DEVICE.** Per-piston bundles include
+a `== DEVICES THIS PISTON USES ==` legend: stand-in id, type name, capabilities,
+and an `entities:` spec that can be pasted straight into `virtual.create_device`
+to stand the device up on someone else's bench. That spec comes from the add-on's
+new `virtual.describe_device` — the same capture `clone_device` uses, so a
+described device and a cloned one cannot disagree. Older add-on: the legend still
+renders and says to update.
+
+**RULE — redact VALUES, not the report's own scaffolding.** Redacting the finished
+text rewrote PistonCore's own labels, because HA ships a device called "Home
+Assistant": the line `Home Assistant: 2026.7.4` became `Device 1460: 2026.7.4`.
+Build the mapping first, apply it to values as they go in. Generated code and
+piston JSON are still redacted wholesale — they are not our scaffolding.
+**Piston names are learned BEFORE device names**, so a piston named after the
+device it controls reads as `Piston 4` rather than `Device 1489`.
+
+**Replacement is ONE pass over the names that actually occur.** Two bugs forced
+this, both seen on real data: replacing names one at a time CASCADED (a stand-in
+got chewed by the next rule), and plain substring matching hit mid-word — HA had
+a person called "Dev", so `Device 10` became `Presence Sensor 1ice 10`. Fixed with
+a single alternation carrying word boundaries on alphanumeric edges. Compiling all
+~2000 names took **21s** on a 109 KB bundle; pre-filtering with plain `in` first
+(a C-speed scan) leaves a handful of branches and brings it back to **0.22s**.
+
+**Part d — reporting to GitHub Issues** (`/api/report-issue`). Chosen because it
+adds no infrastructure, no inbox and no spam handling. The bundle CANNOT ride in
+the URL — browsers and GitHub cap it near 8 KB — so the page copies the report to
+the clipboard and opens a prefilled issue whose template says to paste. Copy
+happens BEFORE the tab opens; some browsers refuse clipboard access once focus
+moves. Works per-piston (`?piston_id=`) or whole-app.
+
+VERIFIED 2026-08-01: 2112 real names from the live instance checked against both
+bundles — **zero leaks**; raw (`?redacted=false`) still contains them, so the test
+proves something. The leak test ignores deliberately-emitted vocabulary (webCoRE
+capability words), or it flags "Motion" as a leak and stops being read.
+
 ## 9. External services to neutralize (VERIFIED URLs in source)
 
 | Where | What | Action |

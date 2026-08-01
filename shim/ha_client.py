@@ -152,18 +152,26 @@ async def _ws_call(messages: list[dict]) -> dict[int, dict]:
     return results
 
 
-async def call_service(domain: str, service: str, service_data: dict | None = None) -> dict:
+async def call_service(domain: str, service: str, service_data: dict | None = None,
+                       return_response: bool = False) -> dict:
     """Call an HA service over the websocket API (e.g. homeassistant.reload_all
     after the configuration.yaml include-lines edit — COMPILER_DECISIONS_DEPLOY
-    §9.2 follow-up; later the deploy flow's automation.reload/script.reload)."""
+    §9.2 follow-up; later the deploy flow's automation.reload/script.reload).
+
+    `return_response` is for services that ANSWER rather than act (the
+    test-devices add-on's `virtual.describe_device`). HA rejects the flag on
+    services that return nothing, so only set it for ones that do.
+    """
     msg: dict = {"id": 1, "type": "call_service", "domain": domain, "service": service}
     if service_data:
         msg["service_data"] = service_data
+    if return_response:
+        msg["return_response"] = True
     results = await _ws_call([msg])
     result = results.get(1, {})
     if not result.get("success"):
         raise HAClientError(f"HA rejected {domain}.{service}: {result.get('error')}")
-    return result
+    return result.get("result", result) if return_response else result
 
 
 async def get_states() -> list:
