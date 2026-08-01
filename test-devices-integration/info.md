@@ -1,27 +1,18 @@
-### Virtual Components for Home Assistant
-Virtual components for testing Home Assistant systems.
+### Virtual Test Devices for Home Assistant
 
+Virtual devices for testing automations — including **clones of your real
+devices** that report the same abilities, so you can test against a stand-in
+instead of the real thing.
 
-## Version 0.8
+Works on its own from Home Assistant's own Actions screen. Also the test bench
+for [PistonCore](https://github.com/jercoates/pistoncore-v2).
 
-### **Breaking Changes**
+**A fork of [twrecked/hass-virtual](https://github.com/twrecked/hass-virtual)
+that uses the same `virtual` domain — install this or hass-virtual, not both.**
 
-I've added persistent support to `binary_sensor`, `fan`, `light`, `lock`,
-`sensor`, `switch` and `device_tracker`. The persistent saving of state is
-turned *on* by default. If you do not want this set `persistent: False` in the
-entity configuration.
+Adds `alarm_control_panel`, `climate`, `media_player`, `siren`, `humidifier`,
+`vacuum`, `button` and `event`; lets every device state its real
+`supported_features`, modes and limits; and fixes three silent data-loss bugs.
 
-
-## Features
-It provides:
-* Virtual binary sensors
-* Virtual device trackers
-* Virtual fans
-* Virtual lights
-* Virtual locks
-* Virtual senors
-* Virtual switches
-
-
-## Documentation
-See [here](https://github.com/twrecked/hass-virtual/blob/master/README.md) for full documentation.
+See the [README](https://github.com/jercoates/ha-virtual-test-devices/blob/main/README.md)
+for the full picture.

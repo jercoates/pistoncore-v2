@@ -1,3 +1,5 @@
 {
-  "name": "Virtual Components"
+  "name": "Virtual Test Devices",
+  "render_readme": true,
+  "homeassistant": "2024.4.0"
 }

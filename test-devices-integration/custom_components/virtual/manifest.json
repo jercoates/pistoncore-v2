@@ -1,12 +1,13 @@
 {
   "domain": "virtual",
-  "name": "Virtual Components",
+  "name": "Virtual Test Devices",
   "codeowners": [
+    "@jercoates",
     "@twrecked"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/twrecked/hass-virtual/blob/master/README.md",
+  "documentation": "https://github.com/jercoates/ha-virtual-test-devices/blob/main/README.md",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/twrecked/hass-virtual/issues",
-  "version": "0.9.4"
+  "issue_tracker": "https://github.com/jercoates/ha-virtual-test-devices/issues",
+  "version": "0.10.0"
 }
