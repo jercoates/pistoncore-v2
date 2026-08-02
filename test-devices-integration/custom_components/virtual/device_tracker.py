@@ -225,7 +225,19 @@ class VirtualDeviceTracker(TrackerEntity, VirtualEntity):
 
     @property
     def location_name(self) -> str | None:
-        """Return a location name for the current location of the device."""
+        """Return a location name for the current location of the device.
+
+        DEPRECATED BY HOME ASSISTANT — REMOVED IN 2027.7.
+        The replacement is `_attr_in_zones` (a list of zones that must actually
+        EXIST in HA). This is NOT a rename: this integration accepts an arbitrary
+        place name with no matching zone, so migrating means deciding what such a
+        name should mean. Inherited from twrecked/hass-virtual, still unmigrated
+        upstream as of 2026-08-02 — check whether they solved it before inventing
+        a second answer.
+
+        tests/test_future_breaks.py fails from 2027-01 until this is gone, so it
+        cannot be forgotten by whoever is maintaining this then.
+        """
         return self._location
 
     @property
