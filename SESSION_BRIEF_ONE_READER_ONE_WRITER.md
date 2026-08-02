@@ -97,6 +97,79 @@ Start with the highest-churn, highest-damage piece: `_JINJA_FUNCS` and the condi
 expressions. `read_expr` in `resolve.py` is the single funnel for value reads — good first
 target.
 
+### Stage 2a — ACCUMULATE-AND-ANNOUNCE resolves to ONE template (the concrete case)
+
+This is the worked example of Stage 2, and it fixes the list-building safety pistons.
+
+**The intent.** `each device in LIST: if <test>: X = X + <text>` then announce `X`.
+Nine corpus pistons do this — Carbon Monoxide, Gas Detector, Smoke (x3), Water Leak,
+Low Battery, Alarm Arming (x2).
+
+**What NOT to do (tried and reverted, 2026-08-01).** Unrolling the loop copies webCoRE's
+MECHANISM once per device — 61 copies for `38_Low_Battery_Check`. Raising the unroll cap
+to let it through was reverted: *"remember this is an intention based compiler"*. A bigger
+cap only makes a bigger transliteration.
+
+**The 50-device unroll cap is INVENTED.** Traced 2026-08-01: added in commit `95fdaf9`
+(2026-07-29) inside an unrelated `$hsmStatus` change, no reason recorded. **No HA limit
+backs it** — nothing in HA_LIMITATIONS.md or COMPILER_SPEC.md, and HA imposes no cap on
+actions per automation; PyScript is plain Python. It should not survive as a bare number:
+either delete it or replace it with a verified reason, per the rule that errors are for
+verified-impossible things only.
+
+**What TO do.** HA's own documented pattern builds exactly this list in a SINGLE template
+(home-assistant.io/docs/templating/tutorial-battery-alerts/): a `namespace`, a `for` over
+the entities, an `if`, and a `join`. One expression regardless of device count.
+
+Emit one `variables:` action whose value is that template, with the entity list resolved
+at COMPILE time (the standing rule — capability resolution is compile-time, recompiling is
+the refresh) and iterated at RUNTIME:
+
+```jinja
+{% set ns = namespace(items=[]) %}
+{% for e in ['sensor.a','sensor.b', …] %}
+  {% if states(e) | float(100) < 20 %}
+    {% set ns.items = ns.items + [device_name(e) ~ ' (' ~ states(e) ~ '%)'] %}
+  {% endif %}
+{% endfor %}
+{{ X }}{{ ns.items | join('\n') }}
+```
+
+**The loop scaffolding lives in a BAND TEMPLATE**, not a Python string — that is the whole
+point of Stage 2. Suggested file: `templates/compiler/yaml/classic/accumulate.j2`, taking
+the variable name, the compile-time entity list, the per-item test, and the per-item text.
+
+**Detection key — MEASURED, not guessed (2026-08-01).** A `setVariable` whose new value
+REFERENCES ITSELF (`X = X + …`): 9 of 9 pistons, 8 inside an `each`, zero false positives.
+Keying on notify/speak instead was tested and is WRONG in both directions — 32 pistons
+notify without the pattern, and `03` builds a list and never notifies. The *consumer*
+still matters, but at EMIT time: the template lands wherever the variable is read, which
+may be a notification, a speaker, a tile or a log — do not restrict it to notify.
+
+**Prerequisite already in place:** `_accumulator_facts`-style analysis must distinguish a
+WITHIN-RUN list (reset earlier in the same run — all 16 accumulators in the corpus) from a
+genuine CROSS-RUN counter (never reset), which does need PyScript persistence.
+
+**Refuse loudly when the shape isn't recognised.** A half-recognised safety alert is worse
+than an honest failure.
+
+### Stage 2b — BOTH BANDS NEED THEIR OWN TEMPLATES (Jeremy, 2026-08-01)
+
+*"pyscript should have its own templates right?"* — yes, and for the same reason as YAML.
+`templates/compiler/pyscript/2.x/` currently holds only the module skeleton; everything
+INSIDE is Python-generated, exactly as the YAML band's expressions are.
+
+Worked example from the day this was written: fixing a volume-from-a-variable produced
+`round(_num(pv.get('integer_Speaker_Volum')) * 0.01, 2)` — correct, but hand-built in
+`emit_pyscript.py`. If HA or PyScript changes how a value is read or scaled, a user cannot
+fix that.
+
+**The bands must NOT share an emission helper.** The bug that led here: `emit_pyscript`
+borrowed `emit_yaml._param_value`, so a PyScript module got a JINJA template
+(`volume_level='"{{ (((none) | float(0)) * 0.01) | round(2) }}"'`) with the variable
+unresolved. One READER shared (Stage 1), two WRITERS separate — one template set per band,
+neither reaching into the other.
+
 ### Stage 3 — PROVE IT, THEN CLEAR THE BACKLOG
 Run `test_intent_probe.py` across the whole vocabulary (79 comparisons, 136 commands, 109
 functions, 12 statement types, four paths). Its differential test is the guarantee:

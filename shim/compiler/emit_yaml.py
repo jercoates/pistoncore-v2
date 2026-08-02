@@ -24,8 +24,8 @@ from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 from .. import customize
 
 from .analyze import analyze
-from .errors import NotYetImplemented, PistonDefect
-from .expression import JinjaTranspiler
+from .errors import CompilerError, NotYetImplemented, PistonDefect
+from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
 from .resolve import Resolver
 from . import routing as _routing
 
@@ -96,10 +96,7 @@ def _media_sig(url: str) -> str:
     return hmac.new(secret.encode(), url.encode(), hashlib.sha256).hexdigest()[:32]
 
 
-_NUMERIC_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
-                "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
-_EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
-                 "is_not": "!=", "is_not_equal_to": "!="}
+
 
 
 def _hex_rgb(value):
@@ -1110,8 +1107,7 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                     # signal, and the driver route is the right answer. A
                     # blank value raises PistonDefect instead, which this
                     # except deliberately does not catch.
-                    data = {k: _param_value(v, n["params"], ctx)
-                            for k, v in data_spec.items()}
+                    data = _spec_data(data_spec, n["params"], ctx, resolver)
             except NotYetImplemented:
                 # The vocab claims to know this command but its mapping cannot
                 # be used here — a broken data spec (`take` asks for a $1 the
@@ -1161,11 +1157,13 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
         elif n["kind"] == "stop":
             out.append({"kind": "stop"})
         elif n["kind"] == "foreach":
-            # HA's repeat/for_each can iterate a list, but the loop VARIABLE here
-            # is used as a device reference inside the body, which YAML can't
-            # bind the way webCoRE does. PyScript does it naturally — route.
-            raise NotYetImplemented(
-                "for-each over a device list requires PyScript", **ctx)
+            # The accumulate-and-announce shape resolves to ONE template
+            # (accumulate.j2). Anything else routes to PyScript.
+            node = _accumulate_loop(n, resolver, ctx)
+            if node is None:
+                raise NotYetImplemented(
+                    "for-each over a device list requires PyScript", **ctx)
+            out.append(node)
         elif n["kind"] == "break":
             # HA's `stop` ends the whole sequence, not just the enclosing loop —
             # not the same thing. PyScript has a real `break`.
@@ -1240,11 +1238,11 @@ def _fade(n: dict, resolver: Resolver, ctx: dict) -> list:
     start = (params[0] or {}).get("c")
     if isinstance(start, (int, float)) and not isinstance(start, bool):
         nodes.append({"kind": "service", "service": service, "entities": entities,
-                      "data": {k: _param_value(v, [params[0]], ctx) for k, v in data_spec.items()}})
+                      "data": _spec_data(data_spec, [params[0]], ctx, resolver)})
     final = (params[1] or {}).get("c")
     if not isinstance(final, (int, float)) or isinstance(final, bool):
         raise NotYetImplemented(f"{cmd} with a non-constant final value", **ctx)
-    data = {k: _param_value(v, [params[1]], ctx) for k, v in data_spec.items()}
+    data = _spec_data(data_spec, [params[1]], ctx, resolver)
     data["transition"] = _duration_seconds(params[2], ctx, "fade duration")
     nodes.append({"kind": "service", "service": service, "entities": entities, "data": data})
     return nodes
@@ -1292,7 +1290,7 @@ def _toggle_level(n: dict, resolver: Resolver, ctx: dict) -> dict:
     ents = resolver.entities_for_command(n["devices"], "setLevel", ctx)
     off_service, _ = resolver.service_spec("off", ents[0], ctx)
     on_service, data_spec = resolver.service_spec("setLevel", ents[0], ctx)
-    on_data = {k: _param_value(v, [params[0]], ctx) for k, v in (data_spec or {}).items()}
+    on_data = _spec_data(data_spec, [params[0]], ctx, resolver)
     cond = {"kind": "template", "template": "{{ is_state('" + ents[0] + "', 'on') }}"}
     return {"kind": "if", "conditions": [cond],
             "then": [{"kind": "service", "service": off_service, "entities": ents, "data": None}],
@@ -1383,7 +1381,7 @@ def _flash(n: dict, resolver: Resolver, ctx: dict) -> dict:
             f"yet", **ctx)
 
     def half(value_param, dur_param):
-        data = {k: _param_value(v, [value_param], ctx) for k, v in data_spec.items()}
+        data = _spec_data(data_spec, [value_param], ctx, resolver)
         return [
             {"kind": "service", "service": service, "entities": entities, "data": data},
             {"kind": "delay", "delay_ms": _flash_delay_ms(dur_param, ctx)},
@@ -1781,10 +1779,35 @@ def _switch_subject(lo: dict, resolver: Resolver, ctx: dict) -> str:
         f"switch on operand type '{t}' not compiled yet", **ctx)
 
 
-def _param_value(token: str, params: list, ctx: dict):
+# An operand the editor never filled in: no type, no value. Distinct from an
+# operand that IS set but empty, which stays a PistonDefect.
+_UNSET_PARAM = object()
+
+
+# Transform names that are SCALE conversions (vocab _value_maps.scales), i.e.
+# the ones with a runtime template twin. The rest (colour packing, mode maps)
+# need a literal and still say so.
+_SCALE_TRANSFORMS = {"pct_float", "hue_hs", "sat_hs"}
+
+
+def _spec_data(data_spec: dict, params: list, ctx: dict,
+               resolver=None) -> dict:
+    """Build a service-data dict from the vocab spec, DROPPING any key whose
+    parameter the piston left unset — webCoRE just doesn't apply an optional
+    parameter, so neither should the emitted call."""
+    out = {}
+    for k, v in (data_spec or {}).items():
+        val = _param_value(v, params, ctx, resolver)
+        if val is not _UNSET_PARAM:
+            out[k] = val
+    return out
+
+
+def _param_value(token: str, params: list, ctx: dict, resolver=None):
     """$1/$2 (+|transform) tokens from the vocab's data specs."""
     raw = str(token)
     transform = None
+    tname = None
     if "|" in raw:
         raw, tname = raw.split("|", 1)
         transform = _PARAM_TRANSFORMS.get(tname)
@@ -1795,6 +1818,29 @@ def _param_value(token: str, params: list, ctx: dict):
         if idx >= len(params):
             raise NotYetImplemented(f"command param {raw} missing", **ctx)
         prm = params[idx]
+        # UNSET optional parameter: the editor writes an operand with no type
+        # and no value when the user leaves the field alone. Omit the key.
+        if (not prm.get("t") and prm.get("c") is None and prm.get("s") is None
+                and not prm.get("e") and not prm.get("x")):
+            return _UNSET_PARAM
+        # A parameter whose value is a VARIABLE or an EXPRESSION rather than a
+        # literal. Emit a template so the value — and any scale conversion —
+        # resolves at runtime. Reading only `c`/`s` made a volume set from a
+        # declared variable arrive as None and blow up the whole piston.
+        if prm.get("t") in ("x", "e") and (prm.get("x") or prm.get("e")):
+            if resolver is None:
+                raise NotYetImplemented(
+                    "a variable command parameter needs the resolver", **ctx)
+            jt = _jinja(resolver, ctx, _PISTON.get("cur"))
+            inner = jt.transpile_operand(prm)
+            if tname in _SCALE_TRANSFORMS:
+                from .resolve import rescale_template
+                inner = rescale_template(tname, inner)
+            elif transform is not None:
+                raise NotYetImplemented(
+                    f"a '{tname}' parameter given as a variable is not "
+                    f"compiled yet", **ctx)
+            return _json_dumps("{{ " + inner + " }}")
         value = prm.get("c") if prm.get("c") is not None else prm.get("s")
     else:
         value = raw
@@ -1802,6 +1848,212 @@ def _param_value(token: str, params: list, ctx: dict):
 
 
 # ── branch emission ─────────────────────────────────────────────────────────
+
+def _has_attached(conds: list) -> bool:
+    """True when any condition in the tree hangs statements off itself."""
+    for c in conds or []:
+        if c.get("true_actions") or c.get("false_actions"):
+            return True
+        if _has_attached(c.get("children") or []):
+            return True
+    return False
+
+
+def _attached_chain(conds: list, then_actions: list, else_actions: list,
+                    resolver: Resolver, ctx: dict) -> list:
+    """webCoRE's evaluation order as a nested HA if-chain.
+
+    Attached statements CANNOT live at automation-condition level: HA's
+    `conditions:` block is a pure test with no way to call a service partway
+    through deciding. So the whole test moves into the actions block, and each
+    condition's attached statements run at the point that condition is
+    evaluated — BEFORE the owning if's body, which is where webCoRE runs them
+    (VERIFIED webcore-piston.groovy:7882-7886).
+
+    SHORT-CIRCUIT is preserved by NESTING rather than listing: in "A and B",
+    B's test — and so B's attached statements — sits inside A's true branch, so
+    a false A means B never runs (:7452-7456)."""
+    if not conds:
+        return then_actions
+    head, rest = conds[0], conds[1:]
+    ts = _resolve_actions(head.get("true_actions") or [], resolver, ctx)
+    fs = _resolve_actions(head.get("false_actions") or [], resolver, ctx)
+    inner = _attached_chain(rest, then_actions, else_actions, resolver, ctx)
+    return [{"kind": "if",
+             "conditions": [_condition(head, resolver, ctx)],
+             "then": ts + inner,
+             "else": fs + else_actions}]
+
+
+def _assert_no_orphan_attached(br: dict, handled: bool, ctx: dict) -> None:
+    """Refuse to emit if anything carrying attached statements went unhandled.
+
+    Attached statements can hang off a TRIGGER, off a condition nested in a
+    GROUP, or off a condition inside a nested if — each would sail through
+    emitting nothing, which is the exact failure being fixed. Silence is the
+    bug; never soften this to a pass."""
+    def scan(node) -> bool:
+        if isinstance(node, list):
+            return any(scan(x) for x in node)
+        if not isinstance(node, dict):
+            return False
+        if node.get("true_actions") or node.get("false_actions"):
+            return True
+        return any(scan(v) for k, v in node.items()
+                   if k in ("children", "conditions", "then", "else",
+                            "cases", "body", "default"))
+
+    unhandled = scan(br.get("triggers") or [])
+    unhandled = scan(br.get("then") or []) or unhandled
+    unhandled = scan(br.get("else") or []) or unhandled
+    if handled:
+        for c in br.get("conditions") or []:
+            unhandled = scan(c.get("children") or []) or unhandled
+    else:
+        unhandled = scan(br.get("conditions") or []) or unhandled
+    if unhandled:
+        raise NotYetImplemented(
+            "actions are attached to a condition in a place the YAML band "
+            "cannot express (a trigger, a condition group, or a nested if)",
+            **ctx)
+
+
+def _finish_branch(br: dict, conditions: list, triggers: list,
+                   cancel_triggers: list, actions: list, piston_id: str,
+                   piston_name: str, blocks: list, auto_ids: list) -> None:
+    """De-dup the wakes and render the automation block."""
+    all_triggers = []
+    seen = set()
+    for t in triggers + cancel_triggers:
+        key = _json_dumps(t)
+        if key not in seen:
+            seen.add(key)
+            all_triggers.append(t)
+    auto_id = f"pistoncore_{piston_id}_s{br['stmt_id']}"
+    auto_ids.append(auto_id)
+    blocks.append(_env.get_template("automation.yaml.j2").render(
+        auto_id=auto_id,
+        alias=f"PistonCore: {piston_name} — ${br['stmt_id']}",
+        mode="restart" if br["tcp"] == "c" else "queued",
+        triggers=all_triggers,
+        conditions=conditions,
+        actions=actions,
+    ))
+
+
+def _accumulate_loop(n: dict, resolver: Resolver, ctx: dict):
+    """`each device: if <test>: X = X + <text>` -> ONE HA template.
+
+    Transliterating the loop means unrolling it once per device — 61 copies for
+    a whole-house battery report. This is an INTENT-based compiler, and HA's
+    own documented answer is a single template (namespace + for + join), so
+    that is what gets emitted. The HA-facing shape lives in accumulate.j2, not
+    here, so a user can fix it when HA moves.
+
+    Returns a `variables` action node, or None when the shape isn't recognised
+    — the caller routes to PyScript rather than guessing.
+
+    Detection is the SELF-REFERENCING assignment (`X = X + …`): 9-of-9 across
+    the corpus, no false positives. Keying on notify/speak was tested and is
+    wrong both ways (32 pistons notify without this; one real case never does)."""
+    body = n.get("body") or []
+    if len(body) != 1:
+        return None
+    inner = body[0]
+    test_cond, tasks = None, None
+    if inner.get("kind") == "if":
+        conds = inner.get("conditions") or []
+        if len(conds) != 1 or conds[0].get("co") == "_group":
+            return None
+        test_cond = conds[0]
+        tasks = (test_cond.get("true_actions") or []) + (inner.get("then") or [])
+    elif inner.get("kind") == "task":
+        tasks = [inner]
+    else:
+        return None
+
+    setvars = [t for t in tasks or []
+               if t.get("kind") == "task" and t.get("command") == "setVariable"]
+    if len(setvars) != 1:
+        return None
+    params = setvars[0].get("params") or []
+    if len(params) < 2:
+        return None
+    var = params[0].get("x") or params[0].get("c")
+    src = params[1]
+    if not var or not isinstance(src.get("e"), str):
+        return None
+    if not re.search(r"\b" + re.escape(str(var)) + r"\b", src["e"]):
+        return None
+
+    attr = (test_cond or {}).get("attr")
+    if not attr:
+        m = re.search(r"\[\s*\$device\s*:\s*([A-Za-z_][\w]*)\s*\]", src["e"])
+        attr = m.group(1) if m else None
+    if not attr:
+        return None
+    # Resolution failures mean "not the shape we recognise", not "broken
+    # piston" — return None so the caller can route, never escape.
+    try:
+        hashes = []
+        for dref in n.get("devices") or []:
+            hashes.extend(resolver._hashes(str(dref), ctx))
+        if not hashes:
+            return None
+        entities = []
+        for h in hashes:
+            ents = resolver.entities_for_attr([h], attr, ctx)
+            if len(ents) != 1:
+                return None
+            entities.append(ents[0])
+    except CompilerError:
+        return None
+
+    sample = entities[0]
+    shape = resolver.read_expr(sample, attr)
+    for ent in entities[1:]:
+        if resolver.read_expr(ent, attr) != shape.replace(f"'{sample}'", f"'{ent}'"):
+            return None
+
+    loopvar = "_pc_dev"
+    jt = _jinja(resolver, ctx, _PISTON.get("cur"))
+    jt.loop_entity, jt.loop_sample = loopvar, sample
+    try:
+        text = jt.transpile_operand({"e": _strip_accumulator(src["e"], var)})
+        test = None
+        if test_cond is not None:
+            # CANONICAL operator tables and comparison builder — never a local
+            # copy. A hand-written subset here missed `is`/`is_not`, the
+            # commonest shape in a safety piston, and lost _num_cmp's
+            # fail-closed guard.
+            co = test_cond.get("co")
+            num_op, enum_op = _NUMERIC_OPS.get(co), _EQUALITY_OPS.get(co)
+            value = test_cond.get("value")
+            if (num_op is None and enum_op is None) or value is None:
+                return None
+            reading = shape.replace(f"'{sample}'", loopvar)
+            if enum_op is not None:
+                mapped = resolver.ha_state_value(attr, value)
+                test = f"{reading} {enum_op} {_json_dumps(str(mapped))}"
+            else:
+                test = _num_cmp(reading, num_op, value)
+    except CompilerError:
+        return None
+    finally:
+        jt.loop_entity = jt.loop_sample = None
+
+    rendered = _env.get_template("accumulate.j2").render(
+        var=var, loopvar=loopvar, entities=repr(entities),
+        test=test, text=text, joiner=repr(""))
+    return {"kind": "variables", "vars": {str(var): _json_dumps(rendered.strip())}}
+
+
+def _strip_accumulator(expr: str, var: str) -> str:
+    """`X = X + <text>` carries the variable at the front; the loop template
+    re-adds the prior value, so emit only the appended part."""
+    stripped = re.sub(r"^\s*" + re.escape(var) + r"\b", "", expr, count=1)
+    return stripped.strip() or '""'
+
 
 def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                  blocks: list, auto_ids: list) -> None:
@@ -1866,6 +2118,16 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]] + direction_conds
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)
+
+    if _has_attached(br["conditions"]):
+        _assert_no_orphan_attached(br, True, ctx)
+        actions = _attached_chain(br["conditions"], then_actions,
+                                  else_actions, resolver, ctx)
+        conditions.extend(direction_conds)
+        _finish_branch(br, conditions, triggers, cancel_triggers, actions,
+                       piston_id, piston_name, blocks, auto_ids)
+        return
+    _assert_no_orphan_attached(br, False, ctx)
 
     if else_actions:
         # EXPLICIT trigger-classified nodes (ct:"t" straight from the JSON —
@@ -1950,14 +2212,5 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
             seen.add(key)
             all_triggers.append(t)
 
-    auto_id = f"pistoncore_{piston_id}_s{br['stmt_id']}"
-    auto_ids.append(auto_id)
-    block = _env.get_template("automation.yaml.j2").render(
-        auto_id=auto_id,
-        alias=f"PistonCore: {piston_name} — ${br['stmt_id']}",
-        mode="restart" if br["tcp"] == "c" else "queued",
-        triggers=all_triggers,
-        conditions=conditions,
-        actions=actions,
-    )
-    blocks.append(block)
+    _finish_branch(br, conditions, all_triggers, [], actions,
+                   piston_id, piston_name, blocks, auto_ids)

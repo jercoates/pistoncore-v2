@@ -105,6 +105,15 @@ never treat it as gospel.
 - **No PowerShell.** Ever.
 - **Two-search-then-stop.** If two searches don't find it, stop and ask instead of
   spelunking.
+- **SEARCH THE WHOLE COMPILER FOR AN EXISTING TOOL BEFORE WRITING A NEW ONE (Jeremy,
+  2026-08-01).** Before adding any table, mapping, or helper, grep the entire compiler for
+  one that already does that job — then USE it, don't write a second. Overlapping,
+  half-built copies of the same thing are a huge problem in this codebase and the direct
+  cause of its worst bugs: a hand-written partial copy of the operator tables missed
+  `is`/`is_not` (the commonest comparison in a safety piston) and also lost the canonical
+  fail-closed numeric guard, which would have invented a low-battery alert for a sensor
+  that was merely offline. The complete list already existed a few hundred lines up.
+  If the existing tool is wrong, FIX IT IN PLACE — never route around it with a copy.
 - **Behavioral verification.** Every change ends with "here is what to click and what you
   should see" for the dev instance.
 - **Deploy block.** Claude never deploys. Jeremy pulls and rebuilds on Unraid himself,

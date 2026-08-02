@@ -10,11 +10,9 @@ NotYetImplemented — which the emit layer converts into PyScript routing, so
 """
 
 import json
-from pathlib import Path
 
 from .errors import NotYetImplemented
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _buckets: dict | None = None
 
 
@@ -55,6 +53,7 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
                 "aggregation": "any", "lo_var": None,
                 "value_vt": None, "value2_vt": None,
                 "value_preset": None, "value2_preset": None,
+                "raw": cond,
                 **_attached_actions(cond, kwargs)}
     # "restriction" nodes have the SAME comparison anatomy as "condition"
     # (PISTON_JSON_REFERENCE §7) and so reuse this parser verbatim.
@@ -81,6 +80,9 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
         "value_expr": ro.get("x"),          # bare expression operand ($sunrise)
         "value2_expr": ro2.get("x"),
         "ct": _classify(cond),
+        # the untouched node: PyScript transpiles operands straight from this,
+        # so consuming this IR costs it no fidelity (Stage 1 of the brief).
+        "raw": cond,
         **_attached_actions(cond, kwargs),
     }
 
@@ -151,10 +153,27 @@ def _restriction_nodes(owner: dict, kwargs: dict) -> list:
 
 
 def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
-    """Nested statements -> action-node tree. Nodes: task | if."""
+    """Nested statements -> action-node tree. Nodes: task | if.
+
+    EVERY node carries `raw` — the piston dict it was built from — and task
+    nodes also carry `raw_stmt`, the owning action statement.
+
+    WHY (2026-08-01, SESSION_BRIEF_ONE_READER_ONE_WRITER §3 Stage 1): the
+    PyScript band kept its own walk over the raw piston JSON instead of using
+    this IR, because the IR flattens conditions to a summary (`value`,
+    `value_vt`) and PyScript needs the full operand trees to transpile
+    expressions. Two walkers is the root cause of the whole silent-drop class
+    — condition-attached ts/fs were missed because NEITHER walker looked, and
+    `$device`-as-a-value works in one and not the other.
+
+    Carrying `raw` lets PyScript walk THIS tree for structure while still
+    reading operand detail from the original dict: one reader for discovery
+    (which is where every silent drop happened) with no loss of fidelity.
+    Detail then migrates out of `raw` into real IR fields one at a time."""
     out = []
     for a in stmts:
         at = a.get("t")
+        start = len(out)
         if at == "action":
             for task in a.get("k", []):
                 out.append({"kind": "task", "command": task.get("c"),
@@ -164,7 +183,8 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
                             # webCoRE's dictionary (PISTON_JSON_REFERENCE §5).
                             # Its name is an HA service, so it resolves without
                             # any vocab lookup.
-                            "custom": bool(task.get("cm"))})
+                            "custom": bool(task.get("cm")),
+                            "raw": task, "raw_stmt": a})
         elif at == "if":
             conds = [_cond_node(c, kwargs) for c in a.get("c", [])]
             if a.get("o", "and") == "or" and len(conds) > 1:
@@ -186,7 +206,7 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
             # the whole piston to PyScript.
             out.append({"kind": "if", "conditions": conds,
                         "then": _action_tree(a.get("s", []), where, kwargs),
-                        "else": _fold_ei(a, where, kwargs)})
+                        "else": _fold_ei(a, where, kwargs), "raw": a})
         elif at == "switch":
             lo = a.get("lo") or {}
             cases = []
@@ -202,7 +222,7 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
                     "switch with fall-through has no HA equivalent "
                     "(choose always exits after the first match)", **kwargs)
             out.append({"kind": "switch", "lo": lo, "cases": cases,
-                        "default": default})
+                        "default": default, "raw": a})
         elif at in ("repeat", "while"):
             body = _action_tree(a.get("s", []), where, kwargs)
             conds = [_cond_node(c, kwargs) for c in a.get("c", [])]
@@ -228,17 +248,41 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
                         "var": a.get("x"),
                         "devices": lo.get("d", []),
                         "lo_type": lo.get("t"),
-                        "body": _action_tree(a.get("s", []), where, kwargs)})
+                        "body": _action_tree(a.get("s", []), where, kwargs), "raw": a})
         elif at == "break":
-            out.append({"kind": "break"})
+            out.append({"kind": "break", "raw": a})
         elif at == "do":
             out.extend(_action_tree(a.get("s", []), where, kwargs))
         elif at == "exit":
-            out.append({"kind": "stop"})
+            out.append({"kind": "stop", "raw": a})
         else:
             raise NotYetImplemented(
                 f"nested statement type '{at}' in {where} not compiled yet", **kwargs)
+        _gate_nested(a, out, start, kwargs)
     return out
+
+
+def _gate_nested(stmt: dict, out: list, start: int, kwargs: dict) -> None:
+    """A restriction on a NESTED statement gates that statement, else included.
+
+    FOUND 2026-08-01, same silent-drop class as condition-attached ts/fs: this
+    walker never read `r` at all. `_restriction_nodes` is applied to the piston
+    root and to TOP-LEVEL statements only, so a restriction on anything nested
+    was dropped without a word — the YAML band would run a gated statement
+    unconditionally. 0 of 84 corpus pistons use one, which under the standing
+    rule says nothing about anyone else's (corpus absence is never evidence).
+
+    Wrapping is the same shape `_restriction_nodes` documents for the top
+    level: gate the WHOLE statement with no else of its own, so a failed
+    restriction runs nothing rather than falling through to an else."""
+    nodes = out[start:]
+    if not nodes or not stmt.get("r"):
+        return
+    gate = _restriction_nodes(stmt, kwargs)      # raises on 'rn', as it should
+    if not gate:
+        return
+    out[start:] = [{"kind": "if", "conditions": gate,
+                    "then": nodes, "else": [], "raw": stmt}]
 
 
 def _fold_ei(stmt: dict, where: str, kwargs: dict) -> list:

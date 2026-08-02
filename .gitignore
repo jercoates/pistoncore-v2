@@ -5,6 +5,17 @@
 # not meant to persist past the hard-testing session that generated it.
 /static/pistoncore/_test_corpus_staged.json
 
+# REAL webCoRE BACKUPS — never commit. THIS REPO IS PUBLIC.
+# A dashboard backup is the user's whole instance: real device and room names,
+# piston names, and (via Hubitat-bridged devices) lock/alarm codes with
+# household member names. Work with one in a scratch directory OUTSIDE the
+# repo; these patterns are a backstop for when one lands here by accident.
+webCoRE.*.zip
+webCoRE.*.json
+*backup*.json
+/backups/
+/_private/
+
 # Python
 .venv/
 __pycache__/

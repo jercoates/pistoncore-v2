@@ -1,0 +1,45 @@
+{#-
+  ACCUMULATE-AND-ANNOUNCE — webCoRE's "walk the devices, build a list, say it"
+  resolved into ONE Home Assistant template.
+
+  webCoRE expresses this as a loop that appends to a variable once per device.
+  Transliterating that (unrolling the loop once per device) is the wrong layer —
+  PistonCore is an INTENT-based compiler, and HA's own documented answer to this
+  exact problem is a single template using `namespace` + `for` + `join`
+  (home-assistant.io/docs/templating/tutorial-battery-alerts/). One expression,
+  any number of devices.
+
+  This file exists so the HA-facing shape is EDITABLE. If HA changes how a value
+  is read or renames a filter, a user fixes it here rather than waiting on a
+  release (COMPILER_SPEC "Jinja2 everywhere", scoped by Jeremy 2026-08-01:
+  anything tracking HA's moving target must be template/data, never Python).
+
+  Rendered INTO an automation's `variables:` action, so the output is the value
+  of one variable.
+
+  Inputs:
+    var        name of the accumulating variable (its prior value is prepended,
+               which is what preserves the header line the piston set earlier)
+    entities   entity ids, resolved at COMPILE time — capability resolution is
+               compile-time and recompiling is the refresh, so the emitted YAML
+               carries no runtime dependency on PistonCore
+    loopvar    the Jinja variable the loop binds each entity to
+    test       per-item condition, already built against `loopvar` by the
+               compiler's ONE canonical comparison builder (_num_cmp for
+               numbers, which is fail-closed on unavailable sensors). Not
+               composed here on purpose: the comparison shape already exists
+               in exactly one place, and copying it here to look tidy would
+               make two. Omit to include every entity.
+    text       per-item text, written against `loopvar`
+    joiner     string placed between items (default: newline)
+
+  NOTE the `{% raw %}` blocks: this template WRITES Jinja, so the HA-side tags
+  must survive rendering here rather than being executed here.
+-#}
+{%- raw %}{% set ns = namespace(items=[]) %}{% for {% endraw %}{{ loopvar }}{% raw %} in {% endraw %}{{ entities }}{% raw %} %}{% endraw %}
+{%- if test %}{% raw %}{% if {% endraw %}{{ test }}{% raw %} %}{% endraw %}{% endif %}
+{%- raw %}{% set ns.items = ns.items + [{% endraw %}{{ text }}{% raw %}] %}{% endraw %}
+{%- if test %}{% raw %}{% endif %}{% endraw %}{% endif %}
+{%- raw %}{% endfor %}{% endraw %}
+{%- if var %}{% raw %}{{ {% endraw %}{{ var }}{% raw %} }}{% endraw %}{% endif %}
+{%- raw %}{{ ns.items | join({% endraw %}{{ joiner }}{% raw %}) }}{% endraw %}

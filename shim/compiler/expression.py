@@ -25,6 +25,16 @@ import re
 
 from .errors import NotYetImplemented
 
+# ── comparison operators — ONE definition, both bands import it ─────────────
+# These were duplicated byte-for-byte in emit_yaml.py and emit_pyscript.py.
+# A hand-written PARTIAL third copy is what made the accumulate resolution miss
+# `is`/`is_not` (2026-08-01), so the tables live here now and nowhere else.
+_NUMERIC_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
+                "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
+_EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
+                 "is_not": "!=", "is_not_equal_to": "!="}
+
+
 # opPriorityFLD verbatim (groovy :10449-10461); lower tier binds tighter
 _PRECEDENCE = {
     "!": 2, "!!": 2, "~": 2,
@@ -55,8 +65,6 @@ _COMPOSITE_PREFIXES = ("$args.", "$json.", "$response.", "$nfl.", "$places.",
                       "$weather.", "$twcweather.", "$incidents.",
                       "$args[", "$json[", "$places[", "$response[", "$incidents[")
 
-_NUMERIC_TYPES = {"integer", "decimal"}
-_STRING_TYPES = {"string", "boolean", "dynamic"}
 
 
 def parse_string(s: str, array_vars=None) -> dict:
@@ -500,8 +508,10 @@ class ExprTranspiler:
         # mode: webCoRE exposes location mode as a bare variable too
         if name == "mode":
             return f"_s({self.mode_entity!r})"
-        raise NotYetImplemented(
-            f"variable '{name}' is not a declared piston variable", **self.ctx)
+        # webCoRE creates a variable on first use, so an undeclared read is
+        # EMPTY, not an error (VERIFIED: `lockDevice` is undeclared in Jeremy's
+        # original piston too, and webCoRE runs it). Compile and flag.
+        return f"pv.get({name!r})"
 
     def device(self, item: dict) -> str:
         """[Device : attribute] — id (hash) or x (device-variable name); both
@@ -645,6 +655,10 @@ _JINJA_FUNCS = {
 
 
 class JinjaTranspiler(ExprTranspiler):
+    # set while emitting an entity loop; see device()/variable() above.
+    loop_entity = None      # the Jinja variable the loop binds
+    loop_sample = None      # a real entity, used only to derive the read shape
+
     """Emits HA Jinja2 for the same AST the Python backend consumes."""
 
     def __init__(self, *args, **kwargs):
@@ -722,6 +736,13 @@ class JinjaTranspiler(ExprTranspiler):
         sysent = self.resolver.system_entity(name.lstrip("$"))
         if sysent:
             return "states('" + sysent + "')"
+        # LOOP MODE: inside an emitted for-loop over entities, `$device` is
+        # whichever entity this iteration is on. webCoRE gives the device's
+        # NAME when it is used as a value, so ask HA for the same thing.
+        # Set by _accumulate_loop (emit_yaml) — see accumulate.j2 for why the
+        # loop exists at all rather than the loop being unrolled.
+        if low == "$device" and self.loop_entity:
+            return f"device_name({self.loop_entity})"
         if name.startswith("$"):
             raise NotYetImplemented(
                 "system variable '%s' has no HA template equivalent" % name,
@@ -736,12 +757,23 @@ class JinjaTranspiler(ExprTranspiler):
             return name
         if name == "mode":
             return "states('" + self.mode_entity + "')"
-        raise NotYetImplemented(
-            "variable '%s' is not a declared piston variable" % name, **self.ctx)
+        # Undeclared variables are created on demand by webCoRE; an
+        # undeclared read is empty rather than fatal. Same rule as the Python
+        # band above.
+        self.used_locals.add(name)
+        return name
 
     def device(self, item: dict) -> str:
         attr = item.get("a") or ""
         dref = item.get("id") or item.get("x")
+        # LOOP MODE: `[$device:battery]` is that reading on THIS iteration's
+        # entity. read_expr is the one place a read is spelled, so derive the
+        # SHAPE from a sample entity and swap the literal id for the loop
+        # variable — the shape is verified uniform across the list before the
+        # loop is emitted (_accumulate_loop), never assumed.
+        if dref == "$device" and self.loop_entity and attr and self.loop_sample:
+            shape = self.resolver.read_expr(self.loop_sample, attr)
+            return shape.replace(f"'{self.loop_sample}'", self.loop_entity)
         if dref == "$currentEventDevice":
             if not attr:
                 return "state_attr(trigger.entity_id, 'friendly_name')"
@@ -769,8 +801,44 @@ class JinjaTranspiler(ExprTranspiler):
         joined = ", ".join(self.resolver.read_expr(e, attr) for e in entities)
         return "[" + joined + "] | join(', ')"
 
+    def _entity_expr(self, node):
+        """The ENTITY a sub-expression reads, as a Jinja expression.
+
+        Needed by functions that ask about the reading's HISTORY rather than
+        its value — the entity is the thing HA keys that on, and the
+        transpiled value has already thrown it away."""
+        if not isinstance(node, dict):
+            return None
+        if node.get("t") == "device":
+            dref = node.get("id") or node.get("x")
+            attr = node.get("a") or ""
+            if dref == "$device" and self.loop_entity:
+                return self.loop_entity
+            if not dref:
+                return None
+            try:
+                ents = self.resolver.entities_for_attr([dref], attr, self.ctx)
+            except Exception:                                   # noqa: BLE001
+                return None
+            return repr(ents[0]) if len(ents) == 1 else None
+        for sub in node.get("i") or []:
+            got = self._entity_expr(sub)
+            if got:
+                return got
+        return None
+
     def function(self, item: dict) -> str:
         name = str(item.get("n") or "").lower()
+        # `age(x)` — milliseconds since that reading last changed. HA keeps it
+        # as last_changed on the ENTITY, so this needs the entity, not the
+        # transpiled value, which is why it can't be a plain _JINJA_FUNCS
+        # entry. Defaults to "just changed" when the entity is unknown rather
+        # than raising, so one missing sensor can't take the whole message down.
+        if name == "age" and len(item.get("i") or []) == 1:
+            ent = self._entity_expr((item.get("i") or [None])[0])
+            if ent:
+                return (f"((as_timestamp(now()) - as_timestamp("
+                        f"states[{ent}].last_changed, as_timestamp(now()))) * 1000)")
         args = [self.expression(sub) for sub in (item.get("i") or [])]
         fn = _JINJA_FUNCS.get(name)
         if fn is None:

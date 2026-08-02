@@ -345,12 +345,27 @@ def section_modifiers(verbose=False):
                   piston([if_stmt([trig])], restrictions=[restriction]),
                   piston([action(nid=1)], restrictions=[restriction])))
 
+    # restriction on a NESTED statement. 0 of 84 corpus pistons use one, and it
+    # was dropped by the analyzer entirely until 2026-08-01 — exactly the kind
+    # of hole the corpus can never reveal, which is why this probe exists.
+    _inner = {"$": 20, "t": "if", "a": "0", "o": "and",
+              "c": [condition_node("is", V["comparisons"]["conditions"]["is"],
+                                   nid=21, as_trigger=False)],
+              "s": [action(cmd="off", nid=22)], "e": [], "ei": [],
+              "r": [], "rop": "and"}
+    cases.append(("restriction on a NESTED statement",
+                  piston([if_stmt([trig], then=[dict(_inner, r=[restriction])])]),
+                  None))
+
     # condition true/false task lists — PISTON_JSON_REFERENCE §3: "exist on
     # every condition; the compiler must honor them; they are easy to miss"
-    trig_ts = dict(trig, ts=[{"$": 50, "c": "off", "p": [], "a": False}])
+    # ts/fs hold STATEMENTS, each with its own task list — NOT bare tasks.
+    # Built wrong here at first, which made a working compiler look broken
+    # the moment it started reading them.
+    trig_ts = dict(trig, ts=[action(cmd="off", nid=50)])
     cases.append(("condition `ts` (tasks when condition turns TRUE)",
                   piston([if_stmt([trig_ts])]), None))
-    trig_fs = dict(trig, fs=[{"$": 51, "c": "off", "p": [], "a": False}])
+    trig_fs = dict(trig, fs=[action(cmd="off", nid=52)])
     cases.append(("condition `fs` (tasks when condition turns FALSE)",
                   piston([if_stmt([trig_fs])]), None))
 
@@ -378,8 +393,10 @@ def section_modifiers(verbose=False):
                   piston([if_stmt([trig_phys])]), None))
 
     # aggregation across multiple devices
-    trig_all = dict(trig, lo=dict(trig["lo"], d=[DEV, ":" + "b" * 32 + ":"], g="all"))
-    trig_any = dict(trig, lo=dict(trig["lo"], d=[DEV, ":" + "b" * 32 + ":"], g="any"))
+    _agg_base = condition_node("is", V["comparisons"]["conditions"]["is"],
+                               nid=30, as_trigger=False)
+    trig_all = dict(_agg_base, lo=dict(_agg_base["lo"], d=[DEV, ":" + "b" * 32 + ":"], g="all"))
+    trig_any = dict(_agg_base, lo=dict(_agg_base["lo"], d=[DEV, ":" + "b" * 32 + ":"], g="any"))
     cases.append(("aggregation `g:'all'` vs `g:'any'`", None, None))
 
     # else-if chain
@@ -417,8 +434,8 @@ def section_modifiers(verbose=False):
         rows.append((label, "  ".join(marks), ""))
 
     # aggregation is a two-variant comparison, not a base/variant one
-    a_all = {b: compile_on(piston([if_stmt([trig_all])]), b) for b in ("yaml", "pyscript")}
-    a_any = {b: compile_on(piston([if_stmt([trig_any])]), b) for b in ("yaml", "pyscript")}
+    a_all = {b: compile_on(piston([if_stmt([trig, trig_all])]), b) for b in ("yaml", "pyscript")}
+    a_any = {b: compile_on(piston([if_stmt([trig, trig_any])]), b) for b in ("yaml", "pyscript")}
     marks = []
     for band in ("yaml", "pyscript"):
         if a_all[band][0] == "error" or a_any[band][0] == "error":

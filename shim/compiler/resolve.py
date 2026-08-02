@@ -120,6 +120,21 @@ def value_map(name: str) -> dict:
     return {k: v for k, v in table.items() if not k.startswith("_")}
 
 
+def rescale_template(name: str, expr: str) -> str:
+    """rescale() for a value only known at RUNTIME (a variable or expression).
+
+    Same ranges, same rounding, read from the vocab exactly as rescale does —
+    the template twin, not a second set of numbers."""
+    spec = (_load_vocab().get("_value_maps") or {}).get("scales", {}).get(name)
+    if not isinstance(spec, dict):
+        raise KeyError(f"vocab _value_maps.scales has no entry '{name}'")
+    src, dst = float(spec["from"]), float(spec["to"])
+    digits = int(spec.get("round", 2))
+    if src == dst:
+        return f"({expr}) | float(0) | round({digits})"
+    return f"((({expr}) | float(0)) * {dst / src!r}) | round({digits})"
+
+
 def rescale(name: str, value):
     """Convert a number between webCoRE's scale and HA's, using the ranges in
     the vocab's _value_maps.scales.
@@ -388,8 +403,20 @@ class Resolver:
             return hashes
         if dref in self.local_device_vars:
             return self.local_device_vars[dref]
-        raise UnresolvableDevice(f"device reference '{dref}' is neither a hash, a local "
-                                 f"device variable, nor a global", **ctx)
+        # COMPILE AND FLAG (Jeremy, 2026-08-01). An unknown NAME is the same
+        # situation as an unknown HASH, which has been handled this way since
+        # 2026-07-19: keep the reference, let it resolve to an inert
+        # placeholder entity, record it as unresolved so the UI can say so.
+        # Failing the whole piston over one stale reference takes the working
+        # devices down with it — and a leftover reference is common, because
+        # people copy pistons and forget to delete a device.
+        #
+        # Note the shape of the risk, which the warning must convey: in an OR
+        # this is harmless (that branch simply never fires); in an AND it can
+        # silently disable the statement.
+        self.unresolved.append({"label": str(dref), "for": "device reference",
+                                "kind": "name", "entity": None})
+        return [dref]
 
     def remembered_entity(self, h: str, attr_or_cmd: str) -> str | None:
         """Last entity this device hash resolved to, from PistonCore's own

@@ -27,7 +27,7 @@ from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 from .. import customize
 
 from .errors import NotYetImplemented
-from .expression import ExprTranspiler
+from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
 from .resolve import Resolver
 from . import routing as _routing
 
@@ -36,10 +36,20 @@ _env = Environment(
     loader=ChoiceLoader([FileSystemLoader(d) for d in customize.search_dirs(_BAND_REL)]),
     trim_blocks=False, lstrip_blocks=False)
 
-_NUMERIC_OPS = {"is_less_than": "<", "is_less_than_or_equal_to": "<=",
-                "is_greater_than": ">", "is_greater_than_or_equal_to": ">="}
-_EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
-                 "is_not": "!=", "is_not_equal_to": "!="}
+
+# Scale conversions that have vocab ranges (_value_maps.scales).
+_SCALE_TRANSFORMS_PY = {"pct_float", "hue_hs", "sat_hs"}
+
+
+def _scale_spec(name):
+    """(from, to, round) for a vocab scale — the NUMBERS stay in the vocab."""
+    from .resolve import _load_vocab
+    spec = (_load_vocab().get("_value_maps") or {}).get("scales", {}).get(name)
+    if not isinstance(spec, dict):
+        return None
+    return float(spec["from"]), float(spec["to"]), int(spec.get("round", 2))
+
+
 _TRIGGER_COS = {
     "changes_to", "changes", "changes_away_from", "rises_above", "drops_below",
     "changes_to_any_of", "changes_away_from_any_of", "gets", "arrives",
@@ -194,6 +204,49 @@ class _PyEmitter:
 
     def _reads(self, entities, attr, numeric: bool = False) -> list[str]:
         return [self._read(e, attr, numeric) for e in entities]
+
+    def _spec_data_py(self, data_spec: dict, params: list, ctx: dict) -> dict:
+        """Service data for THIS band — Python expressions, not Jinja.
+
+        `$N` tokens resolve through _operand_expr, so a parameter given as a
+        VARIABLE or an EXPRESSION works the same as a literal. A `|transform`
+        suffix that is a vocab scale is applied with the vocab's own numbers.
+
+        An UNSET optional parameter is OMITTED (Jeremy: "the default on volume
+        is just keep what is there and dont send a new").
+
+        Do NOT route this back through emit_yaml: that helper emits Jinja, and
+        Jinja inside a PyScript module is just a broken string."""
+        from .resolve import rescale
+        out = {}
+        for key, token in (data_spec or {}).items():
+            raw, tname = str(token), None
+            if "|" in raw:
+                raw, tname = raw.split("|", 1)
+            if not raw.startswith("$"):
+                out[key] = repr(raw)
+                continue
+            idx = int(raw[1:]) - 1
+            if idx >= len(params):
+                raise NotYetImplemented(f"command param {raw} missing", **ctx)
+            prm = params[idx] or {}
+            if (not prm.get("t") and prm.get("c") is None and prm.get("s") is None
+                    and not prm.get("e") and not prm.get("x")):
+                continue                      # unset optional parameter
+            if prm.get("c") is not None and not prm.get("t") in ("x", "e"):
+                value = prm.get("c")
+                out[key] = repr(rescale(tname, value) if tname in _SCALE_TRANSFORMS_PY
+                                else value)
+                continue
+            expr = self._operand_expr(prm, ctx)
+            if tname in _SCALE_TRANSFORMS_PY:
+                spec = _scale_spec(tname)
+                if spec:
+                    src, dst, digits = spec
+                    expr = (f"round(_num({expr}) * {dst / src!r}, {digits})"
+                            if src != dst else f"round(_num({expr}), {digits})")
+            out[key] = expr
+        return out
 
     def _operand_expr(self, op: dict, ctx: dict) -> str:
         """A right-side / value operand -> python expression."""
@@ -839,7 +892,14 @@ class _PyEmitter:
                 p0 = params[0] if params else {}
                 name = p0.get("x") or p0.get("c")
                 if not name:
-                    raise NotYetImplemented("setVariable without a variable name", **ctx)
+                    # The editor's variable field was left blank, so there is
+                    # nothing to assign — webCoRE has no variable to write and
+                    # simply does nothing. COMPILE AND FLAG rather than fail
+                    # the piston over one empty field (Jeremy, 2026-08-01).
+                    self.resolver.unresolved.append(
+                        {"label": "setVariable", "for": "variable name",
+                         "kind": "blank", "entity": None})
+                    continue
                 if p0.get("xi"):
                     self.expr.ctx = ctx
                     idx = self.expr.transpile_operand({"e": p0["xi"]})
@@ -979,9 +1039,12 @@ class _PyEmitter:
                         # "vocab mapping unusable on this device" signal. A
                         # blank value raises PistonDefect, which this except
                         # deliberately does not catch.
-                        from .emit_yaml import _param_value
-                        data = {k: repr(_param_value(v, params, ctx))
-                                for k, v in data_spec.items()}
+                        # _spec_data, not _param_value: an OPTIONAL parameter
+                        # the piston left unset must be OMITTED, not converted.
+                        # Jeremy's rule for volume specifically — "the default
+                        # is keep what is there and don't send a new one" —
+                        # which is exactly what dropping the key does.
+                        data = self._spec_data_py(data_spec, params, ctx)
                 except NotYetImplemented:
                     # in the vocab, but unreachable on THIS device (a bridged
                     # camera has no camera entity to call `take` on)
@@ -1111,9 +1174,21 @@ class _PyEmitter:
                 # the refresh (no runtime PistonCore dependency).
                 if not hashes:
                     raise NotYetImplemented("'each' over an empty device list", **ctx)
-                if len(hashes) > 50:
-                    raise NotYetImplemented(
-                        f"'each' over {len(hashes)} devices — too many to unroll", **ctx)
+                # NO CAP on device count, deliberately. There was a bare
+                # `> 50` here; traced to commit 95fdaf9 (2026-07-29), added
+                # inside an unrelated change with no reason given, and NO HA
+                # limit backs it — HA caps neither actions per automation nor
+                # anything else relevant, and this band emits plain Python. It
+                # failed a 61-sensor battery report, an ordinary size for a
+                # whole-house check. A compile error needs a verified reason it
+                # cannot be done (COMPILER_SPEC §5); an invented number is not
+                # one.
+                #
+                # Note this is NOT the answer to "the loop is big" — the
+                # intent-based path resolves an accumulate-and-announce loop to
+                # ONE HA template (accumulate.j2) and is preferred wherever the
+                # shape is recognised. Unrolling is the fallback for loops that
+                # genuinely need per-device bindings.
                 out = []
                 had = "$device" in self.resolver.local_device_vars
                 prev = self.resolver.local_device_vars.get("$device")
