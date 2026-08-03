@@ -12,6 +12,12 @@ or an AI picking this repo up cold.
 
 To add one: copy the pattern below — a WARN_FROM date, a REMOVED_IN date, a check
 that returns True once the problem is gone, and a message saying what to do.
+
+WRITE THE INSTRUCTIONS TO BE DOUBTED. Anything in here fires a year or more after
+it was written, by which point Home Assistant may have moved again. Say what was
+true when it was written and tell the reader to confirm it against the HA they
+are actually running — advice that sounds certain and is stale is worse than no
+advice, because it gets followed.
 """
 
 from datetime import date
@@ -59,11 +65,16 @@ def test_device_tracker_location_name_is_migrated():
         removed_in="Home Assistant 2027.7",
         still_broken=still_broken,
         what_to_do=(
-            "  1. Check whether twrecked/hass-virtual has migrated it — if so, use theirs.\n"
-            "  2. Otherwise replace the `location_name` property with `_attr_in_zones`\n"
-            "     (a list of zone names), and decide what happens to a location that\n"
-            "     matches no existing zone — that is the actual design question.\n"
-            "  3. Delete nothing here; this test clears itself once `def location_name`\n"
+            "  1. CHECK THE ADVICE BELOW IS STILL CURRENT before following it. It was\n"
+            "     written in Aug 2026 for a removal a year later, and HA may have moved\n"
+            "     again since. Read TrackerEntity in the HA you are actually running.\n"
+            "  2. Check whether twrecked/hass-virtual has migrated it — if so, use theirs\n"
+            "     rather than inventing a second answer and diverging from upstream.\n"
+            "  3. Otherwise replace the `location_name` property with `_attr_in_zones`\n"
+            "     (a list of zone names). NOTE this is not a rename: the real question is\n"
+            "     what a location that matches NO existing zone should do, because this\n"
+            "     integration accepts arbitrary place names.\n"
+            "  4. Delete nothing here; this test clears itself once `def location_name`\n"
             "     is gone from device_tracker.py."
         ),
     )

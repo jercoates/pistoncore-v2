@@ -223,22 +223,56 @@ class VirtualDeviceTracker(TrackerEntity, VirtualEntity):
             self._location = state.state
             self._coords = {}
 
+    # ── where the device is ─────────────────────────────────────────────────
+    #
+    # MIGRATED OFF `location_name` (2026-08-02). Home Assistant deprecated it and
+    # removes it in 2027.7; the replacement is `in_zones`, a list of zone
+    # entity_ids, and HA discards zones that do not exist.
+    #
+    # THAT IS A DELIBERATE BEHAVIOUR CHANGE, not a rename. `location_name`
+    # returned free text and HA used it as the state verbatim, so a virtual
+    # tracker could report "school" with no such zone anywhere. It cannot any
+    # more: state is now `home`, `not_home`, or the name of a zone that really
+    # exists.
+    #
+    # We took that trade ON PURPOSE. A REAL device tracker can only ever report
+    # those things, so a virtual one inventing states your actual devices can
+    # never produce is a worse test bench, not a better one. Done now rather than
+    # left for the deadline because nobody is depending on the old behaviour yet
+    # (Jeremy, 2026-08-02 — the integration was released the day before).
+    #
+    # Resolved on READ rather than cached, because zones may not be loaded yet
+    # when a tracker restores its state at startup.
+
+    ZONE_MEANING_AWAY = ("not_home", "away", "")
+
+    def _zones_for(self, name) -> list[str]:
+        """The zone entity_ids for a configured place name, or [] for away."""
+        wanted = str(name).strip().lower()
+        if wanted in self.ZONE_MEANING_AWAY:
+            return []
+        if self.hass is None:
+            return []
+        for state in self.hass.states.async_all("zone"):
+            object_id = state.entity_id.split(".", 1)[1].lower()
+            friendly = str(state.attributes.get("friendly_name") or "").strip().lower()
+            if wanted in (object_id, friendly, friendly.replace(" ", "_")):
+                return [state.entity_id]
+        # Say so plainly. Silently reporting not_home is exactly the kind of
+        # quiet wrong answer a test bench must never give.
+        _LOGGER.warning(
+            "%s: no zone matches %r, so it reports not_home. Create a zone with "
+            "that name, or use not_home/away deliberately.", self._attr_name, name)
+        return []
+
     @property
-    def location_name(self) -> str | None:
-        """Return a location name for the current location of the device.
-
-        DEPRECATED BY HOME ASSISTANT — REMOVED IN 2027.7.
-        The replacement is `_attr_in_zones` (a list of zones that must actually
-        EXIST in HA). This is NOT a rename: this integration accepts an arbitrary
-        place name with no matching zone, so migrating means deciding what such a
-        name should mean. Inherited from twrecked/hass-virtual, still unmigrated
-        upstream as of 2026-08-02 — check whether they solved it before inventing
-        a second answer.
-
-        tests/test_future_breaks.py fails from 2027-01 until this is gone, so it
-        cannot be forgotten by whoever is maintaining this then.
-        """
-        return self._location
+    def in_zones(self) -> list[str] | None:
+        """Zones this device is in. None hands control to latitude/longitude."""
+        if self._coords:
+            return None
+        if self._location is None:
+            return None
+        return self._zones_for(self._location)
 
     @property
     def source_type(self) -> SourceType | str:

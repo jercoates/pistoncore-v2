@@ -73,6 +73,30 @@ This folder is a **fork of [`twrecked/hass-virtual`](https://github.com/twrecked
   raised, and cloning any device containing a `number` entity could never succeed
   because that platform requires min/max.
 
+## Device tracker: migrated off `location_name` (2026-08-02)
+
+HA deprecated `TrackerEntity.location_name` (removal 2027.7). Migrated NOW rather
+than at the deadline, because the integration had been public for one day and
+nobody depended on the old behaviour — waiting would only have meant doing it
+when the person who understood it might be gone.
+
+**This is a deliberate behaviour change, not a rename.** `location_name` returned
+free text that HA used as the state verbatim, so a virtual tracker could report
+`school` with no such zone anywhere. The replacement, `in_zones`, takes zone
+entity_ids and HA discards zones that do not exist — so the state can now only be
+`home`, `not_home`, or the name of a real zone.
+
+Taken on purpose: a REAL device tracker can only report those things, so a
+virtual one inventing states your actual devices can never produce is a worse
+bench. A location naming no existing zone now reports `not_home` **and logs a
+warning saying so** — silently reporting the wrong thing is what a test bench
+must never do.
+
+VERIFIED on 2026.8.0b3: `home` -> `home`, capitalisation handled, unknown zone ->
+`not_home` + warning, `not_home` explicit, GPS outside a zone -> `not_home` with
+coordinates intact, GPS inside the home zone -> `home`, and the state survives a
+restart. Upstream had not migrated this as of 2026-08-02.
+
 ## Tests (added 2026-08-01)
 
 `tests/` guards the three silent-data-loss bugs fixed in this fork — the mutation
