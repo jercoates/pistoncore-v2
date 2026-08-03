@@ -356,6 +356,24 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         return {"kind": "or" if cond["group_op"] == "or" else "and",
                 "conditions": kids}
 
+    # A piston VARIABLE on the left ("Motion_Triggered is true"). The variable
+    # is carried as an automation-level `variables:` entry, so the template
+    # reads it by name. Without this the whole comparison rendered as "{{ () }}".
+    if cond.get("lo_type") == "x" and cond.get("lo_var_name"):
+        name = cond["lo_var_name"]
+        value = cond.get("value")
+        op = _EQUALITY_OPS.get(co) or _NUMERIC_OPS.get(co)
+        if op is None:
+            raise NotYetImplemented(
+                f"comparison '{co}' on a variable is not compiled yet", **ctx)
+        if _num_str(value):
+            return {"kind": "template",
+                    "template": "{{ " + _num_cmp(name, op, value) + " }}"}
+        # single quotes: the template itself is emitted inside a DOUBLE-quoted
+        # YAML scalar, so a double-quoted value here produces invalid YAML.
+        return {"kind": "template",
+                "template": "{{ " + f"{name} {op} {str(value)!r}" + " }}"}
+
     if cond.get("lo_type") == "v":
         var = cond.get("lo_var")
         # $time is_any -> no operand, always true (webCoRE's own "matches any time")
@@ -881,7 +899,10 @@ def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | 
     the condition itself. Unpromotable shapes (time windows, variables)
     contribute no trigger; they stay as conditions."""
     co = cond["co"]
-    if cond.get("lo_type") == "v":
+    # Nothing to subscribe to: a virtual device (time/date), a piston VARIABLE,
+    # or any operand that resolved to no devices at all. Promoting one of these
+    # produced `entity_id:` null, which Home Assistant rejects outright.
+    if cond.get("lo_type") in ("v", "x") or not cond.get("devices"):
         return None
     if co in ("is", "is_equal_to"):
         value = cond["value"]

@@ -69,7 +69,10 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
         "devices": lo.get("d", []),
         "aggregation": lo.get("g", "any"),
         "lo_type": lo.get("t"),       # 'p' physical device, 'v' variable, ...
-        "lo_var": lo.get("v"),        # variable name when lo_type == 'v'
+        "lo_var": lo.get("v"),        # virtual-device key when lo_type == 'v'
+        # piston VARIABLE name when lo_type == 'x'. Was never carried, so a
+        # condition on a variable had nothing to compile from.
+        "lo_var_name": lo.get("x"),
         "value": ro.get("c"),
         "value_vt": ro.get("vt"),
         "value2": ro2.get("c"),       # second operand (is_between)
