@@ -3366,11 +3366,18 @@
      "domain": "camera",
      "service": "camera.snapshot",
      "data": {
-      "filename": "$1"
+      "filename": "/media/pistoncore/$object_id/$object_id.jpg"
      },
-     "tag": "verified"
+     "tag": "decision",
+     "note": "webCoRE's `take` has NO parameters, so the filename cannot come from one - it is derived from the camera ($object_id). Fixed per camera and overwritten each capture (MEDIA_FILES_SPEC 2.3), which makes the path a compile-time constant, bounds disk use, and makes clearImages a no-op. /media/ NOT /config/www/: both are zero-config but /config/www is served at /local/ with NO authentication, so a camera capture of the house would sit behind a guessable URL (MEDIA_FILES_SPEC 2.2)."
     }
    ]
+  },
+  "clearImages": {
+   "n": "Clear images",
+   "a": "imageCapture",
+   "ha": "noop",
+   "note": "webCoRE empties its own image store; HA has none. Under the fixed-filename scheme each capture overwrites the last, so there is nothing to clear (MEDIA_FILES_SPEC 2.4). CONDITIONAL: if timestamped filenames are ever added this expires."
   },
   "unlock": {
    "n": "Unlock",
@@ -3622,7 +3629,9 @@
    "n": "No operation",
    "a": true,
    "i": "circle",
-   "d": "No operation"
+   "d": "No operation",
+   "ha": "noop",
+   "note": "'No operation' - webCoRE uses it as a deliberate placeholder."
   },
   "wait": {
    "n": "Wait...",
@@ -5043,7 +5052,9 @@
    "n": "Cancel all pending tasks",
    "a": true,
    "d": "Cancel all pending tasks",
-   "p": []
+   "p": [],
+   "ha": "noop",
+   "note": "mode: restart already cancels this automation's pending delays when it retriggers - same effect, nothing to emit."
   },
   "lifxState": {
    "n": "LIFX - Set State...",

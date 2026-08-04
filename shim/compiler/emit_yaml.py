@@ -1069,14 +1069,13 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "setVariable":
                 out.append(_set_variable(n, resolver, ctx))
                 continue
-            if n["command"] == "noop":
-                # "No operation" (vocab: no parameters). Emitting nothing is the
-                # whole behaviour — webCoRE uses it as a deliberate placeholder.
-                continue
-            if n["command"] in ("cancelTasks", "cancelPendingTasks"):
-                # mode: restart already cancels this automation's pending
-                # delays when it retriggers — same effect webCoRE's
-                # cancel-pending-tasks has. Nothing to emit.
+            # Commands that compile to NOTHING. Which ones those are is
+            # DATA — `"ha": "noop"` in the vocab, with the reason in its note —
+            # not a list of names in here. The names were hardcoded, which is
+            # the same duplicate-source problem as everything else: the vocab
+            # is where "this command has no HA action" belongs, and a user can
+            # add one without touching the compiler.
+            if resolver.command_is_noop(n["command"]):
                 continue
             if n["command"] == "sendNotification":
                 out.append(_send_notification(n["params"], resolver, ctx, _PISTON.get("cur")))
@@ -1183,7 +1182,8 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                     # signal, and the driver route is the right answer. A
                     # blank value raises PistonDefect instead, which this
                     # except deliberately does not catch.
-                    data = _spec_data(data_spec, n["params"], ctx, resolver)
+                    data = _spec_data(data_spec, n["params"], ctx, resolver,
+                                      entities[0] if entities else None)
             except NotYetImplemented:
                 # The vocab claims to know this command but its mapping cannot
                 # be used here — a broken data spec (`take` asks for a $1 the
@@ -1968,19 +1968,20 @@ _SCALE_TRANSFORMS = {"pct_float", "hue_hs", "sat_hs"}
 
 
 def _spec_data(data_spec: dict, params: list, ctx: dict,
-               resolver=None) -> dict:
+               resolver=None, entity: str | None = None) -> dict:
     """Build a service-data dict from the vocab spec, DROPPING any key whose
     parameter the piston left unset — webCoRE just doesn't apply an optional
     parameter, so neither should the emitted call."""
     out = {}
     for k, v in (data_spec or {}).items():
-        val = _param_value(v, params, ctx, resolver)
+        val = _param_value(v, params, ctx, resolver, entity)
         if val is not _UNSET_PARAM:
             out[k] = val
     return out
 
 
-def _param_value(token: str, params: list, ctx: dict, resolver=None):
+def _param_value(token: str, params: list, ctx: dict, resolver=None,
+                 entity: str | None = None):
     """$1/$2 (+|transform) tokens from the vocab's data specs."""
     raw = str(token)
     transform = None
@@ -1990,7 +1991,18 @@ def _param_value(token: str, params: list, ctx: dict, resolver=None):
         transform = _PARAM_TRANSFORMS.get(tname)
         if transform is None:
             raise NotYetImplemented(f"unknown command param transform '{tname}'", **ctx)
-    if raw.startswith("$"):
+    # $object_id / $entity_id — the DEVICE this command is aimed at, for specs
+    # that need to build a path or an id rather than take a piston parameter.
+    # webCoRE's `take` has NO parameters, so a snapshot filename cannot come
+    # from one; it has to be derived from the camera. Keeping the PATH in the
+    # vocab and only the substitution here is the split the moving-target rule
+    # asks for (MEDIA_FILES_SPEC §2.3 fixes the filename per camera).
+    if entity and ("$object_id" in raw or "$entity_id" in raw):
+        # SUBSTITUTED, not matched: the token is embedded in a longer string
+        # (a path), so an equality test never fires.
+        return (raw.replace("$object_id", entity.split(".", 1)[1])
+                   .replace("$entity_id", entity))
+    if raw.startswith("$") and "$object_id" not in raw and "$entity_id" not in raw:
         idx = int(raw[1:]) - 1
         if idx >= len(params):
             raise NotYetImplemented(f"command param {raw} missing", **ctx)

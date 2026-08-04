@@ -697,6 +697,19 @@ class Resolver:
                         f"cannot run a {domain} service", ha_domain=domain, **ctx)
         return out
 
+    def command_is_noop(self, command: str) -> bool:
+        """Does this command deliberately compile to nothing?
+
+        Marked `"ha": "noop"` in the vocab. Distinct from an UNMAPPED command,
+        which is an error the user should see — this is "webCoRE has it, HA
+        needs nothing done", with the reason in the vocab entry's note."""
+        vocab = _load_vocab()
+        for section in ("commands", "virtualCommands"):
+            entry = (vocab.get(section) or {}).get(command)
+            if entry and entry.get("ha") == "noop":
+                return True
+        return False
+
     def ha_state_value(self, attr: str, value):
         return self.value_maps.get(attr, {}).get(value, value)
 

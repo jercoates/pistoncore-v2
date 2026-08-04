@@ -86,16 +86,6 @@ Decisions already made in it (do not re-litigate):
 - Fixed filename per camera, overwritten. Makes the path a compile-time
   constant, bounds disk use, and makes `clearImages()` a no-op.
 
-- [ ] **`take` (camera snapshot) — NOW UNBLOCKED, was waiting on this spec.**
-      Broken since discovery 2026-07-26: webCoRE's `take` has ZERO parameters,
-      but the vocab maps it to `camera.snapshot` with `data.filename: "$1"`, so
-      `$1` never exists and HA requires a filename. The spec supplies the
-      answer — `/media/pistoncore/<camera>/<camera>.jpg`, fixed and
-      overwritten — which makes the path a compile-time constant. Fix is a
-      VOCAB edit, not compiler code.
-- [ ] **`clearImages` is absent from the vocab entirely** — add it as a no-op
-      per the fixed-filename decision. Used by real pistons
-      (23_Door_Motion_Alert).
 - [ ] **`media_content_type` extension→type table** — required by HA, no webCoRE
       equivalent (its track parameter is a bare URI). Infer from the extension,
       fail loudly on unknown. Table is DATA, never inline in compiler or
@@ -169,6 +159,17 @@ Decisions already made in it (do not re-litigate):
 - Duplicate operator tables collapsed; dead code removed.
 - `webcore_system_vars.json` — 91 engine system variables extracted from source.
 - Corpus is 84/84 sound; the "three damaged pistons" story was wrong.
+- **`take` (camera snapshot)** — broken since 2026-07-26 and blocked on a
+  decision. webCoRE's `take` has NO parameters but the vocab asked for `$1`,
+  which never exists, and HA requires a filename. Now emits
+  `/media/pistoncore/<camera>/<camera>.jpg` from MEDIA_FILES_SPEC §2.3 — the
+  path lives in the VOCAB, the compiler only substitutes `$object_id`.
+- **`clearImages`** — was absent from the vocab entirely, so it fell to the
+  driver passthrough. Now a declared no-op per §2.4.
+- **No-op commands are DATA.** `noop` / `cancelTasks` / `cancelPendingTasks`
+  were a hardcoded name list in the emitter; they are now `"ha": "noop"` in the
+  vocab with the reason in the note, so a user can declare one without touching
+  the compiler.
 - **ONE PISTON = ONE AUTOMATION.** Promotion was per-STATEMENT; webCoRE's is
   per-PISTON (`hasTriggers` computed once, webcore-piston.groovy:8771-8772,
   used at :9296). A triggerless statement was becoming its own independently
