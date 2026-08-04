@@ -1,0 +1,1316 @@
+{
+ "_comment": "webCoRE ENGINE system variables ($-prefixed), extracted from source, not hand-transcribed. Ground truth for VAR-V-02 (VARIABLES_SPEC.md §11). The engine declares ONE flat table - there is no internal A-I class structure; the only functional split is `dynamic`. NONE are writable by a piston: setVariable (webcore-piston.groovy:10139) branches on '@' globals and locals only and never touches the system table; the sole writer is the engine's internal setter (:14070). The `ha.yaml` field is the Home Assistant template this variable compiles to; edit it here rather than in the compiler when HA moves. A variable with no `ha` entry is NOT implemented - its `ha_lead` says where to look, and nobody has verified it yet. The `ha.yaml` field is the Home Assistant template this variable compiles to; edit it here rather than in the compiler when HA moves. A variable with no `ha` entry is NOT implemented - its `ha_lead` says where to look, and nobody has verified it yet.",
+ "_source": {
+  "file": "reference/webCoRE-hubitat-patches-extracted/webCoRE-hubitat-patches/smartapps/ady624/webcore-piston.src/webcore-piston.groovy",
+  "table": "buildSysVarTemplate(), lines 13759-13876",
+  "constants": "@Field static final String declarations, lines 206-249",
+  "dynamic_flag": "line 13741: 'd:true also means get the variable value dynamically via gtSysVarVal'. dynamic=false means the value comes from the execution CONTEXT instead (getSystemVariablesAndValues, :13730) - these are only meaningful inside a trigger/loop that sets them.",
+  "extracted": "2026-08-03"
+ },
+ "_counts": {
+  "active": 91,
+  "inactive": 9
+ },
+ "variables": {
+  "$args": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13772,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "script/automation input variables",
+   "ha_lead_tag": "assumed"
+  },
+  "$currentEventAttribute": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13792,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "trigger.attribute",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "trigger.attribute"
+   }
+  },
+  "$currentEventDate": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13794,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "trigger.to_state.last_changed",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "as_timestamp(trigger.to_state.last_changed) * 1000"
+   }
+  },
+  "$currentEventDelay": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13795,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "derived from the trigger timestamps",
+   "ha_lead_tag": "assumed"
+  },
+  "$currentEventDescription": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13793,
+   "implemented": {
+    "pyscript": true,
+    "yaml": false
+   },
+   "ha_lead": "trigger description",
+   "ha_lead_tag": "assumed"
+  },
+  "$currentEventDevice": {
+   "type": "device",
+   "dynamic": true,
+   "writable": false,
+   "line": 13796,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "trigger.entity_id",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr(trigger.entity_id, 'friendly_name')"
+   }
+  },
+  "$currentEventDeviceIndex": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13797,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "index within a multi-entity trigger",
+   "ha_lead_tag": "assumed"
+  },
+  "$currentEventDevicePhysical": {
+   "type": "boolean",
+   "dynamic": true,
+   "writable": false,
+   "line": 13798,
+   "implemented": {
+    "pyscript": true,
+    "yaml": false
+   },
+   "ha_lead": "no HA equivalent - HA does not distinguish physical from programmatic actuation",
+   "ha_lead_tag": "assumed"
+  },
+  "$currentEventUnit": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13800,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "trigger.to_state.attributes.unit_of_measurement",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "trigger.to_state.attributes.unit_of_measurement"
+   }
+  },
+  "$currentEventValue": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13799,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "trigger.to_state.state",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "trigger.to_state.state"
+   }
+  },
+  "$day": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13817,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().day",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().day"
+   }
+  },
+  "$dayOfWeek": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13818,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().isoweekday()",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().weekday()"
+   }
+  },
+  "$dayOfWeekName": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13819,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().strftime('%A')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().strftime('%A')"
+   }
+  },
+  "$device": {
+   "type": "device",
+   "dynamic": false,
+   "writable": false,
+   "line": 13769,
+   "context_scoped": true,
+   "implemented": {
+    "pyscript": true,
+    "yaml": false
+   },
+   "ha_lead": "the loop/trigger device - context-scoped, resolved by the compiler (see $device handling in expression.py)",
+   "ha_lead_tag": "assumed"
+  },
+  "$devices": {
+   "type": "device",
+   "dynamic": false,
+   "writable": false,
+   "line": 13770,
+   "context_scoped": true,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "the loop's device list - context-scoped",
+   "ha_lead_tag": "assumed"
+  },
+  "$file": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13853,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA /media - see the media-folder decision",
+   "ha_lead_tag": "assumed"
+  },
+  "$fuel": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13854,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA long-term statistics / recorder - partial at best",
+   "ha_lead_tag": "assumed"
+  },
+  "$hour": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13807,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().hour (12-hour form)",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().hour"
+   }
+  },
+  "$hour24": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13808,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().hour",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().hour"
+   }
+  },
+  "$hsmStatus": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13784,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "alarm_control_panel state (armed_home/armed_away/armed_night/disarmed/triggered) - the vocab already maps these under virtualDevices.alarmSystemStatus",
+   "ha_lead_tag": "assumed"
+  },
+  "$hsmTripped": {
+   "type": "boolean",
+   "dynamic": true,
+   "writable": false,
+   "line": 13783,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "alarm_control_panel state == 'triggered'",
+   "ha_lead_tag": "assumed"
+  },
+  "$httpContentType": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13786,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "rest_command response headers",
+   "ha_lead_tag": "assumed"
+  },
+  "$httpStatusCode": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13787,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "rest_command response status",
+   "ha_lead_tag": "assumed"
+  },
+  "$httpStatusOk": {
+   "type": "boolean",
+   "dynamic": true,
+   "writable": false,
+   "line": 13788,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "rest_command response status",
+   "ha_lead_tag": "assumed"
+  },
+  "$iftttStatusCode": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13789,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA rest_command or webhook response",
+   "ha_lead_tag": "assumed"
+  },
+  "$iftttStatusOk": {
+   "type": "boolean",
+   "dynamic": true,
+   "writable": false,
+   "line": 13790,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA rest_command or webhook response",
+   "ha_lead_tag": "assumed"
+  },
+  "$incidents": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13782,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "no direct equivalent found - HA has no incident feed",
+   "ha_lead_tag": "assumed"
+  },
+  "$index": {
+   "type": "decimal",
+   "dynamic": false,
+   "writable": false,
+   "line": 13771,
+   "context_scoped": true,
+   "implemented": {
+    "pyscript": true,
+    "yaml": false
+   },
+   "ha_lead": "the loop index - context-scoped",
+   "ha_lead_tag": "assumed"
+  },
+  "$json": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13773,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "parsed response from a rest_command",
+   "ha_lead_tag": "assumed"
+  },
+  "$lastexecuted": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13811,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "the automation's own last_triggered attribute",
+   "ha_lead_tag": "assumed"
+  },
+  "$latitude": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13813,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "HA core config latitude",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr('zone.home', 'latitude')"
+   }
+  },
+  "$localNow": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13778,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now() in HA's configured timezone",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().timestamp() * 1000"
+   }
+  },
+  "$location": {
+   "type": "device",
+   "dynamic": false,
+   "writable": false,
+   "line": 13776,
+   "context_scoped": true,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA zone.home / core config latitude+longitude",
+   "ha_lead_tag": "assumed"
+  },
+  "$locationMode": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13775,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "PistonCore's input_select helper - DECIDED, see virtualDevices.mode in webcore_vocab.json",
+   "ha_lead_tag": "assumed"
+  },
+  "$longitude": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13814,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "HA core config longitude",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr('zone.home', 'longitude')"
+   }
+  },
+  "$mediaId": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13869,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "see the media-folder decision",
+   "ha_lead_tag": "assumed"
+  },
+  "$mediaType": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13871,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "see the media-folder decision",
+   "ha_lead_tag": "assumed"
+  },
+  "$mediaUrl": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13870,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "see the media-folder decision",
+   "ha_lead_tag": "assumed"
+  },
+  "$meridian": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13815,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "now().strftime('%p')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().strftime('%p')"
+   }
+  },
+  "$meridianWithDots": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13816,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "now().strftime('%p') with dots inserted",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().strftime('%p') | replace('AM','A.M.') | replace('PM','P.M.')"
+   }
+  },
+  "$midnight": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13823,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "today_at('00:00')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "today_at('00:00').timestamp() * 1000"
+   }
+  },
+  "$minute": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13809,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().minute",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().minute"
+   }
+  },
+  "$month": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13820,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().month",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().month"
+   }
+  },
+  "$monthName": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13821,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().strftime('%B')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().strftime('%B')"
+   }
+  },
+  "$name": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13805,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "the piston's name - PistonCore knows it at compile time",
+   "ha_lead_tag": "assumed"
+  },
+  "$nextMidnight": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13827,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "today_at('00:00') + timedelta(days=1)",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "(today_at('00:00') + timedelta(days=1)).timestamp() * 1000"
+   }
+  },
+  "$nextNoon": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13828,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "today_at('12:00') + timedelta(days=1)",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "(today_at('12:00') + timedelta(days=1)).timestamp() * 1000"
+   }
+  },
+  "$nextSunrise": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13829,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "state_attr('sun.sun','next_rising')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr('sun.sun', 'next_rising')"
+   }
+  },
+  "$nextSunset": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13830,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "state_attr('sun.sun','next_setting')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr('sun.sun', 'next_setting')"
+   }
+  },
+  "$nfl": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13875,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "no direct equivalent - external sports feed",
+   "ha_lead_tag": "assumed"
+  },
+  "$noon": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13824,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "today_at('12:00')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "today_at('12:00').timestamp() * 1000"
+   }
+  },
+  "$now": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13777,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now() (or utcnow()) as a timestamp",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().timestamp() * 1000"
+   }
+  },
+  "$places": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13842,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA ZONES",
+   "ha_lead_tag": "assumed"
+  },
+  "$previousEventAttribute": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13857,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "trigger.attribute",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "trigger.attribute"
+   }
+  },
+  "$previousEventDate": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13859,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "trigger.from_state.last_changed",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "as_timestamp(trigger.from_state.last_changed) * 1000"
+   }
+  },
+  "$previousEventDelay": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13860,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "derived from from_state/to_state timestamps",
+   "ha_lead_tag": "assumed"
+  },
+  "$previousEventDescription": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13858,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "prior trigger description",
+   "ha_lead_tag": "assumed"
+  },
+  "$previousEventDevice": {
+   "type": "device",
+   "dynamic": true,
+   "writable": false,
+   "line": 13861,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "trigger.entity_id (same entity, prior state)",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr(trigger.entity_id, 'friendly_name')"
+   }
+  },
+  "$previousEventDeviceIndex": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13862,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "index within a multi-entity trigger",
+   "ha_lead_tag": "assumed"
+  },
+  "$previousEventDevicePhysical": {
+   "type": "boolean",
+   "dynamic": true,
+   "writable": false,
+   "line": 13863,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "no HA equivalent - see $currentEventDevicePhysical",
+   "ha_lead_tag": "assumed"
+  },
+  "$previousEventUnit": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13865,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "trigger.from_state.attributes.unit_of_measurement",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "trigger.from_state.attributes.unit_of_measurement"
+   }
+  },
+  "$previousEventValue": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13864,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "trigger.from_state.state",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "trigger.from_state.state"
+   }
+  },
+  "$random": {
+   "type": "decimal",
+   "dynamic": true,
+   "writable": false,
+   "line": 13834,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "range/random filter",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "range(0, 1000) | random / 1000"
+   }
+  },
+  "$randomColor": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13835,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "random pick from the vocab's colour table",
+   "ha_lead_tag": "assumed"
+  },
+  "$randomColorName": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13836,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "random pick from the vocab's colour table",
+   "ha_lead_tag": "assumed"
+  },
+  "$randomHue": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13839,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "random integer 0-360",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "range(0, 361) | random"
+   }
+  },
+  "$randomLevel": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13837,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "random integer in the level range",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "range(0, 101) | random"
+   }
+  },
+  "$randomSaturation": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13838,
+   "implemented": {
+    "pyscript": false,
+    "yaml": true
+   },
+   "ha_lead": "random integer 0-100",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "range(0, 101) | random"
+   }
+  },
+  "$response": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13774,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "rest_command response_variable",
+   "ha_lead_tag": "assumed"
+  },
+  "$roomids": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13856,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA AREA ids",
+   "ha_lead_tag": "assumed"
+  },
+  "$rooms": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13855,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA AREAS (area registry)",
+   "ha_lead_tag": "assumed"
+  },
+  "$second": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13810,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().second",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().second"
+   }
+  },
+  "$state": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13806,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "the piston's own state",
+   "ha_lead_tag": "assumed"
+  },
+  "$sunrise": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13825,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "state_attr('sun.sun','next_rising') / today_at + sun offset",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr('sun.sun', 'next_rising')"
+   }
+  },
+  "$sunset": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13826,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "state_attr('sun.sun','next_setting')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "state_attr('sun.sun', 'next_setting')"
+   }
+  },
+  "$temperatureScale": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13840,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA unit system (hass.config.units)",
+   "ha_lead_tag": "assumed"
+  },
+  "$time": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13831,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().strftime('%I:%M %p')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().strftime('%I:%M %p')"
+   }
+  },
+  "$time24": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13832,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().strftime('%H:%M')",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().strftime('%H:%M')"
+   }
+  },
+  "$tzId": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13844,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA configured timezone id",
+   "ha_lead_tag": "assumed"
+  },
+  "$tzInDst": {
+   "type": "boolean",
+   "dynamic": true,
+   "writable": false,
+   "line": 13846,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "now().dst() != 0",
+   "ha_lead_tag": "assumed"
+  },
+  "$tzName": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13843,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA configured timezone name",
+   "ha_lead_tag": "assumed"
+  },
+  "$tzOffset": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13845,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "now().utcoffset()",
+   "ha_lead_tag": "assumed"
+  },
+  "$utc": {
+   "type": "datetime",
+   "dynamic": true,
+   "writable": false,
+   "line": 13779,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "utcnow()",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "utcnow().timestamp() * 1000"
+   }
+  },
+  "$version": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13873,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "PistonCore's own version, not HA's",
+   "ha_lead_tag": "assumed"
+  },
+  "$versionH": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13874,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "PistonCore's own version, not HA's",
+   "ha_lead_tag": "assumed"
+  },
+  "$weather": {
+   "type": "dynamic",
+   "dynamic": true,
+   "writable": false,
+   "line": 13781,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA weather integration (weather.* entity)",
+   "ha_lead_tag": "assumed"
+  },
+  "$year": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13822,
+   "implemented": {
+    "pyscript": true,
+    "yaml": true
+   },
+   "ha_lead": "now().year",
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "yaml": "now().year"
+   }
+  },
+  "$zipCode": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13812,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA core config - not exposed as a template global",
+   "ha_lead_tag": "assumed"
+  },
+  "$zoneId": {
+   "type": "string",
+   "dynamic": true,
+   "writable": false,
+   "line": 13849,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "HA configured timezone id (same source as $tzId)",
+   "ha_lead_tag": "assumed"
+  },
+  "$zoneInDst": {
+   "type": "boolean",
+   "dynamic": true,
+   "writable": false,
+   "line": 13851,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "now().dst() != 0",
+   "ha_lead_tag": "assumed"
+  },
+  "$zoneOffset": {
+   "type": "integer",
+   "dynamic": true,
+   "writable": false,
+   "line": 13850,
+   "implemented": {
+    "pyscript": false,
+    "yaml": false
+   },
+   "ha_lead": "now().utcoffset()",
+   "ha_lead_tag": "assumed"
+  }
+ },
+ "inactive": {
+  "$currentState": {
+   "line": 13801,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$currentStateDuration": {
+   "line": 13802,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$currentStateSince": {
+   "line": 13803,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$mediaSize": {
+   "line": 13872,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$nextScheduledTime": {
+   "line": 13804,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$previousState": {
+   "line": 13866,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$previousStateDuration": {
+   "line": 13867,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$previousStateSince": {
+   "line": 13868,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  },
+  "$zoneName": {
+   "line": 13848,
+   "note": "declared but COMMENTED OUT in the engine, so webCoRE itself never serves it - a piston referencing it gets nothing. Not an HA limitation; there is simply no behaviour to reproduce."
+  }
+ },
+ "aliases": {
+  "$alarmSystemStatus": {
+   "engine_equivalent": "$hsmStatus",
+   "why": "SmartThings SHM vs Hubitat HSM - same concept; already in webcore_vocab.json virtualDevices.alarmSystemStatus with an HA state_map to alarm_control_panel"
+  },
+  "$alarmSystemAlert": {
+   "engine_equivalent": "$hsmTripped",
+   "why": "SmartThings SHM alert vs Hubitat HSM tripped"
+  },
+  "$alarmSystemRules": {
+   "engine_equivalent": null,
+   "why": "SmartThings SHM rule set; Hubitat fork dropped it. No HA equivalent found."
+  },
+  "$sunriseTime": {
+   "engine_equivalent": "$sunrise",
+   "why": "time-of-day form of the same sun event",
+   "ha": {
+    "yaml": "state_attr('sun.sun', 'next_rising')"
+   }
+  },
+  "$sunsetTime": {
+   "engine_equivalent": "$sunset",
+   "why": "time-of-day form of the same sun event",
+   "ha": {
+    "yaml": "state_attr('sun.sun', 'next_setting')"
+   }
+  },
+  "$previousEvent": {
+   "engine_equivalent": "$previousEvent* family",
+   "why": "umbrella name for the previousEvent variables the engine declares individually"
+  },
+  "$date": {
+   "engine_equivalent": null,
+   "why": "not a system variable - it is a VIRTUAL DEVICE in webcore_vocab.json virtualDevices.date",
+   "ha": {
+    "yaml": "now().strftime('%x')"
+   }
+  },
+  "$datetime": {
+   "engine_equivalent": null,
+   "why": "not a system variable - virtualDevices.datetime"
+  }
+ }
+}

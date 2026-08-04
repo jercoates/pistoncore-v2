@@ -213,6 +213,28 @@ class Resolver:
         self.command_ha = _load_command_ha(vocab)
         self.virtual_devices = vocab.get("virtualDevices", {})
         self.local_var_names = {v.get("n") for v in piston.get("v", [])}
+        # The DECLARATION, not just the name. Collected but not yet consumed
+        # (stage 1 of the variables work) — see VARIABLES_SPEC §4 for what the
+        # type governs and §5 for what the initial value governs.
+        #
+        # `has_initial` is the persistence test: webCoRE re-initializes a
+        # variable that HAS an initial value on every run, and persists one
+        # that does not. A list type cannot be given an initial value at all
+        # (the editor hides the field), so lists are always persistent.
+        self.local_var_decls = {}
+        for v in piston.get("v", []):
+            name = v.get("n")
+            if not name:
+                continue
+            vtype = str(v.get("t") or "dynamic")
+            init = v.get("v")
+            has_initial = isinstance(init, dict) and init.get("c") is not None
+            self.local_var_decls[name] = {
+                "type": vtype,
+                "is_list": vtype.endswith("]"),
+                "has_initial": has_initial and not vtype.endswith("]"),
+                "initial": init.get("c") if isinstance(init, dict) else None,
+            }
         self.unresolved: list[dict] = []   # devices kept but not currently in HA
         self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
         sys_ent = resolution_map.get("$system")

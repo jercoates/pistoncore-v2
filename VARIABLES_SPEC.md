@@ -18,16 +18,55 @@ Every claim is marked `Verified — <source, line>`, `Assumed — needs test`, o
 
 ---
 
+## Reconciliation with COMPILER_SPEC.md
+
+This document is scoped to variables. `COMPILER_SPEC.md` §3.1 RESOLVE already
+covers part of the same ground. Where they overlap, the following applies.
+
+**COMPILER_SPEC wins:**
+
+- **Device variables** — specified there in full (§3.1, §H1). Out of scope here.
+- **Superglobals (`@@`)** — §3.1 states they have no v1 role, since PistonCore
+  collapses to a single local HA instance. That supersedes any `@@` handling
+  described in §2 of this document. Deferred, not specified.
+- **Map by behavior, never by name** — §3.1's principle. Adopted here.
+
+**This document corrects COMPILER_SPEC §3.1:**
+
+| §3.1 states | Verified position | Source |
+|---|---|---|
+| "~7 value types" | 10 basic + 9 list types | §4, verified against source and UI |
+| `long` absent from the helper table | `long` is a distinct declared type | §4; COMPILER_SPEC §2.5 itself lists `LONG` in cast dispatch |
+| List types absent entirely | 9 list types exist; lists cannot take an initial value and therefore always persist | §4, §5 |
+| `min`/`max` used "to constrain" | `min`/`max` are **required** — an `input_number` cannot be created without both | §7.3 |
+
+**This document adds, with no COMPILER_SPEC coverage:**
+
+initial-value persistence semantics (§5), the 255-character entity-state cap
+(§7.2), list variables, media and image handling (§10b, §10d), system variables
+embedded in string expressions and their formatting (§10c), and sanitized output
+(§10e).
+
+**COMPILER_SPEC partially answers this document's open items.** §2.5 item 6
+locates `evaluateExpression()` at `webcore-piston.groovy` line 10497 and reports
+that coercion is strongly-typed dispatch — every expression is cast to its
+declared type via `cast`/`bcast`/`scast`/`dcast` before return, with no loose
+dynamic values. It flags this as a real semantic gap against Jinja2, which has no
+forced-cast-per-type step. **VAR-V-01 and VAR-V-08 should start from that finding
+rather than from scratch.**
+
+---
+
 ## Variable classes — scope of this document
 
 webCoRE exposes several distinct classes of variable. They differ in who owns
 them, whether they are writable, and — critically — how each must compile to
 Home Assistant. **Sections 1–11 below cover Class A only.** The other classes
-are specified here and enumerated by the verification tasks in §12.
+are specified here and enumerated by the verification tasks in §11.
 
 | Class | Examples | Writable | PistonCore compilation target |
 |---|---|---|---|
-| **A. User-declared** | any name from the variable dialog | yes | Helper entity, or YAML `variables:` (§5) |
+| **A. User-declared** | any name from the variable dialog | yes | Helper entity, or YAML `variables:` (§5). **Device-typed variables are out of scope** — see note below. |
 | **B. Event context** | `$currentEventDevice`, `$currentEventValue`, `$currentEventAttribute` | no | HA trigger data (`trigger.*`) in templates |
 | **C. Time & date** | `$now`, `$time`, `$hour`, `$sunrise`, `$sunset` | no | HA template functions; `sun` integration |
 | **D. Location & hub** | `$locationMode`, `$shmStatus` | no | PistonCore `input_select`; designated `alarm_control_panel` |
@@ -36,6 +75,11 @@ are specified here and enumerated by the verification tasks in §12.
 | **G. Web request results** | `$response`, `$httpStatusCode` | no | HA `response_variable` from the action call |
 | **H. Random** | `$random`, `$randomColor` | no | HA templates |
 | **I. Piston metadata** | version, piston name/id | no | Compile-time constants |
+
+**Out of scope — device-typed variables.** Device variables, local and global,
+are specified in full elsewhere in the PistonCore specs. This document does not
+restate, extend, or reinterpret those rules. Where a device variable interacts
+with something specified here, defer to the device variable spec.
 
 **Decision — PistonCore choice.** **Only Class A ever becomes a helper entity.**
 Every other class compiles to a template expression, trigger context, call-site
@@ -157,7 +201,7 @@ the HA facts cited in §7.
 
 | webCoRE type | HA helper | Notes |
 |---|---|---|
-| boolean | `input_boolean` | Clean 1:1 |
+| boolean | `input_boolean` | **Not 1:1.** HA states are `on`/`off`, never `true`/`false`. Map by behavior, not type name. (COMPILER_SPEC §3.1) |
 | integer | `input_number` (step 1) | `counter` deliberately unused — see §7.4 |
 | long | `input_number` | Float-backed; precision risk — see §7.3 |
 | decimal | `input_number` | |
@@ -165,7 +209,7 @@ the HA facts cited in §7.
 | time | `input_datetime` (`has_time`) | Offset trap — see §7.1 |
 | date | `input_datetime` (`has_date`) | |
 | datetime | `input_datetime` (both) | |
-| device | — | Compile-time resolution; never reaches HA (§8) |
+| device | — | **Out of scope.** Covered by the device variable spec. |
 | dynamic | `input_text` + type tag | Forces PyScript unless type is unambiguous |
 | `<type>[]` | `input_text` (JSON) | No native list helper; entity-state cap applies |
 
@@ -291,77 +335,7 @@ cannot implement it. Run-scoped variables still compile to YAML `variables:`.
 
 ---
 
-## 8. Device variables
-
-**Decision — PistonCore choice.** Device variables resolve at compile time. The
-compiler expands them into the entity list at each reference point; the variable
-never becomes HA state and never reaches a helper. The 255-character cap does not
-apply.
-
-Resolution reads variables and never mutates them. Device variables store
-friendly names and are never rewritten to entity IDs.
-
-**Verified — piston.module.html v0.3.114.20220203, line 2243 / 2310, read 2026-08-03.** Device has no list form in
-either dialog, so compile-time expansion never has to handle a device collection
-declared as a list type.
-
-### 8.1 Global device variables go stale — dependency tracking required
-
-**Two homes, one name.** Global variables split by type:
-non-device globals become helper entities in HA, referenced by the compiled
-automations from outside them. Device globals are expanded inline into the
-automation at compile and the variable itself exists only in PistonCore's store
-— it never becomes an HA entity at all.
-
-**Verified — dashboard UI screenshot, 2026-08-03.** Global device variables in
-real use hold large device lists (observed: `@Door_Contacts_Exterior` with 14
-devices, `@Alert_Lights` with 4). Device-typed globals are a primary usage
-pattern, not an edge case.
-
-**The problem.** webCoRE resolves device variables at **runtime**, so a global
-device variable is always current — there is no compiled artifact to go stale.
-PistonCore resolves them at **compile time** (§8), which introduces a staleness
-class webCoRE does not have:
-
-> A global device variable is edited from the dashboard, outside any piston.
-> Every already-compiled piston referencing it still holds the device list as it
-> was at compile time. The piston continues to run, silently, against the old
-> list. No error is raised. The failure surfaces only as a device that stopped
-> participating in an automation.
-
-This is the worst failure shape: silent, delayed, and indistinguishable from a
-device problem.
-
-**Decision — PistonCore choice.** Compile-time resolution is retained, but the
-compiler must maintain a **dependency map** from each global device variable to
-every piston that references it. On any change to a global device variable —
-add, remove, rename, delete — all dependent pistons are recompiled and
-redeployed automatically.
-
-**Decision — PistonCore choice.** Deleting a global device variable that has
-dependents fails, naming the dependent pistons. webCoRE permits the delete and
-lets the pistons break at runtime; PistonCore's compile step makes the
-dependency knowable in advance, so it should be enforced.
-
-**Open — decision needed.** Whether recompilation is automatic and silent, or
-surfaces a confirmation listing affected pistons. Silent is closer to webCoRE's
-behavior, where the change simply takes effect. A confirmation is safer but has
-no webCoRE analogue.
-
-**Open — needs source.** Whether webCoRE permits a *local* device variable to
-reference a global one, which would create a second-order dependency. Resolved
-by **VAR-V-06**.
-
----
-
-**Open — decision needed.** A piston assigning *into* a device variable at
-runtime (e.g. storing `$currentEventDevice`) cannot be resolved at compile time.
-Either reject at compile with a clear message, or route the piston to PyScript.
-Must be an explicit decision, not a discovered gap.
-
----
-
-## 9. Value format
+## 8. Value format
 
 **Verified — webcore.groovy v0.3.114.20220203, lines 1513, 1516, read 2026-08-03.** Globals are stored as
 `name → [t: <type>, v: <value>]`. The type tag is part of the storage format, not
@@ -380,7 +354,7 @@ above: local type is fixed at declaration.
 
 ---
 
-## 10. Rename semantics
+## 9. Rename semantics
 
 **Verified — webcore.groovy v0.3.114.20220203, lines 1509–1517, read 2026-08-03.** When the incoming name differs
 from the stored name, the old key is removed and a new entry written. Nothing
@@ -399,7 +373,7 @@ quirk; PistonCore should use one consistent store.
 
 ---
 
-## 11. Design-time expression evaluation
+## 10. Design-time expression evaluation
 
 **Verified — app.js v0.3.114.20220203, lines 1488–1503, read 2026-08-03.** `dataService.evaluateExpression` posts to
 `intf/dashboard/piston/evaluate` with `id`, base64 `expression`, `dataType`, and
@@ -419,7 +393,209 @@ against what the shim currently implements.
 
 ---
 
-## 12. Verification tasks (for Claude Code)
+## 10a. Two type systems — attribute types vs variable types
+
+**Verified — webcore.groovy v0.3.114.20220203, capability/attribute table
+(lines ~2470–2560), read 2026-08-03.** webCoRE uses **two distinct type
+systems**:
+
+- **Variable types (10)** — what the user can declare (§4).
+- **Attribute and parameter types (~35)** — what devices expose and what
+  commands accept. Extracted from source: `decimal`, `string`, `enum`,
+  `integer`, `duration`, `level`, `boolean`, `color`, `dynamic`, `datetime`,
+  `lifxSelector`, `hue`, `uri`, `thermostatSetpoint`, `text`, `attributes`,
+  `url`, `saturation`, `piston`, `colorTemperature`, `object`, `variables`,
+  `infraredLevel`, `time`, `variable`, `thermostatMode`, `thermostatFanMode`,
+  `switch`, `routine`, `phone`, `number`, `mode`, `lifxScene`, `email`,
+  `contacts`, `consumable`, `alarmSystemStatus`, `vector3`, `image`,
+  `hexcolor`, `date`.
+
+**The unspecified problem.** When a piston stores a device attribute into a
+variable, a ~35-type space must collapse into a 10-type space. Several
+attribute types have **no variable type to land in**: `image`, `object`,
+`vector3`, `attributes`, `variables`.
+
+**Decision — PistonCore choice.** A claim that all pistons compile is not
+credible until this collapse is specified. Any attribute type with no variable
+target must either have an explicit mapping rule or fail loudly at compile,
+naming the attribute and type. Silent coercion to `string` is prohibited — it
+converts a type error into a runtime data corruption.
+
+---
+
+## 10b. Media types — images and audio
+
+### Images
+
+**Verified — HA core `components/image/__init__.py`, read 2026-08-03.**
+`ENTITY_IMAGE_URL = "/api/image_proxy/{0}?token={1}"` with
+`TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)`. A `snapshot` service exists,
+taking `ATTR_FILENAME`.
+
+**Verified — HA developer docs, image entity, read 2026-08-03.** Image entity
+state is driven by `image_last_updated`; the bytes are fetched separately and
+are never in the entity state.
+
+**Verified — user piston "doorbell pushed albert", dashboard screenshot,
+2026-08-03.** webCoRE itself stores a captured image as a **filename in a plain
+`string` variable**:
+`string DoorBell_Camera_Image = 'Doorbell_Pro_-motion_...-motion.jpg';`
+
+**Decision — PistonCore choice.** A webCoRE `image` attribute compiles to a
+**file path**, produced by the snapshot service, stored in a `string` variable.
+This now matches webCoRE's own representation rather than being an inference.
+
+**Decision — PistonCore choice.** PistonCore must **never** store an
+`/api/image_proxy/` or `/api/camera_proxy/` URL in a variable. The token rotates
+every 5 minutes, so a stored URL silently dies. A piston capturing an image and
+notifying later would send a dead link with no error raised. This is a
+prohibition, not a preference.
+
+**Open — decision needed.** Snapshot filenames must be unique per capture, or
+successive captures overwrite each other. Naming scheme and cleanup policy are
+unspecified. webCoRE has no analogue — it holds the image in its own storage.
+
+### Audio
+
+**Verified — HA `media_source` docs, read 2026-08-03.**
+`media_player.play_media` takes `media_content_id` — a `media-source://` URI, a
+`/local/` path, or an https URL — plus `media_content_type`.
+
+**Verified — HA TTS docs, read 2026-08-03.** `tts.speak` speaks a message on a
+media player through a TTS entity.
+
+**Decision — PistonCore choice.** webCoRE speech commands (`playText`, `speak`,
+and variants) compile to `tts.speak`. The message is a plain string and fits
+normal variable handling.
+
+**Decision — PistonCore choice.** webCoRE `playTrack` compiles to
+`media_player.play_media`. `media_content_type` is **required by HA and has no
+webCoRE equivalent** — webCoRE's track parameter is a bare URI. The compiler
+infers the type from the file extension via a data-driven extension→type table,
+and fails loudly when the extension is absent or unknown.
+
+**Both media classes are reference-only.** No audio or image bytes ever enter an
+entity state or a variable. This is consistent with §7.2 — the 255-character
+entity state cap makes by-value media impossible regardless.
+
+---
+
+## 10c. System variables inside string expressions
+
+**Verified — user piston "Dishwasher", dashboard screenshot, 2026-08-03.**
+Observed source line:
+
+```
+Send device notification "{"[emoji] Dishwasher [emoji] "$monthName" "$day" - "$time" Dishwasher has finished."}";
+```
+
+This is **not a string literal.** It is a concatenation expression in which
+quote characters toggle between literal text and expression context, with three
+Class C system variables spliced inline.
+
+**Implication.** §§ B–I of the class table describe how system variables are
+*read*. This shows they are also *embedded*, which is a different compilation
+target: the containing string becomes a Jinja template, not a value. Any
+compiler path that treats system variables only as standalone reads will
+mis-handle this, and this construction is common in notification text.
+
+### Formatting is not free
+
+`$monthName`, `$day`, and `$time` return **formatted, localized** values.
+webCoRE derives format and locale from hub settings. HA has no equivalent
+defaults, so each one compiles to an explicit `strftime` format the compiler
+must choose.
+
+**Decision — PistonCore choice.** Format strings live in a data-driven system
+variable table, never inline in the compiler or templates. Each entry pairs the
+webCoRE variable with its HA template expression and format string.
+
+**Open — needs source.** The exact format webCoRE produces for each — 12- vs
+24-hour for `$time`, zero-padding for `$day`, locale for `$monthName`, and
+whether hub timezone or locale settings alter them. Resolved by **VAR-V-16**.
+Choosing differently than webCoRE silently changes every notification's text.
+
+### Encoding
+
+**Verified — user piston, 2026-08-03.** Emoji appear in notification strings.
+UTF-8 must survive parse, compile, YAML emission, and service call. Consistent
+with app.js `utoa` being UTF-8 safe (§8); the compiler must not narrow this.
+
+### The same concept compiles two ways
+
+The observed piston uses time as a **condition** (`Time is between 9:00:00 AM
+and 9:00:00 PM`) and as a **value** (`$time` inside the message) in the same
+piston. These are unrelated compilation targets: a condition, versus a template
+expression. The system variable table must not assume one shape.
+
+---
+
+## 10d. Media lifecycle and platform-dependent content
+
+Observed in real pistons. Each is a variable-adjacent gap with no clean HA
+equivalent.
+
+### `clearImages()` — no HA analogue
+
+**Verified — user piston "doorbell pushed albert", 2026-08-03.** The piston calls
+`Take a picture;` and later `clearImages();` on the same camera device.
+
+webCoRE owns an image store with an explicit lifecycle command to empty it. HA's
+snapshot service writes files and nothing reclaims them.
+
+**Open — decision needed.** A doorbell piston firing several times daily
+accumulates files indefinitely. Options: compile `clearImages()` to a file
+deletion (requires filesystem access from an automation, which HA restricts),
+adopt a fixed-slot filename scheme so each capture overwrites the last, or
+document the gap and let files accumulate. Fixed-slot overwriting is the most
+native, but changes semantics — webCoRE retains multiple images until cleared.
+
+### Image attachment to notifications
+
+**Verified — user piston, 2026-08-03.** Email notification body embeds the image
+filename via a `File:` parameter alongside the message text.
+
+**Open — needs source.** How webCoRE's `File:` parameter resolves the filename to
+image data, and whether HA notify platforms accept an equivalent attachment
+path. Resolved by **VAR-V-17**.
+
+### Device-specific numeric media
+
+**Verified — user piston, 2026-08-03.** `Play Sound 12;` on a chime device — a
+numeric sound index interpreted by device firmware.
+
+**Open — decision needed.** HA has no "sound N" concept; the equivalent depends
+entirely on the device integration. Likely an escape-hatch case under the hybrid
+vocabulary approach rather than a translatable command.
+
+---
+
+## 10e. Sanitized output must substitute device names
+
+**Verified — user piston screenshots, 2026-08-03.** webCoRE's dashboard offers a
+sanitized export. In sanitized output, device names are replaced with generic
+substitutions derived from device type plus an index — observed: `Switch 12`,
+`Unknown Device 15`, `Unknown Device 11`. Compare the unsanitized rendering of a
+different piston, which shows real names (`Back Door`, `Front Door`).
+
+**Correction.** An earlier draft of this spec read those placeholders as
+unresolvable device references. They are not — the devices resolve normally; only
+the *rendering* is redacted.
+
+**Requirement for PistonCore.** Sanitize is a dashboard feature that operates on
+piston data and substitutes **device names specifically**. Because PistonCore
+serves the stock webCoRE dashboard, the sanitize control exists in the UI and
+must work. It touches device variables directly: the substitution replaces the
+friendly names that device variables hold.
+
+**Open — needs source.** Where sanitization is performed — client-side in
+`piston.module.js`, or server-side via a dashboard endpoint — and the exact
+substitution rule that produces names like `Switch 12`. If server-side, the shim
+must implement it. Resolved by **VAR-V-18**.
+
+---
+
+## 11. Verification tasks (for Claude Code)
 
 Each task below is self-contained and executable against the local source trees:
 webCoRE, Hubitat Groovy, and Home Assistant core. Run **one task per session**.
@@ -505,7 +681,7 @@ Locate `setLocalVariable` and the local variable read path. Report:
 - Whether the declared type can change at runtime.
 - Whether an undeclared variable can be written to, and if so what type it gets.
 
-**Spec claim under test (§9):** locals are set by value only, with type resolved
+**Spec claim under test (§8):** locals are set by value only, with type resolved
 from the piston's declaration.
 
 ---
@@ -536,37 +712,6 @@ Report:
 - Whether indices are 0-based or 1-based.
 - The `*CLEAR` index behavior (see changelog v0.3.111.20210130).
 - Whether there is any maximum list length.
-
----
-
-### VAR-V-06 — Device variables at runtime
-
-**File:** `webcore-piston.groovy`
-
-**Open question this resolves (§8):** can a piston assign a device *into* a
-device variable at runtime — for example storing `$currentEventDevice`?
-
-Report whether the engine permits it, what is stored (device object, id, or
-name), and how a later read resolves it. If the engine permits it, report
-whether the editor UI exposes any way to construct such an assignment.
-
-**Additionally, for §8.1 (global device variable staleness):**
-
-This is a **timing** question, not a whether question. The device global lives in
-PistonCore's own store, so PistonCore always knows when it changes; dependency
-tracking is within its control. What the source determines is *when*
-recompilation must happen to match webCoRE's observable behavior.
-
-- Report what happens to a piston when a global device variable it references is
-  edited: does the change take effect on the very next run, or only after the
-  piston is re-saved? **If immediate, PistonCore must recompile dependents on
-  edit. If re-save is required, PistonCore may defer.**
-- Confirm whether webCoRE resolves device variables on every read or caches the
-  resolution at piston save.
-- Report whether a local device variable can be assigned from a global device
-  variable, creating a second-order dependency.
-- Report whether webCoRE blocks deleting a global variable that pistons
-  reference, or permits it.
 
 ---
 
@@ -649,6 +794,103 @@ mappings, and flag any value with no HA equivalent.
 
 ---
 
+### VAR-V-15 — Attribute type to variable type collapse
+
+**Files:** `webcore-piston.groovy`, `webcore.groovy`
+
+**Spec claim under test (§10a):** webCoRE has ~35 attribute/parameter types but
+only 10 variable types, and the collapse between them is unspecified.
+
+Report:
+
+- The complete attribute/parameter type list from the capability table, and the
+  complete variable type list, as two explicit sets.
+- For each attribute type with no matching variable type, what the engine
+  actually does when that value is assigned to a variable: coerce, error, or
+  store as-is untyped.
+- Specifically for `image`: what is stored, and what the value looks like — data
+  URI, URL, byte array, or object reference. The dashboard's
+  `dialog-captured-image` template binds an `<img src>` to `capturedImage`, so
+  determine the form that value takes.
+- For `object`, `vector3`, `attributes`, and `variables`: what these represent
+  and whether a piston can meaningfully assign them to a variable at all.
+
+**This task determines whether "all pistons compile" is true.** If any attribute
+type has no variable target and the engine silently coerces, PistonCore must
+decide explicitly rather than inherit the coercion.
+
+---
+
+### VAR-V-16 — String expression grammar and system variable formatting
+
+**Files:** `webcore-piston.groovy`, `piston.module.js`
+
+**Spec claim under test (§10c):** system variables are embedded inside string
+concatenation expressions, where quotes toggle literal/expression context.
+
+Report:
+
+- The **grammar** of a webCoRE string expression: how quote characters delimit
+  literal versus expression segments, how nesting and escaping work, and how a
+  literal quote character is represented.
+- How this is stored in piston JSON — as one string, or a parsed operand tree.
+  PistonCore must consume whatever webCoRE emits (piston JSON is law).
+- For **every** date/time system variable found by VAR-V-02, the exact output
+  format, with a concrete example value. Specifically `$monthName`, `$day`,
+  `$time`, `$dayOfWeek`, `$hour`, `$minute`, `$meridian`.
+- Whether format depends on hub locale, hub timezone, or a webCoRE setting, and
+  what the fallback is when unset.
+- Whether numeric variables embedded in strings are zero-padded, and whether
+  decimals get a fixed precision.
+
+Output the format findings as a JSON table mapping each system variable to its
+observed output format, suitable for the data-driven table required by §10c.
+
+---
+
+### VAR-V-17 — Image storage lifecycle and attachment
+
+**Files:** `webcore-piston.groovy`, `webcore.groovy`
+
+**Context (§10b, §10d):** webCoRE stores captured images as filename strings and
+provides `clearImages()`.
+
+Report:
+
+- Where captured images are physically stored, and the filename scheme —
+  specifically whether names are unique per capture or reused.
+- What `clearImages()` deletes: all images for a device, all for a piston, or
+  all globally.
+- Whether images expire or are capped in count or size.
+- How the `File:` notification parameter resolves a filename to image data, and
+  what the receiving notification handler is given — path, bytes, or URL.
+- Whether the image filename variable is written by the engine automatically on
+  `take`, or must the piston assign it.
+
+**Then, against HA:** report whether any notify platform accepts a local file
+path for attachment, and what permissions or `allowlist_external_dirs` config it
+requires.
+
+---
+
+### VAR-V-18 — Sanitized output substitution
+
+**Files:** `piston.module.js`, `app.js`, `webcore.groovy`
+
+**Context (§10e):** the dashboard's sanitized export replaces device names with
+generic placeholders such as `Switch 12` and `Unknown Device 15`.
+
+Report:
+
+- Whether sanitization happens client-side or via a dashboard endpoint. If it
+  calls an endpoint, name it — the PistonCore shim must serve it.
+- The exact substitution rule: what produces the type prefix (`Switch`,
+  `Unknown Device`) and what the trailing number indexes.
+- What else is redacted besides device names — piston name, author, location,
+  variable values, import codes.
+- Whether the sanitized form is display-only or also used for piston sharing and
+  backup.
+
 ### VAR-V-09 — HA entity state length limit
 
 **Files:** Home Assistant core
@@ -689,9 +931,9 @@ behavior is identical across all four. Report the HA version inspected.
 
 ---
 
-## 13. Still unresolved
+## 12. Still unresolved
 
-Resolved by the tasks in §12. Listed here for tracking:
+Resolved by the tasks in §11. Listed here for tracking:
 
 Writing these from inference is precisely the guessing that has produced drift.
 Each maps to a verification task above.

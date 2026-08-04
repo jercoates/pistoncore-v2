@@ -369,6 +369,14 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         if _num_str(value):
             return {"kind": "template",
                     "template": "{{ " + _num_cmp(name, op, value) + " }}"}
+        # The COMPARISON must match how the value was WRITTEN (_typed_literal).
+        # Stage 2 made a boolean a real boolean, so comparing it to the string
+        # 'true' is always false — fix both halves or neither.
+        declared = getattr(resolver, "local_var_decls", {}).get(str(name))
+        lit = _typed_literal({"t": "c", "c": value}, declared)
+        if lit is not None:
+            return {"kind": "template",
+                    "template": "{{ " + f"{name} {op} {lit}" + " }}"}
         # single quotes: the template itself is emitted inside a DOUBLE-quoted
         # YAML scalar, so a double-quoted value here produces invalid YAML.
         return {"kind": "template",
@@ -1629,8 +1637,47 @@ def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
         raise NotYetImplemented(
             f"'{name}' is built from its own previous value, which only "
             f"persists between runs under PyScript", **ctx)
+    # Honour the declared type for constants — see _typed_literal.
+    declared = getattr(resolver, "local_var_decls", {}).get(str(name))
+    literal = _typed_literal(value_op, declared)
+    if literal is not None:
+        return {"kind": "variables", "vars": {str(name): literal}}
     return {"kind": "variables",
             "vars": {str(name): _text_param(value_op, resolver, ctx)}}
+
+
+
+def _typed_literal(value_op: dict, declared: dict | None):
+    """A constant rendered in its DECLARED type, or None to fall through.
+
+    webCoRE stores every initial/assigned constant as text, so the declared
+    type is the only thing that says what it means. Booleans in particular
+    MUST come out unquoted: the string "false" is truthy in Jinja, which
+    silently inverts `if <var>` (VARIABLES_SPEC §4).
+    """
+    if not declared or value_op.get("t") != "c":
+        return None
+    raw = value_op.get("c")
+    if raw is None or isinstance(raw, (list, dict)):
+        return None
+    kind = (declared.get("type") or "").rstrip("[]")
+    text = str(raw).strip()
+    if kind == "boolean":
+        low = text.lower()
+        if low in ("true", "false"):
+            return low
+        return None
+    if kind in ("integer", "long"):
+        try:
+            return str(int(float(text)))
+        except (TypeError, ValueError):
+            return None
+    if kind == "decimal":
+        try:
+            return repr(float(text))
+        except (TypeError, ValueError):
+            return None
+    return None
 
 
 def _send_email(n: dict, resolver: Resolver, ctx: dict) -> dict:
