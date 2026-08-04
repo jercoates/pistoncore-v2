@@ -236,7 +236,8 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
     # webCoRE's hasTriggers is per PISTON (:8771-8772, :9296). If anything in
     # this piston subscribes, the whole piston runs on that event and nothing
     # is promoted — so it compiles to ONE automation, not one per statement.
-    piston_has_triggers = any(br["triggers"] for br in branches)
+    # Read from the IR, not re-derived here — analyze() owns this fact.
+    piston_has_triggers = bool(branches and branches[0].get("piston_has_triggers"))
     collect: list | None = [] if piston_has_triggers else None
     try:
         for br in branches:
@@ -967,12 +968,23 @@ def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | 
 
 # ── actions ─────────────────────────────────────────────────────────────────
 
-def _has_wait(nodes: list) -> bool:
-    for n in nodes:
-        if n["kind"] == "task" and n["command"] in ("wait", "waitForTime", "waitRandom"):
+def _has_wait(nodes) -> bool:
+    """Does anything in here wait?
+
+    Walks the WHOLE subtree, not just if/then/else. A wait hiding in a loop
+    body, a switch case, or a condition's attached actions still needs its own
+    cancellation scope — missing one puts a statement into the merged
+    automation where an unrelated trigger can restart it and kill the wait.
+    Two pistons slipped through when this only recursed into `if`."""
+    if isinstance(nodes, dict):
+        if (nodes.get("kind") == "task"
+                and nodes.get("command") in ("wait", "waitForTime", "waitRandom")):
             return True
-        if n["kind"] == "if" and (_has_wait(n["then"]) or _has_wait(n["else"])):
-            return True
+        return any(_has_wait(v) for k, v in nodes.items()
+                   if k in ("then", "else", "body", "conditions", "children",
+                            "cases", "default", "true_actions", "false_actions"))
+    if isinstance(nodes, list):
+        return any(_has_wait(n) for n in nodes)
     return False
 
 
@@ -2238,46 +2250,62 @@ def _strip_accumulator(expr: str, var: str) -> str:
 
 def _merge_branches(parts: list, piston_id: str, piston_name: str,
                     blocks: list, auto_ids: list) -> None:
-    """Every statement of a trigger-driven piston -> ONE automation.
+    """Statements -> automations, grouped so CANCELLATION stays per-statement.
 
-    webCoRE runs the whole piston on any subscribed event, so the automation
-    subscribes to the union of every statement's triggers and then runs each
-    statement in order behind its own conditions. Statement-level conditions
-    move from automation level INTO the action body, because they now gate one
-    statement rather than the whole run.
+    webCoRE runs every statement on every piston event, so each automation
+    subscribes to the UNION of the piston's triggers and each statement's body
+    sits behind its own gate.
 
-    Restrictions stay where they were — they gate their own statement and are
-    already inside that statement's condition list here.
+    But a statement carrying a WAIT keeps its own automation. `mode: restart`
+    cancels a whole in-flight run, and webCoRE cancels a statement's pending
+    tasks only when THAT statement's condition changes — so putting two waits,
+    or a wait and an unrelated trigger, in one automation lets one cancel the
+    other. That is the "run-on sentence" piston failure (Jeremy, 2026-08-03:
+    a floor-wide piston where hall motion must not cancel a pending kitchen
+    timer).
 
-    mode: `restart` if any statement asks for it (webCoRE's default TCP
-    cancels pending tasks on re-trigger); otherwise `queued`.
+    Statements without waits have nothing to cancel, so they merge freely.
     """
-    all_triggers, actions = [], []
-    seen = set()
+    all_triggers, seen = [], set()
     for part in parts:
         for t in part["triggers"]:
             key = _json_dumps(t)
             if key not in seen:
                 seen.add(key)
                 all_triggers.append(t)
-    for part in parts:
-        body = part["actions"]
-        conds = part["conditions"]
-        if conds:
-            body = [{"kind": "if", "conditions": conds, "then": body, "else": []}]
-        actions.extend(body)
 
-    auto_id = f"pistoncore_{piston_id}"
-    auto_ids.append(auto_id)
-    mode = "restart" if any(p["br"]["tcp"] == "c" for p in parts) else "queued"
-    blocks.append(_env.get_template("automation.yaml.j2").render(
-        auto_id=auto_id,
-        alias=f"PistonCore: {piston_name}",
-        mode=mode,
-        triggers=all_triggers,
-        conditions=[],
-        actions=actions,
-    ))
+    def gated(part):
+        body = part["actions"]
+        return ([{"kind": "if", "conditions": part["conditions"],
+                  "then": body, "else": []}] if part["conditions"] else body)
+
+    waiting = [p for p in parts if _has_wait(p["br"]["then"])
+               or _has_wait(p["br"]["else"])]
+    plain = [p for p in parts if p not in waiting]
+
+    def emit(suffix, chunk, mode):
+        if not chunk:
+            return
+        actions = []
+        for part in chunk:
+            actions.extend(gated(part))
+        auto_id = f"pistoncore_{piston_id}{suffix}"
+        auto_ids.append(auto_id)
+        blocks.append(_env.get_template("automation.yaml.j2").render(
+            auto_id=auto_id,
+            alias=f"PistonCore: {piston_name}"
+                  + (f" — ${chunk[0]['br']['stmt_id']}" if suffix else ""),
+            mode=mode,
+            triggers=all_triggers,
+            conditions=[],
+            actions=actions,
+        ))
+
+    emit("", plain, "restart" if any(p["br"]["tcp"] == "c" for p in plain)
+         else "queued")
+    for part in waiting:
+        emit(f"_s{part['br']['stmt_id']}", [part],
+             "restart" if part["br"]["tcp"] == "c" else "queued")
 
 
 def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,

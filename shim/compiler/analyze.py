@@ -423,4 +423,21 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
         # if/else action, and they must never be promoted to a subscription.
         branches[-1]["restrictions"] = (_restriction_nodes(stmt, kwargs)
                                         + list(piston_restrictions))
+
+    # IS THIS PISTON TRIGGER-DRIVEN? An intent-level fact about the WHOLE
+    # piston, so it is read here rather than re-derived by each emitter.
+    #
+    # webCoRE computes the same thing once (`hasTriggers`,
+    # webcore-piston.groovy:8771-8772) and uses it at :9296 to decide whether
+    # conditions get promoted to subscriptions. A piston that subscribes to
+    # ANYTHING promotes nothing: every statement runs on that event, gated by
+    # its own conditions. Deciding this per statement is what made a
+    # triggerless statement compile into its own independently firing
+    # automation.
+    #
+    # Stamped on every branch so both bands read the same answer instead of
+    # each computing its own — one reader, which is the whole point.
+    has_triggers = any(br.get("triggers") for br in branches)
+    for br in branches:
+        br["piston_has_triggers"] = has_triggers
     return branches
