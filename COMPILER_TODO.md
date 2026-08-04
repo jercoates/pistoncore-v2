@@ -65,6 +65,63 @@ pyscript: 12}`.
       runnable now that the engine source is confirmed present. One per session,
       report only, no edits.
 
+## Open — media and files (MEDIA_FILES_SPEC, not implemented)
+
+**The spec document itself is NOT in the repo** as of 2026-08-03 — it was written
+but only pasted into a session. Save it before relying on any of this; these
+entries are a summary, not the authority.
+
+Decisions already made in it (do not re-litigate):
+- Media is REFERENCED, never carried. No image or audio bytes in an entity
+  state, helper, or variable — also forced by the 255-char state cap.
+- **Never store an `/api/image_proxy/` or `/api/camera_proxy/` URL.** The token
+  rotates every 5 minutes (HA core `components/image/__init__.py`,
+  `TOKEN_CHANGE_INTERVAL`), so a stored URL dies silently — works in every
+  hand-test, fails whenever the notification lags.
+- Snapshots go to `/media/pistoncore/<camera>/`, **NOT `/config/www/`**. Both
+  are zero-config; only one is safe. `/config/www` is served at `/local/` with
+  NO authentication, so a camera capture of the house would sit behind a
+  guessable URL. Needs saying in INSTALL.md *with the reason*, or the
+  obvious-looking choice gets copied back in.
+- Fixed filename per camera, overwritten. Makes the path a compile-time
+  constant, bounds disk use, and makes `clearImages()` a no-op.
+
+- [ ] **`take` (camera snapshot) — NOW UNBLOCKED, was waiting on this spec.**
+      Broken since discovery 2026-07-26: webCoRE's `take` has ZERO parameters,
+      but the vocab maps it to `camera.snapshot` with `data.filename: "$1"`, so
+      `$1` never exists and HA requires a filename. The spec supplies the
+      answer — `/media/pistoncore/<camera>/<camera>.jpg`, fixed and
+      overwritten — which makes the path a compile-time constant. Fix is a
+      VOCAB edit, not compiler code.
+- [ ] **`clearImages` is absent from the vocab entirely** — add it as a no-op
+      per the fixed-filename decision. Used by real pistons
+      (23_Door_Motion_Alert).
+- [ ] **`media_content_type` extension→type table** — required by HA, no webCoRE
+      equivalent (its track parameter is a bare URI). Infer from the extension,
+      fail loudly on unknown. Table is DATA, never inline in compiler or
+      template. Not built.
+- [ ] **`clearImages()` → no-op** under fixed filenames. **Conditional
+      obligation:** if timestamped filenames are ever added, this decision
+      expires and it needs a real implementation. Do not let the no-op survive a
+      naming-scheme change silently.
+- [ ] **Numeric sound index (`Play Sound 12`)** — device-firmware meaning, no HA
+      concept. Escape-hatch case via the custom-command mechanism, not a
+      translation.
+- [ ] **MEDIA-V-01** — webCoRE image store internals, `clearImages()` real scope,
+      and how the `File:` notify parameter resolves to image data. Engine source
+      IS now available, so this is runnable.
+- [ ] **MEDIA-V-02** — can an HA notify platform attach a file from a media
+      directory? **This one can overturn the `/media/` decision above.** If media
+      dirs don't work for attachment, the location must be revisited — and the
+      alternative still must not be `/config/www`.
+- [ ] **MEDIA-V-03** — image/audio attribute types; what the engine does with an
+      `image`-typed attribute assigned to a variable (no matching variable type
+      exists).
+- [ ] **Open question (Jeremy's call):** fixed filenames have a narrow race — a
+      camera firing twice can have the second capture land while the first
+      notification is still assembling, so it sends the newer image. Timestamped
+      names avoid it but grow unbounded with no reaper. Arguably correct as-is.
+
 ## Open — structural (SESSION_BRIEF_ONE_READER_ONE_WRITER.md)
 
 - [ ] **Stage 1 — one reader.** `emit_pyscript` still walks the raw piston JSON
