@@ -280,6 +280,49 @@ async def undeploy(piston_id: str) -> None:
         storage.write_json_atomic(_STATUS_FILE, statuses)
 
 
+async def _deploy_helpers(piston_id: str, writer, helpers: list) -> str:
+    """Create/refresh the helper entities piston variables live in.
+
+    Rebuilt from every piston's recorded helper set, so this both CREATES what
+    the current compile needs and REMOVES what nothing needs any more — a
+    deleted piston has no record, so its helpers stop being written and vanish
+    on reload. Reconciling beats bookkeeping: there is no orphan list to drift.
+
+    Never raises: a piston whose automation is fine should not fail to deploy
+    because a helper could not be written. The reason is returned for the
+    status record instead.
+    """
+    from . import helpers as helper_mod
+
+    try:
+        statuses = load_statuses()
+        rows, seen = [], set()
+        for pid, rec in statuses.items():
+            src = helpers if pid == piston_id else (rec.get("helpers") or [])
+            for h in src:
+                if h.get("entity") and h["entity"] not in seen:
+                    seen.add(h["entity"])
+                    rows.append(h)
+        for h in helpers:                       # this piston may be new
+            if h.get("entity") and h["entity"] not in seen:
+                seen.add(h["entity"])
+                rows.append(h)
+
+        if not rows:
+            return ""
+        inc = helper_mod.ensure_include(writer)
+        helper_mod.write_helpers(rows, writer)
+        for domain, service in helper_mod.reload_services(
+                {r["entity"].split(".", 1)[0] for r in rows}):
+            await ha_client.call_service(domain, service, {})
+        note = f"{len(rows)} variable helper(s)"
+        if inc.get("changed"):
+            note += "; added the packages include to configuration.yaml"
+        return note
+    except Exception as exc:                                    # noqa: BLE001
+        return f"variable helpers could not be written: {exc}"
+
+
 async def compile_and_deploy(piston_id: str) -> dict:
     """Runs after every successful save / pause / resume / import. Never
     raises — every outcome lands in meta.compile for the UI surfaces."""
@@ -362,6 +405,10 @@ async def compile_and_deploy(piston_id: str) -> dict:
         filename = _script_file
     artifact = _keep_artifact(piston_id, result["yaml"], ".yaml")
 
+    # Helpers FIRST: the automation about to be written reads them.
+    helper_note = await _deploy_helpers(piston_id, writer,
+                                        result.get("helpers") or [])
+
     try:
         if prev.get("file") and prev["file"] != filename:
             writer.delete(prev["file"])
@@ -413,9 +460,15 @@ async def compile_and_deploy(piston_id: str) -> dict:
                 (" and others" if len(names) > 3 else "") +
                 " aren't in Home Assistant right now. They're left in the "
                 "automation and will work again when they come back.")
+    # `helpers` is persisted so the next deploy of ANY piston can rebuild the
+    # whole package from the recorded sets — that is what makes a deleted or
+    # no-longer-needed helper disappear without an orphan list to maintain.
+    if helper_note and not helper_note.startswith(str(len(result.get("helpers") or []))):
+        warn = (warn + "; " if warn else "") + helper_note
     return _record(piston_id, status="deployed", file=filename, reload=reload_note,
                    auto_ids=auto_ids, enabled=note, artifact=artifact,
                    band="script" if is_script else "yaml",
                    config_check=check_note,
+                   helpers=result.get("helpers") or [],
                    unresolved=[u["label"] for u in unresolved],
                    message=warn or None)

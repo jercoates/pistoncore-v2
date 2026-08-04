@@ -911,7 +911,19 @@ class _PyEmitter:
                     out.append({"kind": "setvar_index", "name": _q(name),
                                 "index": idx, "value": value_expr})
                     continue
-                value_expr = self._operand_expr(params[1] if len(params) > 1 else {"t": "c", "c": None}, ctx)
+                # DECLARED TYPE first. `"false"` is truthy in Python exactly
+                # as in Jinja, so a boolean left as text silently inverts
+                # `if <var>` here too (VARIABLES_SPEC §4). The DECISION is
+                # shared with the YAML band via resolve.typed_value; only the
+                # literal FORMAT differs — Python spells it True, YAML true.
+                # Do NOT reach for the YAML band's formatter: that is how a
+                # Jinja template ended up inside a PyScript module.
+                from .resolve import typed_value
+                _vop = params[1] if len(params) > 1 else {"t": "c", "c": None}
+                _decl = getattr(self.resolver, "local_var_decls", {}).get(str(name))
+                _typed = typed_value(_vop, _decl)
+                value_expr = (repr(_typed) if _typed is not None
+                              else self._operand_expr(_vop, ctx))
                 if str(name).startswith("@"):
                     # runtime global write: persisted pyscript entity
                     # (research §7 namespace) + local cache for same-run reads

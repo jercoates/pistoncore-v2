@@ -11,7 +11,7 @@ Casting rules, system variables, and list runtime semantics BLOCKED pending
 | `app.js` (dashboard) | v0.3.114.20220203 | Wire format, design-time evaluation |
 | `webcore.groovy` (parent app) | v0.3.114.20220203 | Global variable storage & lifecycle |
 | `piston.module.html` (dashboard) | v0.3.114.20220203 | Authoritative type lists, persistence semantics |
-| `webcore-piston.groovy` | — | **NOT YET SUPPLIED** — casting, system vars, list runtime |
+| `webcore-piston.groovy` | — | **SUPPLIED** (2026-08-03) at `reference/webCoRE-hubitat-patches-extracted/.../webcore-piston.src/`. VAR-V-01/03/04/05 are runnable. VAR-V-02 is DONE — see `webcore_system_vars.json` |
 
 Every claim is marked `Verified — <source, line>`, `Assumed — needs test`, or
 `Decision — PistonCore choice`.
@@ -215,6 +215,68 @@ the HA facts cited in §7.
 
 **Verified — HA `input_datetime` docs, https://www.home-assistant.io/integrations/`input_datetime/`, read 2026-08-03.**
 `has_date` and `has_time` are independent booleans, giving all three variants.
+
+## 4a. IMPLEMENTATION STATUS (PistonCore, 2026-08-03)
+
+**Built and verified.** Both bands read the declared type. The decision is
+`resolve.typed_value()` — ONE function — and each band formats the result its
+own way (`true` in YAML/Jinja, `True` in Python). Sharing the decision but not
+the formatting is deliberate: the last time a band borrowed the other's
+formatter it emitted a Jinja template into a PyScript module.
+
+Only CONSTANTS are cast. An expression is left alone, because casting a value
+the compiler cannot see would be guessing.
+
+**The hazard this closed:** every value used to be written as text, and the
+string `"false"` is TRUTHY in both Jinja and Python. A boolean left as text
+silently inverts `if <var>`.
+
+## 4b. PERSISTENCE NEEDS A STRICTER TEST THAN §5 (PistonCore, 2026-08-03)
+
+§5's rule — initial value present means run-scoped — is correct for webCoRE,
+which runs a piston as ONE program. **PistonCore compiles each top-level
+statement into a SEPARATE HA automation**, and an HA `variables:` block lives
+for one run of one automation. So the test PistonCore must apply is:
+
+> Does any READ of this variable happen outside the statement that WROTE it?
+
+If yes it needs a helper entity, **regardless of whether it has an initial
+value**. `Motion_Triggered` in `Video Hall Motion Light` has an initial value
+(so §5 calls it run-scoped) yet is set in statement 1 and read in statement 9 —
+two different automations. Measured across the 84-piston corpus: 23 variables
+in 13 pistons, and every motion-light piston needs two.
+
+This is the manual-override pattern (Jeremy, 2026-08-03): set a flag when the
+light is switched on by hand, check it back on a later trigger to skip the
+timer. Before this it silently never matched.
+
+PyScript-band pistons need no helpers — that band keeps piston variables in its
+own persisted state, so cross-statement reads already work there.
+
+## 4c. HELPER CREATION — VERIFIED MECHANISM (2026-08-03)
+
+**The REST config API does NOT create helpers.** `/api/config/input_boolean/
+config/<id>` returns **404**; that path exists for automations, scripts and
+scenes only. (Jeremy called this before the test: *"i doubt it autocreats i had
+to do it when i made the yaml by hand."*)
+
+**What works:** write a YAML file, then call `<domain>.reload`. All four helper
+domains expose one. Proven end to end against a live HA — file written, reload
+called, entities appeared, no restart.
+
+**A PACKAGES folder, not `!include` lines.** A package MERGES with the user's
+configuration. Four bare `input_boolean:`-style includes would collide with an
+install that already defines its own helpers, and a duplicate key stops HA
+starting — a failure that lands at their next restart, not at our compile.
+
+The shape lives in `templates/compiler/yaml/classic/helpers_package.yaml.j2`,
+not in Python, because helper domain names and required fields are HA's moving
+target.
+
+**Lifecycle.** The package is rebuilt from every piston's recorded helper set on
+each deploy, so a variable that no longer needs a helper — or a piston that has
+been deleted — simply stops contributing rows and the entity disappears on the
+next reload. Reconciling beats bookkeeping: there is no orphan list to drift.
 
 ## 5. Persistence — initial value determines lifetime
 

@@ -558,6 +558,48 @@ def _integration_files() -> list:
             if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"]
 
 
+
+@router.get("/api/variable-helpers/status")
+async def api_variable_helpers_status():
+    """Is configuration.yaml wired to load PistonCore's helper package?
+
+    Read-only — safe to call from the Settings page on every load."""
+    from ..compiler import helpers as helper_mod
+    try:
+        writer = deploy_writer.get_writer()
+        text = await asyncio.to_thread(writer.read, "configuration.yaml")
+    except Exception as exc:                                    # noqa: BLE001
+        return {"ok": False, "present": None, "error": str(exc)}
+    return {"ok": True, "present": helper_mod.include_present(text),
+            "line": helper_mod.INCLUDE_MARKER,
+            "file": helper_mod.PACKAGE_FILE}
+
+
+@router.post("/api/variable-helpers/ensure")
+async def api_variable_helpers_ensure(request: Request):
+    """Add the packages include to configuration.yaml.
+
+    GATED like the test-devices installer — this edits a file of the USER'S,
+    so the caller must acknowledge it, enforced server-side so hitting the
+    endpoint directly cannot skip the warning (same rule as §test-devices).
+
+    No restart: the helper domains each expose a `reload` service, which is
+    how the entities appear (verified against a live HA, 2026-08-03)."""
+    body = await request.json()
+    if not body.get("acknowledged"):
+        return JSONResponse(
+            {"error": "This adds one line to your Home Assistant's "
+                      "configuration.yaml — acknowledge to proceed."},
+            status_code=400)
+    from ..compiler import helpers as helper_mod
+    try:
+        writer = deploy_writer.get_writer()
+        result = await asyncio.to_thread(helper_mod.ensure_include, writer)
+    except Exception as exc:                                    # noqa: BLE001
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return {"ok": True, **result}
+
+
 @router.post("/api/test-devices/install")
 async def api_test_devices_install(request: Request):
     """Write the test-device integration into HA's custom_components and restart

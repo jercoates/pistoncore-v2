@@ -28,6 +28,37 @@ app = FastAPI(title="PistonCore v2 shim")
 from . import customize  # noqa: E402
 customize.ensure_seeded()
 
+
+@app.on_event("startup")
+async def _ensure_variable_helpers_include() -> None:
+    """Make sure HA is wired to load PistonCore's helper package.
+
+    Piston variables that must survive between automations live in helper
+    entities, and HA only reads them if configuration.yaml points at the
+    packages folder (VARIABLES_SPEC §4; verified 2026-08-03 that the REST
+    config API cannot create helpers, so a file plus reload is the route).
+
+    Runs at startup so an install that has been updated picks it up without
+    anyone visiting Settings. NEVER fatal: a read-only or unconfigured write
+    target must not stop PistonCore booting — the Settings page carries the
+    same action for when it does."""
+    import asyncio as _asyncio
+    import logging as _logging
+
+    try:
+        from . import deploy_writer
+        from .compiler import helpers as helper_mod
+        writer = deploy_writer.get_writer()
+        result = await _asyncio.to_thread(helper_mod.ensure_include, writer)
+        if result.get("changed"):
+            _logging.getLogger(__name__).info(
+                "PistonCore: added the variable-helper packages include to "
+                "configuration.yaml")
+    except Exception as exc:                                    # noqa: BLE001
+        _logging.getLogger(__name__).info(
+            "PistonCore: variable-helper include not applied (%s) — "
+            "it can be added from Settings", exc)
+
 # intf/dashboard/* and PistonCore's own pages (CLAUDE.md UI split) first so
 # they aren't shadowed by the dashboard's SPA fallback below. "/" now serves
 # the PistonCore front door, not the dashboard directly (CLAUDE.md: "Users

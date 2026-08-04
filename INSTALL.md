@@ -56,7 +56,7 @@ not port-forward it to the internet.**
 
 ## What PistonCore writes to Home Assistant
 
-Four places, and no fifth. Two of them are gated behind an explicit click, one is a
+Five places, and no sixth. Three of them are gated behind an explicit click, one is a
 zero-setup default you can override or delete, and the rest is PistonCore's own folders.
 
 **1. Its own compiled output** — `pistoncore/automations/` and `pistoncore/scripts/` under
@@ -81,7 +81,23 @@ own entity instead or delete it outright. Covered in
 into `custom_components/` only if you choose to install it, after PistonCore shows you
 exactly what it will copy. Covered under [Optional pieces](#test-devices).
 
-Every one of these is reversible and all four are listed in
+**5. Helper entities for piston variables** *(shown first, applied only on your click)* —
+some webCoRE variables have to survive between automations. A piston that sets a
+"manually switched on" flag in one place and checks it back later is the common case: the
+flag has to outlive the run that set it, and Home Assistant's own automation variables
+cannot do that. PistonCore writes those variables as helpers into
+`pistoncore_packages/pistoncore_variables.yaml` and reloads them — **no HA restart**.
+
+It is a *packages* folder on purpose. A package **merges** with your configuration, so if
+you already define `input_boolean:` yourself, PistonCore's helpers sit alongside yours
+instead of colliding with them — a duplicate key there would stop HA from starting.
+
+Only variables that genuinely need one get a helper. A variable used and finished inside a
+single statement stays a plain automation variable and creates nothing. Each helper is named
+`pistoncore_<piston>_<variable>`, so you can always tell which piston owns it, and they are
+removed when the piston is deleted.
+
+Every one of these is reversible and all five are listed in
 [Removing PistonCore](#removing-pistoncore), so you can see the whole footprint in one place
 and undo it item by item.
 
@@ -376,7 +392,7 @@ docker rm -f pistoncore-v2
 docker rmi pistoncore-v2
 ```
 
-What stays behind — the same four places, in reverse:
+What stays behind — the same five places, in reverse:
 
 - **Compiled automations** in `pistoncore/automations/` and `pistoncore/scripts/` keep
   running natively. Complex pistons keep running as long as PyScript stays installed.
@@ -389,6 +405,10 @@ What stays behind — the same four places, in reverse:
   helpers page if you don't want it.
 - **The test-devices integration**, if installed, removes separately from
   `custom_components/`.
+- **Piston variable helpers** live in `pistoncore_packages/`. Delete the folder and the
+  `packages:` line to remove them all at once, or delete individual helpers from HA's
+  helpers page. Any automation still reading one will simply see it as unavailable — it
+  will not stop the rest of the automation from running.
 
 Also: **the data folder** holds your pistons, settings, and compiler customizations. Keep it
 if there's any chance you'll come back — it's your only copy of your piston JSON unless you

@@ -139,6 +139,22 @@
       <button type="button" class="btn btn-primary" id="config-yaml-apply">Apply these changes</button>
     </div>
     <button type="button" class="btn" id="config-yaml-check">Check configuration.yaml</button>
+
+    <h2>Piston variable helpers</h2>
+    <p class="field-hint">
+      Some piston variables have to outlive a single automation run — a "switched on by
+      hand" flag set in one place and checked back later is the usual case. Home
+      Assistant's own automation variables can't do that, so PistonCore stores those in
+      helper entities and needs one line in <code>configuration.yaml</code> pointing at
+      the folder they live in. It's a <em>packages</em> folder, which merges with your
+      configuration rather than replacing anything, so helpers you already define are
+      untouched. This is checked automatically when PistonCore starts; the button is
+      here for when the write target wasn't ready then. No Home Assistant restart.
+    </p>
+    <div id="var-helpers-banner"></div>
+    <button type="button" class="btn" id="var-helpers-check">Check helper setup</button>
+    <button type="button" class="btn btn-primary" id="var-helpers-apply"
+            style="display:none">Add the line</button>
   </form>
 
   <h2>Translation data</h2>

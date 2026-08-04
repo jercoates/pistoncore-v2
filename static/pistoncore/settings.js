@@ -205,3 +205,57 @@ document.querySelectorAll(".tr-restore").forEach((btn) => {
       + " file(s)). <a href='/settings'>Refresh this page</a> to see it.");
   });
 });
+
+
+/* ── Piston variable helpers ────────────────────────────────────────────────
+   Variables that must survive between automations live in helper entities,
+   which HA only loads if configuration.yaml points at the packages folder.
+   Startup does this automatically; this is the manual path for when the write
+   target wasn't configured yet. Gated the same way as the test-devices
+   installer — it edits a file of the user's. */
+const vhBanner = document.getElementById("var-helpers-banner");
+const vhApply = document.getElementById("var-helpers-apply");
+
+function vhShow(kind, msg) {
+  if (vhBanner) vhBanner.innerHTML =
+    '<div class="alert alert-' + kind + '">' + msg + "</div>";
+}
+
+async function vhCheck(quiet) {
+  const resp = await fetch("/api/variable-helpers/status");
+  const data = await resp.json();
+  if (!data.ok) {
+    vhShow("warning", "Couldn't read configuration.yaml: " +
+      (data.error || "unknown") + " — check the write target above.");
+    if (vhApply) vhApply.style.display = "none";
+    return;
+  }
+  if (data.present) {
+    if (!quiet) vhShow("success", "Set up — helper entities will be created as needed.");
+    if (vhApply) vhApply.style.display = "none";
+  } else {
+    vhShow("info", "Not set up yet. PistonCore would add <code>" +
+      data.line + "</code> to configuration.yaml.");
+    if (vhApply) vhApply.style.display = "";
+  }
+}
+
+if (document.getElementById("var-helpers-check")) {
+  document.getElementById("var-helpers-check")
+    .addEventListener("click", () => vhCheck(false));
+  vhApply.addEventListener("click", async () => {
+    vhShow("info", "Adding…");
+    const resp = await fetch("/api/variable-helpers/ensure", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ acknowledged: true }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { vhShow("warning", data.error || "Failed."); return; }
+    vhShow("success", data.changed
+      ? "Added. Helper entities will be created on the next deploy."
+      : "Already set up — nothing changed.");
+    vhApply.style.display = "none";
+  });
+  vhCheck(true);
+}

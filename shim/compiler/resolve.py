@@ -120,6 +120,124 @@ def value_map(name: str) -> dict:
     return {k: v for k, v in table.items() if not k.startswith("_")}
 
 
+
+# webCoRE type -> the HA helper that holds it (VARIABLES_SPEC §4).
+# `device` is out of scope here: device variables resolve to entities directly.
+_HELPER_DOMAIN = {
+    "boolean": "input_boolean",
+    "integer": "input_number",
+    "long": "input_number",
+    "decimal": "input_number",
+    "string": "input_text",
+    "dynamic": "input_text",
+    "time": "input_datetime",
+    "date": "input_datetime",
+    "datetime": "input_datetime",
+}
+
+
+def helper_entity_id(piston_id: str, name: str, vtype: str) -> str | None:
+    """Deterministic entity id for a variable's backing helper.
+
+    Deterministic so recompiling reuses the same helper rather than orphaning
+    it — the same reason auto_ids are derived rather than generated."""
+    domain = _HELPER_DOMAIN.get(str(vtype).rstrip("[]"))
+    if domain is None:
+        return None
+    if str(vtype).endswith("]"):
+        domain = "input_text"        # lists serialise to JSON in a text helper
+    slug = re.sub(r"[^a-z0-9_]+", "_", str(name).lower()).strip("_")
+    return f"{domain}.pistoncore_{piston_id}_{slug}".lower()
+
+
+def variables_needing_helpers(piston: dict) -> dict:
+    """{name: {type, entity, reason}} for locals that cannot live in a YAML
+    `variables:` block — see this module's stage-3a note."""
+    decls = {v.get("n"): str(v.get("t") or "dynamic")
+             for v in (piston.get("v") or []) if v.get("n")}
+    if not decls:
+        return {}
+    written, read = {}, {}
+
+    def walk(node, stmt):
+        if isinstance(node, list):
+            for x in node:
+                walk(x, stmt)
+            return
+        if not isinstance(node, dict):
+            return
+        for task in (node.get("k") or []):
+            if task.get("c") == "setVariable":
+                prm = (task.get("p") or [{}])[0]
+                nm = prm.get("x") or prm.get("c")
+                if nm in decls:
+                    written.setdefault(nm, set()).add(stmt)
+        blob = json.dumps({k: v for k, v in node.items() if k != "k"})
+        for nm in decls:
+            if re.search(r"\b" + re.escape(nm) + r"\b", blob):
+                read.setdefault(nm, set()).add(stmt)
+        for key in ("s", "e", "ei", "ts", "fs", "c", "cs"):
+            if node.get(key):
+                walk(node[key], stmt)
+
+    for stmt in piston.get("s", []):
+        walk(stmt, stmt.get("$"))
+
+    out = {}
+    for nm, vtype in decls.items():
+        if vtype == "device":
+            continue
+        w = written.get(nm, set())
+        if not w:
+            continue                      # never assigned: nothing to persist
+        r = read.get(nm, set())
+        crosses = bool(r - w) or len(w) > 1
+        if not crosses:
+            continue                      # lives and dies inside one statement
+        if _HELPER_DOMAIN.get(str(vtype).rstrip("[]")) is None:
+            continue
+        # The entity id needs the piston id, which the Resolver does not
+        # receive — the emitters build it with helper_entity_id().
+        out[nm] = {"type": vtype,
+                   "written_in": sorted(x for x in w if x is not None),
+                   "read_in": sorted(x for x in r if x is not None)}
+    return out
+
+def typed_value(value_op: dict, declared: dict | None):
+    """A constant coerced to its DECLARED type, or None to leave it alone.
+
+    ONE decision, used by BOTH bands — each formats the result its own way
+    (`true` in YAML/Jinja, `True` in Python). Sharing the decision but not the
+    formatting is deliberate: the last time a band borrowed the other's
+    formatter it emitted a Jinja template into a PyScript module.
+
+    webCoRE stores every constant as text, so the declared type is the only
+    thing that says what it means. Booleans matter most — the string "false"
+    is TRUTHY in both Jinja and Python, so leaving it as text silently inverts
+    `if <var>` (VARIABLES_SPEC §4)."""
+    if not declared or value_op.get("t") != "c":
+        return None
+    raw = value_op.get("c")
+    if raw is None or isinstance(raw, (list, dict)):
+        return None
+    kind = (declared.get("type") or "").rstrip("[]")
+    text = str(raw).strip()
+    if kind == "boolean":
+        low = text.lower()
+        return True if low == "true" else False if low == "false" else None
+    if kind in ("integer", "long"):
+        try:
+            return int(float(text))
+        except (TypeError, ValueError):
+            return None
+    if kind == "decimal":
+        try:
+            return float(text)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
 def rescale_template(name: str, expr: str) -> str:
     """rescale() for a value only known at RUNTIME (a variable or expression).
 
@@ -221,6 +339,9 @@ class Resolver:
         # variable that HAS an initial value on every run, and persists one
         # that does not. A list type cannot be given an initial value at all
         # (the editor hides the field), so lists are always persistent.
+        # Locals that need a real HA helper because their reads cross the
+        # statement that wrote them (stage 3a). Keyed by variable name.
+        self.helper_vars = variables_needing_helpers(piston)
         self.local_var_decls = {}
         for v in piston.get("v", []):
             name = v.get("n")

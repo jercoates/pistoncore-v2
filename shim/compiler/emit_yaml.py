@@ -233,9 +233,17 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
     if _has_no_subscriptions(branches):
         return _compile_script(branches, resolver, piston_id, piston_name, header)
 
+    # webCoRE's hasTriggers is per PISTON (:8771-8772, :9296). If anything in
+    # this piston subscribes, the whole piston runs on that event and nothing
+    # is promoted — so it compiles to ONE automation, not one per statement.
+    piston_has_triggers = any(br["triggers"] for br in branches)
+    collect: list | None = [] if piston_has_triggers else None
     try:
         for br in branches:
-            _emit_branch(br, resolver, piston_id, piston_name, blocks, auto_ids)
+            _emit_branch(br, resolver, piston_id, piston_name, blocks, auto_ids,
+                         collect=collect, piston_has_triggers=piston_has_triggers)
+        if collect is not None:
+            _merge_branches(collect, piston_id, piston_name, blocks, auto_ids)
     except _NoSubscriptions:
         # promotion found nothing subscribable after all — same conclusion,
         # reached later: this piston is a script.
@@ -249,7 +257,8 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
         raise
 
     return {"target": "yaml", "yaml": header + "\n".join(blocks) + "\n", "reasons": [],
-            "auto_ids": auto_ids, "media_warnings": resolver.media_warnings}
+            "auto_ids": auto_ids, "media_warnings": resolver.media_warnings,
+            "helpers": _helpers_for(resolver, piston_id, piston_name)}
 
 
 class _NoSubscriptions(Exception):
@@ -304,7 +313,8 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
     )
     return {"target": "yaml", "kind": "script", "yaml": header + block,
             "reasons": [], "auto_ids": [], "script_ids": [script_id],
-            "unresolved": resolver.unresolved, "media_warnings": resolver.media_warnings}
+            "unresolved": resolver.unresolved, "media_warnings": resolver.media_warnings,
+            "helpers": _helpers_for(resolver, piston_id, piston_name)}
 
 
 # ── conditions ──────────────────────────────────────────────────────────────
@@ -362,6 +372,31 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     if cond.get("lo_type") == "x" and cond.get("lo_var_name"):
         name = cond["lo_var_name"]
         value = cond.get("value")
+        # A helper-backed variable is READ from its entity, not from a YAML
+        # `variables:` block that the writing automation never shared with
+        # this one (stage 3b). This is what makes the manual-override pattern
+        # work across separate automations.
+        hread = helper_read_expr(name, resolver, ctx.get("piston_id") or "")
+        if hread is not None:
+            op = _EQUALITY_OPS.get(co) or _NUMERIC_OPS.get(co)
+            if op is None:
+                raise NotYetImplemented(
+                    f"comparison '{co}' on a variable is not compiled yet", **ctx)
+            spec = resolver.helper_vars.get(str(name)) or {}
+            if str(spec.get("type", "")).rstrip("[]") == "boolean":
+                # the read is already a boolean test; compare against the
+                # webCoRE word rather than HA's on/off
+                want = str(value).strip().lower() == "true"
+                if op == "!=":
+                    want = not want
+                return {"kind": "template",
+                        "template": "{{ " + (hread if want
+                                             else f"not {hread}") + " }}"}
+            if _num_str(value):
+                return {"kind": "template",
+                        "template": "{{ " + _num_cmp(hread, op, value) + " }}"}
+            return {"kind": "template",
+                    "template": "{{ " + f"{hread} {op} {str(value)!r}" + " }}"}
         op = _EQUALITY_OPS.get(co) or _NUMERIC_OPS.get(co)
         if op is None:
             raise NotYetImplemented(
@@ -1637,6 +1672,12 @@ def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
         raise NotYetImplemented(
             f"'{name}' is built from its own previous value, which only "
             f"persists between runs under PyScript", **ctx)
+    # Helper-backed variables are written through their entity so the value
+    # survives to the other automations that read it (stage 3b).
+    hw = _helper_write(name, value_op, resolver, ctx,
+                       ctx.get("piston_id") or "")
+    if hw is not None:
+        return hw
     # Honour the declared type for constants — see _typed_literal.
     declared = getattr(resolver, "local_var_decls", {}).get(str(name))
     literal = _typed_literal(value_op, declared)
@@ -1648,36 +1689,92 @@ def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
 
 
 def _typed_literal(value_op: dict, declared: dict | None):
-    """A constant rendered in its DECLARED type, or None to fall through.
+    """The declared-type constant as a YAML/Jinja literal (`true`, `90`).
 
-    webCoRE stores every initial/assigned constant as text, so the declared
-    type is the only thing that says what it means. Booleans in particular
-    MUST come out unquoted: the string "false" is truthy in Jinja, which
-    silently inverts `if <var>` (VARIABLES_SPEC §4).
-    """
-    if not declared or value_op.get("t") != "c":
+    The DECISION is resolve.typed_value — shared with the PyScript band. Only
+    the FORMATTING is here, because the two bands spell literals differently."""
+    from .resolve import typed_value
+    val = typed_value(value_op, declared)
+    if val is None:
         return None
-    raw = value_op.get("c")
-    if raw is None or isinstance(raw, (list, dict)):
+    if isinstance(val, bool):
+        return "true" if val else "false"
+    return repr(val)
+
+
+def _helper_write(name: str, value_op: dict, resolver: Resolver, ctx: dict,
+                  piston_id: str):
+    """setVariable on a helper-backed variable -> a service call on the helper.
+
+    Returns None when this variable is not helper-backed, so the caller falls
+    through to the ordinary YAML `variables:` path."""
+    from .resolve import helper_entity_id
+    spec = getattr(resolver, "helper_vars", {}).get(str(name))
+    if not spec:
         return None
-    kind = (declared.get("type") or "").rstrip("[]")
-    text = str(raw).strip()
-    if kind == "boolean":
-        low = text.lower()
-        if low in ("true", "false"):
-            return low
+    entity = helper_entity_id(piston_id, name, spec["type"])
+    if entity is None:
         return None
-    if kind in ("integer", "long"):
-        try:
-            return str(int(float(text)))
-        except (TypeError, ValueError):
-            return None
-    if kind == "decimal":
-        try:
-            return repr(float(text))
-        except (TypeError, ValueError):
-            return None
-    return None
+    domain = entity.split(".", 1)[0]
+    declared = getattr(resolver, "local_var_decls", {}).get(str(name))
+    literal = _typed_literal(value_op, declared)
+
+    if domain == "input_boolean":
+        # A constant we can read now picks the service outright; anything
+        # computed needs the value at runtime, which input_boolean cannot take
+        # — so choose between the two services with a condition instead.
+        if literal in ("true", "false"):
+            return {"kind": "service",
+                    "service": f"input_boolean.turn_{'on' if literal == 'true' else 'off'}",
+                    "entities": [entity]}
+        expr = _text_param(value_op, resolver, ctx)
+        return {"kind": "if",
+                "conditions": [{"kind": "template",
+                                "template": "{{ " + _json_loads_inner(expr) + " }}"}],
+                "then": [{"kind": "service", "service": "input_boolean.turn_on",
+                          "entities": [entity]}],
+                "else": [{"kind": "service", "service": "input_boolean.turn_off",
+                          "entities": [entity]}]}
+
+    service = ("input_number.set_value" if domain == "input_number"
+               else "input_datetime.set_datetime" if domain == "input_datetime"
+               else "input_text.set_value")
+    field = ("value" if domain in ("input_number", "input_text")
+             else "datetime")
+    val = literal if literal is not None else _text_param(value_op, resolver, ctx)
+    return {"kind": "service", "service": service, "entities": [entity],
+            "data": {field: val}}
+
+
+def _json_loads_inner(quoted: str) -> str:
+    """_text_param returns a JSON-quoted scalar or a quoted "{{ ... }}".
+    Strip back to the bare expression for embedding in a condition."""
+    import json as _j
+    try:
+        raw = _j.loads(quoted)
+    except Exception:                                          # noqa: BLE001
+        return str(quoted)
+    raw = str(raw).strip()
+    if raw.startswith("{{") and raw.endswith("}}"):
+        return raw[2:-2].strip()
+    return _j.dumps(raw)
+
+
+def helper_read_expr(name: str, resolver: Resolver, piston_id: str):
+    """Jinja that reads a helper-backed variable, or None if not helper-backed."""
+    from .resolve import helper_entity_id
+    spec = getattr(resolver, "helper_vars", {}).get(str(name))
+    if not spec:
+        return None
+    entity = helper_entity_id(piston_id, name, spec["type"])
+    if entity is None:
+        return None
+    domain = entity.split(".", 1)[0]
+    if domain == "input_boolean":
+        return f"is_state('{entity}', 'on')"
+    if domain == "input_number":
+        return f"states('{entity}') | float(0)"
+    return f"states('{entity}')"
 
 
 def _send_email(n: dict, resolver: Resolver, ctx: dict) -> dict:
@@ -1917,6 +2014,22 @@ def _param_value(token: str, params: list, ctx: dict, resolver=None):
 
 # ── branch emission ─────────────────────────────────────────────────────────
 
+def _helpers_for(resolver: Resolver, piston_id: str, piston_name: str) -> list:
+    """The helper entities this piston's variables need (stage 3a/3b).
+
+    Reported in the compile result so DEPLOY can create them — the compiler
+    stays read-only and never touches Home Assistant itself (locked policy §1)."""
+    from .resolve import helper_entity_id
+    out = []
+    for name, spec in (getattr(resolver, "helper_vars", {}) or {}).items():
+        entity = helper_entity_id(piston_id, name, spec["type"])
+        if entity:
+            out.append({"entity": entity, "variable": name,
+                        "type": spec["type"],
+                        "name": f"{piston_name}: {name}"})
+    return sorted(out, key=lambda h: h["entity"])
+
+
 def _has_attached(conds: list) -> bool:
     """True when any condition in the tree hangs statements off itself."""
     for c in conds or []:
@@ -2123,8 +2236,61 @@ def _strip_accumulator(expr: str, var: str) -> str:
     return stripped.strip() or '""'
 
 
+def _merge_branches(parts: list, piston_id: str, piston_name: str,
+                    blocks: list, auto_ids: list) -> None:
+    """Every statement of a trigger-driven piston -> ONE automation.
+
+    webCoRE runs the whole piston on any subscribed event, so the automation
+    subscribes to the union of every statement's triggers and then runs each
+    statement in order behind its own conditions. Statement-level conditions
+    move from automation level INTO the action body, because they now gate one
+    statement rather than the whole run.
+
+    Restrictions stay where they were — they gate their own statement and are
+    already inside that statement's condition list here.
+
+    mode: `restart` if any statement asks for it (webCoRE's default TCP
+    cancels pending tasks on re-trigger); otherwise `queued`.
+    """
+    all_triggers, actions = [], []
+    seen = set()
+    for part in parts:
+        for t in part["triggers"]:
+            key = _json_dumps(t)
+            if key not in seen:
+                seen.add(key)
+                all_triggers.append(t)
+    for part in parts:
+        body = part["actions"]
+        conds = part["conditions"]
+        if conds:
+            body = [{"kind": "if", "conditions": conds, "then": body, "else": []}]
+        actions.extend(body)
+
+    auto_id = f"pistoncore_{piston_id}"
+    auto_ids.append(auto_id)
+    mode = "restart" if any(p["br"]["tcp"] == "c" for p in parts) else "queued"
+    blocks.append(_env.get_template("automation.yaml.j2").render(
+        auto_id=auto_id,
+        alias=f"PistonCore: {piston_name}",
+        mode=mode,
+        triggers=all_triggers,
+        conditions=[],
+        actions=actions,
+    ))
+
+
 def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
-                 blocks: list, auto_ids: list) -> None:
+                 blocks: list, auto_ids: list, collect: list | None = None,
+                 piston_has_triggers: bool = False) -> None:
+    """Emit one statement.
+
+    `collect` is not None when the piston is TRIGGER-DRIVEN: the statement's
+    parts are appended to it instead of becoming their own automation, so the
+    caller can merge every statement into one. See _merge_branches for why.
+
+    `piston_has_triggers` gates promotion — webCoRE promotes conditions only
+    when the WHOLE piston has none (:9296), never per statement."""
     ctx = {"piston_id": piston_id, "piston_name": piston_name, "stmt_id": br["stmt_id"]}
     has_wait = _has_wait(br["then"]) or _has_wait(br["else"])
     trig_id = "fire" if has_wait else None
@@ -2158,8 +2324,48 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                     cancel_triggers.append({"kind": "state", "entities": node["entities"],
                                             "to": opposite, "id": "tcp_cancel",
                                             **({"attribute": node["attribute"]} if node.get("attribute") else {})})
-        if not triggers:
-            # condition-only statement -> promote (subscription equivalence)
+        if triggers is not None and piston_has_triggers and not triggers:
+            # The piston has a trigger elsewhere, so this statement is NOT
+            # promoted (webcore-piston.groovy:9296) — but a condition carrying
+            # a DURATION still needs something to wake the piston when the time
+            # elapses. webCoRE schedules that itself (requestWakeUp /
+            # scheduleTimeCondition, :5205 / :7895); the HA equivalent is a
+            # trigger with `for:`. Without it a "was X for 5 minutes" statement
+            # is only ever evaluated when some OTHER trigger happens to fire,
+            # so a motion light would never turn off.
+            for cond in br["conditions"]:
+                if not (cond.get("duration") or {}).get("c"):
+                    continue
+                hold = _duration_hms(cond.get("duration"))
+                if not hold:
+                    continue
+                node = _promote(cond, resolver, ctx, trig_id)
+                if node is None and cond.get("lo_type") == "p" and cond.get("devices"):
+                    # `was X for N` / `stays X for N`: _promote only knows the
+                    # instantaneous comparisons. The HA idiom for a held value
+                    # is a state trigger with `for:` — became X and stayed X.
+                    co = cond.get("co") or ""
+                    value = cond.get("value")
+                    if co.startswith(("was", "stays", "remains")) and value is not None:
+                        try:
+                            entities = resolver.entities_for_attr(
+                                cond["devices"], cond["attr"], ctx)
+                        except CompilerError:
+                            continue
+                        if entities:
+                            node = {"kind": "state", "entities": entities,
+                                    "to": resolver.ha_state_value(cond["attr"], value),
+                                    "id": trig_id}
+                if node:
+                    node["for"] = hold
+                    triggers.append(node)
+
+        if not triggers and not piston_has_triggers:
+            # CONDITION-ONLY PISTON -> promote (subscription equivalence,
+            # webcore-piston.groovy:9296). Per PISTON, never per statement: a
+            # piston that has a trigger anywhere runs all of its statements on
+            # that trigger, so promoting here would invent an automation
+            # webCoRE never has.
             for cond in br["conditions"]:
                 node = _promote(cond, resolver, ctx, trig_id)
                 if node:
@@ -2192,6 +2398,11 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         actions = _attached_chain(br["conditions"], then_actions,
                                   else_actions, resolver, ctx)
         conditions.extend(direction_conds)
+        if collect is not None:
+            collect.append({"br": br, "conditions": conditions,
+                            "triggers": triggers + cancel_triggers,
+                            "actions": actions})
+            return
         _finish_branch(br, conditions, triggers, cancel_triggers, actions,
                        piston_id, piston_name, blocks, auto_ids)
         return
@@ -2280,5 +2491,31 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
             seen.add(key)
             all_triggers.append(t)
 
+    if collect is not None:
+        # MERGING: this statement's body is about to sit in ONE automation
+        # alongside every other statement, woken by the union of all their
+        # triggers. A statement whose only gate WAS its trigger would then run
+        # on somebody else's trigger too — turning a flag off in the same run
+        # that set it. webCoRE re-evaluates the trigger as a condition on every
+        # run, so add that re-check here.
+        # Gate on the TRIGGER ID, which is webCoRE's rule stated exactly: a
+        # trigger comparison is true only for its OWN event. A re-check
+        # condition cannot express that — a bare "switch changed" has no state
+        # to re-check — and without a gate this statement would run on every
+        # other statement's trigger too, turning a flag off in the run that set
+        # it. A statement with only CONDITIONS gets no such gate, because a
+        # condition is meant to be evaluated on any event.
+        gates = list(conditions)
+        if br["triggers"]:
+            stmt_key = f"stmt{br['stmt_id']}"
+            for t in all_triggers:
+                if not t.get("id"):
+                    t["id"] = stmt_key
+            ids = sorted({t.get("id") for t in all_triggers if t.get("id")})
+            if ids:
+                gates.append({"kind": "trigger", "id": ids})
+        collect.append({"br": br, "conditions": gates,
+                        "triggers": all_triggers, "actions": actions})
+        return
     _finish_branch(br, conditions, all_triggers, [], actions,
                    piston_id, piston_name, blocks, auto_ids)

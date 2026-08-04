@@ -752,6 +752,22 @@ class JinjaTranspiler(ExprTranspiler):
                 "global variable '%s' in a template needs PyScript "
                 "(its value lives in a pyscript entity)" % name, **self.ctx)
         if name in self.local_names:
+            # HELPER-BACKED: this variable's reads cross the statement that
+            # wrote it, so it lives in an HA entity rather than a YAML
+            # `variables:` block (stage 3b). Read it from the entity, or the
+            # template would reference a variable this automation never set.
+            spec = getattr(self.resolver, "helper_vars", {}).get(name)
+            if spec:
+                from .resolve import helper_entity_id
+                ent = helper_entity_id(self.ctx.get("piston_id") or "",
+                                       name, spec["type"])
+                if ent:
+                    domain = ent.split(".", 1)[0]
+                    if domain == "input_boolean":
+                        return f"is_state('{ent}', 'on')"
+                    if domain == "input_number":
+                        return f"states('{ent}') | float(0)"
+                    return f"states('{ent}')"
             # the caller emits these as automation-level `variables:` entries
             self.used_locals.add(name)
             return name
