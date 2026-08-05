@@ -205,7 +205,7 @@
     hours: 25
   continue_on_timeout: true
 {%- elif a.kind == 'stop' -%}
-- stop: "piston exited"
+- stop: "{{ a.get('reason') or 'piston exited' }}"
 {%- elif a.kind == 'if' -%}
 - if:
 {%- for c in a.conditions %}

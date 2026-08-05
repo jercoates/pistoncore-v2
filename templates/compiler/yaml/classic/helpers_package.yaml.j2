@@ -42,3 +42,12 @@
 {%- endfor %}
 {%- endfor %}
 {% endfor %}
+{% if shell_commands %}
+# Deleting a file is not an action Home Assistant provides. `shell_command` is
+# the supported way to do it, and a package can declare one — so clearImages()
+# actually deletes rather than quietly doing nothing.
+shell_command:
+{%- for name, cmd in shell_commands.items() %}
+  {{ name }}: {{ cmd | tojson }}
+{%- endfor %}
+{% endif %}

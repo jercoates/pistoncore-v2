@@ -40,8 +40,6 @@
   "clearTile",
   "exit",
   "break",
-  "cancelTasks",
-  "cancelPendingTasks",
   "executePiston",
   "pausePiston",
   "resumePiston",

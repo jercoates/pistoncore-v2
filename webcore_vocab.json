@@ -3376,8 +3376,17 @@
   "clearImages": {
    "n": "Clear images",
    "a": "imageCapture",
-   "ha": "noop",
-   "note": "webCoRE empties its own image store; HA has none. Under the fixed-filename scheme each capture overwrites the last, so there is nothing to clear (MEDIA_FILES_SPEC 2.4). CONDITIONAL: if timestamped filenames are ever added this expires."
+   "ha": [
+    {
+     "domain": "camera",
+     "service": "shell_command.pistoncore_delete_snapshot",
+     "data": {
+      "camera": "$object_id"
+     },
+     "tag": "decision",
+     "note": "REALLY deletes the capture. Home Assistant has NO delete action of any kind - it writes files (camera.snapshot) and reads them (file.read_file) but never removes them, verified against a live service registry 2026-08-04. shell_command is the only route, so PistonCore declares ONE constrained command: the caller passes the CAMERA and the folder is fixed inside the command, so nothing can reach outside /media/pistoncore/. Needs no runtime PistonCore - it lives in HA's config and keeps working if PistonCore is removed - so it is documented in INSTALL.md rather than gated."
+    }
+   ]
   },
   "unlock": {
    "n": "Unlock",
@@ -5053,8 +5062,7 @@
    "a": true,
    "d": "Cancel all pending tasks",
    "p": [],
-   "ha": "noop",
-   "note": "mode: restart already cancels this automation's pending delays when it retriggers - same effect, nothing to emit."
+   "note": "Cancels ALL pending tasks - vcmd_cancelTasks sets cancellations[ALL]=true (webcore-piston.groovy:7321); declared 'Cancel all pending tasks', no params (webcore.groovy:2811). NOT a no-op: the old claim that mode:restart covers it was wrong - restart only fires on RE-TRIGGER, this cancels on demand mid-run. UNMAPPED until verified."
   },
   "lifxState": {
    "n": "LIFX - Set State...",

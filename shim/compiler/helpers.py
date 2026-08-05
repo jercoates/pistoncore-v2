@@ -44,6 +44,47 @@ NUMBER_MIN = -999999999999
 NUMBER_MAX = 999999999999
 
 
+
+# Deleting a file is not something Home Assistant offers as an action, but
+# `shell_command` is a first-class integration and a package can declare one.
+# webCoRE's clearImages() genuinely deletes; refusing to implement it because
+# there is no ready-made service would be giving up on something that works
+# (Jeremy, 2026-08-04: "if we can make it work we should").
+#
+# The command is TEMPLATED so one declaration serves every camera — the path
+# arrives as service data rather than being baked in per piston.
+# CONSTRAINED on purpose. Home Assistant provides no delete action at all —
+# camera.snapshot and image.snapshot write files, file.read_file reads them,
+# and nothing removes them (verified against a live HA service registry,
+# 2026-08-04). shell_command is the only mechanism, which means the workaround
+# is a raw `rm` unless we bound it.
+#
+# So the caller passes the CAMERA, not a path, and the folder is fixed in the
+# command itself. An automation calling this cannot reach outside
+# /media/pistoncore/, and cannot walk out of it: `..`, `/` and quotes would
+# have to survive an entity object_id, which they cannot.
+SHELL_COMMANDS = {
+    "pistoncore_delete_snapshot":
+        'rm -f "/media/pistoncore/{{ camera }}/{{ camera }}.jpg"',
+}
+
+
+def shell_command_block() -> dict:
+    """The `shell_command:` section for the package file.
+
+    NOT opt-in, and the test is Jeremy's (2026-08-04): "if it can work without
+    pistoncore working it can stand with a note on what it does. if pistoncore
+    has to be there to do it that is opt in." This is written into Home
+    Assistant's own config once and runs on its own — deleting PistonCore does
+    not stop it, the same standing rule the emitted automations follow.
+
+    It is also not a general capability: the folder is fixed inside the command
+    and the caller passes only a camera, so it cannot reach outside
+    /media/pistoncore/. What it DOES gets documented in INSTALL.md rather than
+    hidden behind a switch."""
+    return dict(SHELL_COMMANDS)
+
+
 def helper_config(domain: str, name: str) -> dict:
     """The YAML body for one helper, keyed by its object_id."""
     cfg: dict = {"name": name}
@@ -74,7 +115,8 @@ def render_package(helpers: list) -> str:
         rows.append({"domain": domain, "object_id": object_id,
                      "name": cfg.pop("name"), "config": cfg})
     rows.sort(key=lambda r: (r["domain"], r["object_id"]))
-    return _env.get_template("helpers_package.yaml.j2").render(helpers=rows)
+    return _env.get_template("helpers_package.yaml.j2").render(
+        helpers=rows, shell_commands=shell_command_block())
 
 
 def include_present(config_text: str) -> bool:

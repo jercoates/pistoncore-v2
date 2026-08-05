@@ -86,6 +86,10 @@ Decisions already made in it (do not re-litigate):
 - Fixed filename per camera, overwritten. Makes the path a compile-time
   constant, bounds disk use, and makes `clearImages()` a no-op.
 
+- [ ] **`cancelPendingTasks` GLOBAL scope** — Local works (`stop:`). Global
+      reaches OTHER pistons; one automation cannot halt another's in-flight
+      run, so it refuses loudly rather than doing the local thing and looking
+      like it worked. Needs a real answer.
 - [ ] **`media_content_type` extension→type table** — required by HA, no webCoRE
       equivalent (its track parameter is a bare URI). Infer from the extension,
       fail loudly on unknown. Table is DATA, never inline in compiler or
@@ -166,6 +170,23 @@ Decisions already made in it (do not re-litigate):
   path lives in the VOCAB, the compiler only substitutes `$object_id`.
 - **`clearImages`** — was absent from the vocab entirely, so it fell to the
   driver passthrough. Now a declared no-op per §2.4.
+- **`clearImages` REALLY deletes.** Home Assistant has NO delete action of any
+  kind — it writes files (camera.snapshot, image.snapshot) and reads them
+  (file.read_file) and never removes them, verified against a live service
+  registry. shell_command is the only route, so PistonCore declares ONE
+  constrained command: the caller passes the CAMERA and the folder is fixed
+  inside the command, so nothing can reach outside /media/pistoncore/.
+  NOT gated: it needs no runtime PistonCore — it lives in HA's config and keeps
+  working if PistonCore is removed — so it is documented in INSTALL.md instead.
+  Jeremy's test: "if it can work without pistoncore working it can stand with a
+  note on what it does. if pistoncore has to be there to do it that is opt in".
+- **`cancelPendingTasks` (Local) → HA `stop:`.**
+- **`cancelTasks` → HA `stop:`.** It was a silent no-op on the claim that
+  `mode: restart` covers it; it does not — restart only fires on RE-TRIGGER,
+  while this cancels on demand mid-run. `vcmd_cancelTasks` sets
+  `cancellations[ALL]=true` (webcore-piston.groovy:7321) and Jeremy describes
+  the effect as "stops the automation at that line", which is `stop:` exactly.
+  Removed from the PyScript-only routing list — YAML does this reliably.
 - **No-op commands are DATA.** `noop` / `cancelTasks` / `cancelPendingTasks`
   were a hardcoded name list in the emitter; they are now `"ha": "noop"` in the
   vocab with the reason in the note, so a user can declare one without touching

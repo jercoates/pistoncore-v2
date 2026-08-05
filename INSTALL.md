@@ -56,7 +56,7 @@ not port-forward it to the internet.**
 
 ## What PistonCore writes to Home Assistant
 
-Five places, and no sixth. Three of them are gated behind an explicit click, one is a
+Six places, and no seventh. Three of them are gated behind an explicit click, one is a
 zero-setup default you can override or delete, and the rest is PistonCore's own folders.
 
 **1. Its own compiled output** — `pistoncore/automations/` and `pistoncore/scripts/` under
@@ -97,7 +97,25 @@ single statement stays a plain automation variable and creates nothing. Each hel
 `pistoncore_<piston>_<variable>`, so you can always tell which piston owns it, and they are
 removed when the piston is deleted.
 
-Every one of these is reversible and all five are listed in
+**6. A snapshot-delete command** *(written with the helper package)* — webCoRE's
+`clearImages()` deletes a captured image, and **Home Assistant has no delete action
+at all**: it writes files (`camera.snapshot`) and reads them (`file.read_file`), but
+nothing removes them. `shell_command` is the only mechanism HA provides, so
+PistonCore declares exactly one, alongside the helpers:
+
+```yaml
+shell_command:
+  pistoncore_delete_snapshot: 'rm -f "/media/pistoncore/{{ camera }}/{{ camera }}.jpg"'
+```
+
+**It is deliberately not a general file-delete.** The folder is fixed inside the
+command and the caller passes only a camera name, so nothing on your system can use
+it to remove anything outside `/media/pistoncore/`. It needs no PistonCore at
+runtime — it lives in your config and keeps working if you delete PistonCore
+entirely — which is why it is documented here rather than hidden behind a switch.
+Delete the line if you never capture images.
+
+Every one of these is reversible and all six are listed in
 [Removing PistonCore](#removing-pistoncore), so you can see the whole footprint in one place
 and undo it item by item.
 
@@ -392,7 +410,7 @@ docker rm -f pistoncore-v2
 docker rmi pistoncore-v2
 ```
 
-What stays behind — the same five places, in reverse:
+What stays behind — the same six places, in reverse:
 
 - **Compiled automations** in `pistoncore/automations/` and `pistoncore/scripts/` keep
   running natively. Complex pistons keep running as long as PyScript stays installed.
@@ -405,6 +423,8 @@ What stays behind — the same five places, in reverse:
   helpers page if you don't want it.
 - **The test-devices integration**, if installed, removes separately from
   `custom_components/`.
+- **The snapshot-delete command** goes with the package file. Deleting
+  `pistoncore_packages/` removes it along with the helpers.
 - **Piston variable helpers** live in `pistoncore_packages/`. Delete the folder and the
   `packages:` line to remove them all at once, or delete individual helpers from HA's
   helpers page. Any automation still reading one will simply see it as unavailable — it

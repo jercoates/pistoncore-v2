@@ -1069,6 +1069,35 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if n["command"] == "setVariable":
                 out.append(_set_variable(n, resolver, ctx))
                 continue
+            if n["command"] == "cancelPendingTasks":
+                # Scope:enum[Local,Global] (webcore.groovy:2827). LOCAL is this
+                # piston's own pending work, which is this run — `stop:` ends
+                # it, same as cancelTasks. GLOBAL reaches OTHER pistons, and
+                # one automation cannot halt another's in-flight run, so that
+                # scope is refused loudly rather than silently doing the local
+                # thing and looking like it worked.
+                scope = ((n.get("params") or [{}])[0] or {}).get("c")
+                if str(scope or "Local").strip().lower() == "global":
+                    raise NotYetImplemented(
+                        "cancelPendingTasks with GLOBAL scope stops tasks in "
+                        "OTHER pistons, which one automation cannot do to "
+                        "another", **ctx)
+                out.append({"kind": "stop", "reason": "cancelPendingTasks"})
+                continue
+            if n["command"] == "cancelTasks":
+                # "Cancel all pending tasks" — vcmd_cancelTasks sets
+                # cancellations[ALL]=true (webcore-piston.groovy:7321), and
+                # Jeremy describes the effect as "stops the automation at that
+                # line". Everything still pending in this run IS this run, so
+                # HA's `stop:` expresses it exactly. YAML can do this reliably,
+                # so it stays in YAML.
+                #
+                # It was previously a silent no-op on the claim that
+                # mode: restart covers it. It does not — restart only fires on
+                # RE-TRIGGER, while this cancels on demand mid-run.
+                out.append({"kind": "stop", "reason": "cancelTasks"})
+                continue
+
             # Commands that compile to NOTHING. Which ones those are is
             # DATA — `"ha": "noop"` in the vocab, with the reason in its note —
             # not a list of names in here. The names were hardcoded, which is
