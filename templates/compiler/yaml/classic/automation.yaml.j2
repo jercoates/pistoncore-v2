@@ -230,6 +230,11 @@
 - id: {{ auto_id }}
   alias: "{{ alias }}"
   mode: {{ mode }}
+{%- if max_exceeded %}
+  # Dropped runs are EXPECTED here, not a fault — see the throttle note at the
+  # end of this automation. `silent` stops HA logging a warning for each one.
+  max_exceeded: {{ max_exceeded }}
+{%- endif %}
   triggers:
 {%- for t in triggers %}
 {{ trigger_block(t) | indent(4, true) }}
@@ -240,11 +245,24 @@
 {{ cond_block(c) | indent(4, true) }}
 {%- endfor %}
 {%- endif %}
-{%- if actions %}
+{%- if actions or throttle_seconds %}
   actions:
 {%- for a in actions %}
 {{ action_block(a) | indent(4, true) }}
 {%- endfor %}
+{%- if throttle_seconds %}
+    # THROTTLE. This automation wakes on EVERY update of the watched value,
+    # because webCoRE's `remains_*` means "was and still is" — it has to see
+    # each change to know that. A fast driver (MQTT especially) can report many
+    # times a second, so this trailing wait holds the automation busy and
+    # `mode: single` drops anything arriving during it. Without this, a chatty
+    # sensor would run the automation continuously.
+    #
+    # Raise it to make the piston quieter, lower it to make it more responsive.
+    # This is a plain HA delay — edit it here and it stays edited until the
+    # piston is recompiled.
+    - delay: "{{ throttle_seconds }}"
+{%- endif %}
 {%- else %}
   actions: []
 {%- endif %}

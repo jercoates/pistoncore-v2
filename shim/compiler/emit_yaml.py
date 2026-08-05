@@ -701,6 +701,34 @@ _OPPOSITE_TRIGGER_OP = {
 }
 
 
+# How long a quarantined `remains_*` automation stays busy after a run, which
+# is what drops the flood from a fast driver. One second is the deliberate
+# default: an MQTT sensor reporting many times a second collapses to one run,
+# and nothing observable is lost because a `remains_*` action re-asserts
+# something that is already true. Rendered by the template as a plain HA delay
+# so it stays editable in the emitted YAML.
+# TODO: promote to a Settings knob (all first-run settings must be editable
+# there too) — COMPILER_TODO.md.
+_NOISY_THROTTLE = "00:00:01"
+
+_REMAIN_ABOVE = ("remains_above", "remains_above_or_equal_to",
+                 "stays_greater_than", "stays_greater_than_or_equal_to")
+_REMAIN_BELOW = ("remains_below", "remains_below_or_equal_to",
+                 "stays_less_than", "stays_less_than_or_equal_to")
+
+
+def _is_noisy_trigger(trig: dict) -> bool:
+    """A trigger that must wake on EVERY change of the value it watches.
+
+    Only the "was and still is" family, and only when authored WITHOUT a
+    duration. With one it compiles to `numeric_state` + `for:` — HA-native,
+    fires once, silent — so `stays_*` (which declares a duration in the vocab)
+    is normally not noisy at all. This is the small remainder that is.
+    """
+    return (trig.get("co") in _REMAIN_ABOVE + _REMAIN_BELOW
+            and not _duration_hms(trig.get("duration")))
+
+
 def _recheck_condition(trig: dict, resolver: Resolver, ctx: dict) -> dict | None:
     """See _TRIGGER_RECHECK_OP. Builds a synthetic condition node from the
     trigger's own IR (same shape _cond_node already produces, co swapped to
@@ -853,22 +881,20 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
             node["for"] = hold
         return node
     # "remains above N for T" -> numeric_state with `for:` (HA native)
-    REMAIN_ABOVE = ("remains_above", "remains_above_or_equal_to",
-                    "stays_greater_than", "stays_greater_than_or_equal_to")
-    REMAIN_BELOW = ("remains_below", "remains_below_or_equal_to",
-                    "stays_less_than", "stays_less_than_or_equal_to")
-    if co in REMAIN_ABOVE:
-        node = {"kind": "numeric_state", "entities": entities, "above": value,
-                "id": trig_id}
+    if co in _REMAIN_ABOVE or co in _REMAIN_BELOW:
+        key = "above" if co in _REMAIN_ABOVE else "below"
         if hold:
-            node["for"] = hold
-        return node
-    if co in REMAIN_BELOW:
-        node = {"kind": "numeric_state", "entities": entities, "below": value,
-                "id": trig_id}
-        if hold:
-            node["for"] = hold
-        return node
+            return {"kind": "numeric_state", "entities": entities,
+                    key: value, "for": hold, "id": trig_id}
+        # WITHOUT a duration this is webCoRE's "was and still is": the engine
+        # requires the OLD and the NEW value to satisfy it
+        # (webcore-piston.groovy:8461), which is the opposite of the crossing
+        # `numeric_state` fires on — the crossing is the one case it excludes.
+        # No HA trigger expresses that, so wake on any change and let the
+        # re-check condition below decide. That firing rate is why the owning
+        # statement is quarantined and throttled in _merge_branches.
+        return {"kind": "state", "entities": entities, "id": trig_id,
+                "_noisy": True}
 
     # ── parity family ── (becomes_even/odd = edge into that parity;
     # remains_even/odd, stays_even/odd = same edge held for a duration —
@@ -2314,9 +2340,18 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
 
     Statements without waits have nothing to cancel, so they merge freely.
     """
+    # A NOISY trigger is deliberately kept OUT of the shared union. Every
+    # automation subscribes to that union, so letting one in would wake the
+    # whole piston on every sensor update — the exact harm the quarantine
+    # exists to prevent (Jeremy, 2026-08-04: "it constantly triggering events
+    # as the value changes is a major problem"). DIVERGENCE, documented:
+    # webCoRE re-runs every statement on every event, so statements other than
+    # the one that asked for `remains_*` no longer get woken by it.
     all_triggers, seen = [], set()
     for part in parts:
         for t in part["triggers"]:
+            if t.get("_noisy"):
+                continue
             key = _json_dumps(t)
             if key not in seen:
                 seen.add(key)
@@ -2327,11 +2362,12 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
         return ([{"kind": "if", "conditions": part["conditions"],
                   "then": body, "else": []}] if part["conditions"] else body)
 
-    waiting = [p for p in parts if _has_wait(p["br"]["then"])
-               or _has_wait(p["br"]["else"])]
-    plain = [p for p in parts if p not in waiting]
+    noisy = [p for p in parts if any(t.get("_noisy") for t in p["triggers"])]
+    waiting = [p for p in parts if p not in noisy
+               and (_has_wait(p["br"]["then"]) or _has_wait(p["br"]["else"]))]
+    plain = [p for p in parts if p not in noisy and p not in waiting]
 
-    def emit(suffix, chunk, mode):
+    def emit(suffix, chunk, mode, triggers=None, throttle=None):
         if not chunk:
             return
         actions = []
@@ -2344,7 +2380,9 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
             alias=f"PistonCore: {piston_name}"
                   + (f" — ${chunk[0]['br']['stmt_id']}" if suffix else ""),
             mode=mode,
-            triggers=all_triggers,
+            max_exceeded="silent" if throttle else None,
+            throttle_seconds=throttle,
+            triggers=all_triggers if triggers is None else triggers,
             conditions=[],
             actions=actions,
         ))
@@ -2354,6 +2392,23 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
     for part in waiting:
         emit(f"_s{part['br']['stmt_id']}", [part],
              "restart" if part["br"]["tcp"] == "c" else "queued")
+    for part in noisy:
+        # QUARANTINE. Its own automation, so waking on every update can only
+        # ever restart ITS OWN run — which is what webCoRE does under
+        # TCP=restart anyway — and can never cancel another statement's
+        # pending timer.
+        #
+        # `single` + the trailing delay is the throttle. It cannot be used when
+        # the statement holds a wait of its own: `single` would drop the
+        # re-trigger that TCP=restart requires, so that combination keeps its
+        # real mode and runs unthrottled.
+        has_wait = _has_wait(part["br"]["then"]) or _has_wait(part["br"]["else"])
+        emit(f"_s{part['br']['stmt_id']}", [part],
+             ("restart" if part["br"]["tcp"] == "c" else "queued")
+             if has_wait else "single",
+             triggers=all_triggers + [t for t in part["triggers"]
+                                      if t.get("_noisy")],
+             throttle=None if has_wait else _NOISY_THROTTLE)
 
 
 def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
@@ -2500,6 +2555,18 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
             opp_co = _OPPOSITE_TRIGGER_OP.get(trig.get("co"))
             if opp_co:
                 triggers.append(_trigger(dict(trig, co=opp_co), resolver, ctx, trig_id))
+
+    # A noisy trigger fires on every change, satisfied or not, so its check
+    # CANNOT be optional the way the else-branch re-check above is — without it
+    # the body would run on every update. Appended unconditionally, and guarded
+    # so a piston carrying both an else-branch and a noisy trigger does not get
+    # the same condition twice.
+    for _trig in br["triggers"]:
+        if not _is_noisy_trigger(_trig):
+            continue
+        _rc = _recheck_condition(_trig, resolver, ctx)
+        if _rc and _rc not in cond_nodes:
+            cond_nodes.append(_rc)
 
     if else_actions and cond_nodes:
         # else must NOT run on a cancel-trigger pass, so the template

@@ -17,41 +17,46 @@ pyscript: 12}`.
       "was open five minutes ago" becomes "is open now". 10 collisions measured
       across both bands. COMPILER_SPEC §2.5 says the discrete-sample semantics
       need PyScript's `.old` / `state_hold`; spec'd, not built.
-- [ ] **`remains_*` (4 operators) collides with its crossing twin.** SCOPE IS
-      SMALLER THAN IT LOOKED. `stays_*` declares a hold duration (vocab `t:1`)
-      and already compiles to `numeric_state` + `for:` — HA-native, fires once,
-      no noise. Correct today, leave it alone. Only `remains_above`,
-      `remains_below` and their `_or_equal_to` twins declare NO duration
-      (`t: null`), so they mean "on every event where old and new both satisfy"
-      (webcore-piston.groovy:8461) vs `drops_below`'s crossing (:8455). They
-      currently fall through to the same bare `numeric_state`, so the two
-      compile identically.
+- [x] **`remains_*` numeric family — DONE 2026-08-04.** Durationless
+      `remains_above/below` (+ `_or_equal_to`) now emit a bare state trigger
+      carrying their own value re-check, quarantined into their own automation
+      with `mode: single` + `max_exceeded: silent` + a trailing 1s delay as the
+      throttle. The noisy trigger is deliberately kept OUT of the shared
+      trigger union so it cannot wake the rest of the piston. Collisions
+      20 -> 16. `stays_*` was already correct (declares a duration, compiles to
+      `numeric_state` + `for:`, native and silent) and was left alone.
 
-      A faithful trigger must wake on every change, and a first attempt at that
-      (2026-08-04) was REVERTED as a major bug: a bare state trigger inside a
-      shared `mode: restart` automation fires on every sensor update and kills
-      other statements' pending waits. Do not re-add it without all three of:
-        1. its OWN automation — reuse the `_has_wait` split in
-           `_merge_branches`, so its firing can only restart its own run
-           (which IS webCoRE under TCP=restart);
-        2. `mode: single` + `max_exceeded: silent` + trailing `delay:` as the
-           throttle, default 1s, a Settings knob. Protects the MQTT case
-           (Jeremy 2026-08-04: fast-polling drivers, 50/sec -> 1/sec costs
-           nothing observable because a remains_* action re-asserts something
-           already true). Divergence to document: a sub-second excursion above
-           the threshold and back inside the window reads as "remained" where
-           webCoRE saw a crossing. Cannot apply when the statement itself holds
-           a wait under TCP=restart — flag that combination instead;
-        3. `attribute:` on the trigger — a bare state trigger also fires on
-           attribute-only changes (battery, last_seen), which is both noise and
-           unfaithful. This part is a straight bug fix under any setting.
+- [ ] **Same bug, three more families: range and parity.** The 4 remaining YAML
+      collisions are all the crossing-vs-held pair this fix just resolved for
+      numbers, in handlers it did not touch:
+        `enters_range == remains_inside_of_range`
+        `exits_range == remains_outside_of_range`
+        `becomes_even == remains_even`
+        `becomes_odd == remains_odd`
+      The machinery now exists and should be REUSED, not re-written: extend
+      `_is_noisy_trigger()` to those families and give each a re-check entry in
+      `_TRIGGER_RECHECK_OP`. Both quarantine and throttle then apply with no
+      new code. Verify a re-check mapping exists for the parity ops first —
+      they emit template triggers, not `numeric_state`, so that path is
+      unproven.
 
-      Plus an advisory on the TWO existing surfaces (front-door list indicator,
-      piston status-screen banner — never a third): "wakes on every update of
-      <entity>, throttled to 1s", because a user can pick `remains_*` without
-      knowing it costs a logbook entry per second (Jeremy 2026-08-04).
+- [ ] **Throttle interval must become a Settings knob.** Hardcoded
+      `_NOISY_THROTTLE = "00:00:01"` in emit_yaml.py. It renders through the
+      template as a plain HA delay so it is editable in the emitted YAML, but
+      every first-run/setup setting has to be editable on the Settings page
+      too.
 
-      `becomes_even` / `remains_even` still collide outright.
+- [ ] **Advisory not yet surfaced.** A user can still pick `remains_*` without
+      learning it wakes on every update. Needs the compile-time flag on the two
+      existing surfaces (front-door list indicator, piston status-screen
+      banner) — never a third: "wakes on every update of <entity>, throttled to
+      1s".
+
+- [ ] **Two divergences to write up** (fair-warning doc, not bugs): a
+      sub-second excursion past the threshold and back inside the throttle
+      window reads as "remained" where webCoRE saw a crossing; and statements
+      OTHER than the one asking for `remains_*` no longer re-run on its events,
+      because the noisy trigger is held out of the shared union.
 
 - [ ] **Interaction filter (`p:'p'`) silently dropped** — "only when physically
       operated" also fires on automated changes. 7 corpus pistons use it. HA
