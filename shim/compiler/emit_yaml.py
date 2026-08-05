@@ -716,17 +716,41 @@ _REMAIN_ABOVE = ("remains_above", "remains_above_or_equal_to",
 _REMAIN_BELOW = ("remains_below", "remains_below_or_equal_to",
                  "stays_less_than", "stays_less_than_or_equal_to")
 
+# Every "was and still is" operator, across all three families that have one.
+# Their crossing twins — enters_range, exits_range, becomes_even, becomes_odd —
+# are deliberately absent: a crossing is exactly what HA triggers do natively,
+# so those are already correct and cheap.
+_HELD_OPS = _REMAIN_ABOVE + _REMAIN_BELOW + (
+    "remains_inside_of_range", "stays_inside_of_range",
+    "remains_outside_of_range", "stays_outside_of_range",
+    "remains_even", "stays_even", "remains_odd", "stays_odd",
+)
+
 
 def _is_noisy_trigger(trig: dict) -> bool:
     """A trigger that must wake on EVERY change of the value it watches.
 
     Only the "was and still is" family, and only when authored WITHOUT a
-    duration. With one it compiles to `numeric_state` + `for:` — HA-native,
-    fires once, silent — so `stays_*` (which declares a duration in the vocab)
-    is normally not noisy at all. This is the small remainder that is.
+    duration. With one it compiles to a native trigger plus `for:` — fires
+    once, silent — so `stays_*` (which declares a duration in the vocab) is
+    normally not noisy at all. This is the small remainder that is.
     """
-    return (trig.get("co") in _REMAIN_ABOVE + _REMAIN_BELOW
+    return (trig.get("co") in _HELD_OPS
             and not _duration_hms(trig.get("duration")))
+
+
+def _noisy_state_trigger(entities, trig_id) -> dict:
+    """The wake for a held comparison authored without a duration.
+
+    "Was and still is" needs the OLD and the NEW value (webcore-piston.groovy
+    :8461), and every native HA trigger fires on the TRANSITION into a state —
+    which is the one case these operators exclude. So there is nothing to
+    subscribe to but the change itself; the value test moves to the re-check
+    condition, and the cost of waking constantly is paid for by the quarantine
+    and throttle in _merge_branches.
+    """
+    return {"kind": "state", "entities": entities, "id": trig_id,
+            "_noisy": True}
 
 
 def _recheck_condition(trig: dict, resolver: Resolver, ctx: dict) -> dict | None:
@@ -862,6 +886,11 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
         return {"kind": "numeric_state", "entities": entities,
                 "below": value, "id": trig_id}
     if co in ("enters_range", "remains_inside_of_range", "stays_inside_of_range"):
+        if co != "enters_range" and not hold:
+            # Held, but no duration: "was inside and still is", which is NOT
+            # the entering that numeric_state fires on. Same split as the
+            # numeric family below.
+            return _noisy_state_trigger(entities, trig_id)
         node = {"kind": "numeric_state", "entities": entities,
                 "above": value, "below": trig.get("value2"), "id": trig_id}
         if hold and co != "enters_range":
@@ -873,6 +902,11 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
         # once) — there's no native trigger for "value LEFT the range," so
         # this needs a template that's true exactly when the value sits
         # outside [value, value2], firing on the false->true transition.
+        if co != "exits_range" and not hold:
+            # A template trigger fires on its result going false->true, which
+            # is the LEAVING — the one case "was outside and still is"
+            # excludes. Same split as the numeric family.
+            return _noisy_state_trigger(entities, trig_id)
         joiner = " and " if trig.get("aggregation") == "all" else " or "
         parts = [_num_between(e, value, trig.get("value2"), negate=True) for e in entities]
         body = parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
@@ -893,8 +927,7 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
         # No HA trigger expresses that, so wake on any change and let the
         # re-check condition below decide. That firing rate is why the owning
         # statement is quarantined and throttled in _merge_branches.
-        return {"kind": "state", "entities": entities, "id": trig_id,
-                "_noisy": True}
+        return _noisy_state_trigger(entities, trig_id)
 
     # ── parity family ── (becomes_even/odd = edge into that parity;
     # remains_even/odd, stays_even/odd = same edge held for a duration —
@@ -902,6 +935,10 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
     PARITY = ("becomes_even", "becomes_odd", "remains_even", "remains_odd",
               "stays_even", "stays_odd")
     if co in PARITY:
+        if co not in ("becomes_even", "becomes_odd") and not hold:
+            # "was even and still is" — not the becoming that a template
+            # trigger's false->true fires on. Same split as the numeric family.
+            return _noisy_state_trigger(entities, trig_id)
         want = 0 if co.endswith("even") else 1
         joiner = " and " if trig.get("aggregation") == "all" else " or "
         parts = [f"states('{e}') | is_number and states('{e}') | int(0) % 2 == {want}"

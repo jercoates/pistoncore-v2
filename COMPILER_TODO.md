@@ -26,19 +26,17 @@ pyscript: 12}`.
       20 -> 16. `stays_*` was already correct (declares a duration, compiles to
       `numeric_state` + `for:`, native and silent) and was left alone.
 
-- [ ] **Same bug, three more families: range and parity.** The 4 remaining YAML
-      collisions are all the crossing-vs-held pair this fix just resolved for
-      numbers, in handlers it did not touch:
-        `enters_range == remains_inside_of_range`
-        `exits_range == remains_outside_of_range`
-        `becomes_even == remains_even`
-        `becomes_odd == remains_odd`
-      The machinery now exists and should be REUSED, not re-written: extend
-      `_is_noisy_trigger()` to those families and give each a re-check entry in
-      `_TRIGGER_RECHECK_OP`. Both quarantine and throttle then apply with no
-      new code. Verify a re-check mapping exists for the parity ops first —
-      they emit template triggers, not `numeric_state`, so that path is
-      unproven.
+- [x] **Same bug in range and parity — DONE 2026-08-04.** `enters_range ==
+      remains_inside_of_range`, `exits_range == remains_outside_of_range`,
+      `becomes_even == remains_even`, `becomes_odd == remains_odd` were the
+      same crossing-vs-held collision in handlers the numeric fix had not
+      touched. Fixed by REUSING that machinery, not copying it: `_HELD_OPS`
+      now names every "was and still is" operator across all three families,
+      `_noisy_state_trigger()` is the one place the wake is built, and every
+      re-check mapping needed already existed in `_TRIGGER_RECHECK_OP`.
+      Collisions 16 -> 12. The 10 that remain are all PyScript-band `was_* ==
+      is_*`, which is the separate `was_*` item below; the YAML band is down
+      to 2.
 
 - [ ] **Throttle interval must become a Settings knob.** Hardcoded
       `_NOISY_THROTTLE = "00:00:01"` in emit_yaml.py. It renders through the
