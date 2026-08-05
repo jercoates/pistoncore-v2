@@ -26,7 +26,7 @@ from .. import customize
 from .analyze import analyze
 from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
-from .resolve import Resolver
+from .resolve import Resolver, WAS_TO_IS, WAS_SENTINEL, was_watcher_entity
 from . import routing as _routing
 
 _BAND_REL = "templates/compiler/yaml/classic"
@@ -168,15 +168,22 @@ def _minutes_hms(minutes: int) -> str:
     return f"{minutes // 60:02d}:{minutes % 60:02d}:00"
 
 
-def _duration_hms(op) -> str | None:
-    """The `to` operand on stays/remains/was comparisons — a hold time.
-    Returns HH:MM:SS or None when it isn't a fixed number."""
+def _duration_secs(op) -> int | None:
+    """The `to` operand on stays/remains/was comparisons, in seconds.
+    None when it isn't a fixed number."""
     if not isinstance(op, dict):
         return None
     n = op.get("c")
     if not isinstance(n, (int, float)) or isinstance(n, bool):
         return None
-    secs = int(n * {"s": 1, "m": 60, "h": 3600, "d": 86400}.get(op.get("vt", "s"), 1))
+    return int(n * {"s": 1, "m": 60, "h": 3600, "d": 86400}.get(op.get("vt", "s"), 1))
+
+
+def _duration_hms(op) -> str | None:
+    """Same operand as HH:MM:SS, which is what HA's `for:` takes."""
+    secs = _duration_secs(op)
+    if secs is None:
+        return None
     return f"{secs // 3600:02d}:{(secs % 3600) // 60:02d}:{secs % 60:02d}"
 
 
@@ -245,6 +252,9 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
                          collect=collect, piston_has_triggers=piston_has_triggers)
         if collect is not None:
             _merge_branches(collect, piston_id, piston_name, blocks, auto_ids)
+        # After the branches, because a was_* watcher is only known once the
+        # condition that needs it has been built.
+        _was_watcher_blocks(resolver, piston_id, piston_name, blocks, auto_ids)
     except _NoSubscriptions:
         # promotion found nothing subscribable after all — same conclusion,
         # reached later: this piston is a script.
@@ -283,6 +293,9 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
                     piston_name: str, header: str) -> dict:
     """Emit the whole piston as one HA script."""
     ctx = {"piston_id": piston_id, "piston_name": piston_name, "stmt_id": None}
+    # NOT a ctx key: ctx is splatted into CompilerError, so anything added
+    # there has to be a field it accepts.
+    resolver.script_band = True
     actions = []
     for br in branches:
         body = _resolve_actions(br["then"], resolver, ctx)
@@ -357,9 +370,90 @@ def _num_between(read: str, lo, hi, negate: bool = False) -> str:
     return f"{read} | is_number and {body}"
 
 
+def _last_changed_is_exact(cond: dict) -> bool:
+    """True when HA's own `last_changed` already answers "for how long".
+
+    It is exact for ONE predicate: "the state has been this single value".
+    Then any change to the state is also a change to the answer, so the two
+    clocks agree and no helper is needed — this is the cheap path and most
+    real pistons take it.
+
+    It is wrong for every predicate that can stay true ACROSS a value change:
+    a numeric bound (a fridge going 11° -> 12° is still above 10, but
+    last_changed resets and the duration restarts at zero), `is_not`, or a list
+    of accepted values. Those need the watcher.
+    """
+    return cond.get("co") == "was" and not isinstance(cond.get("value"), list)
+
+
+def _was_condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
+    """`was_X for T` -> "X is true now, and has been for at least/less than T".
+
+    HA cannot look backwards: the `numeric_state` condition takes no `for:`,
+    and `last_changed` resets on EVERY update, so a sensor reporting while it
+    stays below its threshold would never accumulate and the answer would be
+    permanently false. Instead a helper records WHEN the inner test became
+    true — maintained by the watcher automation in _was_watcher_blocks — and
+    the elapsed time is read from that.
+    """
+    inner = _condition(dict(cond, co=WAS_TO_IS[cond["co"]], duration={}),
+                       resolver, ctx)
+    secs = _duration_secs(cond.get("duration"))
+    if not secs or not cond.get("devices"):
+        # webCoRE's own threshold of 0 makes this the instantaneous test, and a
+        # left side with no device has no history to look back through.
+        return inner
+    if getattr(resolver, "script_band", False):
+        # A subscription-less piston compiles to a SCRIPT, and deploy writes
+        # exactly one file per piston — so there is nowhere to put the watcher
+        # AUTOMATION this needs. Emitting the helper without its watcher would
+        # leave the helper permanently at its sentinel and the condition
+        # permanently false: silently broken, which is worse than not
+        # compiling. PyScript owns its whole file and has no such limit.
+        raise NotYetImplemented(
+            f"'{cond['co']}' needs to track how long a condition has held, "
+            f"which requires a companion automation this piston has no file "
+            f"for — needs PyScript", **ctx)
+    if inner.get("kind") != "template":
+        raise NotYetImplemented(
+            f"'{cond['co']}' wraps a comparison that isn't a plain template "
+            f"({inner.get('kind')}), so its 'has held for' test can't be "
+            f"built — needs PyScript", **ctx)
+
+    entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
+    entity = was_watcher_entity(ctx.get("piston_id") or "", entities,
+                                cond.get("attr"), cond["co"],
+                                cond.get("value"), cond.get("value2"))
+    store = getattr(resolver, "was_watchers", None)
+    if store is None:
+        store = {}
+        setattr(resolver, "was_watchers", store)
+    store.setdefault(entity, {"entity": entity, "entities": entities,
+                              "attr": cond.get("attr"),
+                              "template": inner["template"]})
+
+    # 'g' = "for at least T" (the default), 'l' = "for less than T"
+    # — webcore-piston.groovy:8288, `fisg ? duration>=threshold : duration<threshold`.
+    op = "<" if str((cond.get("duration") or {}).get("f") or "g") == "l" else ">="
+    held = (f"states('{entity}') not in ['unknown', 'unavailable', "
+            f"'{WAS_SENTINEL}'] and "
+            f"as_timestamp(now()) - as_timestamp(states('{entity}'), 0) "
+            f"{op} {secs}")
+    return {"kind": "and", "conditions": [
+        inner,
+        {"kind": "template", "template": "{{ " + held + " }}"},
+    ]}
+
+
 def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     """Condition IR node -> template/time/sun condition dict for the template."""
     co = cond["co"]
+
+    # ── the was_* family ── handled AHEAD of every other dispatch, because
+    # was_* is not a family of comparisons: it WRAPS one. The inner test can be
+    # any ordinary comparison, and only the "has held for T" part is special.
+    if co in WAS_TO_IS and not _last_changed_is_exact(cond):
+        return _was_condition(cond, resolver, ctx)
 
     # nested condition group -> HA's and/or condition blocks
     if co == "_group":
@@ -2137,6 +2231,36 @@ def _param_value(token: str, params: list, ctx: dict, resolver=None,
 
 # ── branch emission ─────────────────────────────────────────────────────────
 
+def _was_watcher_blocks(resolver: Resolver, piston_id: str, piston_name: str,
+                        blocks: list, auto_ids: list) -> None:
+    """One small automation per `was_*` comparison, keeping its helper current.
+
+    It records WHEN the inner test became true, and clears the helper the
+    moment it stops being true — so the elapsed time read in _was_condition is
+    always "how long this has held continuously", which is what webCoRE
+    accumulates by walking state history.
+
+    The triggers are TEMPLATE triggers on the predicate and its negation. A
+    template trigger fires when its result goes false->true, so these fire only
+    on the two flips — not on every update of the underlying sensor. That is
+    what keeps the watcher cheap enough to exist per comparison.
+    """
+    for w in sorted((getattr(resolver, "was_watchers", {}) or {}).values(),
+                    key=lambda x: x["entity"]):
+        inner = w["template"].strip()
+        body = inner[2:-2].strip() if inner.startswith("{{") else inner
+        auto_id = f"pistoncore_{piston_id}_watch_{w['entity'].split('_')[-1]}"
+        auto_ids.append(auto_id)
+        blocks.append(_env.get_template("was_watcher.yaml.j2").render(
+            auto_id=auto_id,
+            alias=f"PistonCore: {piston_name} — tracks how long a condition holds",
+            entity=w["entity"],
+            predicate="{{ " + body + " }}",
+            negated="{{ not (" + body + ") }}",
+            sentinel=WAS_SENTINEL,
+        ))
+
+
 def _helpers_for(resolver: Resolver, piston_id: str, piston_name: str) -> list:
     """The helper entities this piston's variables need (stage 3a/3b).
 
@@ -2150,6 +2274,12 @@ def _helpers_for(resolver: Resolver, piston_id: str, piston_name: str) -> list:
             out.append({"entity": entity, "variable": name,
                         "type": spec["type"],
                         "name": f"{piston_name}: {name}"})
+    # was_* watchers need a helper too, created the same way and reported
+    # through the same list so DEPLOY has one thing to create and one thing to
+    # clean up when the piston is deleted.
+    for w in (getattr(resolver, "was_watchers", {}) or {}).values():
+        out.append({"entity": w["entity"], "type": "datetime",
+                    "name": f"{piston_name}: since '{w['attr']}' condition held"})
     return sorted(out, key=lambda h: h["entity"])
 
 

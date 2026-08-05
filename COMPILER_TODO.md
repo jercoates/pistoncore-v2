@@ -38,6 +38,43 @@ pyscript: 12}`.
       is_*`, which is the separate `was_*` item below; the YAML band is down
       to 2.
 
+- [x] **`was_*` (14 operators) no longer answers the wrong question — DONE
+      2026-08-04.** webCoRE walks state history backwards, accumulating time
+      while each past state satisfies an inner comparison
+      (webcore-piston.groovy:8255-8300, `valueWas`), so `was_less_than N for T`
+      means "has been CONTINUOUSLY below N for T". Both bands were dropping the
+      duration for most of the family and answering "is below N right now".
+      `resolve.WAS_TO_IS` is now the one place the was_*/is_* pairing is
+      written down — verified to cover the vocab exactly, no missing entries
+      and no invented ones — and both bands read it.
+
+      YAML: exact, via a watcher helper. HA has no "this predicate has held for
+      T" primitive (the numeric_state CONDITION takes no `for:`), so a helper
+      records WHEN the inner test became true and the piston reads the elapsed
+      time. The watcher automation uses TEMPLATE triggers on the predicate and
+      its negation, which fire only on the two flips — not on every sensor
+      update — which is what makes one per comparison affordable.
+
+      `last_changed` is still used where it is EXACT and free: "the state has
+      been this one value". It is wrong for anything that stays true across a
+      value change (a numeric bound, is_not, a list of values), which is
+      exactly what `_last_changed_is_exact` decides.
+
+- [ ] **PyScript `was_*` is approximate where YAML is exact.** PyScript gates
+      on `_fn_age` (last_changed), which under-reports the duration for numeric
+      predicates — a fridge going 11° -> 12° restarts the clock. It fails
+      CLOSED, so it is honest, but the two bands do not agree. The fix is a
+      persisted `pyscript.` state variable (`state.persist()`, verified present
+      at pyscript-source/state.py:328) maintained by a `@state_trigger`, giving
+      PyScript the same watcher without needing an HA helper or any change to
+      the deploy contract.
+
+- [ ] **A subscription-less piston cannot host a watcher.** It compiles to a
+      SCRIPT and deploy writes exactly one file per piston, so there is nowhere
+      to put the watcher AUTOMATION. Those route to PyScript instead of
+      emitting a helper nothing would ever stamp. To keep them in YAML, deploy
+      needs to accept a second file per piston, with its own cleanup on delete.
+
 - [ ] **Throttle interval must become a Settings knob.** Hardcoded
       `_NOISY_THROTTLE = "00:00:01"` in emit_yaml.py. It renders through the
       template as a plain HA delay so it is editable in the emitted YAML, but

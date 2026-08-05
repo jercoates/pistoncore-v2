@@ -28,7 +28,15 @@ from .. import customize
 
 from .errors import NotYetImplemented
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
-from .resolve import Resolver
+from .resolve import Resolver, WAS_TO_IS
+
+# was_* ops with their own branch in _condition_expr, which applies the
+# duration gate itself. Everything else in WAS_TO_IS is gated generically at
+# the top of that method.
+_WAS_SELF_HANDLED = ("was", "was_not", "was_greater_than",
+                     "was_greater_than_or_equal_to", "was_less_than",
+                     "was_less_than_or_equal_to", "was_equal_to",
+                     "was_different_than")
 from . import routing as _routing
 
 _BAND_REL = "templates/compiler/pyscript/2.x"
@@ -321,6 +329,25 @@ class _PyEmitter:
 
     def _condition_expr(self, cond: dict, ctx: dict) -> str:
         co = cond.get("co")
+        # was_* ops that share a branch with their is_* twin below would drop
+        # the duration entirely and compile to the same code. Build the inner
+        # test by RECURSING as the twin (resolve.WAS_TO_IS is the one place
+        # that pairing is written down) and gate it on how long the state has
+        # held. The numeric/equality was_* ops are handled in their own branch
+        # further down and are excluded here so they are not gated twice.
+        if co in WAS_TO_IS and co not in _WAS_SELF_HANDLED:
+            inner = self._condition_expr(dict(cond, co=WAS_TO_IS[co]), ctx)
+            dur = self._duration_ms(cond.get("to"))
+            if dur is None:
+                raise NotYetImplemented(
+                    f"'{co}' without a fixed duration not compiled yet", **ctx)
+            qual = ">=" if (cond.get("to") or {}).get("f", "g") == "g" else "<"
+            ents = self.resolver.entities_for_attr(
+                cond.get("devices"), cond.get("attr"), ctx)
+            ages = " or ".join(f"(_fn_age({_q(e)}) or 0) {qual} {dur}"
+                               for e in ents) or "False"
+            return f"({inner} and ({ages}))"
+
         lo = cond.get("lo") or {}
         ro = cond.get("ro") or {}
         ro2 = cond.get("ro2") or {}
@@ -466,17 +493,36 @@ class _PyEmitter:
         elif co in ("was_greater_than", "was_greater_than_or_equal_to",
                     "was_less_than", "was_less_than_or_equal_to",
                     "was_equal_to", "was_different_than"):
-            # history comparisons approximate to current state + age (Tier-3)
+            # "was X for T". The comment here used to say "current state +
+            # age", but the age was never emitted — the duration was dropped
+            # outright, so `was_less_than 50 for 10 minutes` answered "is below
+            # 50 right now". That is why was_* and is_* compiled to identical
+            # code (Round E collision check, 2026-08-04).
             OPS = {"was_greater_than": ">", "was_greater_than_or_equal_to": ">=",
                    "was_less_than": "<", "was_less_than_or_equal_to": "<=",
                    "was_equal_to": "==", "was_different_than": "!="}
             op = OPS[co]
+            dur = self._duration_ms(cond.get("to"))
+            if dur is None:
+                raise NotYetImplemented(
+                    f"'{co}' without a fixed duration not compiled yet", **ctx)
+            qual = ">=" if (cond.get("to") or {}).get("f", "g") == "g" else "<"
+            # APPROXIMATE for the numeric ops, and knowingly so: _fn_age is
+            # last_changed, which resets on EVERY update — so a fridge going
+            # 11° -> 12° restarts the clock even though it stayed above 10.
+            # It under-reports the duration, so it fails CLOSED. The YAML band
+            # answers this exactly via a watcher helper
+            # (emit_yaml._was_condition); doing the same here needs a persisted
+            # pyscript state variable — see COMPILER_TODO.md.
+            age = f"(_fn_age({{e}}) or 0) {qual} {dur}"
             if op in ("==", "!="):
-                parts = [f"({r} {op} {_q(self.resolver.ha_state_value(attr, value))})"
-                         for r in sread]
+                parts = [f"({r} {op} {_q(self.resolver.ha_state_value(attr, value))}"
+                         f" and " + age.format(e=_q(e)) + ")"
+                         for e, r in zip(entities, sread)]
             else:
-                parts = [f"({r} is not None and {r} {op} {value})"
-                         for r in fread]
+                parts = [f"({r} is not None and {r} {op} {value}"
+                         f" and " + age.format(e=_q(e)) + ")"
+                         for e, r in zip(entities, fread)]
         elif co in ("stays_greater_than", "stays_greater_than_or_equal_to",
                     "stays_less_than", "stays_less_than_or_equal_to",
                     "remains_above", "remains_below"):

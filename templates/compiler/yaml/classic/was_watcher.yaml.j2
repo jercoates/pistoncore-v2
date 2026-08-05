@@ -1,0 +1,63 @@
+{#-
+  WATCHER for one webCoRE `was_*` comparison.
+
+  `was_less_than N for 10 minutes` asks "has this been continuously below N for
+  the last 10 minutes". Home Assistant cannot answer that: the numeric_state
+  CONDITION takes no `for:`, and `last_changed` resets on every update, so a
+  sensor that reports while staying below its threshold never accumulates any
+  time and the answer would be permanently false.
+
+  So the compiler records the answer as it happens. This automation stamps the
+  helper the moment the condition becomes true and clears it the moment it
+  stops being true; the piston then just reads how long ago the stamp was.
+
+  Both triggers are TEMPLATE triggers, which fire when their result goes from
+  false to true — so this runs on the two flips only, NOT on every sensor
+  update. That is what makes one of these per comparison affordable.
+
+  This is HOME ASSISTANT SCHEMA — trigger kinds, the service names, the
+  timestamp format — so it lives here rather than in Python. If HA renames any
+  of it, this file is where a user fixes it with nobody upstream
+  (COMPILER_SPEC "Jinja2 everywhere").
+
+  Input:
+    auto_id, alias   identity for the automation
+    entity           the input_datetime holding "since when"
+    predicate        Jinja that is true while the condition holds
+    negated          the same Jinja, inverted
+    sentinel         the value meaning "not currently true"
+-#}
+- id: {{ auto_id }}
+  alias: "{{ alias }}"
+  # `queued` so a flip cannot be lost: the two triggers can land back to back
+  # when a value crosses and immediately re-crosses, and dropping either one
+  # would leave the helper stamped with the wrong moment.
+  mode: queued
+  max: 10
+  triggers:
+    - trigger: template
+      value_template: "{{ predicate }}"
+      id: became_true
+    - trigger: template
+      value_template: "{{ negated }}"
+      id: became_false
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: became_true
+          sequence:
+            - action: input_datetime.set_datetime
+              target:
+                entity_id: {{ entity }}
+              data:
+                datetime: "{{ '{{ now().strftime(\'%Y-%m-%d %H:%M:%S\') }}' }}"
+        - conditions:
+            - condition: trigger
+              id: became_false
+          sequence:
+            - action: input_datetime.set_datetime
+              target:
+                entity_id: {{ entity }}
+              data:
+                datetime: "{{ sentinel }}"

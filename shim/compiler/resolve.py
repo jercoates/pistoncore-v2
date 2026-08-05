@@ -6,6 +6,7 @@ fixture map — that's how golden-fixture placeholder entity_ids stay honest.
 d-array entries resolve as: hashed id | local device-variable name | @global
 name (PISTON_JSON_REFERENCE §4 — never assume already-a-hash)."""
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -134,6 +135,63 @@ _HELPER_DOMAIN = {
     "date": "input_datetime",
     "datetime": "input_datetime",
 }
+
+
+# ── the `was_*` family ────────────────────────────────────────────────────
+#
+# webCoRE evaluates these by walking the device's state history BACKWARDS,
+# accumulating time while each past state satisfies an ordinary instantaneous
+# comparison and stopping at the first that does not
+# (webcore-piston.groovy:8255-8300, `valueWas`). So `was_less_than N` is not
+# "is below N" — it is "has been CONTINUOUSLY below N for [at least|less than]
+# T". Only the sustained part is special; the inner test is a normal
+# comparison, which is what this table names.
+#
+# It lives here, not in either emitter, because both bands have to answer the
+# SAME question. PyScript previously reached the answer by lumping was_* into
+# the is_* branches, which silently dropped the duration entirely.
+WAS_TO_IS = {
+    "was": "is",
+    "was_not": "is_not",
+    "was_equal_to": "is_equal_to",
+    "was_different_than": "is_different_than",
+    "was_less_than": "is_less_than",
+    "was_less_than_or_equal_to": "is_less_than_or_equal_to",
+    "was_greater_than": "is_greater_than",
+    "was_greater_than_or_equal_to": "is_greater_than_or_equal_to",
+    "was_any_of": "is_any_of",
+    "was_not_any_of": "is_not_any_of",
+    "was_inside_of_range": "is_inside_of_range",
+    "was_outside_of_range": "is_outside_of_range",
+    "was_even": "is_even",
+    "was_odd": "is_odd",
+}
+
+# HA has no "this numeric predicate has held for T" primitive: the
+# `numeric_state` CONDITION takes no `for:`, and `last_changed` resets on every
+# update, so a sensor that reports while staying below its threshold would
+# never accumulate. Instead a helper records WHEN the predicate became true and
+# the test becomes "true now, and has been since >= T".
+#
+# This sentinel means "not currently satisfied". input_datetime always holds a
+# value, so there is no empty state to mean it — and without an explicit
+# not-satisfied marker, an unset helper would read as an enormous duration and
+# the comparison would answer TRUE. Fail closed, deliberately.
+WAS_SENTINEL = "1970-01-01 00:00:00"
+
+
+def was_watcher_entity(piston_id: str, entities, attr, co: str,
+                       value, value2=None) -> str:
+    """Deterministic entity id for the helper behind one `was_*` comparison.
+
+    Keyed by everything that changes the question being asked, so two pistons
+    watching the same device for the same thing share one helper, and
+    recompiling reuses it instead of orphaning it — same rule as
+    helper_entity_id above."""
+    key = "|".join([",".join(sorted(entities or [])), str(attr), str(co),
+                    str(value), str(value2)])
+    slug = hashlib.md5(key.encode("utf-8")).hexdigest()[:8]
+    return f"input_datetime.pistoncore_{piston_id}_was_{slug}".lower()
 
 
 def helper_entity_id(piston_id: str, name: str, vtype: str) -> str | None:
