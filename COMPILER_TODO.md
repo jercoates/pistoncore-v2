@@ -135,10 +135,6 @@ Decisions already made in it (do not re-litigate):
       equivalent (its track parameter is a bare URI). Infer from the extension,
       fail loudly on unknown. Table is DATA, never inline in compiler or
       template. Not built.
-- [ ] **`clearImages()` → no-op** under fixed filenames. **Conditional
-      obligation:** if timestamped filenames are ever added, this decision
-      expires and it needs a real implementation. Do not let the no-op survive a
-      naming-scheme change silently.
 - [ ] **Numeric sound index (`Play Sound 12`)** — device-firmware meaning, no HA
       concept. Escape-hatch case via the custom-command mechanism, not a
       translation.

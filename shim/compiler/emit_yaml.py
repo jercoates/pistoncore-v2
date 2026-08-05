@@ -898,6 +898,13 @@ _INCLUSIVE_BOUNDARY_OPS = {
     "is_less_than_or_equal_to", "is_greater_than_or_equal_to",
     # explicit trigger comparisons with the same "or equal to" edge
     "drops_to_or_below", "rises_to_or_above",
+    # HELD comparisons with the same edge. These were missed when the boundary
+    # fix went in for `is_<=`: without them `stays_less_than` and
+    # `stays_less_than_or_equal_to` emit IDENTICAL code, so the "or equal to"
+    # is silently lost and a value sitting exactly on N never triggers.
+    "stays_less_than_or_equal_to", "stays_greater_than_or_equal_to",
+    "remains_below_or_equal_to", "remains_above_or_equal_to",
+    "was_less_than_or_equal_to", "was_greater_than_or_equal_to",
 }
 
 
