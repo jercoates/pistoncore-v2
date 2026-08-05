@@ -2466,6 +2466,7 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         conditions.append(_condition(r, resolver, ctx))
 
     cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]] + direction_conds
+
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)
 

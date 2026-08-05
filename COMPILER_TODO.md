@@ -17,12 +17,42 @@ pyscript: 12}`.
       "was open five minutes ago" becomes "is open now". 10 collisions measured
       across both bands. COMPILER_SPEC §2.5 says the discrete-sample semantics
       need PyScript's `.old` / `state_hold`; spec'd, not built.
-- [ ] **`remains_*` compiles as its edge twin** — `drops_below` and
-      `remains_below` emit identical code, likewise `becomes_even` /
-      `remains_even`. One of each pair is wrong.
-- [ ] **Boundary `=` lost in `stays_*` / `remains_*`** —
-      `stays_less_than == stays_less_than_or_equal_to`. The same bug was fixed
-      once for `is_<=`; the fix never reached these families.
+- [ ] **`remains_*` (4 operators) collides with its crossing twin.** SCOPE IS
+      SMALLER THAN IT LOOKED. `stays_*` declares a hold duration (vocab `t:1`)
+      and already compiles to `numeric_state` + `for:` — HA-native, fires once,
+      no noise. Correct today, leave it alone. Only `remains_above`,
+      `remains_below` and their `_or_equal_to` twins declare NO duration
+      (`t: null`), so they mean "on every event where old and new both satisfy"
+      (webcore-piston.groovy:8461) vs `drops_below`'s crossing (:8455). They
+      currently fall through to the same bare `numeric_state`, so the two
+      compile identically.
+
+      A faithful trigger must wake on every change, and a first attempt at that
+      (2026-08-04) was REVERTED as a major bug: a bare state trigger inside a
+      shared `mode: restart` automation fires on every sensor update and kills
+      other statements' pending waits. Do not re-add it without all three of:
+        1. its OWN automation — reuse the `_has_wait` split in
+           `_merge_branches`, so its firing can only restart its own run
+           (which IS webCoRE under TCP=restart);
+        2. `mode: single` + `max_exceeded: silent` + trailing `delay:` as the
+           throttle, default 1s, a Settings knob. Protects the MQTT case
+           (Jeremy 2026-08-04: fast-polling drivers, 50/sec -> 1/sec costs
+           nothing observable because a remains_* action re-asserts something
+           already true). Divergence to document: a sub-second excursion above
+           the threshold and back inside the window reads as "remained" where
+           webCoRE saw a crossing. Cannot apply when the statement itself holds
+           a wait under TCP=restart — flag that combination instead;
+        3. `attribute:` on the trigger — a bare state trigger also fires on
+           attribute-only changes (battery, last_seen), which is both noise and
+           unfaithful. This part is a straight bug fix under any setting.
+
+      Plus an advisory on the TWO existing surfaces (front-door list indicator,
+      piston status-screen banner — never a third): "wakes on every update of
+      <entity>, throttled to 1s", because a user can pick `remains_*` without
+      knowing it costs a logbook entry per second (Jeremy 2026-08-04).
+
+      `becomes_even` / `remains_even` still collide outright.
+
 - [ ] **Interaction filter (`p:'p'`) silently dropped** — "only when physically
       operated" also fires on automated changes. 7 corpus pistons use it. HA
       may genuinely not distinguish; if so it must be FLAGGED, not ignored.
@@ -199,6 +229,12 @@ Decisions already made in it (do not re-litigate):
   live HA (the REST config API cannot do it; write-plus-reload can).
 - Duplicate operator tables collapsed; dead code removed.
 - `webcore_system_vars.json` — 91 engine system variables extracted from source.
+- **The "or equal to" edge in HELD comparisons.** The boundary fix went in for
+  `is_<=` and never reached `stays_*` / `remains_*` / `was_*`, so those pairs
+  emitted identical code and a value sitting exactly on the threshold never
+  fired. 27_Food_Temp_NEW watches a probe with `stays_greater_than_or_equal_to`
+  and would have missed it. Found by the probe's collision check, not by any
+  piston failing — nothing fails, it just quietly does not fire.
 - Corpus is 84/84 sound; the "three damaged pistons" story was wrong.
 - **`take` (camera snapshot)** — broken since 2026-07-26 and blocked on a
   decision. webCoRE's `take` has NO parameters but the vocab asked for `$1`,
