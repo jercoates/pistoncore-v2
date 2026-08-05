@@ -180,6 +180,23 @@ WAS_TO_IS = {
 WAS_SENTINEL = "1970-01-01 00:00:00"
 
 
+# webCoRE stores every duration the same way — a number in `c` and its unit in
+# `vt` — whether it is a comparison's hold time, a `wait`, or a fade's length.
+# ONE converter, because the copies drifted: the wait-command copy was missing
+# "d", so a wait authored in days silently became that many seconds.
+_DURATION_UNITS = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+
+
+def duration_seconds(op) -> int | None:
+    """A webCoRE duration operand in whole seconds; None if not a fixed number."""
+    if not isinstance(op, dict):
+        return None
+    n = op.get("c")
+    if not isinstance(n, (int, float)) or isinstance(n, bool):
+        return None
+    return int(n * _DURATION_UNITS.get(op.get("vt", "s"), 1))
+
+
 def last_changed_is_exact(cond: dict) -> bool:
     """True when HA's own `last_changed` already answers "for how long".
 

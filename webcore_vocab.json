@@ -4628,6 +4628,19 @@
      ],
      "d": " if already {v}"
     }
+   ],
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "brightness_pct": "$2",
+      "transition": "$3|duration_secs",
+      "fade_from": "$1"
+     },
+     "tag": "decision",
+     "note": "HA fades with `transition` on the same turn_on that sets the target, so a fade is one call: go to the FINAL level over the duration. The optional 'Starting level' needs a second call that jumps there first — the compiler emits that ahead of this one when it is set."
+    }
    ]
   },
   "fadeInfraredLevel": {
@@ -4692,6 +4705,19 @@
      ],
      "d": " if already {v}"
     }
+   ],
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "hs_color": "$2|sat_hs",
+      "transition": "$3|duration_secs",
+      "fade_from": "$1|sat_hs"
+     },
+     "tag": "decision",
+     "note": "HA fades with `transition` on the same turn_on that sets the target, so a fade is one call to the FINAL value over the duration. HA has no saturation-only service; the hue half is padded exactly as setSaturation does."
+    }
    ]
   },
   "fadeHue": {
@@ -4724,6 +4750,19 @@
      ],
      "d": " if already {v}"
     }
+   ],
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "hs_color": "$2|hue_hs",
+      "transition": "$3|duration_secs",
+      "fade_from": "$1|hue_hs"
+     },
+     "tag": "decision",
+     "note": "HA fades with `transition` on the same turn_on that sets the target, so a fade is one call to the FINAL value over the duration. HA has no hue-only service; the saturation half is padded exactly as setHue does."
+    }
    ]
   },
   "fadeColorTemperature": {
@@ -4755,6 +4794,19 @@
       "off"
      ],
      "d": " if already {v}"
+    }
+   ],
+   "ha": [
+    {
+     "domain": "light",
+     "service": "light.turn_on",
+     "data": {
+      "color_temp_kelvin": "$2",
+      "transition": "$3|duration_secs",
+      "fade_from": "$1"
+     },
+     "tag": "decision",
+     "note": "HA fades with `transition` on the same turn_on that sets the target, so a fade is one call to the FINAL value over the duration. webCoRE's parameter is already Kelvin, no conversion — same as setColorTemperature."
     }
    ]
   },

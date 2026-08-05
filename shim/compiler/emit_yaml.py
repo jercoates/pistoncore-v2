@@ -27,7 +27,8 @@ from .analyze import analyze
 from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
 from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL,
-                      was_watcher_entity, last_changed_is_exact)
+                      was_watcher_entity, last_changed_is_exact,
+                      duration_seconds)
 from . import routing as _routing
 
 _BAND_REL = "templates/compiler/yaml/classic"
@@ -148,7 +149,31 @@ def _rescaled(name):
 # hue_hs / sat_hs pad out to HA's [hue, saturation] pair. The padding values
 # are NOT scales — setting hue alone can't know the saturation, so it assumes
 # full, and vice versa. That's a modelling compromise and stays in code.
-_PARAM_TRANSFORMS = {"hex_rgb": _hex_rgb,
+# Transforms that need the whole PARAMETER, not just its value — a duration
+# carries its unit in `vt` alongside the number in `c`, so the value alone
+# cannot be converted.
+_WHOLE_PARAM_TRANSFORMS = {"duration_secs"}
+
+
+def _duration_secs_param(prm: dict):
+    """A webCoRE duration parameter as whole seconds.
+
+    HA expresses a fade as `transition:` in seconds, so this is the bridge from
+    "2 minutes" as the editor stores it. The SERVICE and the FIELD NAME live in
+    webcore_vocab.json where they can be edited; only this arithmetic — which
+    is webCoRE's side of the conversion and does not move when HA changes —
+    stays here.
+    """
+    secs = _duration_secs(prm if isinstance(prm, dict) else {})
+    if secs is None:
+        raise PistonDefect(
+            "a fade/duration parameter has no fixed value — set it in the "
+            "editor, or remove the command")
+    return secs
+
+
+_PARAM_TRANSFORMS = {"duration_secs": _duration_secs_param,
+                     "hex_rgb": _hex_rgb,
                      "pct_float": _rescaled("pct_float"),
                      "hue_hs": lambda v: [_rescaled("hue_hs")(v), 100],
                      "sat_hs": lambda v: [0, _rescaled("sat_hs")(v)],
@@ -158,11 +183,13 @@ _PARAM_TRANSFORMS = {"hex_rgb": _hex_rgb,
 
 
 def _delay_hms(params: list) -> str:
-    p = params[0] if params else {}
-    n = p.get("c", 0)
-    unit = p.get("vt", "s")
-    seconds = {"s": n, "m": n * 60, "h": n * 3600}.get(unit, n)
-    return f"{seconds // 3600:02d}:{(seconds % 3600) // 60:02d}:{seconds % 60:02d}"
+    """A `wait` command's duration parameter as HH:MM:SS.
+
+    Reads the shared duration converter rather than keeping its own unit table
+    — this one used to be a second copy that was missing "d" (days), so a wait
+    authored in days silently became that many SECONDS.
+    """
+    return _duration_hms(params[0] if params else {}) or "00:00:00"
 
 
 def _minutes_hms(minutes: int) -> str:
@@ -170,14 +197,8 @@ def _minutes_hms(minutes: int) -> str:
 
 
 def _duration_secs(op) -> int | None:
-    """The `to` operand on stays/remains/was comparisons, in seconds.
-    None when it isn't a fixed number."""
-    if not isinstance(op, dict):
-        return None
-    n = op.get("c")
-    if not isinstance(n, (int, float)) or isinstance(n, bool):
-        return None
-    return int(n * {"s": 1, "m": 60, "h": 3600, "d": 86400}.get(op.get("vt", "s"), 1))
+    """The shared converter — see resolve.duration_seconds."""
+    return duration_seconds(op)
 
 
 def _duration_hms(op) -> str | None:
@@ -1352,6 +1373,18 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             try:
                 entities = resolver.entities_for_command(n["devices"], n["command"], ctx)
                 service, data_spec = resolver.service_spec(n["command"], entities[0], ctx)
+                # `fade_from` is the vocab saying "this command may jump to a
+                # starting value before it fades". HA cannot express a start
+                # and an end in one turn_on, so it becomes a second call placed
+                # ahead of the fade. Declared in the vocab rather than a list
+                # of command names in here, so a user adding a fade for another
+                # attribute gets the behaviour without touching Python.
+                # READ, never popped: service_spec hands back the vocab's own
+                # dict, cached for the whole process — mutating it would strip
+                # fade_from for every piston compiled after this one.
+                fade_from = (data_spec or {}).get("fade_from")
+                data_spec = {k: v for k, v in (data_spec or {}).items()
+                             if k != "fade_from"}
                 data = None
                 if data_spec:
                     # Inside the try on purpose: a data spec that can't be
@@ -1380,6 +1413,17 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                     and data.get("media_content_id"):
                 data["media_content_id"] = _rewrite_media_url(
                     data["media_content_id"], resolver, ctx)
+            if fade_from and data:
+                # The target field is whatever the fade sets — everything in
+                # the spec except the transition. Jump there instantly (no
+                # transition key at all), then let the fade below run.
+                start = _param_value(fade_from, n["params"], ctx, resolver,
+                                     entities[0] if entities else None)
+                if start is not _UNSET_PARAM:
+                    out.append({"kind": "service", "service": service,
+                                "entities": entities,
+                                "data": {k: start for k in data
+                                         if k != "transition"}})
             out.append({"kind": "service", "service": service,
                         "entities": entities, "data": data})
         elif n["kind"] == "switch":
@@ -2208,6 +2252,8 @@ def _param_value(token: str, params: list, ctx: dict, resolver=None,
                     f"a '{tname}' parameter given as a variable is not "
                     f"compiled yet", **ctx)
             return _json_dumps("{{ " + inner + " }}")
+        if tname in _WHOLE_PARAM_TRANSFORMS:
+            return transform(prm)
         value = prm.get("c") if prm.get("c") is not None else prm.get("s")
     else:
         value = raw

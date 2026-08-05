@@ -29,7 +29,7 @@ from .. import customize
 from .errors import NotYetImplemented
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
 from .resolve import (Resolver, WAS_TO_IS, was_watcher_entity,
-                      last_changed_is_exact)
+                      last_changed_is_exact, duration_seconds)
 
 # was_* ops with their own branch in _condition_expr, which applies the
 # duration gate itself. Everything else in WAS_TO_IS is gated generically at
@@ -245,6 +245,17 @@ class _PyEmitter:
             if (not prm.get("t") and prm.get("c") is None and prm.get("s") is None
                     and not prm.get("e") and not prm.get("x")):
                 continue                      # unset optional parameter
+            if tname == "duration_secs":
+                # A fade's length. HA's `transition` is seconds; webCoRE keeps
+                # the unit beside the number, so this MUST convert or "2
+                # minutes" arrives as 2 seconds. Same converter the YAML band
+                # uses (resolve.duration_seconds) so the bands cannot drift.
+                secs = duration_seconds(prm)
+                if secs is None:
+                    raise NotYetImplemented(
+                        f"'{key}' needs a fixed duration", **ctx)
+                out[key] = repr(secs)
+                continue
             if prm.get("c") is not None and not prm.get("t") in ("x", "e"):
                 value = prm.get("c")
                 out[key] = repr(rescale(tname, value) if tname in _SCALE_TRANSFORMS_PY
@@ -1110,6 +1121,14 @@ class _PyEmitter:
                     entities = self.resolver.entities_for_command(devices, cmd, ctx)
                     service, data_spec = self.resolver.service_spec(cmd, entities[0], ctx)
                     domain, svc = service.split(".", 1)
+                    # Vocab-declared: this command may jump to a starting value
+                    # before it fades. Popped BEFORE the data is built, or it
+                    # would be sent to HA as an invented service field.
+                    # READ, never popped — see the YAML band: this is the
+                    # vocab's own cached dict, shared by every piston.
+                    fade_from = (data_spec or {}).get("fade_from")
+                    data_spec = {k: v for k, v in (data_spec or {}).items()
+                                 if k != "fade_from"}
                     data = {}
                     if data_spec:
                         # Inside the try: an unfillable data spec is the
@@ -1129,6 +1148,17 @@ class _PyEmitter:
                         out.append(self._driver_command(cmd, devices, params, ctx))
                         continue
                     raise
+                if fade_from and data:
+                    # HA cannot express a start and an end in one call, so the
+                    # jump is a separate call placed ahead of the fade — same
+                    # shape the YAML band emits.
+                    start = self._spec_data_py(
+                        {k: fade_from for k in data if k != "transition"},
+                        params, ctx)
+                    if start:
+                        out.append({"kind": "service", "domain": domain,
+                                    "service": svc, "entities": entities,
+                                    "data": start})
                 out.append({"kind": "service", "domain": domain, "service": svc,
                             "entities": entities, "data": data})
         return out
@@ -1313,15 +1343,6 @@ class _PyEmitter:
         event_body = []      # runs on device/service wakes (whole-piston walk)
         guarded = []         # every/on bodies: fast-forward to firing stmt only
 
-        # Piston-level restrictions ("only execute if ...") gate EVERY statement.
-        # Statement-level ones are handled in _stmt_nodes; this band does not yet
-        # wrap the whole piston body, and silently ignoring a gate is the exact
-        # bug this feature exists to prevent — so fail loudly until implemented.
-        if self.piston.get("r"):
-            raise NotYetImplemented(
-                "piston-level restrictions are not compiled in the PyScript band yet",
-                piston_id=self.piston_id, piston_name=self.piston_name, stmt_id=None)
-
         for stmt in self.piston.get("s", []):
             sid = stmt.get("$")
             ctx = self._ctx(sid)
@@ -1399,6 +1420,35 @@ class _PyEmitter:
         if var_exprs:
             event_body = [{"kind": "setvar", "name": e["name"], "value": e["value"]}
                           for e in var_exprs] + list(event_body)
+        # Piston-level restrictions ("only execute if ...") gate EVERY statement,
+        # so they wrap the whole body rather than any one statement — the same
+        # shape _stmt_nodes uses for a statement's own restrictions: one `if`
+        # with NO else, because a failed restriction runs nothing at all.
+        #
+        # Applied to BOTH bodies. `guarded` holds the every/on bodies, which are
+        # reached by their own decorators and never pass through event_body — so
+        # gating only event_body would leave a scheduled statement running while
+        # the piston is restricted, which is the silent-bypass this used to
+        # hard-fail rather than risk.
+        rest = self.piston.get("r") or []
+        if rest:
+            if self.piston.get("rn"):
+                # "except when ..." — same reasoning as the statement-level
+                # case: dropping a gate silently is worse than not compiling.
+                raise NotYetImplemented(
+                    "negated piston-level restriction set ('rn') not compiled yet",
+                    piston_id=self.piston_id, piston_name=self.piston_name,
+                    stmt_id=None)
+            gate = self._group_expr(rest, self.piston.get("rop", "and"),
+                                    self._ctx(None))
+            if event_body:
+                event_body = [{"kind": "if", "expr": gate,
+                               "then": event_body, "else": []}]
+            for g in guarded:
+                if g.get("body"):
+                    g["body"] = [{"kind": "if", "expr": gate,
+                                  "then": g["body"], "else": []}]
+
         return {"decorators": self.decorators, "event_body": event_body,
                 "guarded": guarded, "variables": variables,
                 "was_watchers": sorted(self.was_watchers.values(),

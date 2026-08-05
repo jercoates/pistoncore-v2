@@ -81,6 +81,44 @@ pyscript: 12}`.
       emitting a helper nothing would ever stamp. To keep them in YAML, deploy
       needs to accept a second file per piston, with its own cleanup on delete.
 
+- [x] **Piston-level restrictions compile on PyScript — DONE 2026-08-04.**
+      They were a deliberate hard-fail ("fail loudly rather than silently
+      ignore a gate"), which was the right call while unimplemented but left a
+      hole in the valve: a user who FORCES PyScript for Hubitat-grade trace
+      fidelity could not compile a piston with an "only execute if..." at all.
+      Now gated the same way statement-level restrictions already were — one
+      `if` with no else, so a failed restriction runs nothing.
+
+      Applied to BOTH bodies. `guarded` holds the every/on bodies, which reach
+      their code through their own decorators and never pass through
+      event_body — gating only event_body would have left a scheduled
+      statement running while the piston was restricted, which is exactly the
+      silent bypass the hard-fail existed to prevent. Negated sets ('rn') still
+      hard-fail, same reasoning, now with a piston-level message.
+
+- [x] **Fade commands compile — DONE 2026-08-05.** `fadeLevel`,
+      `fadeSaturation`, `fadeHue`, `fadeColorTemperature` had no `ha` mapping
+      at all. A fade is HA's `transition:` on the same turn_on that sets the
+      target, so it is one call to the FINAL value over the duration. Service
+      and field names went in webcore_vocab.json where a user can edit them;
+      only the seconds arithmetic is code, as a transform the vocab NAMES
+      (`$3|duration_secs`).
+
+      The optional "Starting level" would have been a silent drop, so the vocab
+      declares `fade_from` and the compiler emits a second call ahead of the
+      fade that jumps there instantly. Declared in DATA rather than a list of
+      command names in Python, so a fade added for another attribute gets the
+      behaviour for free. Both bands verified on both shapes.
+
+      Commands failing on both bands: 44 -> 40. `fadeInfraredLevel` is left:
+      it is a camera IR illuminator with no HA light equivalent.
+
+- [x] **One duration converter — DONE 2026-08-05.** There were three copies of
+      the "number in `c`, unit in `vt`" table. The `wait` command's copy was
+      missing "d", so a wait authored in DAYS silently became that many
+      seconds. Now `resolve.duration_seconds`, read by both bands and by every
+      caller.
+
 - [ ] **Throttle interval must become a Settings knob.** Hardcoded
       `_NOISY_THROTTLE = "00:00:01"` in emit_yaml.py. It renders through the
       template as a plain HA delay so it is editable in the emitted YAML, but
