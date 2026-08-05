@@ -86,6 +86,47 @@ Decisions already made in it (do not re-litigate):
 - Fixed filename per camera, overwritten. Makes the path a compile-time
   constant, bounds disk use, and makes `clearImages()` a no-op.
 
+- [ ] **Pending work as a SCRIPT — only where a cancel exists.** Scoped, not a
+      restructure (Jeremy, 2026-08-04: "we only have to change it when the
+      cancel is in the piston"). MEASURED: **5 of 84** pistons contain a cancel
+      command, and all 5 also contain a wait — that is the whole affected set.
+      Pistons without a cancel keep inline delays and emit identically.
+
+      Today a wait becomes an INLINE `delay`, which welds pending work to the
+      run. That is why cancellation looks impossible: there is nothing separate
+      left to cancel. webCoRE cancels pending/scheduled tasks and CARRIES ON
+      (vcmd_cancelTasks, webcore-piston.groovy:7321); HA's `stop:` halts the
+      run. Currently emitted as `stop:`, which over-halts — harmless across all
+      84 only because every corpus use is the last action in its block, which
+      is luck, not design. `cancelTasks; turn on light;` would lose the light.
+
+      **The right question is not "does HA have a primitive" but "can we
+      emulate it"** (Jeremy, 2026-08-04). Two routes, both real:
+
+      A. **Cancel flag.** Guard after every delay; `cancelTasks` sets it; the
+         run clears it at start. Exact semantics, but every delayed path grows
+         a guard and it does not give per-task granularity.
+      B. **Pending work as a SCRIPT.** A statement's delayed continuation
+         becomes an HA `script`; `cancelTasks` calls `script.turn_off`, which
+         cancels a running script mid-delay while the parent automation
+         continues. Much closer to webCoRE's own model, and it is the only one
+         that can express `cancelPendingTasks`' Local/Global SCOPE, because
+         scripts are addressable individually.
+
+      B is the answer, and gated on "does this piston contain a cancel" it is
+      a contained job: detect the flag, split that statement's actions at the
+      delay, emit the continuation as a script, call `script.turn_on` and carry
+      on, and compile the cancel to `script.turn_off`. Everything else is
+      untouched.
+
+      Knock-on: it is also what `cancelPendingTasks` SCOPE needs, since scripts
+      are addressable individually — and the split-on-wait grouping may become
+      unnecessary once pending work is separately cancellable.
+
+      **Public-release framing (Jeremy, firm): stop making the corpus work and
+      dead-ending the rest.** A decision that is only correct because his 84
+      pistons happen not to hit the gap is not a decision.
+
 - [ ] **`cancelPendingTasks` GLOBAL scope** — Local works (`stop:`). Global
       reaches OTHER pistons; one automation cannot halt another's in-flight
       run, so it refuses loudly rather than doing the local thing and looking

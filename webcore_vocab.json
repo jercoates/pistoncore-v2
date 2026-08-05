@@ -5062,7 +5062,7 @@
    "a": true,
    "d": "Cancel all pending tasks",
    "p": [],
-   "note": "Cancels ALL pending tasks - vcmd_cancelTasks sets cancellations[ALL]=true (webcore-piston.groovy:7321); declared 'Cancel all pending tasks', no params (webcore.groovy:2811). NOT a no-op: the old claim that mode:restart covers it was wrong - restart only fires on RE-TRIGGER, this cancels on demand mid-run. UNMAPPED until verified."
+   "note": "DIVERGENCE, documented. webCoRE cancels PENDING/SCHEDULED tasks and then CARRIES ON executing the rest of the statement (vcmd_cancelTasks sets cancellations[ALL]=true, webcore-piston.groovy:7321; declared 'Cancel all pending tasks', webcore.groovy:2811). HA's `stop:` HALTS the run, so anything after it does not execute. Those are not the same thing. HA has no 'cancel my pending work but keep going' primitive - a wait compiles to an inline delay, so the pending work IS the rest of the run. Harmless across all 84 corpus pistons: every use is the LAST action in its block, where the two are indistinguishable. A piston doing `cancelTasks; turn on light;` WOULD lose the light."
   },
   "lifxState": {
    "n": "LIFX - Set State...",
