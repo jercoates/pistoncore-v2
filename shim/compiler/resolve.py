@@ -180,6 +180,24 @@ WAS_TO_IS = {
 WAS_SENTINEL = "1970-01-01 00:00:00"
 
 
+def last_changed_is_exact(cond: dict) -> bool:
+    """True when HA's own `last_changed` already answers "for how long".
+
+    Exact for ONE predicate: "the state has been this single value". Then any
+    change to the state is also a change to the answer, the two clocks agree,
+    and no watcher is needed — the cheap path most real pistons take.
+
+    Wrong for anything that stays true ACROSS a value change: a numeric bound
+    (a fridge going 11° -> 12° is still above 10, but last_changed restarts),
+    `is_not` (changing between two values that are both "not X"), or a list of
+    accepted values. Those need a watcher.
+
+    Shared by both bands so they cannot disagree about which comparisons are
+    cheap and which need tracking.
+    """
+    return cond.get("co") == "was" and not isinstance(cond.get("value"), list)
+
+
 def was_watcher_entity(piston_id: str, entities, attr, co: str,
                        value, value2=None) -> str:
     """Deterministic entity id for the helper behind one `was_*` comparison.

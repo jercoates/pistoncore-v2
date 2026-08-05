@@ -26,7 +26,8 @@ from .. import customize
 from .analyze import analyze
 from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
-from .resolve import Resolver, WAS_TO_IS, WAS_SENTINEL, was_watcher_entity
+from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL,
+                      was_watcher_entity, last_changed_is_exact)
 from . import routing as _routing
 
 _BAND_REL = "templates/compiler/yaml/classic"
@@ -370,22 +371,6 @@ def _num_between(read: str, lo, hi, negate: bool = False) -> str:
     return f"{read} | is_number and {body}"
 
 
-def _last_changed_is_exact(cond: dict) -> bool:
-    """True when HA's own `last_changed` already answers "for how long".
-
-    It is exact for ONE predicate: "the state has been this single value".
-    Then any change to the state is also a change to the answer, so the two
-    clocks agree and no helper is needed — this is the cheap path and most
-    real pistons take it.
-
-    It is wrong for every predicate that can stay true ACROSS a value change:
-    a numeric bound (a fridge going 11° -> 12° is still above 10, but
-    last_changed resets and the duration restarts at zero), `is_not`, or a list
-    of accepted values. Those need the watcher.
-    """
-    return cond.get("co") == "was" and not isinstance(cond.get("value"), list)
-
-
 def _was_condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     """`was_X for T` -> "X is true now, and has been for at least/less than T".
 
@@ -452,7 +437,7 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     # ── the was_* family ── handled AHEAD of every other dispatch, because
     # was_* is not a family of comparisons: it WRAPS one. The inner test can be
     # any ordinary comparison, and only the "has held for T" part is special.
-    if co in WAS_TO_IS and not _last_changed_is_exact(cond):
+    if co in WAS_TO_IS and not last_changed_is_exact(cond):
         return _was_condition(cond, resolver, ctx)
 
     # nested condition group -> HA's and/or condition blocks

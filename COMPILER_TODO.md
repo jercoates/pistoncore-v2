@@ -60,14 +60,20 @@ pyscript: 12}`.
       value change (a numeric bound, is_not, a list of values), which is
       exactly what `_last_changed_is_exact` decides.
 
-- [ ] **PyScript `was_*` is approximate where YAML is exact.** PyScript gates
-      on `_fn_age` (last_changed), which under-reports the duration for numeric
-      predicates — a fridge going 11° -> 12° restarts the clock. It fails
-      CLOSED, so it is honest, but the two bands do not agree. The fix is a
-      persisted `pyscript.` state variable (`state.persist()`, verified present
-      at pyscript-source/state.py:328) maintained by a `@state_trigger`, giving
-      PyScript the same watcher without needing an HA helper or any change to
-      the deploy contract.
+- [x] **PyScript `was_*` is now exact too — DONE 2026-08-04.** It records when
+      a predicate became true and reads elapsed time from that, instead of
+      `_fn_age`/last_changed which restarts on every update. The stamps live as
+      an attribute on the piston's OWN persisted state entity — the one already
+      holding its variables — so PyScript needs no helper, no extra entity, and
+      no change to the deploy contract, and the stamps survive a restart the
+      same way variables do. `_was_held` fails CLOSED when a predicate has
+      never been seen becoming true.
+
+      Both bands now share `resolve.WAS_TO_IS` (the was_*/is_* pairing),
+      `resolve.last_changed_is_exact` (which comparisons are cheap enough to
+      leave alone) and `resolve.was_watcher_entity` (the identity of a watcher,
+      so the two bands agree about which comparisons are the same comparison).
+      Neither band has its own copy of any of the three.
 
 - [ ] **A subscription-less piston cannot host a watcher.** It compiles to a
       SCRIPT and deploy writes exactly one file per piston, so there is nowhere

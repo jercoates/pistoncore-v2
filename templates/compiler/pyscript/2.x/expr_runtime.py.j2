@@ -430,6 +430,62 @@ def _fn_age(entity_id):
         return None
 
 
+# ── was_* watchers ─────────────────────────────────────────────────────────
+# webCoRE's was_* asks "has this been true CONTINUOUSLY for T", which it
+# answers by walking state history. last_changed cannot answer it for any
+# predicate that stays true ACROSS a value change — a fridge going 11° -> 12°
+# is still above 10, but last_changed restarts and the duration never
+# accumulates. So the moment a predicate becomes true is recorded here.
+#
+# The record lives on the piston's OWN persisted state entity, alongside its
+# variables, so it costs no extra entity in Home Assistant and survives a
+# restart the same way the variables do.
+_was_since = {}
+
+
+def _was_restore():
+    try:
+        for _k, _v in (state.getattr(_STATE_ENTITY + ".was") or {}).items():
+            _was_since[_k] = _v
+    except Exception:
+        pass
+
+
+def _was_save():
+    try:
+        state.setattr(_STATE_ENTITY + ".was", dict(_was_since))
+    except Exception as exc:
+        log.warning(f"could not persist was_* timers: {exc}")
+
+
+def _was_mark(slug, holding):
+    """Watcher hook: called whenever a watched value changes."""
+    if holding:
+        if _was_since.get(slug) is None:
+            _was_since[slug] = datetime.datetime.now().isoformat()
+            _was_save()
+    elif _was_since.get(slug) is not None:
+        _was_since.pop(slug, None)
+        _was_save()
+
+
+def _was_held(slug, holding, ms, at_least=True):
+    """True when the predicate holds NOW and has held for >= / < ms."""
+    if not holding:
+        return False
+    since = _was_since.get(slug)
+    if since is None:
+        # Never seen becoming true: a fresh deploy, or a value that has not
+        # changed since. Fail CLOSED rather than assume it always held.
+        return False
+    try:
+        then = datetime.datetime.fromisoformat(str(since))
+        elapsed = (datetime.datetime.now(then.tzinfo) - then).total_seconds() * 1000
+    except Exception:
+        return False
+    return elapsed >= ms if at_least else elapsed < ms
+
+
 # ── coverage-audit additions (2026-07-23) ──────────────────────────────────
 # webCoRE functions that previously compiled in NEITHER band, i.e. any piston
 # using one hard-failed. Group H of the audit (previousValue, previousAge,

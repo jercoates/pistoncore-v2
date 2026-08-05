@@ -263,3 +263,24 @@ def {{ func_name }}(trigger_type=None, var_name=None, value=None, old_value=None
 def {{ func_name }}_execute(**kwargs):
     """PistonCore: execute piston '{{ piston_name }}'."""
     {{ func_name }}(trigger_type="service", **kwargs)
+{% if was_watchers %}
+
+# ── was_* watchers ─────────────────────────────────────────────────────────
+# One per "has held for T" comparison in this piston. They record WHEN the
+# condition became true so the piston can ask how long it has held — see
+# _was_held in the runtime above for why last_changed cannot answer that.
+#
+# These wake on every change of the value they watch, which is unavoidable:
+# knowing a predicate held CONTINUOUSLY means seeing each change. They are
+# plain function calls rather than automation runs, so the cost is small, and
+# they write only when the answer actually flips.
+_was_restore()
+{%- for w in was_watchers %}
+
+
+@state_trigger({{ w.watch | tojson }})
+def _was_watch_{{ w.slug }}(**kwargs):
+    """Tracks: {{ w.describe }}"""
+    _was_mark({{ w.slug | tojson }}, {{ w.predicate }})
+{%- endfor %}
+{% endif %}

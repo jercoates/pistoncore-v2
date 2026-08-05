@@ -28,7 +28,8 @@ from .. import customize
 
 from .errors import NotYetImplemented
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
-from .resolve import Resolver, WAS_TO_IS
+from .resolve import (Resolver, WAS_TO_IS, was_watcher_entity,
+                      last_changed_is_exact)
 
 # was_* ops with their own branch in _condition_expr, which applies the
 # duration gate itself. Everything else in WAS_TO_IS is gated generically at
@@ -108,6 +109,9 @@ class _PyEmitter:
         self.piston_name = piston_name
         self.resolver = resolver
         self.decorators: list[dict] = []
+        # was_* comparisons that need their own "how long has this held"
+        # tracker; keyed by slug so two identical comparisons share one.
+        self.was_watchers: dict = {}
         array_vars = {v.get("n") for v in piston.get("v", [])
                       if str(v.get("t", "")).endswith("]")}
         # HA has no location mode; the helper entity standing in for it is
@@ -335,19 +339,6 @@ class _PyEmitter:
         # that pairing is written down) and gate it on how long the state has
         # held. The numeric/equality was_* ops are handled in their own branch
         # further down and are excluded here so they are not gated twice.
-        if co in WAS_TO_IS and co not in _WAS_SELF_HANDLED:
-            inner = self._condition_expr(dict(cond, co=WAS_TO_IS[co]), ctx)
-            dur = self._duration_ms(cond.get("to"))
-            if dur is None:
-                raise NotYetImplemented(
-                    f"'{co}' without a fixed duration not compiled yet", **ctx)
-            qual = ">=" if (cond.get("to") or {}).get("f", "g") == "g" else "<"
-            ents = self.resolver.entities_for_attr(
-                cond.get("devices"), cond.get("attr"), ctx)
-            ages = " or ".join(f"(_fn_age({_q(e)}) or 0) {qual} {dur}"
-                               for e in ents) or "False"
-            return f"({inner} and ({ages}))"
-
         lo = cond.get("lo") or {}
         ro = cond.get("ro") or {}
         ro2 = cond.get("ro2") or {}
@@ -438,6 +429,34 @@ class _PyEmitter:
         # var_name identity), which is not the same thing as its value.
         sread = self._reads(entities, attr)
         fread = self._reads(entities, attr, numeric=True)
+
+        # was_* asks "has this held CONTINUOUSLY for T". Where last_changed
+        # can answer that exactly it is left alone (the cheap path); everywhere
+        # else a watcher records when the predicate became true, because
+        # last_changed restarts on every update and would never accumulate.
+        # The inner test is built by RECURSING as the is_* twin, so was_* never
+        # needs its own copy of any comparison — resolve.WAS_TO_IS is the one
+        # place that pairing lives.
+        if co in WAS_TO_IS and not last_changed_is_exact(cond):
+            inner = self._condition_expr(dict(cond, co=WAS_TO_IS[co]), ctx)
+            dur = self._duration_ms(cond.get("to"))
+            if dur is None:
+                raise NotYetImplemented(
+                    f"'{co}' without a fixed duration not compiled yet", **ctx)
+            at_least = (cond.get("to") or {}).get("f", "g") == "g"
+            # Same identity function as the YAML band, so the two bands agree
+            # about which comparisons are the same comparison.
+            slug = was_watcher_entity(self.piston_id, entities, attr, co,
+                                      ro.get("c"),
+                                      ro2.get("c")).split("_")[-1]
+            self.was_watchers.setdefault(slug, {
+                "slug": slug,
+                "watch": ", ".join(_q(e) for e in entities),
+                "predicate": inner,
+                "describe": f"{attr} {co.replace('_', ' ')}",
+            })
+            return f"_was_held({_q(slug)}, {inner}, {dur}, {at_least})"
+
 
         if co in _NUMERIC_OPS or (co in ("rises_above", "drops_below")):
             op = _NUMERIC_OPS.get(co) or (">" if co == "rises_above" else "<")
@@ -1382,6 +1401,8 @@ class _PyEmitter:
                           for e in var_exprs] + list(event_body)
         return {"decorators": self.decorators, "event_body": event_body,
                 "guarded": guarded, "variables": variables,
+                "was_watchers": sorted(self.was_watchers.values(),
+                                      key=lambda w: w["slug"]),
                 "global_values": global_values,
                 "alarm_entity": self.resolver.system_entity("alarmSystemStatus")}
 
