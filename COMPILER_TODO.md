@@ -144,15 +144,26 @@ pyscript: 12}`.
       them) a device_class, and those conditions can disagree.
 
       MEASURED 2026-08-05: 17 HA domains are described in both, and 13 of the
-      17 already differ. Both directions, both user-visible:
-        * picker offers what the compiler can't use — `binary_sensor` shows
-          battery/sleeping/touch with no matching `ha` rule;
-        * compiler supports what you can't pick — `media_player` maps
-          level/switch/currentActivity and `switch` maps valve, none offered.
-      Deriving the picker FROM the `ha` arrays does not work: the picker's rule
-      language is strictly richer (feature bits, colour modes, declaration
-      attrs, unit fallback) and would lose information. So the reconciliation
-      is per-domain and needs a ruling on each of the 13.
+      17 already differ.
+
+      NOT a question of access — CORRECTED after Jeremy pointed out the raw
+      feed. `_custom_attribute` exposes ANY attribute HA reports, keyed by its
+      raw HA name ("never silently drop what HA exposes"). A picker rule does
+      not grant access; it grants the webCoRE NAME and TYPE — `contact` as an
+      enum of open/closed rather than a raw key typed by sniffing the current
+      value. So the risk is a name/type mismatch, which is silent: an imported
+      piston asking for `level` will not bind to an attribute offered as
+      `brightness`, and a comparison expecting open/closed gets on/off.
+
+      And the vocab is the wrong side of at least one. A real Sonos shows
+      `volume` from the picker rules — webCoRE's own name — while the vocab
+      maps `level` -> media_player. So this is NOT "add the vocab's list to the
+      picker": each of the 13 needs checking against webCoRE's own naming,
+      which is the authority, and either side may be the loose one.
+
+      Deriving the picker FROM the `ha` arrays does not work regardless: the
+      picker's rule language is strictly richer (feature bits, colour modes,
+      declaration attrs, unit fallback) and would lose information.
 
 - [ ] **Throttle interval must become a Settings knob.** Hardcoded
       `_NOISY_THROTTLE = "00:00:01"` in emit_yaml.py. It renders through the
