@@ -1414,6 +1414,25 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                     and data.get("media_content_id"):
                 data["media_content_id"] = _rewrite_media_url(
                     data["media_content_id"], resolver, ctx)
+            # Setting hue alone or saturation alone. The vocab says to preserve
+            # the other half by reading it back from the light; padding it with
+            # a constant (what this used to do) silently recolours a pastel to
+            # full saturation. One call PER light, because each has its own
+            # current colour and one service call sends the same data to all.
+            keep = next((("saturation" if "|hue_hs" in str(tok) else "hue")
+                         for tok in (data_spec or {}).values()
+                         if "|hue_hs" in str(tok) or "|sat_hs" in str(tok)), None)
+            if keep and data and len(entities) >= 1:
+                key = next(iter(data))
+                pair = data[key]
+                asked = pair[0] if keep == "saturation" else pair[1]
+                for ent in entities:
+                    out.append({"kind": "service", "service": service,
+                                "entities": [ent],
+                                "data": dict(data, **{key: _json_dumps(
+                                    _env.get_template("partial_color.j2").render(
+                                        entity=ent, value=asked, keep=keep))})})
+                continue
             if fade_from and data:
                 # The target field is whatever the fade sets — everything in
                 # the spec except the transition. Jump there instantly (no

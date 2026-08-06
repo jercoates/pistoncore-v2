@@ -1,0 +1,38 @@
+{#-
+  Setting HUE alone, or SATURATION alone.
+
+  Home Assistant has no hue-only or saturation-only service — `hs_color` takes
+  the pair together. webCoRE could change one and leave the other, so writing a
+  constant for the other half silently recolours the light: a soft pastel told
+  "set hue to 120" would come back fully saturated.
+
+  So the half that was NOT asked for is read back from the light itself, at HA's
+  own runtime. That is the behaviour webcore_vocab.json already records for
+  setHue and setSaturation ("compile with template reading current hs_color").
+
+  ONE ENTITY PER CALL. A single service call sends the same data to every target,
+  and each light has its own current colour — so the compiler emits one of these
+  per light rather than one call for all of them.
+
+  The fallback matters: a light that is OFF, or that has never been given a
+  colour, reports no hs_color at all. Full saturation / zero hue is the same
+  assumption webCoRE's own behaviour implies, and it is applied only when there
+  is genuinely nothing to preserve.
+
+  This is HOME ASSISTANT TEMPLATE SYNTAX — state_attr, the hs_color attribute,
+  the list shape — so it lives here rather than in Python. If HA changes any of
+  it, this is where a user fixes it (COMPILER_SPEC "Jinja2 everywhere").
+
+  SINGLE quotes only: the automation template wraps this in double quotes.
+
+  Input:
+    entity   the light this call targets
+    value    the half the piston asked for
+    keep     which half to preserve — 'saturation' when setting hue, 'hue' when
+             setting saturation
+-#}
+{%- if keep == 'saturation' -%}
+{{ '{{' }} [{{ value }}, (state_attr('{{ entity }}', 'hs_color') or [0, 100])[1]] {{ '}}' }}
+{%- else -%}
+{{ '{{' }} [(state_attr('{{ entity }}', 'hs_color') or [0, 100])[0], {{ value }}] {{ '}}' }}
+{%- endif -%}

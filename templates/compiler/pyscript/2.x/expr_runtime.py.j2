@@ -430,6 +430,28 @@ def _fn_age(entity_id):
         return None
 
 
+def _hs_keep(entity_id, value, keep):
+    """Set hue OR saturation while preserving the other half.
+
+    HA's `hs_color` is a [hue, saturation] PAIR — there is no hue-only or
+    saturation-only service — so changing one means sending both. Sending a bare
+    number is rejected outright, and sending a constant for the other half
+    silently recolours the light: a soft pastel told "set hue to 120" comes back
+    fully saturated.
+
+    So the half that was not asked for is read back off the light. A light that
+    is off, or has never been given a colour, reports no hs_color; [0, 100] is
+    the fallback, applied only when there is genuinely nothing to preserve.
+    """
+    try:
+        current = (state.getattr(str(entity_id)) or {}).get("hs_color")
+    except Exception:
+        current = None
+    if not current or len(current) < 2:
+        current = [0, 100]
+    return [value, current[1]] if keep == "saturation" else [current[0], value]
+
+
 # ── was_* watchers ─────────────────────────────────────────────────────────
 # webCoRE's was_* asks "has this been true CONTINUOUSLY for T", which it
 # answers by walking state history. last_changed cannot answer it for any

@@ -1148,6 +1148,24 @@ class _PyEmitter:
                         out.append(self._driver_command(cmd, devices, params, ctx))
                         continue
                     raise
+                # Hue-only / saturation-only. HA's hs_color is a PAIR, so a
+                # bare number is rejected outright — which is what this emitted
+                # before. One call per light, because each has its own current
+                # colour to preserve. Matches the YAML band exactly.
+                keep = next((("saturation" if "|hue_hs" in str(tok) else "hue")
+                             for tok in (data_spec or {}).values()
+                             if "|hue_hs" in str(tok) or "|sat_hs" in str(tok)),
+                            None)
+                if keep and data and entities:
+                    key = next(iter(data))
+                    asked = data[key]
+                    for ent in entities:
+                        out.append({
+                            "kind": "service", "domain": domain, "service": svc,
+                            "entities": [ent],
+                            "data": dict(data, **{
+                                key: f"_hs_keep({ent!r}, {asked}, {keep!r})"})})
+                    continue
                 if fade_from and data:
                     # HA cannot express a start and an end in one call, so the
                     # jump is a separate call placed ahead of the fade — same

@@ -130,6 +130,43 @@
     equivalent.
   </p>
 
+  <h2>Setting hue or saturation on a light that's off</h2>
+  <p>
+    Home Assistant has no "set hue only" or "set saturation only" service — it
+    takes hue and saturation together as a pair. PistonCore handles that for you
+    by reading the light's current colour and keeping the half you didn't ask
+    about, so "set hue to 120" on a soft pastel stays a soft pastel.
+  </p>
+  <p>
+    <strong>The one gap:</strong> a light that is off, or that has never been
+    given a colour, has no current colour to read. In that case the missing half
+    falls back to full saturation, hue zero.
+  </p>
+  <p>
+    <strong>What to do:</strong> nothing for a light that's on. If you're setting
+    a colour on a light you're also turning on, use <strong>Set color</strong>
+    and give both values — that's exact regardless.
+  </p>
+
+  <h2>Timing on a value that lives inside a device is less precise</h2>
+  <p>
+    Some readings are the device's own state (a switch is on) and some live
+    <em>inside</em> it as a detail — a thermostat's current temperature, a lock's
+    last user. Home Assistant timestamps the whole device, not each detail
+    separately.
+  </p>
+  <p>
+    <strong>What happens:</strong> "has been X for ten minutes" on one of those
+    inner values is measured from the last time <em>anything</em> about that
+    device changed. A thermostat reporting its humidity restarts the clock on a
+    question about its temperature.
+  </p>
+  <p>
+    <strong>What to do:</strong> nothing, for most pistons — it errs towards
+    firing late, not falsely. Force PyScript if a piston depends on that timing
+    being exact.
+  </p>
+
   <h2>"My variable got cut off"</h2>
   <p>
     Any value PistonCore stores in a Home Assistant helper is capped at
