@@ -38,11 +38,11 @@
     <tr>
       <td>A state or value comes out wrong — "open" vs "on", an alarm mode, a fan
           speed, a colour name</td>
-      <td><code>value_maps.json</code></td>
+      <td><code>webcore_vocab.json</code></td>
     </tr>
     <tr>
       <td>A device doesn't show up, or shows up missing something it can do</td>
-      <td><code>picker_capability_map.json</code></td>
+      <td><code>webcore_vocab.json</code></td>
     </tr>
     <tr>
       <td>A piston is using PyScript when it shouldn't have to (or the reverse)</td>
@@ -81,28 +81,32 @@
     service name somewhere else, it isn't there.
   </p>
 
-  <h2>value_maps.json — what values mean</h2>
+  <h2>Values live in the vocab too</h2>
   <p>
     Names versus <em>values</em>. The vocab says a lock is operated with
-    <code>lock.lock</code>; this file says webCoRE's "unlocked" is HA's
-    <code>unlocked</code>, that the opposite of "open" is "closed", which service
-    arms an alarm to a given mode, and what "low" means as a fan speed.
+    <code>lock.lock</code>; it also says webCoRE's "unlocked" is HA's
+    <code>unlocked</code>, which service arms an alarm to a given mode, and what
+    "low" means as a fan speed. These used to be a separate
+    <code>value_maps.json</code>; they were folded in so there is one file to edit.
   </p>
   <p>
     Edit this when a piston triggers at the wrong time, or a mode lands on the wrong
     setting, even though the right service is clearly being called.
   </p>
 
-  <h2>picker_capability_map.json — what your devices can do</h2>
+  <h2>What your devices can do — the <code>_picker_rules</code> section</h2>
   <p>
     Home Assistant describes a device with a domain, a device class, and a set of
-    supported features. webCoRE describes it with capabilities and attributes. This
-    file is the bridge, and it decides <strong>what you see in the device picker</strong>
-    and which attributes each device offers.
+    supported features. webCoRE describes it with capabilities and attributes. The
+    <code>_picker_rules</code> section of the vocab is the bridge, and it decides
+    <strong>what you see in the device picker</strong> and which attributes each
+    device offers.
   </p>
   <p>
     Edit it when a device is missing from the picker, or is there but doesn't offer
-    something it can plainly do.
+    something it can plainly do. It was its own file
+    (<code>picker_capability_map.json</code>) until August 2026 — folded in because
+    the two files had already drifted apart in 13 places.
   </p>
 
   <h2>routing_table.json — which engine a piston uses</h2>

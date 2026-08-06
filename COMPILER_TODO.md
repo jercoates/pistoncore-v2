@@ -119,6 +119,41 @@ pyscript: 12}`.
       seconds. Now `resolve.duration_seconds`, read by both bands and by every
       caller.
 
+- [x] **picker_capability_map.json folded into the vocab — DONE 2026-08-05.**
+      It was the last file on the vocab's clock that wasn't in it: its contents
+      are `device_class`, `supported_features`, `supported_color_modes` — all
+      things that change when HA RENAMES something, the same clock as the
+      vocab, per the file-split rule. Now `webcore_vocab.json` `_picker_rules`.
+      Underscore-prefixed, so fixtures.py strips it from the sealed dashboard
+      by rule rather than by a list someone must remember to update — the trap
+      that bit twice before.
+
+      Proved neutral against a NEW device-payload harness built for it
+      (scratchpad/payload_snap.py, registries from the dev bench and the test
+      HA): 219 devices, 1705 attributes, byte-identical.
+
+      Also repointed the self-repair map in pages.py, which still sent users to
+      the file — the exact bug the last consolidation hit — and two help pages
+      that named `picker_capability_map.json` AND `value_maps.json`, the latter
+      deleted ten days earlier.
+
+- [ ] **The picker rules and the `ha` arrays still state the condition twice.**
+      `_picker_rules` answers "which attributes does this device expose"; the
+      per-attribute `ha` arrays answer "how is that attribute read, and how do
+      its values map". Different questions — but both name a domain and (27 of
+      them) a device_class, and those conditions can disagree.
+
+      MEASURED 2026-08-05: 17 HA domains are described in both, and 13 of the
+      17 already differ. Both directions, both user-visible:
+        * picker offers what the compiler can't use — `binary_sensor` shows
+          battery/sleeping/touch with no matching `ha` rule;
+        * compiler supports what you can't pick — `media_player` maps
+          level/switch/currentActivity and `switch` maps valve, none offered.
+      Deriving the picker FROM the `ha` arrays does not work: the picker's rule
+      language is strictly richer (feature bits, colour modes, declaration
+      attrs, unit fallback) and would lose information. So the reconciliation
+      is per-domain and needs a ruling on each of the 13.
+
 - [ ] **Throttle interval must become a Settings knob.** Hardcoded
       `_NOISY_THROTTLE = "00:00:01"` in emit_yaml.py. It renders through the
       template as a plain HA delay so it is editable in the emitted YAML, but

@@ -62,7 +62,7 @@ It replicates the **intent** of the piston, not webCoRE's architecture. There is
 the product's maintainability model):** everything the compiler reads to make
 its decisions — the command/value maps, BOTH bands' emission templates
 (yaml/classic + pyscript/2.x incl. expr_runtime), webcore_vocab.json,
-picker_capability_map.json, AND routing_table.json (the "what needs PyScript"
+AND routing_table.json (the "what needs PyScript"
 table) — is DATA, and MUST be loaded from the editable customize copy on the
 persistent `/data` volume, never hard-coded and never read only from the
 image.
@@ -94,7 +94,7 @@ command/value-map guidance it already has. The translation layer is how HA
 entities become webCoRE-shaped devices/attributes and how attribute reads &
 command writes route back to HA — it lives in `webcore_vocab.json` (the
 per-attribute/command `"ha"` arrays + `_ha_translation` block — the structured
-read/write rules, see DEVICE_PAYLOAD_SPEC §2) and `picker_capability_map.json`
+read/write rules, see DEVICE_PAYLOAD_SPEC §2) and its `_picker_rules` section
 (HA signals → attribute keys). The section must be written for ANYONE (a user
 following it by hand, or an AI handed the file), matching the existing doc's
 "what it does / shape rules / instructions for the AI / verify" structure, so a

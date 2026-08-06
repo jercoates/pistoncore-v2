@@ -93,7 +93,6 @@ CUSTOMIZABLE = [
                                    # command_maps/value_maps JSON was deleted
                                    # 2026-07-26; translation lives in the vocab)
     "webcore_vocab.json",
-    "picker_capability_map.json",
     "routing_table.json",
 ]
 

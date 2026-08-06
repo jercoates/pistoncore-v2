@@ -1,7 +1,7 @@
 """HA -> webCoRE grouped device payload pipeline (DEVICE_PAYLOAD_SPEC.md).
 
 Implements Stages 1, 3, 4, 6, 7, 8 literally from the documented source
-files (picker_capability_map.json, webcore_vocab.json) and HA's own
+files (webcore_vocab.json, which holds the picker rules too) and HA's own
 registry fields. Stage 5 (live attribute values) is deliberately deferred —
 not blocked on data anymore (webcore_vocab.json's "ha" arrays are now a
 structured, machine-executable read rule per attribute), just not yet
@@ -63,7 +63,7 @@ def _is_battery(entity: dict, state_map: dict) -> bool:
         return True
     return entity.get("original_device_class") == "battery"
 
-# Declaration attributes picker_capability_map.json's by_declaration_attr
+# Declaration attributes the vocab's _picker_rules by_declaration_attr
 # rules check for (climate/device_tracker/person domains) — read straight
 # off the entity's state.attributes dict.
 def _declaration_attr_keys(capability_map: dict) -> list[str]:
@@ -108,7 +108,7 @@ def _trailing_number(entity_id: str) -> int:
 
 
 def _custom_attribute_key(entity: dict, entity_id: str) -> str:
-    """Key for an entity that matched no picker_capability_map rule.
+    """Key for an entity that matched no picker rule.
 
     Prefer the original Hubitat attribute name, recovered from the entity's
     own unique_id (format hub::device::sensor::attrName — confirmed against
@@ -117,7 +117,7 @@ def _custom_attribute_key(entity: dict, entity_id: str) -> str:
     byte-for-byte the attribute name his old Hubitat webCoRE piston used).
     piston.module.js:3688-3701 falls back to a device's own a[] entries by
     name when a key isn't in the central vocab, so this doesn't need a
-    vocab or picker_capability_map entry to work in the editor. Falls back
+    vocab entry to work in the editor. Falls back
     to the entity's own object_id when the pattern doesn't match (non-
     Hubitat platforms, or Hubitat entities that aren't a single passthrough
     attribute)."""
@@ -129,7 +129,7 @@ def _custom_attribute_key(entity: dict, entity_id: str) -> str:
 
 
 def _custom_attribute(entity_id: str, entity: dict, state: dict | None) -> dict | None:
-    """Generic fallback attribute for an entity with no picker_capability_map
+    """Generic fallback attribute for an entity with no picker rule
     rule — never silently drop what HA exposes.
 
     Binds on EXISTENCE (loaded entity), not on current value: an entity whose
@@ -330,7 +330,7 @@ def group_entities(registries: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Stage 3 — picker_capability_map.json rule evaluator
+# Stage 3 — picker rule evaluator (vocab `_picker_rules`)
 # ---------------------------------------------------------------------------
 
 def _entity_signals(entity_id: str, state: dict | None, capability_map: dict | None = None) -> dict:
@@ -349,7 +349,7 @@ def _entity_signals(entity_id: str, state: dict | None, capability_map: dict | N
 
 def attribute_keys_for_entity(signals: dict, capability_map: dict) -> set[str]:
     """
-    Evaluate picker_capability_map.json's rule types for one entity's
+    Evaluate the vocab's _picker_rules rule types for one entity's
     signals, per the file's own documented algorithm (_meta.usage):
     always -> by_device_class -> by_supported_color_modes ->
     by_supported_features (or legacy_by_supported_features when
@@ -516,7 +516,7 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
             for k in entity_attr_keys)
 
         if not entity_attr_keys or not state_is_covered:
-            # No picker_capability_map rule matched this entity at all, or the
+            # No picker rule matched this entity at all, or the
             # rules that matched all read fields inside it. Either way the
             # state itself falls through as a device-local custom attribute.
             entity = entity_map.get(entity_id, {})
@@ -1066,8 +1066,12 @@ def build_device_payload(registries: dict) -> dict:
         "resolution_map": {hashedId: {...}, ...},
         "tts_engines": [ {entity_id, name}, ... ] }
     """
-    picker_map = _load_json("picker_capability_map.json")
     vocab = _load_json("webcore_vocab.json")
+    # The picker rules live IN the vocab (2026-08-05): one file to edit
+    # when HA renames a device_class or moves a supported_features bit,
+    # rather than two that quietly disagree. Underscore-prefixed, so
+    # fixtures.py strips it from the sealed dashboard feed by rule.
+    picker_map = vocab.get("_picker_rules") or {"domains": {}}
     attr_to_caps = build_attr_to_capabilities_index(vocab)
 
     state_map = {s["entity_id"]: s for s in registries["states"]}

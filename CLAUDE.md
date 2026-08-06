@@ -163,7 +163,8 @@ never treat it as gospel.
 
 - `dashboard/` — sealed upstream dashboard (see rules above)
 - `reference/` — webcore_source_reference.groovy and other read-only upstream references
-- Repo-root translation files: webcore_vocab.json, picker_capability_map.json
+- Repo-root translation files: webcore_vocab.json (ALL translation, including
+  the picker rules under `_picker_rules`)
   (seed data for the db and device payloads; webcore_vocab.json's "ha" arrays +
   `_ha_translation` block are the HA read/write rules the shim strips before
   serving to the dashboard)

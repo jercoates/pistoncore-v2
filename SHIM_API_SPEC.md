@@ -451,7 +451,7 @@ app.js, dashboard.module.js, or piston.module.js.
    tolerate its absence (retry-with-backoff on connect failure, app.js's onclose/onerror
    handlers). Shim: ignore, no stub needed.
 3. PISTON_JSON_REFERENCE.md — extract full piston JSON format from Session 14 sources. **Status:** §8 ($ id assignment) and §10.5's comparison trigger/condition split resolved 2026-07-10; rest still open.
-4. DEVICE_PAYLOAD_SPEC.md — entity_id → device object pipeline using picker_capability_map + vocab + attribute translation. **Status:** built (milestone 2), Stage 3.1/3.2/3.3 added since.
+4. DEVICE_PAYLOAD_SPEC.md — entity_id → device object pipeline using the vocab (_picker_rules + attribute translation). **Status:** built (milestone 2), Stage 3.1/3.2/3.3 added since.
 5. Spike milestone: static serving + `/connect` + hardcoded `load`/`devices`/`getDb` with 3 fake devices → dashboard renders piston list and device picker. **Status: DONE (milestone 1).**
 6. TRACE_ACTIVITY_CONTRACT.md (new, 2026-07-10) — `piston/activity` response shape and log-entry shape resolved; the `state`/`trace` blobs' write sites (not just where they're read/served from) still need a dedicated trace before the compiler can commit to a trace strategy.
 

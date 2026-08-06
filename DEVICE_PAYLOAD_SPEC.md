@@ -40,7 +40,7 @@ menus are computed client-side from `a`/`c` per device, VERIFIED-JS piston.modul
 | HA **device registry** | the grouping: physical devices, their stable device IDs, their names (`name_by_user` else `name`) |
 | HA **entity registry** | entity → device_id membership; `entity_category` (for filtering diagnostics); disabled flags |
 | HA state API | live values, domain, device_class, supported_features, supported_color_modes |
-| `picker_capability_map.json` | HA signals → attribute keys (VERIFIED-FILES) |
+| `webcore_vocab.json` `_picker_rules` | HA signals → attribute keys (VERIFIED-FILES) |
 | `webcore_vocab.json` | attribute keys → capabilities/attributes/commands definitions, plus per-attribute/command `"ha"` arrays (where the value lives / where commands route — structured, machine-executable read/write rules, retired `pistoncore_attribute_translation.json`'s free-text `ha_source`) (VERIFIED-FILES, merged 2026-07-12) |
 
 ## 3. Pipeline
@@ -66,7 +66,7 @@ supported_color_modes, declaration attributes. Offline/unavailable members stay 
 group (entity registry knows them; never auto-drop).
 
 ### Stage 3 — Picker map lookup, per member → union
-Run each member entity through `picker_capability_map.json` → its attribute keys. The
+Run each member entity through the vocab's `_picker_rules` → its attribute keys. The
 group's attribute key set = the UNION across members. Record, for every attribute key,
 **which member entity contributed it** — this binding is the resolution data (Stage 8).
 
@@ -98,8 +98,8 @@ lexicographic — `button_10` must sort after `button_2`, not before), and emit 
 companion count attribute (`{"n": "numberOfButtons", "t": "integer", "v": <count>}`) so
 the editor offers the right number of indexes instead of its 32-slot fallback.
 
-### Stage 3.2 — Custom-attribute fallback (no picker_capability_map rule needed)
-**DECISION, Jeremy, 2026-07-09.** An entity that matches *zero* `picker_capability_map.json`
+### Stage 3.2 — Custom-attribute fallback (no picker rule needed)
+**DECISION, Jeremy, 2026-07-09.** An entity that matches *zero* `_picker_rules`
 rules (no domain/device_class/unit match — e.g. a generic Hubitat-driver passthrough sensor
 with no HA `device_class`) is **not** dropped. It falls through as a device-local custom
 attribute: `{"n": <key>, "t": "string"|"decimal"}`, no vocab entry required. This works in
@@ -136,7 +136,7 @@ rules:
 - Extend the same way for other command-only capabilities as devices demand (siren/alarm,
   tone, etc.).
 Where these rules live: either a `capabilities` branch added to
-`picker_capability_map.json` entries (preferred — keeps one map) or a small companion
+`_picker_rules` entries (preferred — keeps one map) or a small companion
 map; DECISION at implementation, but the rules must be data, not code, per house style.
 Capabilities from this lane merge into the group's capability set before Stage 4 runs,
 and their member-entity binding is recorded exactly like attribute contributions
@@ -217,7 +217,7 @@ entity-as-device — grouping is a no-op for singles.
 ## 4a. REQUIRED help (Jeremy, 2026-07-20)
 
 The translation files this spec governs — `webcore_vocab.json` (`"ha"` arrays +
-`_ha_translation`) and `picker_capability_map.json` — are user-editable data on
+`_ha_translation`, `_picker_rules`) — is user-editable data on
 the /data volume (COMPILER_SPEC §1a). They still lack a user/AI editing
 walkthrough. A future session MUST add a "how to edit the translation layer"
 section to `/help/editing-compiler`: what the `"ha"` read/write rules and the
@@ -244,7 +244,7 @@ a user teaches PistonCore a new attribute translation without a code change.
    live HA as milestone 2 (CLAUDE.md ladder).
 7. ~~Stage 3.3 rule inventory~~ — Speak RESOLVED 2026-07-11: `media_player` + PLAY_MEDIA
    bit (512) -> `speechSynthesis` capability, implemented as a `capabilities` branch on
-   `picker_capability_map.json`'s `media_player` domain (`_meta.command_only_lane`) and
+   the vocab's `_picker_rules` `media_player` domain (`_meta.command_only_lane`) and
    consumed by `device_pipeline.py`'s `capability_keys_for_entity()`, merged into the
    group's capability set independent of the attribute bridge. Verified live against
    Jeremy's real HA: all 6 real media_player devices (SHIELD, Family Room, Kitchen,

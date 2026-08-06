@@ -1573,11 +1573,12 @@ _REPAIR_MAP = [
      "runtime file, AND add its bare name to the _FUNCTIONS set at the bottom "
      "of shim/compiler/expression.py so the compiler knows it exists."),
     ("has no binding for attribute",
-     "picker_capability_map.json",
-     "This maps HA entity signals (domain, device_class, supported_features) "
-     "to webCoRE attribute names. Add a rule so the entity that carries this "
-     "attribute is recognised; check webcore_vocab.json for the attribute's "
-     "canonical name and type."),
+     "webcore_vocab.json",
+     "Under \"_picker_rules\", the \"domains\" section maps HA entity signals "
+     "(domain, device_class, supported_features, supported_color_modes) to "
+     "webCoRE attribute names. Add a rule there so the entity carrying this "
+     "attribute is recognised; the attribute's canonical name and type are in "
+     "the \"attributes\" section of the same file."),
     ("requires PyScript",
      "routing_table.json",
      "This lists the webCoRE JSON signatures that force the PyScript band. "
