@@ -28,7 +28,7 @@ from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
 from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL,
                       was_watcher_entity, last_changed_is_exact,
-                      duration_seconds)
+                      duration_seconds, pause_target_automations)
 from . import routing as _routing
 
 _BAND_REL = "templates/compiler/yaml/classic"
@@ -350,7 +350,6 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
     return {"target": "yaml", "kind": "script", "yaml": header + block,
             "reasons": [], "auto_ids": [], "script_ids": [script_id],
             "unresolved": resolver.unresolved, "media_warnings": resolver.media_warnings,
-            "warnings": resolver.warnings,
             "helpers": _helpers_for(resolver, piston_id, piston_name)}
 
 
@@ -1869,23 +1868,10 @@ def _piston_pause_resume(n: dict, resolver: Resolver, ctx: dict) -> dict:
     isn't deterministic from the id alone (HA derives it from the alias,
     de-duplicated on collision; that's why deploy.py's own _automation_entities
     matches the same way instead of guessing the slug)."""
-    params = n["params"]
-    target = (params[0] or {}).get("c") if params else None
-    if not isinstance(target, str) or not target.strip(":"):
-        raise NotYetImplemented(f"{n['command']} without a piston target", **ctx)
-    target_id = target.strip(":")
-    from .deploy import load_statuses
-    rec = load_statuses().get(target_id)
-    if not rec:
-        raise NotYetImplemented(
-            f"{n['command']} targets a piston (id {target_id}) that hasn't been "
-            f"compiled/deployed yet — deploy it first, then this piston", **ctx)
-    auto_ids = rec.get("auto_ids") or []
-    if not auto_ids:
-        raise NotYetImplemented(
-            f"{n['command']} targets a piston (id {target_id}) that compiled to "
-            f"a script, not an automation — scripts have no enabled/disabled "
-            f"state to pause", **ctx)
+    try:
+        _, auto_ids = pause_target_automations(n["command"], n["params"])
+    except NotYetImplemented as exc:
+        raise NotYetImplemented(str(exc), **ctx) from None
     # pausePiston and resumePiston each carry their own HA name in the vocab,
     # so picking one is just a lookup on the command already in hand.
     service = resolver.command_ha_entry(n["command"], ctx)["service"]

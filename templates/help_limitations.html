@@ -33,6 +33,18 @@
     of these rather than emitting something that quietly does nothing.
   </p>
 
+  <h2>A piston compiled to PyScript can't be paused either</h2>
+  <p>
+    PyScript pistons are modules, not Home Assistant automations, so there's no
+    automation for HA to switch off. This is the same wall as the one above, for
+    a different reason — and it applies whichever band the <em>pausing</em>
+    piston uses.
+  </p>
+  <p>
+    <strong>What to do:</strong> if a piston needs to be pausable, leave it on
+    ordinary automations rather than forcing it to PyScript.
+  </p>
+
   <h2>"Deploy the target piston first"</h2>
   <p>
     Pausing works by naming the target's automations, and those names don't exist

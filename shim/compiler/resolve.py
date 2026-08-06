@@ -197,6 +197,49 @@ def duration_seconds(op) -> int | None:
     return int(n * _DURATION_UNITS.get(op.get("vt", "s"), 1))
 
 
+def pause_target_automations(command: str, params: list) -> tuple[str, list]:
+    """A pausePiston/resumePiston target -> (target id, its automation ids).
+
+    Both bands need this and must refuse the SAME cases, so it lives here.
+
+    The ids come from the target piston's own last recorded compile — a
+    compile-time lookup of the same class as the device resolution map. They are
+    needed because Home Assistant derives an automation's entity_id from its
+    alias and de-duplicates on collision, so the entity_id cannot be predicted;
+    only the `id:` we write is stable, and it is matched at HA's runtime.
+
+    Raises when the answer would be a lie: a target never compiled has no
+    automations to name, and a target that compiled to a SCRIPT has no
+    enabled/disabled state at all — Home Assistant can disable an automation,
+    not a script.
+    """
+    from .errors import NotYetImplemented
+    from .deploy import load_statuses
+    target = (params[0] or {}).get("c") if params else None
+    if not isinstance(target, str) or not target.strip(":"):
+        raise NotYetImplemented(f"{command} without a piston target")
+    target_id = target.strip(":")
+    rec = load_statuses().get(target_id)
+    if not rec:
+        raise NotYetImplemented(
+            f"{command} targets a piston (id {target_id}) that hasn't been "
+            f"compiled/deployed yet — deploy it first, then this piston")
+    auto_ids = rec.get("auto_ids") or []
+    if not auto_ids:
+        # Two different reasons for having no automations, and calling a
+        # PyScript piston "a script" sends the user looking for the wrong thing.
+        if rec.get("band") == "pyscript":
+            raise NotYetImplemented(
+                f"{command} targets a piston (id {target_id}) that compiled to "
+                f"PyScript, which is a module rather than an automation — Home "
+                f"Assistant has nothing to disable")
+        raise NotYetImplemented(
+            f"{command} targets a piston (id {target_id}) that compiled to a "
+            f"script, not an automation — scripts have no enabled/disabled "
+            f"state to pause")
+    return target_id, auto_ids
+
+
 def last_changed_is_exact(cond: dict) -> bool:
     """True when HA's own `last_changed` already answers "for how long".
 
@@ -451,11 +494,6 @@ class Resolver:
             }
         self.unresolved: list[dict] = []   # devices kept but not currently in HA
         self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
-        # Things that COMPILED but a user needs told about — an HA
-        # limitation the piston has walked into. Not errors: the output
-        # is correct as far as HA can go. Surfaced on the front-door
-        # indicator and the piston's status banner, never a third place.
-        self.warnings: list[str] = []
         sys_ent = resolution_map.get("$system")
         self.system_entities = sys_ent if isinstance(sys_ent, dict) else {}
         # (entity_id, webCoRE attribute) -> the HA FIELD inside that entity,

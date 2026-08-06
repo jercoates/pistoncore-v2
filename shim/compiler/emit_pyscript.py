@@ -29,15 +29,9 @@ from .. import customize
 from .errors import NotYetImplemented
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
 from .resolve import (Resolver, WAS_TO_IS, was_watcher_entity,
-                      last_changed_is_exact, duration_seconds)
+                      last_changed_is_exact, duration_seconds,
+                      pause_target_automations)
 
-# was_* ops with their own branch in _condition_expr, which applies the
-# duration gate itself. Everything else in WAS_TO_IS is gated generically at
-# the top of that method.
-_WAS_SELF_HANDLED = ("was", "was_not", "was_greater_than",
-                     "was_greater_than_or_equal_to", "was_less_than",
-                     "was_less_than_or_equal_to", "was_equal_to",
-                     "was_different_than")
 from . import routing as _routing
 
 _BAND_REL = "templates/compiler/pyscript/2.x"
@@ -1083,6 +1077,22 @@ class _PyEmitter:
                 out.append({"kind": "service", "domain": "pyscript",
                             "service": f"pistoncore_{target.strip(':')}_execute",
                             "entities": [], "data": {}})
+            elif cmd in ("pausePiston", "resumePiston"):
+                # Was refused outright on this band, which is a hole in the
+                # valve: forcing PyScript is a user's CHOICE for trace fidelity,
+                # so a piston it cannot compile is a fallback bug, not a
+                # limitation of the piston.
+                #
+                # Same compile-time lookup and the same refusals as the YAML
+                # band (resolve.pause_target_automations), so both bands accept
+                # and reject exactly the same pistons.
+                _, auto_ids = pause_target_automations(cmd, params)
+                service = self.resolver.command_ha_entry(cmd, ctx)["service"]
+                svc_domain, svc_name = service.split(".", 1)
+                out.append({
+                    "kind": "service", "domain": svc_domain, "service": svc_name,
+                    "entities": [],
+                    "data": {"entity_id": f"_piston_automations({auto_ids!r})"}})
             elif cmd in ("cancelTasks", "cancelPendingTasks"):
                 # restart execution model already kills pending waits on
                 # retrigger (research §6) — breadcrumb only (Tier-3 caveat)

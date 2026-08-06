@@ -430,6 +430,30 @@ def _fn_age(entity_id):
         return None
 
 
+def _piston_automations(auto_ids):
+    """The entity_ids of another piston's automations, found at HA's runtime.
+
+    Home Assistant derives an automation's entity_id from its alias and changes
+    it if two collide, so it cannot be predicted at compile time. The `id:`
+    PistonCore writes IS stable, and HA keeps it as an attribute — so the match
+    happens on that.
+
+    A piston can compile to SEVERAL automations: a statement carrying a wait
+    gets its own, so does a throttled `remains_*` trigger, and so does each
+    `was_*` watcher. Pausing only the first would leave the piston acting while
+    it looked paused, so all of them are returned.
+    """
+    wanted = set(auto_ids or [])
+    found = []
+    for entity_id in state.names("automation"):
+        try:
+            if (state.getattr(entity_id) or {}).get("id") in wanted:
+                found.append(entity_id)
+        except Exception:
+            continue
+    return found
+
+
 def _hs_keep(entity_id, value, keep):
     """Set hue OR saturation while preserving the other half.
 
