@@ -1,0 +1,62 @@
+{
+ "_comment": "What KIND of value a raw Home Assistant reading is, so an attribute PistonCore has no vocab entry for still arrives properly typed instead of guessed from whatever its value happened to be at scan time. This is webCoRE's own behaviour for anything outside its vocabulary: webcore.groovy:3698 serialises every device attribute as name + the driver's getDataType() + the driver's getValues(). Home Assistant's device_class and options are the same information, so this file is how we ask the platform instead of guessing.",
+
+ "_why_its_own_file": "It does NOT belong in webcore_vocab.json, by the file-split rule (split by WHY something changes). The vocab changes when HA RENAMES something; webCoRE's own side of it is frozen and has not been updated in years. THIS file changes when HA ADDS something — a new device class for a new kind of device — which happens constantly as new hardware appears (Jeremy, 2026-08-05). Different clock, so different file, exactly as routing_table.json is separate because it changes when HA GAINS AN ABILITY.",
+
+ "_how_its_used": "device_pipeline._custom_attribute, for entities that match no picker rule. Order: an `options` list published by HA wins outright (those ARE the valid values); then a domain with fixed states; then device_class; then domain; then a unit or numeric state_class means a number; then, only if nothing else applies, the old guess from the current value.",
+
+ "_editing": "Add an entry when a device shows up in the picker as plain text that should be a number, a date, or a dropdown. Types must be one of webcore_vocab.json's attributeTypeToOperatorGroup keys, or 'string'. Takes effect on the next compile — no restart, no rebuild.",
+
+ "by_device_class": {
+  "_note": "Only classes whose type is NOT already obvious. Anything carrying a unit_of_measurement or a numeric state_class is treated as a number without needing an entry here, which covers most sensor classes. There is deliberately NO 'enum' entry: HA's enum device_class is only useful when it also publishes an `options` list, and that case is already handled ahead of this table. Mapping it here produced a dropdown with nothing in it — worse than plain text (caught 2026-08-05 on 12 powerSource attributes).",
+  "timestamp": "datetime",
+  "date": "date",
+  "duration": "decimal",
+  "monetary": "decimal",
+  "aqi": "integer"
+ },
+
+ "by_domain": {
+  "_note": "The entity's own domain, when it settles the type on its own.",
+  "select": "enum",
+  "input_select": "enum",
+  "number": "decimal",
+  "input_number": "decimal",
+  "text": "string",
+  "input_text": "string",
+  "date": "date",
+  "input_datetime": "datetime",
+  "time": "time",
+  "counter": "integer",
+  "image": "image"
+ },
+
+ "fixed_state_domains": {
+  "_note": "Domains whose state is a small closed set. HA does not publish these as an `options` list, but they are as fixed as one — so they become a dropdown rather than a text box. Values are HA's own state strings, NOT webCoRE words: an attribute reaching this file has no vocab entry, so nothing translates it and a piston compares the raw value.",
+  "binary_sensor": ["on", "off"],
+  "switch": ["on", "off"],
+  "input_boolean": ["on", "off"],
+  "light": ["on", "off"],
+  "fan": ["on", "off"],
+  "lock": ["locked", "unlocked", "locking", "unlocking", "jammed", "open", "opening"],
+  "cover": ["open", "opening", "closed", "closing"],
+  "valve": ["open", "opening", "closed", "closing"],
+  "person": ["home", "not_home"],
+  "device_tracker": ["home", "not_home"],
+  "alarm_control_panel": ["disarmed", "armed_home", "armed_away", "armed_night", "armed_vacation", "armed_custom_bypass", "pending", "arming", "disarming", "triggered"],
+  "media_player": ["off", "on", "idle", "playing", "paused", "standby", "buffering"],
+  "vacuum": ["cleaning", "docked", "idle", "paused", "returning", "error"],
+  "humidifier": ["on", "off"],
+  "water_heater": ["off", "eco", "electric", "gas", "heat_pump", "high_demand", "performance"],
+  "update": ["on", "off"],
+  "siren": ["on", "off"],
+  "remote": ["on", "off"],
+  "automation": ["on", "off"],
+  "script": ["on", "off"],
+  "schedule": ["on", "off"],
+  "input_button": ["unknown"],
+  "button": ["unknown"]
+ },
+
+ "numeric_state_classes": ["measurement", "total", "total_increasing"]
+}

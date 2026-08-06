@@ -137,17 +137,55 @@ def _custom_attribute(entity_id: str, entity: dict, state: dict | None) -> dict 
     will produce values (found live 2026-07-19 — a camera's smart_detect_type
     sensor read 'unknown' because it hadn't detected anything recently, and
     the whole attribute vanished from that camera's bindings while its twin
-    on another camera worked). Type falls back to string when there's no
-    numeric value to sniff."""
+    on another camera worked).
+
+    TYPE AND VALUES COME FROM HOME ASSISTANT, not from guessing. webCoRE does
+    the same thing for anything outside its vocabulary — webcore.groovy:3698
+    serialises every attribute as name + the driver's getDataType() + the
+    driver's getValues(). HA's device_class and `options` are that same
+    information. Sniffing the current value (what this used to do, and all it
+    did) types a mode selector as free text and throws away the list of valid
+    choices HA had already published.
+
+    Order, most specific first; see ha_device_classes.json's own notes."""
     if state is None:
         return None
+    attrs = state.get("attributes") or {}
     value = state.get("state")
     key = _custom_attribute_key(entity, entity_id)
-    try:
-        float(value)
-        attr_type = "decimal"
-    except (TypeError, ValueError):
-        attr_type = "string"
+    domain = entity_id.split(".", 1)[0]
+    table = _load_json("ha_device_classes.json")
+
+    # 1. HA published the valid values outright — those ARE the options.
+    options = attrs.get("options")
+    if isinstance(options, list) and options:
+        return {"n": key, "t": "enum", "o": [str(o) for o in options]}
+
+    # 2. A domain whose state is a small closed set. HA doesn't publish these
+    #    as options, but they are as fixed as one, so they become a dropdown.
+    fixed = (table.get("fixed_state_domains") or {}).get(domain)
+    if isinstance(fixed, list) and fixed:
+        return {"n": key, "t": "enum", "o": list(fixed)}
+
+    # 3-4. What HA says this reading IS.
+    device_class = attrs.get("device_class")
+    attr_type = (table.get("by_device_class") or {}).get(device_class) \
+        or (table.get("by_domain") or {}).get(domain)
+
+    # 5. A unit, or a numeric state_class, means a number — which covers most
+    #    sensor device classes without needing an entry for each.
+    if not attr_type:
+        numeric = table.get("numeric_state_classes") or []
+        if attrs.get("unit_of_measurement") or attrs.get("state_class") in numeric:
+            attr_type = "decimal"
+
+    # 6. Nothing said anything: the original guess from the current value.
+    if not attr_type:
+        try:
+            float(value)
+            attr_type = "decimal"
+        except (TypeError, ValueError):
+            attr_type = "string"
     return {"n": key, "t": attr_type}
 
 
