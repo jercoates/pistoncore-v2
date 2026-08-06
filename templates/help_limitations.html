@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}PistonCore Help — Where HA differs from webCoRE{% endblock %}
+
+{% block content %}
+<div class="page active help-article">
+  <div class="list-header">
+    <h1>Where Home Assistant differs from webCoRE</h1>
+  </div>
+
+  <p>
+    Almost everything in a piston survives the trip to Home Assistant unchanged.
+    A few things can't, because HA has no equivalent for what webCoRE did. This
+    page is the honest list — what you asked for, what actually happens, and
+    what to do about it.
+  </p>
+  <p>
+    <strong>None of these are faults in your piston.</strong> Each one is a
+    deliberate, documented choice PistonCore made instead of pretending. If a
+    piston behaves slightly differently, you should read it here first rather
+    than discover it months later.
+  </p>
+
+  <h2>"This piston can't be paused"</h2>
+  <p>
+    <strong>A piston with no triggers isn't an automation.</strong> If nothing
+    wakes your piston, HA treats it as a <em>script</em> — a sequence you run on
+    demand. HA can switch an automation off; a script has no on/off state to
+    switch.
+  </p>
+  <p>
+    <strong>What to do:</strong> give the target piston a trigger, or don't
+    pause it. PistonCore refuses to compile <code>pausePiston</code> aimed at one
+    of these rather than emitting something that quietly does nothing.
+  </p>
+
+  <h2>"Deploy the target piston first"</h2>
+  <p>
+    Pausing works by naming the target's automations, and those names don't exist
+    until that piston has been compiled once. Deploy the piston you want to
+    pause, then the piston that pauses it. After that, redeploy either in any
+    order.
+  </p>
+  <p>
+    <em>Why it can't just look it up later:</em> Home Assistant picks an
+    automation's internal id from its name, and changes it if two names collide.
+    The id can't be worked out in advance — only read back once the automation
+    exists.
+  </p>
+
+  <h2>"This piston wakes on every sensor update"</h2>
+  <p>
+    You used a <strong>remains…</strong> comparison — "remains below 50",
+    "remains inside range". That means <em>was already true and still is</em>, so
+    the piston has to see every change to know it. HA has no trigger for that;
+    its closest one fires at the moment of crossing, which is the exact case
+    "remains" excludes.
+  </p>
+  <p>
+    <strong>What PistonCore does:</strong> that statement gets its own
+    automation, limited to one run per second, with skipped runs silenced so they
+    don't fill your log. On a fast-reporting sensor that's the difference between
+    one run a second and fifty.
+  </p>
+  <table class="help-table">
+    <tr><th>Worth knowing</th><th>What it means</th></tr>
+    <tr>
+      <td>Brief spikes</td>
+      <td>If the value jumps past the threshold and back within that one second,
+          PistonCore counts it as "remained" where webCoRE would have seen a
+          crossing.</td>
+    </tr>
+    <tr>
+      <td>Other statements</td>
+      <td>The rest of that piston no longer re-runs on this trigger's events.
+          webCoRE re-ran every statement on every piston event; allowing that
+          here would wake the whole piston on every sensor update.</td>
+    </tr>
+  </table>
+  <p>
+    <strong>What to do:</strong> if you can say what you want with
+    <strong>stays…</strong> instead, do — it carries a duration, HA supports that
+    directly, and none of the above applies. If you need "remains" and want it
+    quieter or faster, the limit is a plain <code>delay:</code> at the end of that
+    automation with a comment explaining it. Edit it there.
+  </p>
+
+  <h2>"This condition is false right after deploying"</h2>
+  <p>
+    You used a <strong>was…</strong> comparison — "was below 50 for ten minutes".
+    PistonCore answers that by remembering <em>when</em> it became true. On a
+    freshly deployed piston nothing has been remembered yet, so the answer stays
+    false until the value next changes into that state.
+  </p>
+  <p>
+    <strong>What to do:</strong> nothing. It settles by itself the first time the
+    value changes.
+  </p>
+  <p>
+    <em>Why it doesn't just ask HA:</em> Home Assistant tracks when an entity last
+    changed, and that resets on <strong>every</strong> update. A fridge going 11°
+    to 12° is still above 10, but the clock would restart — so "above 10 for ten
+    minutes" would never add up and the condition would never fire. Remembering
+    it separately is the only accurate way.
+  </p>
+  <p>
+    This errs on the safe side: it under-reports how long something has held,
+    never over-reports. An alert fires late rather than falsely.
+  </p>
+
+  <h2>"Why are there two triggers for one condition?"</h2>
+  <p>
+    You asked for "50 <strong>or more</strong>" (or "or less"). HA's numeric
+    triggers are strict — "above 50" does not fire at exactly 50 — so PistonCore
+    adds a second trigger for the exact value.
+  </p>
+  <p>
+    <strong>Don't delete the second one.</strong> Without it, a sensor sitting
+    exactly at your threshold never fires at all. That was a real bug: a food
+    probe holding exactly at temperature triggered nothing.
+  </p>
+
+  <h2>"Why is my fade two actions?"</h2>
+  <p>
+    "Fade from 20% to 80% over two minutes" becomes: jump to 20%, then fade to
+    80%. HA can't take a starting value and an ending value in one call. The
+    result is what you asked for — it just reads as two steps.
+  </p>
+  <p>
+    <strong>Not supported:</strong> fading a camera's infrared level. HA has no
+    equivalent.
+  </p>
+
+  <h2>"My variable got cut off"</h2>
+  <p>
+    Any value PistonCore stores in a Home Assistant helper is capped at
+    <strong>255 characters</strong>. That's HA's limit on any entity's state, not
+    a choice PistonCore made.
+  </p>
+  <p>
+    <strong>What to do:</strong> if the piston genuinely needs a longer value — a
+    large response, a long message — force that piston to PyScript, which has no
+    such cap.
+  </p>
+
+  <h2>When to force PyScript</h2>
+  <p>
+    Every piston can compile to PyScript instead of ordinary HA automations.
+    PyScript is a single file PistonCore controls end to end, so several of the
+    limits above simply don't exist there, and the trace detail is closer to what
+    Hubitat and SmartThings gave you.
+  </p>
+  <p>
+    <strong>The trade-offs:</strong> PyScript is an add-on you have to install,
+    and pistons compiled that way don't appear in Home Assistant's automation
+    editor. Use it deliberately, for a piston that needs it — not as the default.
+  </p>
+
+  <h2>Something not listed here?</h2>
+  <p>
+    If a piston behaves differently and you can't find it above, that's worth
+    reporting. Either it belongs on this page, or it's a real bug. The rule
+    PistonCore works to is that any difference from webCoRE gets written down as
+    fair warning, never silently accepted — so a missing entry is itself a
+    problem.
+  </p>
+</div>
+{% endblock %}

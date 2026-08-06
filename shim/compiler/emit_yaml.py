@@ -350,6 +350,7 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
     return {"target": "yaml", "kind": "script", "yaml": header + block,
             "reasons": [], "auto_ids": [], "script_ids": [script_id],
             "unresolved": resolver.unresolved, "media_warnings": resolver.media_warnings,
+            "warnings": resolver.warnings,
             "helpers": _helpers_for(resolver, piston_id, piston_name)}
 
 
@@ -1872,9 +1873,8 @@ def _piston_pause_resume(n: dict, resolver: Resolver, ctx: dict) -> dict:
     # single-quoted Python/Jinja list literal, not _json_dumps — the whole
     # expression gets wrapped in DOUBLE quotes by the template (matching every
     # other value_template in this codebase), so nothing inside may use them.
-    id_list = "[" + ", ".join(repr(str(i)) for i in auto_ids) + "]"
-    template = ("{{ states.automation | selectattr('attributes.id', 'in', "
-                + id_list + ") | map(attribute='entity_id') | list }}")
+    template = _env.get_template("piston_automations.j2").render(
+        auto_ids=[str(i) for i in auto_ids]).strip()
     return {"kind": "service", "service": service, "target_template": template, "data": None}
 
 

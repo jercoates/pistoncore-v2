@@ -1,0 +1,28 @@
+{#-
+  The entity_ids of one piston's automations, resolved at HOME ASSISTANT's
+  runtime rather than at compile time.
+
+  Needed because HA does not let us choose an automation's entity_id: it derives
+  that from the alias and de-duplicates on collision, while the `id:` we write is
+  kept as an attribute. So the entity_id cannot be predicted from the id — which
+  is why deploy.py matches the same way instead of guessing the alias slug.
+
+  The ids come from the target piston's own last recorded auto_ids, so this
+  covers EVERY automation it compiled into. That matters: a piston can compile
+  to several — a statement carrying a wait gets its own, so does a throttled
+  `remains_*` trigger, and so does each `was_*` watcher. Pausing only the first
+  would leave the piston acting while it looked paused.
+
+  This is HOME ASSISTANT TEMPLATE SYNTAX — the `states.automation` collection,
+  the `selectattr` filters, how a target accepts a list — so it lives here
+  rather than in Python. If HA changes any of it, this file is where a user
+  fixes it with nobody upstream (COMPILER_SPEC "Jinja2 everywhere").
+
+  SINGLE quotes only. The rendered expression is wrapped in DOUBLE quotes by
+  the automation template, matching every other value_template here, so a
+  double quote inside would break the YAML.
+
+  Input:
+    auto_ids   the target piston's automation ids
+-#}
+{{ '{{' }} states.automation | selectattr('attributes.id', 'in', [{% for i in auto_ids %}'{{ i }}'{% if not loop.last %}, {% endif %}{% endfor %}]) | map(attribute='entity_id') | list {{ '}}' }}

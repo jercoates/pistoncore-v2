@@ -451,6 +451,11 @@ class Resolver:
             }
         self.unresolved: list[dict] = []   # devices kept but not currently in HA
         self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
+        # Things that COMPILED but a user needs told about — an HA
+        # limitation the piston has walked into. Not errors: the output
+        # is correct as far as HA can go. Surfaced on the front-door
+        # indicator and the piston's status banner, never a third place.
+        self.warnings: list[str] = []
         sys_ent = resolution_map.get("$system")
         self.system_entities = sys_ent if isinstance(sys_ent, dict) else {}
         # (entity_id, webCoRE attribute) -> the HA FIELD inside that entity,

@@ -1747,6 +1747,15 @@ async def help_editing_compiler(request: Request):
     return templates.TemplateResponse(request, "help_editing_compiler.html", {})
 
 
+@router.get("/help/limitations")
+async def help_limitations(request: Request):
+    """Where HA can't do what webCoRE did — the page the compiler's warnings
+    point at. Reached by drilling in from the two announcement surfaces or from
+    the help index, never somewhere an error lands on its own (CLAUDE.md UI
+    split)."""
+    return templates.TemplateResponse(request, "help_limitations.html", {})
+
+
 @router.get("/help/start-here")
 async def help_start_here(request: Request):
     return templates.TemplateResponse(request, "help_start_here.html", {})
