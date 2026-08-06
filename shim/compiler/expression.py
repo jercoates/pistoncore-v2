@@ -284,35 +284,29 @@ def parse_expression(s, parse_as_string: bool = False, device_lookup=None,
 # system variables with a direct runtime mapping (expr_runtime.py.j2 helpers /
 # trigger kwargs). Composite feeds ($weather, $twcweather, $response, ...)
 # have no HA equivalent -> NotYetImplemented names them.
-_SYSVARS = {
-    "$now": "_now_ms()", "$localnow": "_now_ms()", "$utc": "_utc_ms()",
-    "$time": "_sysdate('%I:%M %p')", "$time24": "_sysdate('%H:%M')",
-    "$hour": "_sysnum('hour12')", "$hour24": "_sysnum('hour')",
-    "$minute": "_sysnum('minute')", "$second": "_sysnum('second')",
-    "$day": "_sysnum('day')", "$month": "_sysnum('month')",
-    "$year": "_sysnum('year')",
-    "$monthname": "_sysdate('%B')", "$dayofweekname": "_sysdate('%A')",
-    "$dayofweek": "_sysnum('dow')",
-    "$date": "_sysdate('%x')", "$datetime": "_now_ms()",
-    "$midnight": "_daytime_ms(0, 0)", "$noon": "_daytime_ms(12, 0)",
-    "$sunrise": "_sun_ms('next_rising')", "$sunset": "_sun_ms('next_setting')",
-    "$currenteventdevice": "var_name", "$currenteventvalue": "value",
-    "$previouseventvalue": "old_value",
-    "$currenteventattribute": "var_name",
-    "$index": "_index",
-    "$device": "_device",
-    "$nextsunrise": "_sun_ms('next_rising')",
-    "$nextsunset": "_sun_ms('next_setting')",
-    "$sunrisetime": "_sun_min('sunrise')",
-    "$sunsettime": "_sun_min('sunset')",
-    "$currenteventdescription": "_event_description()",
-    "$currenteventdevicephysical": "var_name",
-    "$previousevent": "old_value",
-    "$alarmsystemalert": "_s('alarm_control_panel_alert')",
-    "$alarmsystemrules": "''",
-    "$alarmsystemstatus": "_sys_alarm()",
-    "$random": "_fn_random()", "$randomlevel": "_fn_random(100)",
-}
+def _sysvar_table(band: str) -> dict:
+    """{$name: HA expression} for one band, read from webcore_vocab.json.
+
+    These used to be two hardcoded dicts in this file, one per band. They are
+    the moving target the "Jinja2 everywhere" rule exists for: an expression
+    like state_attr('sun.sun', 'next_setting') changes when HA changes, and
+    fixing it should be a data edit, not a code change and a rebuild.
+
+    A variable with no `ha` block for this band simply isn't in the table, and
+    the caller raises the same "not compiled yet" it always did — so ADDING one
+    is now a vocab entry and nothing else.
+
+    Keyed lowercase because piston JSON is not case-consistent about $names;
+    the vocab keeps webCoRE's own spelling, which is the name a user recognises.
+    """
+    from .resolve import _load_vocab
+    out = {}
+    for name, entry in (_load_vocab().get("systemVariables") or {}).items():
+        expr = (entry.get("ha") or {}).get(band)
+        if expr:
+            out[str(name).lower()] = expr
+    return out
+
 
 
 class ExprTranspiler:
@@ -473,15 +467,16 @@ class ExprTranspiler:
             # local_device_vars); used as a VALUE — which is what a piston does
             # when it builds "Basement Smoke detector - detected" — webCoRE
             # gives the device's name. Without this it fell through to the
-            # _SYSVARS placeholder and emitted a bare `_device`, an undefined
+            # system-variable table and emitted a bare `_device`, an undefined
             # name that would have raised at runtime.
             if low == "$device":
                 bound = getattr(self.resolver, "local_device_vars", {}).get("$device")
                 if bound:
                     entry = self.resolver.resolution_map.get(bound[0]) or {}
                     return repr(str(entry.get("name") or ""))
-            if low in _SYSVARS:
-                return _SYSVARS[low]
+            _sv = _sysvar_table('pyscript')
+            if low in _sv:
+                return _sv[low]
             if low.split(".")[0].split("[")[0] in (
                     "$weather", "$twcweather", "$response", "$args", "$json",
                     "$nfl", "$places", "$incidents", "$httpstatuscode"):
@@ -598,30 +593,6 @@ _FUNCTIONS = {
 # which the dispatcher already turns into PyScript routing — so the fallback
 # stays correct while coverage grows.
 
-_JINJA_SYSVARS = {
-    # event context — HA exposes the triggering event as trigger.*
-    # (docs /docs/automation/templating/). webCoRE renders $currentEventDevice
-    # as the device NAME, so use friendly_name rather than the entity_id.
-    "$currenteventdevice": "state_attr(trigger.entity_id, 'friendly_name')",
-    "$currenteventvalue": "trigger.to_state.state",
-    "$previouseventvalue": "trigger.from_state.state",
-    "$now": "now().timestamp() * 1000",
-    "$time": "now().strftime('%I:%M %p')",
-    "$time24": "now().strftime('%H:%M')",
-    "$hour": "now().hour",
-    "$hour24": "now().hour",
-    "$minute": "now().minute",
-    "$second": "now().second",
-    "$day": "now().day",
-    "$month": "now().month",
-    "$year": "now().year",
-    "$monthname": "now().strftime('%B')",
-    "$dayofweekname": "now().strftime('%A')",
-    "$dayofweek": "now().weekday()",
-    "$date": "now().strftime('%x')",
-    "$sunrise": "state_attr('sun.sun', 'next_rising')",
-    "$sunset": "state_attr('sun.sun', 'next_setting')",
-}
 
 _DEFAULT_DT_FMT = "'%Y-%m-%d %H:%M'"
 
@@ -728,8 +699,9 @@ class JinjaTranspiler(ExprTranspiler):
     def variable(self, name) -> str:
         name = str(name or "")
         low = name.lower()
-        if low in _JINJA_SYSVARS:
-            return _JINJA_SYSVARS[low]
+        _sv = _sysvar_table('yaml')
+        if low in _sv:
+            return _sv[low]
         # System variables backed by an HA entity rather than a template
         # builtin ($hsmStatus, $alarmSystemStatus, ...). The resolution map's
         # $system entry says which entity; reading it is just its state.

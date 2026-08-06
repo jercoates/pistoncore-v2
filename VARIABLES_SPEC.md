@@ -11,7 +11,7 @@ Casting rules, system variables, and list runtime semantics BLOCKED pending
 | `app.js` (dashboard) | v0.3.114.20220203 | Wire format, design-time evaluation |
 | `webcore.groovy` (parent app) | v0.3.114.20220203 | Global variable storage & lifecycle |
 | `piston.module.html` (dashboard) | v0.3.114.20220203 | Authoritative type lists, persistence semantics |
-| `webcore-piston.groovy` | — | **SUPPLIED** (2026-08-03) at `reference/webCoRE-hubitat-patches-extracted/.../webcore-piston.src/`. VAR-V-01/03/04/05 are runnable. VAR-V-02 is DONE — see `webcore_system_vars.json` |
+| `webcore-piston.groovy` | — | **SUPPLIED** (2026-08-03) at `reference/webCoRE-hubitat-patches-extracted/.../webcore-piston.src/`. VAR-V-01/03/04/05 are runnable. VAR-V-02 is DONE — see `webcore_vocab.json` `systemVariables` |
 
 Every claim is marked `Verified — <source, line>`, `Assumed — needs test`, or
 `Decision — PistonCore choice`.

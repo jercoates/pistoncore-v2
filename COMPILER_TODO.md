@@ -152,9 +152,11 @@ pyscript: 12}`.
       it must be TOTAL. Every failure there is a valve bug, not a missing feature.
 - [ ] **44 of 136 commands fail on both bands** — mostly missing vocab `ha`
       entries, which is editable data rather than code.
-- [ ] **System variables: 50 of 91 unimplemented.** `webcore_system_vars.json`
-      has the inventory, each with an `ha_lead`. 41 have expressions; nothing
-      consumes the file yet — the compiler still reads its own hardcoded tables.
+- [ ] **System variables: 60 of 99 have no HA expression yet.** They now live
+      in `webcore_vocab.json` under `systemVariables`, each with a per-band
+      `ha` block; 39 are implemented. Adding one is a VOCAB EDIT — no code
+      change, no rebuild. Unimplemented ones keep their research `ha_lead` as
+      a starting point; it is NOT wired up.
 - [ ] **`$device` / `$devices` / `$index` / `$location` are context-scoped** —
       they take their value from the running trigger or loop, not from a
       lookup. Only `$device` is handled.
@@ -312,7 +314,8 @@ Decisions already made in it (do not re-litigate):
   startup check, gated Settings action. Creation mechanism verified against a
   live HA (the REST config API cannot do it; write-plus-reload can).
 - Duplicate operator tables collapsed; dead code removed.
-- `webcore_system_vars.json` — 91 engine system variables extracted from source.
+- `webcore_vocab.json` `systemVariables` — the 91 engine system variables plus
+  8 aliases the compiler accepts, each with its per-band HA expression.
 - **The "or equal to" edge in HELD comparisons.** The boundary fix went in for
   `is_<=` and never reached `stays_*` / `remains_*` / `was_*`, so those pairs
   emitted identical code and a value sitting exactly on the threshold never
