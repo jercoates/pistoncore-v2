@@ -1,5 +1,17 @@
 # VIRTUAL_DEVICES_SPEC.md — Test devices (behavioral testing)
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 **Status:** Draft 3 — mechanism DECIDED 2026-07-20 (Jeremy): build on a fork of
 the GPL-3.0 `twrecked/hass-virtual` integration. Draft 2's template+helper
 mechanism is REJECTED (it can't group; see §5). Plain-language behavior first

@@ -1,5 +1,17 @@
 # SHIM_API_SPEC.md — PistonCore v2 Backend Contract
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 **Status:** Draft 1 — extracted from `dashboard/js/app.js` (ady624/webCoRE master, vendored in this repo).
 **Authority:** This document is the spec for the FastAPI shim. Where this document and the shim code disagree, the code is wrong. Where this document and `dashboard/js/app.js` disagree, **app.js wins** — update this document.
 **Tagging:** `VERIFIED` = read directly from dashboard source in this repo. `ASSUMED` = inferred, must be confirmed against source or Hubitat Groovy backend before relied on.

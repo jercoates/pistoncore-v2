@@ -1,5 +1,17 @@
 # PISTON_JSON_REFERENCE.md — The webCoRE Piston JSON Format
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 **Status:** Draft 1 — extracted from `dashboard/js/modules/piston.module.js` (the vendored editor is the code that *authors* this JSON, so it is the primary source for structure). Engine-side semantics not visible in the editor are tagged TO VERIFY (check against webcore-piston.groovy when needed).
 **Authority:** This JSON format is **law** (standing v2 rule: the piston JSON as webCoRE emits it is law; PistonCore adapts to it, never the reverse). This document *describes* the law; where it and the dashboard source disagree, the source wins and this doc gets fixed.
 **Consumers:** the compiler (reads it), import/export (moves it), and **AI authoring** — an AI that produces JSON conforming to this document yields a piston the editor renders and the compiler compiles. That is the design goal of this file.

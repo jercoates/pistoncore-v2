@@ -1,5 +1,17 @@
 # PistonCore — Compiler Decisions Holding Doc
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 **Version:** 2.0 (July 2026 — adapted for the pistoncore-v2 pivot: the piston JSON is now stock webCoRE format authored by the vendored webCoRE dashboard; the v1 wizard and v1 nested-tree JSON are retired. All v1-JSON field names below are historical and re-key against PISTON_JSON_REFERENCE.md (webCoRE format) when it exists. v1.3 added C-TYPES; v1.2 added Section G sketches; v1.1 added Section E PyScript routing, verified vs PyScript 2.0.1 + HA 2026.6)
 **Status:** Holding doc — not a spec; expected to drift and adapt as problems and
 solutions are found. Captures compiler-relevant decisions (originally from

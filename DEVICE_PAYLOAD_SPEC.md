@@ -1,5 +1,17 @@
 # DEVICE_PAYLOAD_SPEC.md — HA → webCoRE Device Object Pipeline (Grouped Model)
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 **Status:** Draft 2 — rewritten around the GROUPED device model (DECISION, Jeremy,
 2026-07-07): one picker device per physical device (Hubitat feel), not one per HA entity.
 Output format verified against webcore.groovy v0.3.114 (`listAvailableDevices`); input

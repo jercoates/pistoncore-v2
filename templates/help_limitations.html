@@ -142,6 +142,29 @@
     equivalent.
   </p>
 
+  <h2>Timers anchored to sunrise or sunset</h2>
+  <p>
+    "Every day at sunrise", "at sunset", "at noon", "at midnight" all work, and
+    so does an offset — "30 minutes before sunrise", "an hour after sunset".
+    These follow the real sun times for your location and shift through the year
+    on their own.
+  </p>
+  <p>
+    <strong>Not supported — two cases, and both tell you rather than guessing:</strong>
+  </p>
+  <ul>
+    <li>
+      <strong>A sun time on a cycle longer than a day</strong> — "every 2 days at
+      sunrise", "every week at sunset". A once-a-day sun time is fine; spacing it
+      out over several days isn't something HA can express.
+    </li>
+    <li>
+      <strong>An offset that is worked out while the piston runs</strong> — such
+      as "sunrise plus &lt;a variable&gt;". The offset has to be a fixed amount of
+      time you type in. A fixed offset covers nearly every real use.
+    </li>
+  </ul>
+
   <h2>Setting hue or saturation on a light that's off</h2>
   <p>
     Home Assistant has no "set hue only" or "set saturation only" service — it

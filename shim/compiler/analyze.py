@@ -486,7 +486,7 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
                 "stmt_id": sid, "kind": "if", "tcp": stmt.get("tcp", "c") or "c",
                 "triggers": on_triggers, "conditions": [],
                 "then": _action_tree(stmt.get("s", []), f"on ${sid}", kwargs),
-                "else": [],
+                "else": [], "raw": stmt,
             })
         elif t == "action":
             # a bare top-level action: no subscription, just steps to run
@@ -494,7 +494,7 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
                 "stmt_id": sid, "kind": "actions", "tcp": stmt.get("tcp", "c") or "c",
                 "triggers": [], "conditions": [],
                 "then": _action_tree([stmt], f"statement ${sid}", kwargs),
-                "else": [],
+                "else": [], "raw": stmt,
             })
         else:
             # do / while / repeat / for / each / switch / break / exit at the
@@ -514,7 +514,7 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
                 "tcp": stmt.get("tcp", "c") or "c",
                 "triggers": [], "conditions": [],
                 "then": _action_tree([stmt], f"statement ${sid}", kwargs),
-                "else": [],
+                "else": [], "raw": stmt,
                 "yaml_blocker": (f"top-level statement type '{t}' "
                                  f"(statement ${sid}) not compiled yet"),
             })
@@ -523,6 +523,12 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
         # if/else action, and they must never be promoted to a subscription.
         branches[-1]["restrictions"] = (_restriction_nodes(stmt, kwargs)
                                         + list(piston_restrictions))
+        # webCoRE's OWN name for this statement. `kind` is the analyzer's
+        # summary and is deliberately lossy — an `on` block and an `if` are
+        # both kind "if" — but the PyScript band subscribes differently for
+        # each, so the distinction has to survive the read. Recorded once here
+        # rather than each band re-deriving it from the raw JSON.
+        branches[-1]["stmt_type"] = t
 
     # IS THIS PISTON TRIGGER-DRIVEN? An intent-level fact about the WHOLE
     # piston, so it is read here rather than re-derived by each emitter.

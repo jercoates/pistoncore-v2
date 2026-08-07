@@ -1,22 +1,42 @@
 # Compiler TODO
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 One list, kept current. Add to it when something is found; strike items when
 they're built AND verified. The aim is to get this short enough that the
 unstarted features can start.
 
 **Always:** run `.venv/Scripts/python.exe test_compile_snapshots.py` before and
 after every change. It must say NO DRIFT, or you changed output for pistons you
-weren't touching. Baseline: **84 compiled / 0 errored**, bands `{yaml: 72,
-pyscript: 12}`.
+weren't touching. Baseline: **84 compiled / 0 errored**, bands `{yaml: 71,
+pyscript: 13}` (re-measured 2026-08-06; the 72/12 written here before was stale).
+
+**Also run `python test_intent_probe.py --section statements`.** It now GATES
+rather than reports: every statement shape must compile on PyScript, and the
+analyzer must be able to READ every one of them. It exits non-zero when either
+fails. The corpus cannot see this class of bug — on 2026-08-06 it reported NO
+DRIFT on all 84 pistons while the gate caught a crash for any piston opening
+with a loop or a switch.
 
 ---
 
 ## Open — correctness (silent-wrong, highest priority)
 
-- [ ] **`was_*` family compiles as `is_*`** — the historical lookback is lost.
-      "was open five minutes ago" becomes "is open now". 10 collisions measured
-      across both bands. COMPILER_SPEC §2.5 says the discrete-sample semantics
-      need PyScript's `.old` / `state_hold`; spec'd, not built.
+- [x] **`was_*` family compiles as `is_*` — STALE ENTRY, struck 2026-08-06.**
+      This contradicted the three DONE items below it, which fixed exactly this
+      on both bands on 2026-08-04. Re-measured: the probe reports **1**
+      comparison collision in total (`[yaml] changed == is_any`), not the 10
+      claimed here. The entry was a leftover duplicate; the work is done.
 - [x] **`remains_*` numeric family — DONE 2026-08-04.** Durationless
       `remains_above/below` (+ `_or_equal_to`) now emit a bare state trigger
       carrying their own value re-check, quarantined into their own automation
@@ -74,6 +94,36 @@ pyscript: 12}`.
       leave alone) and `resolve.was_watcher_entity` (the identity of a watcher,
       so the two bands agree about which comparisons are the same comparison).
       Neither band has its own copy of any of the three.
+
+- [x] **"Every day at sunrise" ran at MIDNIGHT — DONE 2026-08-06, verified on a
+      live HA.** The sun event was read, discarded, and never mentioned; same
+      for sunset. `_every_decorator` had a partial copy of the daily-time logic
+      that looked only at the NUMBER, so a preset anchor fell through to the
+      multi-day branch and became `period(2020-01-01 00:00:00, 1d)`. The
+      `once(sunrise)` spelling already existed in `_trigger_decorator`; both now
+      call `_daily_time_spec`. Noon and midnight came free — the hand-written
+      list named only sunrise/sunset while the vocab's `presets.time` declares
+      all four, so the list is read from the vocab now.
+
+      **The offset (`lo3`) was ALSO being dropped** — "sunrise + 30 minutes"
+      fired at sunrise exactly. Found by reading the sources, not the corpus
+      (which contains no `every` statement at all, so it can never cover this):
+      the editor renders an offset only when `lo2.t != 'c'` ("anything other
+      than constants may have an offset", piston.module.js:4429-4444, signed,
+      negative = BEFORE) and the engine keeps `lo3` for exactly that case
+      (webcore-piston.groovy:1722-1724). Seconds come from the ONE duration
+      converter; a computed offset refuses loudly rather than firing at plain
+      sunrise and looking right.
+
+      VERIFIED ON THE BENCH (Docker HA + PyScript 2.0.1, not just emitted text):
+      `once(sunrise)` -> 06:02:32, `+ 1800s` -> 06:32:32, `- 900s` -> 05:47:32,
+      `once(sunset + 3600s)` -> 19:09:03. And it RECURS daily — PyScript applies
+      a day offset to any date-less spec (its own `trigger.py`), so `once()`
+      here does not mean "once ever".
+
+      Left open: a sun anchor on a MULTI-day cycle ("every 2 days at sunrise")
+      has no PyScript spelling and now raises instead of silently running at
+      midnight.
 
 - [ ] **A subscription-less piston cannot host a watcher.** It compiles to a
       SCRIPT and deploy writes exactly one file per piston, so there is nowhere
@@ -193,11 +243,25 @@ pyscript: 12}`.
 
 ## Open — coverage
 
-- [ ] **29 of 79 comparison operators fail on the PyScript band.** Jeremy's rule:
-      PyScript is a user-selectable choice for Hubitat-grade trace fidelity, so
-      it must be TOTAL. Every failure there is a valve bug, not a missing feature.
-- [ ] **44 of 136 commands fail on both bands** — mostly missing vocab `ha`
-      entries, which is editable data rather than code.
+- [ ] **29 of 79 comparison operators fail on BOTH bands** — RE-MEASURED
+      2026-08-06, and the old wording here ("fail on the PyScript band") was
+      wrong in a way that misdirects the work. The probe reports them as
+      "COMPILES ON NEITHER BAND (real gap): 29", with a SEPARATE bucket of 14
+      that YAML can't do and PyScript can — that 14 is the valve working as
+      designed, not a bug. So this is a coverage gap on both sides, not a
+      PyScript-totality failure. Mostly the `stays_*` family (8), the
+      `remains_*` family, range/parity, and the trigger-only operators probed
+      as conditions.
+      NOTE the related claim at line ~26 that "`stays_*` was already correct"
+      is also wrong: only the NUMERIC ones are. `stays_even`, `stays_odd`,
+      `stays_unchanged`, `stays_away_from`, `stays_away_from_any_of`,
+      `stays_different_than`, `stays_inside_of_range` and
+      `stays_outside_of_range` all compile on neither band.
+- [ ] **40 of 137 commands fail on both bands** (was written as 44 of 136;
+      re-measured 2026-08-06). Really **38** — `pausePiston` and `resumePiston`
+      appear in the probe's failure list only because the probe's target piston
+      has never been deployed, which is a probe artifact, not a gap. Mostly
+      missing vocab `ha` entries, which is editable data rather than code.
 - [ ] **System variables: 60 of 99 have no HA expression yet.** They now live
       in `webcore_vocab.json` under `systemVariables`, each with a per-band
       `ha` block; 39 are implemented. Adding one is a VOCAB EDIT — no code
@@ -317,15 +381,44 @@ Decisions already made in it (do not re-litigate):
 
 ## Open — structural (SESSION_BRIEF_ONE_READER_ONE_WRITER.md)
 
-- [ ] **Stage 1 — one reader.** `emit_pyscript` still walks the raw piston JSON
-      instead of the analyzer's IR. Measured ready: the analyzer reads every
-      PyScript-band piston, and the nested-restriction hole that blocked it is
-      fixed. This is the root cause of the whole silent-drop class.
-- [ ] **Stage 2 — one writer per band.** 45 HA-facing expressions are still
-      Python strings across `expression.py` (22 + the 109-entry `_JINJA_FUNCS`),
-      `emit_yaml.py` (17), `resolve.py` (5), `emit_pyscript.py` (1). Breaks the
-      moving-target rule. Each band needs its OWN templates and they must not
-      share emission helpers.
+- [x] **Stage 1, FIRST HALF — top-level discovery is shared. DONE 2026-08-06.**
+      `emit_pyscript.build()` iterates `analyze()`'s branches instead of walking
+      `piston["s"]` itself. Each branch carries `raw` (the untouched statement)
+      and `stmt_type` (webCoRE's own name for it — `kind` is deliberately lossy,
+      an `on` block and an `if` are both kind "if"), so emission is unchanged
+      and only DISCOVERY moved. That is the layer every silent drop has lived in.
+
+      **THE PRECONDITION THAT NEARLY BIT, and the reason this took a gate.**
+      The analyzer's refusals doubled as the ROUTING signal — emit_yaml aborted,
+      compile_piston caught it, the piston went to PyScript with the exception
+      text as the reason. Fine while the analyzer was the YAML band's private
+      reader; fatal once both bands share it, because a refusal then means the
+      piston compiles on NEITHER — and a user who FORCED PyScript bypasses
+      routing entirely and has no fallback at all (Jeremy, 2026-08-06).
+
+      So reading and judging are now separate: `analyze.yaml_blockers` records
+      "the YAML band can't express this" as a fact on the node, and emit_yaml
+      re-raises the first note VERBATIM, leaving routing and reason text
+      byte-identical. **18 shapes** the analyzer could not read but PyScript
+      compiles happily were fixed this way: `on` blocks, `every 90m` / `2d` /
+      `1w`, `every day at <sun event>`, `xor`, switch fall-through, and any
+      piston whose FIRST statement is a loop / switch / break / exit / do.
+      Nine were found by hand; the other nine only by the gate — exactly half.
+
+- [ ] **Stage 1, SECOND HALF — the nested walk.** `_stmt_nodes_unrestricted`,
+      `_attached_nodes` and `_block` still walk raw statements. Known
+      impedance mismatch to settle FIRST: the IR flattens an action statement
+      into one node per TASK, while `_task_nodes` emits a whole statement at a
+      time. Decide that with Jeremy before writing code.
+- [ ] **Stage 2 — one writer per band.** RE-MEASURED 2026-08-06: ~39 HA-facing
+      expressions are still Python strings — `expression.py` 11, `emit_yaml.py`
+      22, `resolve.py` 5, `emit_pyscript.py` 1. **The "109-entry `_JINJA_FUNCS`"
+      claim repeated here and in COMPILER_SPEC.md is WRONG: it is 24 entries**
+      (expression.py:600-625). 109 is the count of webCoRE FUNCTIONS in the
+      vocab, and the PyScript half of those already lives in a template
+      (`expr_runtime.py.j2`). So this job is far smaller than written.
+      Each band needs its OWN templates and they must not share emission
+      helpers.
 - [ ] **`on` blocks: the YAML handler is dead AND broken.** Routing forces
       PyScript, and `_cond_node` rejects `t:'event'` anyway.
 

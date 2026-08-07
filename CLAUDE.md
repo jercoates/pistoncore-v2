@@ -14,8 +14,26 @@ Jeremy is the sole director. He has no programming background: he directs, Claud
 implements, and he verifies **behaviorally** by clicking through the dev instance — not by
 reading code or diffs. Explain in behavior terms, not code terms.
 
+**DEV_BENCH.local.md — read it at the start of every session.** Gitignored (it
+names Jeremy's machines and network; this repo is public), so it is not in the
+GitHub copy — if it is missing, ask him for it. It describes the dev bench you
+are free to break, the device factory that can fabricate ANY device via ordinary
+HA actions, and which machines are his. **You are never limited to verifying
+behaviour by reading emitted text**, and you should not have to be told this
+again.
+
 ## Authority chain (highest wins)
 
+0. **HARD_RULES.md — READ IT FIRST, EVERY SESSION.** Jeremy's standing decisions
+   in plain words, with dates. It outranks every spec and all code, and it is
+   where a ruling lands the day it is made — because **the specs are known to be
+   incomplete**: he has updated them as he decided things but cannot be sure every
+   change landed, and following a stale spec has UNDONE real decisions before.
+   Therefore: a spec tells you what to BUILD; it never authorises UNDOING
+   something that works. Code doing something no spec mentions is most likely an
+   unwritten decision — check `git log -S` (this repo's commit messages carry the
+   reasoning), then ASK. Never delete working behaviour without his go-ahead;
+   removing genuinely dead code is fine.
 1. **The webCoRE sources.** `dashboard/` (especially js/app.js and
    js/modules/piston.module.js) and `reference/webcore_source_reference.groovy` are ground
    truth for the API contract and the piston JSON format.

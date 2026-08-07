@@ -1,5 +1,17 @@
 # TRACE_ACTIVITY_CONTRACT.md — What the shim must fabricate for trace/console
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 **Status:** Draft 2 — ALL §1-§5 TO-VERIFY items resolved 2026-07-19 (verification
 pass; every claim now cited). Originally Draft 1 2026-07-10, mining `reference/webCoRE-hubitat-patches-extracted/`
 (the ady624 Hubitat fork, "Last update July 5, 2026 for Hubitat" — confirmed correct fork

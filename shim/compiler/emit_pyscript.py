@@ -26,6 +26,7 @@ from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
 from .. import customize
 
+from .analyze import analyze
 from .errors import NotYetImplemented
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
 from .resolve import (Resolver, WAS_TO_IS, was_watcher_entity,
@@ -103,7 +104,7 @@ def _time_presets() -> set:
             for p in ((_load_vocab().get("presets") or {}).get("time") or [])}
 
 
-def _daily_time_spec(op: dict) -> str | None:
+def _daily_time_spec(op: dict, offset_op: dict | None = None) -> str | None:
     """PyScript time spec for a DAILY time operand — a sun preset or a fixed
     clock time — or None when the operand is neither.
 
@@ -125,7 +126,28 @@ def _daily_time_spec(op: dict) -> str | None:
         if bare in _time_presets():
             preset = bare
     if preset:
-        return f"once({str(preset).lower()})"
+        spec = str(preset).lower()
+        # THE OFFSET (`lo3`). webCoRE allows one only when the time anchor is
+        # NOT a plain constant — VERIFIED twice from the sources rather than
+        # inferred: the editor renders it under `if (timer.lo2.t != 'c')`
+        # ("anything other than constants may have an offset",
+        # piston.module.js:4429-4444, signed, negative = BEFORE), and the
+        # engine keeps `lo3` for exactly that case and strips it otherwise
+        # (webcore-piston.groovy:1722-1724).
+        #
+        # It was being dropped silently — "every day at sunrise + 30 minutes"
+        # fired at sunrise exactly. PyScript expresses it natively
+        # (PYSCRIPT_COMPILER_RESEARCH §"at sunrise/sunset ± offset"), so this
+        # is a translation, not a limitation. Seconds come from the ONE
+        # duration converter; a non-constant offset yields None and the caller
+        # raises rather than guessing.
+        if offset_op:
+            secs = duration_seconds(offset_op)
+            if secs is None:
+                return None
+            if secs:
+                spec += f" {'+' if secs > 0 else '-'} {abs(secs)}s"
+        return f"once({spec})"
     if _is_number(op.get("c")):
         at = int(op["c"])
         return f"cron({at % 60} {at // 60} * * *)"
@@ -901,17 +923,26 @@ class _PyEmitter:
             raise NotYetImplemented("'every' with non-constant interval — expression "
                                     "engine not built yet", **ctx)
         lo2 = stmt.get("lo2") or {}
+        lo3 = stmt.get("lo3") or {}
         at = lo2.get("c") if lo2.get("vt") == "time" and _is_number(lo2.get("c")) else None
         if unit in ("s", "m", "h"):
             om = lo.get("om") or 0
             start = f"00:{int(om):02d}:00" if unit == "h" and om else "00:00:00"
             spec = f"period({start}, {interval}{unit})"
-        elif unit == "d" and interval == 1 and _daily_time_spec(lo2):
-            # Fixed clock time OR a sun preset — the one helper answers both.
-            # This used to read only the NUMBER, so "every day at sunrise" fell
-            # past here into the multi-day branch below and became a midnight
-            # period() timer with the sun event silently discarded.
-            spec = _daily_time_spec(lo2)
+        elif unit == "d" and interval == 1 and _daily_time_spec(lo2, lo3):
+            # Fixed clock time OR a sun preset (with its offset) — the one
+            # helper answers all of them. This used to read only the NUMBER, so
+            # "every day at sunrise" fell past here into the multi-day branch
+            # below and became a midnight period() timer with the sun event
+            # silently discarded.
+            spec = _daily_time_spec(lo2, lo3)
+        elif unit == "d" and interval == 1 and lo2.get("s"):
+            # The anchor IS a sun event, so the only way to get here is an
+            # offset that isn't a fixed duration (an expression or variable).
+            # Refuse rather than fire at plain sunrise and look correct.
+            raise NotYetImplemented(
+                f"'every day at {lo2['s']}' with a computed offset — the "
+                f"offset must be a fixed duration", **ctx)
         elif unit in ("d", "w"):
             if lo2.get("s"):
                 # A sun event on a MULTI-day cycle. once() repeats daily and
@@ -1414,10 +1445,21 @@ class _PyEmitter:
         event_body = []      # runs on device/service wakes (whole-piston walk)
         guarded = []         # every/on bodies: fast-forward to firing stmt only
 
-        for stmt in self.piston.get("s", []):
-            sid = stmt.get("$")
+        # STAGE 1 (SESSION_BRIEF_ONE_READER_ONE_WRITER §3): the top-level
+        # statement list is DISCOVERED by the shared reader, not walked again
+        # here. This is the layer every silent drop lived in — a statement kind
+        # one band knew about and the other didn't — so it is the layer that
+        # has to be read once.
+        #
+        # Each branch still carries `raw`, the untouched statement, and the
+        # emit code below reads operands from it exactly as before. Discovery
+        # is shared; emission stays per-band (§Stage 2b: the bands must NOT
+        # share an emission helper).
+        for branch in analyze(self.piston, self.piston_id, self.piston_name):
+            stmt = branch["raw"]
+            sid = branch["stmt_id"]
             ctx = self._ctx(sid)
-            t = stmt.get("t")
+            t = branch["stmt_type"]
             if t == "every":
                 self._every_decorator(stmt, sid, ctx)
                 guarded.append({"stmt_id": sid,

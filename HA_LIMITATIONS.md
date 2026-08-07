@@ -1,5 +1,17 @@
 # PistonCore — HA Limitations & Gotchas Reference
 
+> ## ⚠ READ BEFORE CHANGING ANYTHING
+> **This spec may be out of date, and may be MISSING decisions that were made
+> but never written down.** A spec can tell you what to **build**. It NEVER, on
+> its own, authorises **undoing** something that already works.
+>
+> If the code does something this document doesn't mention, that is most likely
+> a real decision — check `git log -S "<the thing>"` first, then **ASK JEREMY**.
+> **Never delete working behaviour without his explicit go-ahead.** (Removing
+> genuinely dead code is fine.)
+>
+> Standing decisions that outrank this document: **[HARD_RULES.md](HARD_RULES.md)**
+
 **Status:** Living document — add to this whenever a new HA limitation is discovered.
 **Last Updated:** July 2026 (PyScript research session — verified PyScript 2.0.0/2.0.1 release notes and current docs against a third-party AI summary; corrected two false claims (auto-reload DOES exist; scripts DO persist across restart), added Section 6 "PyScript Runtime Constraints" covering the 2.0 decorator subsystem rewrite (re-test flag), hard rules for compiler-emitted code (no generators/yield/special class methods; never touch `hass` — built-ins only), restart semantics for in-flight tasks, and the no-trace-UI debug implication (compiler must emit log breadcrumbs). Prior: July 2026 research session — re-verified full PyScript routing table and Section 1 loop-control table against live HA 2026.7 docs; no changes required, all prior routing decisions confirmed still correct. Current stable is **2026.7** (released July 1, 2026 — purpose-specific triggers/conditions graduated from Labs to default, Matter backend rewritten in TypeScript (matter.js), Activity/Logbook rebuilt as timeline; none of this affects PistonCore's core scripting/routing decisions). Added two re-test flags to Section 2 from 2026.7 changelog. PyScript confirmed still at 2.0.1 — no release since last research. Prior: June 2026 — PyScript routing table expanded: XOR, followed_by, switch fallthrough, monthly/yearly scheduling all confirmed PyScript-capable and routed there, not cut. Prior: Session 73 — live-researched WebCoRE non-device command set against current HA docs; added Section 10.)
 
