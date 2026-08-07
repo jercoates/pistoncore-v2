@@ -55,6 +55,29 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
                 "value_preset": None, "value2_preset": None,
                 "raw": cond,
                 **_attached_actions(cond, kwargs)}
+    if cond.get("t") == "event":
+        # An `on <events> do` entry: a bare subscription with an `lo` and NO
+        # comparison at all (VERIFIED piston.module.js:1481-1484 — editEvent
+        # seeds {t:'event', lo:{...}} and never sets co/ro).
+        #
+        # READ, don't refuse (2026-08-06). This used to raise, which meant the
+        # analyzer could not read an `on` block at ALL — while the PyScript
+        # band compiles them fine. That was survivable only because the
+        # analyzer was the YAML band's private reader; the moment PyScript
+        # reads through it, refusing here stops those pistons compiling on the
+        # only band that can run them, including for a user who FORCED
+        # PyScript and so has no routing fallback left.
+        lo = cond.get("lo") or {}
+        return {"co": None, "attr": lo.get("a"), "devices": lo.get("d", []),
+                "aggregation": lo.get("g", "any"), "lo_type": lo.get("t"),
+                "lo_var": lo.get("v"), "lo_var_name": lo.get("x"),
+                "value": None, "value_vt": None, "value2": None,
+                "value2_vt": None, "duration": {}, "value_preset": None,
+                "value2_preset": None, "value_expr": None, "value2_expr": None,
+                "ct": "t",          # an event block is nothing but a subscription
+                "yaml_blocker": f"condition node type '{cond.get('t')}' "
+                                f"not compiled yet",
+                "raw": cond, **_attached_actions(cond, kwargs)}
     # "restriction" nodes have the SAME comparison anatomy as "condition"
     # (PISTON_JSON_REFERENCE §7) and so reuse this parser verbatim.
     if cond.get("t") not in ("condition", "restriction"):
@@ -198,10 +221,14 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
                           "value_vt": None, "value2_vt": None,
                           "value_preset": None, "value2_preset": None,
                           "value_expr": None, "value2_expr": None}]
-            elif a.get("o", "and") not in ("and", "or"):
-                raise NotYetImplemented(
-                    f"condition operator '{a.get('o')}' (nested statement "
-                    f"${a.get('$')}) not compiled yet", **kwargs)
+            nested_blocker = None
+            if a.get("o", "and") not in ("and", "or"):
+                # xor / nand / nor / xnor — webCoRE's full operator set. HA's
+                # condition language has only and/or/not, PyScript has all of
+                # them (it counts the true conditions), so this is recorded,
+                # not raised.
+                nested_blocker = (f"condition operator '{a.get('o')}' (nested "
+                                  f"statement ${a.get('$')}) not compiled yet")
             # A trigger comparison nested inside an if evaluates as a
             # CONDITION (current state) on both bands — webCoRE judges it
             # against the waking event, which HA has no equivalent for inside
@@ -209,7 +236,8 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
             # the whole piston to PyScript.
             out.append({"kind": "if", "conditions": conds,
                         "then": _action_tree(a.get("s", []), where, kwargs),
-                        "else": _fold_ei(a, where, kwargs), "raw": a})
+                        "else": _fold_ei(a, where, kwargs), "raw": a,
+                        "yaml_blocker": nested_blocker})
         elif at == "switch":
             lo = a.get("lo") or {}
             cases = []
@@ -220,12 +248,15 @@ def _action_tree(stmts: list, where: str, kwargs: dict) -> list:
                     default = body
                 else:
                     cases.append({"ro": cs.get("ro") or {}, "body": body})
-            if a.get("ctp") in ("f", "e"):
-                raise NotYetImplemented(
-                    "switch with fall-through has no HA equivalent "
-                    "(choose always exits after the first match)", **kwargs)
             out.append({"kind": "switch", "lo": lo, "cases": cases,
-                        "default": default, "raw": a})
+                        "default": default, "raw": a,
+                        # Recorded rather than raised — HA's `choose` really
+                        # cannot fall through, but PyScript can, and it must
+                        # still be able to read this statement.
+                        "yaml_blocker": (
+                            "switch with fall-through has no HA equivalent "
+                            "(choose always exits after the first match)"
+                            if a.get("ctp") in ("f", "e") else None)})
         elif at in ("repeat", "while"):
             body = _action_tree(a.get("s", []), where, kwargs)
             conds = [_cond_node(c, kwargs) for c in a.get("c", [])]
@@ -302,9 +333,10 @@ def _fold_ei(stmt: dict, where: str, kwargs: dict) -> list:
 
 def _if_branch(stmt: dict, sid, kwargs: dict) -> dict:
     op = stmt.get("o", "and")
+    blocker = None
     if op not in ("and", "or"):
-        raise NotYetImplemented(
-            f"condition operator '{op}' (statement ${sid}) not compiled yet", **kwargs)
+        blocker = (f"condition operator '{op}' (statement ${sid}) "
+                   f"not compiled yet")
     triggers, conditions = [], []
     for cond in stmt.get("c", []):
         node = _cond_node(cond, kwargs)
@@ -327,6 +359,8 @@ def _if_branch(stmt: dict, sid, kwargs: dict) -> dict:
         "conditions": conditions,
         "then": _action_tree(stmt.get("s", []), f"then of ${sid}", kwargs),
         "else": _fold_ei(stmt, f"else of ${sid}", kwargs),
+        "yaml_blocker": blocker,
+        "raw": stmt,
     }
 
 
@@ -337,6 +371,7 @@ def _every_branch(stmt: dict, sid, kwargs: dict) -> dict:
     PISTON_JSON_REFERENCE §operands)."""
     lo = stmt.get("lo") or {}
     interval, unit = lo.get("c"), lo.get("vt")
+    blocker = None
     if not isinstance(interval, int) or interval <= 0:
         raise NotYetImplemented(
             f"'every' with non-constant interval (statement ${sid}) requires PyScript", **kwargs)
@@ -350,30 +385,76 @@ def _every_branch(stmt: dict, sid, kwargs: dict) -> dict:
         om = lo.get("om") or 0
         timer = {"kind": "time_pattern", "hours": f"/{interval}",
                  "minutes": str(int(om) if isinstance(om, (int, float)) else 0)}
-    elif unit == "d" and interval == 1:
-        lo2 = stmt.get("lo2") or {}
-        at = lo2.get("c")
-        if lo2.get("vt") != "time" or not isinstance(at, (int, float)):
-            raise NotYetImplemented(
-                f"'every day at' with a non-fixed time (sunrise/sunset/variable) "
-                f"(statement ${sid}) requires PyScript", **kwargs)
-        at = int(at)
+    elif unit == "d" and interval == 1 and isinstance(
+            (stmt.get("lo2") or {}).get("c"), (int, float)) and \
+            (stmt.get("lo2") or {}).get("vt") == "time":
+        at = int((stmt.get("lo2") or {})["c"])
         timer = {"kind": "time", "at": f"{at // 60:02d}:{at % 60:02d}:00"}
+    elif unit == "d" and interval == 1:
+        # sunrise/sunset/variable rather than a fixed clock time
+        timer = {"kind": "unexpressible"}
+        blocker = (f"'every day at' with a non-fixed time (sunrise/sunset/"
+                   f"variable) (statement ${sid}) requires PyScript")
     else:
-        raise NotYetImplemented(
-            f"'every {interval}{unit}' (statement ${sid}) has no native HA trigger "
-            f"— requires PyScript", **kwargs)
+        # RECORDED, not raised (2026-08-06) — see _cond_node. The YAML band
+        # still refuses these (emit_yaml raises on the recorded blocker, with
+        # this exact wording, so routing and the reason text are unchanged);
+        # the difference is that the piston is now fully READ first, so the
+        # PyScript band can consume the same IR.
+        timer = {"kind": "unexpressible"}
+        blocker = (f"'every {interval}{unit}' (statement ${sid}) has no native "
+                   f"HA trigger — requires PyScript")
 
     return {
         "stmt_id": sid,
         "kind": "timer",
         "tcp": stmt.get("tcp", "c") or "c",
         "timer": timer,
+        "yaml_blocker": blocker,
+        "raw": stmt,
         "triggers": [],
         "conditions": [],
         "then": _action_tree(stmt.get("s", []), f"every ${sid}", kwargs),
         "else": [],
     }
+
+
+def yaml_blockers(node) -> list[str]:
+    """Every "the YAML band can't express this" note recorded anywhere under a
+    branch, in the order the tree is walked.
+
+    WHY THIS EXISTS (2026-08-06). The analyzer used to RAISE at each of these
+    points, and that raise doubled as the routing decision: emit_yaml would
+    abort, compile_piston caught it, and the piston went to PyScript with the
+    exception text as the reason. That worked only while the analyzer was the
+    YAML band's private reader. Stage 1 of SESSION_BRIEF_ONE_READER_ONE_WRITER
+    has BOTH bands read it, and then a raise means the piston compiles on
+    neither band — with no fallback at all for a user who forced PyScript,
+    which bypasses routing entirely (Jeremy, 2026-08-06).
+
+    So the two jobs are separated: the analyzer READS everything, and records
+    what YAML can't express as a fact. emit_yaml turns the first note back into
+    the identical exception, so routing behaviour and the recorded reason text
+    are unchanged.
+
+    Deliberately NOT a fixed list of "shapes that need PyScript" — that set
+    SHRINKS as HA gains abilities and as the YAML emitter grows, and each note
+    is removed by making the emitter handle the shape, never by editing a
+    table (Jeremy, 2026-08-06: the gate has to stay adjustable as HA changes)."""
+    found = []
+    if isinstance(node, list):
+        for item in node:
+            found += yaml_blockers(item)
+    elif isinstance(node, dict):
+        if node.get("yaml_blocker"):
+            found.append(node["yaml_blocker"])
+        for key, value in node.items():
+            # `raw` is the untouched piston dict hanging off every node; it can
+            # never hold a blocker and walking it would revisit the whole
+            # subtree once per node.
+            if key not in ("raw", "raw_stmt", "yaml_blocker"):
+                found += yaml_blockers(value)
+    return found
 
 
 def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
@@ -416,8 +497,27 @@ def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
                 "else": [],
             })
         else:
-            raise NotYetImplemented(
-                f"top-level statement type '{t}' (statement ${sid}) not compiled yet", **kwargs)
+            # do / while / repeat / for / each / switch / break / exit at the
+            # TOP level. _action_tree already knows every one of them — they
+            # are ordinary nested statements — so the reader can read them
+            # here too; this dispatch simply raised before reaching it, which
+            # meant the analyzer could not read a piston that opens with a
+            # bare `each` or `while` while the PyScript band compiles them.
+            #
+            # FOUND 2026-08-06 by the statement gate in test_intent_probe.py,
+            # not by inspection: eight shapes, none of them in the corpus, all
+            # of them invisible to every other check. An unknown type still
+            # raises — from _action_tree, which is the one place that decides
+            # what a statement type means.
+            branches.append({
+                "stmt_id": sid, "kind": "actions",
+                "tcp": stmt.get("tcp", "c") or "c",
+                "triggers": [], "conditions": [],
+                "then": _action_tree([stmt], f"statement ${sid}", kwargs),
+                "else": [],
+                "yaml_blocker": (f"top-level statement type '{t}' "
+                                 f"(statement ${sid}) not compiled yet"),
+            })
         # Kept OUT of "conditions" on purpose — see _restriction_nodes: these
         # gate the whole statement (else included) and must be emitted above the
         # if/else action, and they must never be promoted to a subscription.

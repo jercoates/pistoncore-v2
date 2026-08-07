@@ -89,6 +89,49 @@ def _is_number(v) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def _time_presets() -> set:
+    """The preset time names, read from the VOCAB's own `presets.time` rather
+    than written out here (Jeremy, 2026-08-06: "do not hard code vocab").
+
+    The literal tuple this replaces named only sunrise/sunset, so `every day at
+    noon` and `at midnight` were not recognised as presets at all. The vocab
+    declares all four, and PyScript's datetime spec accepts all four
+    (PYSCRIPT_COMPILER_RESEARCH §"at sunrise/sunset ± offset": "Also
+    noon/midnight")."""
+    from .resolve import _load_vocab
+    return {str(p).lower()
+            for p in ((_load_vocab().get("presets") or {}).get("time") or [])}
+
+
+def _daily_time_spec(op: dict) -> str | None:
+    """PyScript time spec for a DAILY time operand — a sun preset or a fixed
+    clock time — or None when the operand is neither.
+
+    ONE helper because two callers need the identical answer: a
+    `happens_daily_at` comparison (_trigger_decorator) and an `every day at`
+    statement (_every_decorator). The second had its own partial copy that
+    handled only the number and never looked at `s`, so "every day at sunrise"
+    fell through to the multi-day branch and compiled to a plain MIDNIGHT
+    timer — silently, with the sun event discarded (found 2026-08-06 by the
+    statement-variant probe; 0 of 84 corpus pistons use the shape).
+
+    Sun form per PYSCRIPT_COMPILER_RESEARCH §"at sunrise/sunset ± offset"
+    (`once(sunrise)`), and its DST decision (§408-413): a daily/weekly "at
+    time" compiles to once()/cron(), NEVER a period() spanning days."""
+    op = op or {}
+    preset = op.get("s")
+    if not preset and isinstance(op.get("x"), str):
+        bare = op["x"].strip().lower().lstrip("$")
+        if bare in _time_presets():
+            preset = bare
+    if preset:
+        return f"once({str(preset).lower()})"
+    if _is_number(op.get("c")):
+        at = int(op["c"])
+        return f"cron({at % 60} {at // 60} * * *)"
+    return None
+
+
 def _wait_seconds(params: list) -> float:
     p = params[0] if params else {}
     n = p.get("c", 0)
@@ -667,22 +710,10 @@ class _PyEmitter:
             var = lo.get("v")
             sysent = self.resolver.system_entity(var)
             if var in ("time", "datetime"):
-                value = (cond.get("ro") or {}).get("c")
-                ro_ = cond.get("ro") or {}
-                preset = ro_.get("s")
-                if not preset and isinstance(ro_.get("x"), str) and \
-                        ro_["x"].strip().lower().lstrip("$") in ("sunrise", "sunset"):
-                    preset = ro_["x"].strip().lower().lstrip("$")
-                if preset:
+                spec = _daily_time_spec(cond.get("ro") or {})
+                if spec:
                     self.decorators.append(
-                        {"kind": "time_trigger",
-                         "spec": f"once({str(preset).lower()})", "stmt_id": sid})
-                    return
-                if _is_number(value):
-                    at = int(value)
-                    self.decorators.append(
-                        {"kind": "time_trigger",
-                         "spec": f"cron({at % 60} {at // 60} * * *)", "stmt_id": sid})
+                        {"kind": "time_trigger", "spec": spec, "stmt_id": sid})
                     return
             if sysent:
                 raw = (cond.get("ro") or {}).get("c")
@@ -875,9 +906,21 @@ class _PyEmitter:
             om = lo.get("om") or 0
             start = f"00:{int(om):02d}:00" if unit == "h" and om else "00:00:00"
             spec = f"period({start}, {interval}{unit})"
-        elif unit == "d" and interval == 1 and at is not None:
-            spec = f"cron({int(at) % 60} {int(at) // 60} * * *)"
+        elif unit == "d" and interval == 1 and _daily_time_spec(lo2):
+            # Fixed clock time OR a sun preset — the one helper answers both.
+            # This used to read only the NUMBER, so "every day at sunrise" fell
+            # past here into the multi-day branch below and became a midnight
+            # period() timer with the sun event silently discarded.
+            spec = _daily_time_spec(lo2)
         elif unit in ("d", "w"):
+            if lo2.get("s"):
+                # A sun event on a MULTI-day cycle. once() repeats daily and
+                # period() cannot express a sun event at all, so there is no
+                # honest spelling for it — raise rather than drop the preset
+                # and emit a plain clock timer, which is what happened before.
+                raise NotYetImplemented(
+                    f"'every {interval}{unit} at {lo2['s']}' — a sun event on a "
+                    f"multi-day cycle has no PyScript time spec", **ctx)
             days = interval * (7 if unit == "w" else 1)
             hhmm = f"{int(at) // 60:02d}:{int(at) % 60:02d}:00" if at is not None else "00:00:00"
             spec = f"period(2020-01-01 {hhmm}, {days}d)"

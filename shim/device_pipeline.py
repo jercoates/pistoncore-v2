@@ -771,13 +771,6 @@ def describe_domain_services(services: dict, domain: str, limit: int = 60) -> li
     return out
 
 
-def domains_offering(services: dict, service_name: str) -> list[str]:
-    """Which domains register a service of this name — for the case where the
-    piston's command is known but the right domain isn't."""
-    return sorted(d for d, entries in (services or {}).items()
-                  if isinstance(entries, dict) and service_name in entries)
-
-
 def _build_notify_device(service_key: str, vocab: dict) -> tuple[str, dict, dict]:
     """
     One synthetic picker device per notify target service -- same shape as

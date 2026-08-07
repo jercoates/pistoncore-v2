@@ -23,7 +23,7 @@ from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
 from .. import customize
 
-from .analyze import analyze
+from .analyze import analyze, yaml_blockers
 from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
 from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL,
@@ -249,6 +249,16 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
         from .. import storage
         _MEDIA_CFG = storage.load_settings().get("media", {}) or {}
     branches = analyze(piston, piston_id, piston_name)
+    # The analyzer READS shapes this band cannot express (see
+    # analyze.yaml_blockers) instead of refusing to read them, so that the
+    # PyScript band can share the same reader. This band still refuses them —
+    # raising the first note verbatim, which is the exception the analyzer used
+    # to raise from the same spot, so routing and the recorded reason text are
+    # byte-identical to before.
+    _blocked = yaml_blockers(branches)
+    if _blocked:
+        raise NotYetImplemented(_blocked[0], piston_id=piston_id,
+                                piston_name=piston_name)
     resolver = Resolver(piston, resolution_map, globals_map)
     blocks = []
     auto_ids = []

@@ -61,6 +61,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from shim.compiler import compile_piston                      # noqa: E402
 from shim.compiler import emit_yaml as _emit_yaml             # noqa: E402
+from shim.compiler.analyze import analyze as _analyze         # noqa: E402
 from test_compile_snapshots import _synthetic_maps            # noqa: E402
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -509,20 +510,125 @@ def section_statements(verbose=False):
     }
 
     print()
+    failures = []
     for name, stmt in stmts.items():
-        p = piston([stmt])
-        marks = []
+        failures += _report_shape(name, stmt, verbose, width=12)
+
+    # VARIANTS WITHIN a statement type. The dict above proves each type
+    # compiles ONCE, with one set of operands — which is not the same as
+    # proving the type is covered. `every` passes above on "every 5 minutes"
+    # while "every 90 minutes" and "every day at sunrise" take completely
+    # different paths, and an `if` passes on "and" while "xor" does not.
+    #
+    # FOUND 2026-08-06: nine shapes below compile on PyScript but the ANALYZER
+    # cannot read at all. That is invisible to the corpus (0 of 84 use any of
+    # them) and invisible to the section above, and it is a live hazard for
+    # Stage 1 of SESSION_BRIEF_ONE_READER_ONE_WRITER: the moment the PyScript
+    # band reads through the analyzer, every one of them stops compiling —
+    # including for a user who FORCED PyScript, which bypasses routing and so
+    # has no fallback left (Jeremy, 2026-08-06).
+    print("\n  VARIANTS WITHIN A TYPE")
+    print()
+    for name, stmt in statement_variants().items():
+        failures += _report_shape(name, stmt, verbose, width=26)
+    return failures
+
+
+def _report_shape(name, stmt, verbose, width):
+    """Compile one statement shape on both bands and print a row.
+
+    Returns the PyScript failures — the band that MUST be total, because it is
+    user-selectable and bypasses routing when forced (COMPILER_SPEC §3.2)."""
+    p = piston([stmt])
+    marks, failures = [], []
+    pyscript_ok = False
+    for band in ("yaml", "pyscript"):
+        status, body, kind = compile_on(p, band)
+        marks.append(f"{band}:{'ok(' + str(kind) + ')' if status == 'ok' else 'ERROR'}")
+        if band == "pyscript":
+            pyscript_ok = status == "ok"
+            if status == "error":
+                failures.append((name, body))
+
+    # STAGE 1 PRECONDITION: can the ANALYZER read this shape?
+    #
+    # Both bands are to share one reader (SESSION_BRIEF_ONE_READER_ONE_WRITER
+    # §3). Any shape PyScript can compile but the analyzer cannot READ is a
+    # piston that stops compiling the moment that lands — and stops on the only
+    # band that could run it. Nine such shapes existed on 2026-08-06 and no
+    # test could see them, so the precondition is checked here rather than
+    # spot-checked by hand.
+    try:
+        _analyze(p, "probe", "Probe")
+        reads = True
+    except Exception as exc:                                    # noqa: BLE001
+        reads, why = False, f"{type(exc).__name__}: {exc}"
+    marks.append("reader:ok" if reads else "reader:CANNOT-READ")
+    if pyscript_ok and not reads:
+        failures.append((name, "PyScript compiles it but the analyzer cannot "
+                               "read it - " + why))
+    detail = ""
+    if verbose:
         for band in ("yaml", "pyscript"):
-            status, body, kind = compile_on(p, band)
-            marks.append(f"{band}:{'ok(' + str(kind) + ')' if status == 'ok' else 'ERROR'}")
-        detail = ""
-        if verbose:
-            for band in ("yaml", "pyscript"):
-                status, body, _ = compile_on(p, band)
-                if status == "error":
-                    detail = "\n      " + body[:150]
-        print(f"  {name:<12} {'  '.join(marks)}{detail}")
-    return stmts
+            status, body, _ = compile_on(p, band)
+            if status == "error":
+                detail = "\n      " + body[:150]
+    print(f"  {name:<{width}} {'  '.join(marks)}{detail}")
+    return failures
+
+
+def statement_variants():
+    """Shapes WITHIN a statement type that take a different compilation path.
+
+    Each entry is here because it reaches code the plain form does not. The
+    `every` family splits on unit and on whether the daily time is a fixed
+    clock time or a sun event; `switch` splits on fall-through; `if` splits on
+    the operator joining its conditions."""
+    cond_on = condition_node("is", V["comparisons"]["conditions"]["is"],
+                             nid=3, as_trigger=False)
+    cond_off = condition_node("is", V["comparisons"]["conditions"]["is"],
+                              nid=4, as_trigger=False)
+
+    def every(interval, unit, lo2=None, nid=1):
+        s = {"$": nid, "t": "every", "a": "0",
+             "lo": {"c": interval, "f": "l", "g": "any", "t": "c", "vt": unit},
+             "s": [action(nid=10)]}
+        if lo2 is not None:
+            s["lo2"] = lo2
+        return s
+
+    def sun(which):
+        """A sun-event time operand, VERIFIED against the corpus rather than
+        guessed: 13_Chicken_Light_Morning_GPT / 14 / 15 all carry exactly
+        {"f":"l","g":"any","s":"sunrise","t":"s","vt":"time"}.
+
+        Note `t` is "s" (a PRESET operand), not "c" — a constant with an `s`
+        field is not the same node and would probe a path the editor never
+        emits. Hence its own builder rather than const()."""
+        return {"f": "l", "g": "any", "s": which, "t": "s", "vt": "time"}
+
+    return {
+        "every 5 minutes": every(5, "m"),
+        "every 90 minutes": every(90, "m"),
+        "every 5 hours": every(5, "h"),
+        "every 2 days": every(2, "d", const(480, "time")),
+        "every 1 week": every(1, "w", const(480, "time")),
+        "every day at 08:00": every(1, "d", const(480, "time")),
+        "every day at sunrise": every(1, "d", sun("sunrise")),
+        "every day at sunset": every(1, "d", sun("sunset")),
+        "on <mode changes>": {
+            "$": 1, "t": "on", "a": "0", "s": [action(nid=10)],
+            "c": [{"$": 2, "t": "event", "sm": "auto", "z": "",
+                   "lo": {"t": "v", "v": "mode", "g": "any", "c": "",
+                          "x": None, "e": ""}}]},
+        "if A xor B": if_stmt([cond_on, cond_off]) | {"o": "xor"},
+        "switch fall-through": {
+            "$": 1, "t": "switch", "a": "0", "ctp": "f",
+            "lo": {"t": "p", "d": [DEV], "a": "switch", "g": "any"},
+            "cs": [{"t": "c", "ro": const("on", "enum"), "ro2": dict(EMPTY),
+                    "s": [action(nid=10)], "z": ""}],
+            "e": []},
+    }
 
 
 def section_commands(verbose=False):
@@ -637,9 +743,35 @@ def main():
     ap.add_argument("--section", choices=sorted(SECTIONS), action="append")
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
-    for name in (args.section or list(SECTIONS)):
-        SECTIONS[name](args.verbose)
+    wanted = args.section or list(SECTIONS)
+    results = {name: SECTIONS[name](args.verbose) for name in wanted}
     print()
+
+    # GATE — the one invariant this file enforces rather than reports.
+    #
+    # PyScript is user-selectable ("prefer PyScript for fidelity",
+    # COMPILER_SPEC §3.2) and forcing it bypasses routing entirely, so there is
+    # no fallback behind it: whatever it cannot compile, the user simply cannot
+    # compile. Jeremy's rule is that it must therefore be TOTAL — a piston
+    # failing there is a bug in the valve, never a missing feature.
+    #
+    # Scoped to STATEMENT SHAPES on purpose. Comparison operators and commands
+    # are not total yet (29 and 40 open respectively, COMPILER_TODO.md) and
+    # gating on those would just fail every run and teach everyone to ignore
+    # it. Statement shapes ARE total today, and Stage 1 of the one-reader work
+    # is precisely the change that could silently break them.
+    broken = results.get("statements") or []
+    if broken:
+        print("GATE FAILED - a statement shape either stopped compiling on the")
+        print("PyScript band (which has no fallback behind it), or compiles")
+        print("there while the shared reader cannot read it:\n")
+        for name, err in broken:
+            print(f"  {name}\n      {err[:170]}")
+        print()
+        return 1
+    if "statements" in wanted:
+        print("GATE PASSED - every statement shape compiles on PyScript, and")
+        print("the analyzer can read every one of them.\n")
     return 0
 
 

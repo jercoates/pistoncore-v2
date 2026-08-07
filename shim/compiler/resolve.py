@@ -907,10 +907,6 @@ class Resolver:
         ha = (self.virtual_devices.get(name) or {}).get("ha")
         return ha if isinstance(ha, dict) else {}
 
-    def service_for(self, command: str, entity_id: str, ctx: dict) -> str:
-        service, _ = self.service_spec(command, entity_id, ctx)
-        return service
-
     def service_spec(self, command: str, entity_id: str, ctx: dict) -> tuple[str, dict | None]:
         """(service, data-template-or-None) for a command aimed at a device,
         picked by that device's domain. data values carry $1/$2 param tokens
