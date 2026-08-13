@@ -67,6 +67,85 @@
     of piston can run. PistonCore tells you which band each piston used.
   </p>
 
+  <h2>Writing pistons that compile well</h2>
+  <p>
+    These are habits in the <em>webCoRE editor</em>, not PistonCore settings.
+    None of them is required — pistons written any other way still compile —
+    but each one makes the result easier to read, easier to change later, and
+    easier for PistonCore to understand correctly.
+  </p>
+
+  <h3>Declare your devices in <code>define</code>, then use the name</h3>
+  <p>
+    In the editor's <code>define</code> block, give a device (or a group of
+    them) a name, and refer to that name everywhere in the piston instead of
+    picking the device again in each statement.
+  </p>
+  <pre>define
+    device Water_Sensors_Always = Kitchen Leak, Water Heater Leak;
+end define;</pre>
+  <p>
+    <strong>Why it pays off:</strong> when you replace a sensor, you change it
+    in <em>one</em> place rather than hunting through every statement that
+    mentioned it. It also makes the piston readable — "any of
+    <code>Water_Sensors_Always</code> is wet" says what you meant, while a bare
+    list of device names says only what you clicked. PistonCore reads those
+    names too: it can tell that a statement naming the group and a statement
+    naming one of its members are talking about the same devices, which helps
+    it see that both belong to the same job.
+  </p>
+
+  <h3>Use globals for lists you reuse across pistons</h3>
+  <p>
+    A global device list (<code>@Speakers</code>,
+    <code>@Notifications_Push</code>, <code>@Presence_Sensor_All</code>) lives
+    outside any one piston, so every piston that uses it picks up a change at
+    once. Add a speaker to the global, and every announcement in the house
+    reaches it — no editing piston by piston.
+  </p>
+  <p>
+    You can also target <em>more than one</em> global in a single command. A
+    notification sent to a text list and a push list together reaches both,
+    with no second statement.
+  </p>
+  <p>
+    <strong>Worth knowing:</strong> whether a notification arrives as a text or
+    a push is a property of the <em>device</em> you send it to, not of the
+    command. "Send device notification" does whatever the target device does.
+  </p>
+
+  <h3>Write your statements in the order you want them to matter</h3>
+  <p>
+    PistonCore keeps the order you wrote things in. It never reorders your
+    statements to make them easier to compile, and it never assumes two things
+    are interchangeable just because it can't see a reason they aren't.
+  </p>
+  <p>
+    So put the thing that <em>must</em> happen first. In a leak piston, shutting
+    the water off matters more than announcing it; if a speaker is offline or a
+    notification service is down, you still want the valve closed. Ordering by
+    what matters most costs you nothing and protects you when something in the
+    chain fails.
+  </p>
+  <p>
+    Order also records how <em>you</em> think the piston fits together, and that
+    survives into the compiled automation and its comments — which is what makes
+    it readable in six months, by you or by whoever inherits it.
+  </p>
+
+  <h3>One piston, one job — where you can</h3>
+  <p>
+    A piston that does one thing is easier to pause, test, fix and reason about
+    than one that does five. Pistons that stack several unrelated jobs still
+    work, but every problem in them is harder to isolate, and the compiled
+    output has more moving parts.
+  </p>
+  <p>
+    Deeply nested pistons — loops inside loops, work hung off several layers of
+    condition — are compiled to PyScript rather than YAML, because PyScript can
+    keep the structure intact. That is a normal outcome, not a failure.
+  </p>
+
   <h2>Habits that keep things predictable</h2>
   <ul>
     <li><strong>Pause instead of deleting</strong> while experimenting — pausing
