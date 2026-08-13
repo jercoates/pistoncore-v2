@@ -28,6 +28,51 @@ COMPILER_DECISIONS_DEPLOY.md — restated here; on conflict, this doc wins once 
 
 ---
 
+## 0. THE MEASUREMENT THAT SAYS WHETHER ANY OF THIS IS WORKING
+**(Jeremy's research, CONFIRMED BY COUNT 2026-08-10)**
+
+**Ask: of the places Home Assistant has a native idiom, how many does the
+compiler use?** Measured across all 76 corpus pistons on the YAML band:
+
+```
+condition types emitted:   template 152 · trigger 143 · time 30 · or 8 · sun 3
+                           state      0      <- never emitted, not once
+of those 152 templates:     75 are exactly {{ states('x') == 'y' }}
+                               — every one has a native `condition: state`
+```
+
+**Zero out of seventy-five on the simplest and commonest idiom HA has.** Not a
+rounding error — a systematic tell. The transcoder owns ONE mechanism, "render
+webCoRE's left-operand / comparison / right-operand as Jinja", inherited from
+webCoRE's shape, and puts everything through it. It never asks what Home
+Assistant has for this. `condition: numeric_state`, `condition: device` and
+native `for:` durations are absent from that census too, so 0/75 is a FLOOR.
+
+**Why this is not cosmetic.** A native condition is an editable row in Home
+Assistant's visual editor; a template condition is an opaque blob a user cannot
+touch without writing Jinja. The emitted YAML is supposed to outlive PistonCore
+being deleted and be maintainable by whoever owns it
+([[no_runtime_pistoncore_dependency]]) — 152 template blobs are a far worse
+inheritance than 75 state conditions plus templates for the genuinely hard
+cases.
+
+**USE THIS AS THE YARDSTICK, because the obvious ones are worthless.** Band
+split proves nothing (nothing on either band is device-validated — 1 of 76 has
+been driven on real devices). "It compiled", "it routed" and "HA accepted it"
+are not behaviour (HARD_RULES §7). Matching the old output proves the bug was
+reproduced (§2c). This number needs no device, is countable in one pass, and
+moves only when the compiler starts choosing HA idioms instead of translating
+expressions.
+
+**And it is the honest case FOR the intent engine**, which otherwise has none:
+"the user wanted the door contact to be closed" maps to `condition: state`
+directly, while "translate this expression" can only ever produce a template.
+As of 2026-08-10 there is still no proof the intent engine will be better — it
+currently drops delays and timer-backed waits — so this is the thing to measure
+it by, not a belief to build on.
+
+---
+
 ## 1. Mission and non-negotiable policy (DECIDED — from holding doc §A)
 
 The compiler turns saved webCoRE piston JSON into things Home Assistant executes natively.

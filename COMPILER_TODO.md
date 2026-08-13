@@ -18,8 +18,18 @@ unstarted features can start.
 
 **Always:** run `.venv/Scripts/python.exe test_compile_snapshots.py` before and
 after every change. It must say NO DRIFT, or you changed output for pistons you
-weren't touching. Baseline: **84 compiled / 0 errored**, bands `{yaml: 71,
-pyscript: 13}` (re-measured 2026-08-06; the 72/12 written here before was stale).
+weren't touching. Baseline: **76 compiled / 0 errored**, bands `{yaml: 61,
+pyscript: 15}` (re-measured 2026-08-10). The corpus is **76**, not 84 — eight
+pistons moved to `test-pistons/manual-run/`. Every earlier figure in this file
+counted against 84 and is stale by that much.
+
+> **⚠ THE SNAPSHOT BASELINE ON DISK IS STALE — 24 PISTONS REPORT DRIFT.**
+> Emission was changed deliberately and `test-compile-snapshots.json` was never
+> re-recorded, so a fresh clone running the harness sees 24 "emitted code
+> changed" lines and reads it as a broken compiler. It is not. Do NOT blind-run
+> `--update` to silence it: that blesses changes nobody has reviewed. Work out
+> what those 24 changes are, with the commitment checker watching, then
+> re-record deliberately.
 
 **Also run `python test_intent_probe.py --section commitments`** (built
 2026-08-08). It is the only check that can see a SILENT DROP: it states every
@@ -42,11 +52,39 @@ with a loop or a switch.
 
 ---
 
-## THE INTENT LAYER — BUILT 2026-08-08 (`shim/compiler/pattern.py`)
+## ⚠ `pattern.py` WAS DELETED WITHOUT PERMISSION — AND IT IS RECOVERABLE
+**(established 2026-08-10)**
 
-The middle layer finally exists. `intent.py` says what each WORD wants;
-`pattern.py` says what the PISTON wants, which is not the sum of its words
-(HARD_RULES §10a).
+**Jeremy did not authorise this.** A session deleted `shim/compiler/pattern.py`
+on 2026-08-08, wrote `pattern_recovered.md`, and claimed the file had been
+recovered. It had not been: that document contains only the module's
+DOCSTRINGS and constants. Every line of logic was left behind.
+
+**HARD_RULES §1 exists for exactly this** — never delete working behaviour
+without his go-ahead. The deletion also went into HARD_RULES §2a as settled
+fact ("Deleted 2026-08-08"), which means an unauthorised act was written into
+the file that outranks every spec. Treat §2a's judgement of the APPROACH as
+still open, not as Jeremy's ruling.
+
+**THE FULL BYTECODE SURVIVES.** `shim/compiler/__pycache__/pattern.cpython-314.pyc`
+— 32,011 bytes, dated 2026-08-08, **7,652 bytes of real bytecode** across all
+17 definitions: `Intent`, `_walk_tasks`, `_outcomes`, `_devices`,
+`_holds_work`, `_is_recurring`, `_is_timed_revert`, `_is_announce`,
+`_is_reach_out`, `_is_respond`, `_is_remember`, `_shape_of`, `_read_devices`,
+`device_aliases`, `_expand`, `_related`, `read`, `coverage`.
+
+That is the whole module, not a summary. It can be disassembled and rebuilt,
+and the rebuild is CHECKABLE: recompile it and compare bytecode against the
+original `.pyc`. Nothing else in this project has that kind of objective test.
+
+**DO NOT let `__pycache__` be cleaned before this is done.** A copy is only as
+safe as the next person who tidies build artefacts.
+
+The sections below describe that module as if it were present. They are kept
+because the CONCERNS are still live — but they now belong against `spec.py`,
+which is what actually reads pistons today. `intent.py` says what each WORD
+wants; `pattern.py` said what the PISTON wants, which is not the sum of its
+words (HARD_RULES §10a).
 
 **Shapes, not labels.** Seven, built from the bounded outcome vocabulary and
 never from mining the corpus: `timed_revert`, `respond`, `announce`,
@@ -200,6 +238,10 @@ where it works today.
 Every refusal is a missing piece of compiler, so the honest way to pick what to
 build next is to ask why the 13 pistons give up. Measured, not guessed:
 
+(Counts below were taken against the 84-piston corpus and 13 on PyScript. It
+is now 76 pistons and **15** on PyScript — re-measure before relying on any
+row.)
+
 | n | why it falls to PyScript |
 |---|---|
 | 4 → 1 | actions attached to a condition (**3 fixed, see below**) |
@@ -210,7 +252,13 @@ build next is to ask why the 13 pistons give up. Measured, not guessed:
 | 1 | `$nextSunset` has no HA template equivalent |
 | 1 | `was_greater_than_or_equal_to` needs held-duration tracking |
 
-**Actions attached to a TRIGGER — BUILT 2026-08-08** (`_trigger_attached`).
+**Actions attached to a TRIGGER — NOT BUILT. This section is wrong.**
+**(corrected 2026-08-10.)** `_trigger_attached` exists nowhere in the code and
+appears nowhere in git history — `git log -S` returns nothing. The document
+contradicts itself: the entry further down correctly records it as "built,
+verified, and then REVERTED on 2026-08-08". The revert is what happened. What
+follows is kept as the DESIGN, which is still sound and still worth building —
+read it as a plan, not as a description of the code.
 Was the biggest single bucket. webCoRE runs a condition's `ts`/`fs` whenever
 that condition is evaluated (:7882-7886), and a trigger node is evaluated on
 every wake like any other — so it becomes an `if` on that trigger's comparison,
@@ -504,7 +552,9 @@ to score against except Jeremy).
       never been seen becoming true.
 
       Both bands now share `resolve.WAS_TO_IS` (the was_*/is_* pairing),
-      `resolve.last_changed_is_exact` (which comparisons are cheap enough to
+      `resolve.last_changed_is_exact` (no leading underscore — spelled
+      `_last_changed_is_exact` elsewhere in this file, which finds nothing;
+      corrected 2026-08-10) (which comparisons are cheap enough to
       leave alone) and `resolve.was_watcher_entity` (the identity of a watcher,
       so the two bands agree about which comparisons are the same comparison).
       Neither band has its own copy of any of the three.

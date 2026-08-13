@@ -1494,6 +1494,124 @@ def _block(st: dict, per_device: bool = False, repeating: bool = False) -> Block
     return b
 
 
+def _subject_refs(sub) -> set:
+    """What a test's subject identifies — a device list, or a VIRTUAL device.
+
+    A virtual subject (`$alarmSystemStatus`, `$mode`) has no device references,
+    so two statements woken by the SAME alarm-status change had nothing to
+    overlap on and read as unrelated: `19_Claude_Alarm_checks` came out as four
+    separate intents when it is one piston about the alarm. Sharing a virtual
+    device is the same kind of evidence as sharing a real one.
+
+    Measured before adding it: this corrects that one piston and moves no
+    other, so it does not collapse everything that happens to run on a clock."""
+    out = {str(d) for d in sub.devices}
+    if sub.kind == "virtual" and sub.virtual:
+        out.add("virtual:" + str(sub.virtual))
+    return out
+
+
+def _touches(b: "Block") -> set:
+    """Every device reference a block touches, in EITHER role.
+
+    Statements relate through what they WATCH as much as what they drive:
+    "motion active -> light on" and "motion clear -> wait, light off" are one
+    intent, and they share the sensor as surely as the light."""
+    out = set()
+    for kid in b.walk():
+        for p in kid.does:
+            out |= {str(d) for d in p.devices}
+        for g in ([kid.gate] if kid.gate is not None else []) + list(kid.restrictions):
+            for leaf in g.leaves():
+                out |= _subject_refs(leaf.subject)
+        for t in kid.wakes:
+            out |= _subject_refs(t.subject)
+        if kid.over is not None:
+            out |= {str(d) for d in kid.over.devices}
+    return out
+
+
+def _expand_refs(refs: set, piston: dict) -> set:
+    """Device references with any group NAME replaced by its members.
+
+    A device-type local variable is one name covering several real devices
+    (`Water_Sensor_All` is nine). So a statement naming the group and one
+    naming a member hash are the SAME devices, and comparing the bare strings
+    would call them unrelated and split one intent in two.
+
+    Uses the reader's own declaration table rather than a second copy
+    (HARD_RULES §9). `@global` lists live outside the piston and stay
+    unexpanded — a stated limit, not a silent one: the cost is a piston read as
+    MORE intents than it has, never a wrong emission."""
+    decl = _declared_vars(piston)
+    out = set()
+    for r in refs:
+        members = (decl.get(str(r)) or (None, ()))[1]
+        out |= set(members) if members else {str(r)}
+    return out
+
+
+def intents(root: "Block", piston: dict) -> list:
+    """The piston's top-level statements grouped into the things it is FOR.
+
+    HARD_RULES §10: the whole piston is ONE intent by DEFAULT and is not
+    chopped up because the pieces would compile more easily. §10b: a run-on
+    piston genuinely carries several, and that is the COMMON authoring style,
+    so more than one has to be findable.
+
+    RECOVERED LOGIC. This test — any overlap across the devices two statements
+    touch in either role, after expanding groups — was written on 2026-08-08
+    with Jeremy's correction that device use is RELATIVE, not exact. The file
+    holding it was deleted without permission the same day; it was rebuilt here
+    from its own bytecode on 2026-08-10, against the tree rather than the flat
+    atom list it was first written for.
+
+    Order is preserved: groups come back in the order their first statement was
+    written, because "in this order" is intent, not syntax (§10)."""
+    tops = list(root.children)
+    sets = [_expand_refs(_touches(b), piston) for b in tops]
+    group_of = list(range(len(tops)))
+
+    def root_of(i):
+        while group_of[i] != i:
+            i = group_of[i]
+        return i
+
+    for i in range(len(tops)):
+        for j in range(i + 1, len(tops)):
+            if sets[i] & sets[j]:
+                group_of[root_of(j)] = root_of(i)
+    ordered, seen = [], {}
+    for i, b in enumerate(tops):
+        r = root_of(i)
+        if r not in seen:
+            seen[r] = len(ordered)
+            ordered.append([])
+        ordered[seen[r]].append(b)
+    return ordered
+
+
+def coverage(root: "Block", piston: dict) -> dict:
+    """Is every top-level statement in exactly one intent, in order?
+
+    THE GATE. A statement in NO intent would be silently unread — the failure
+    this project keeps being bitten by — and one in TWO would be emitted twice.
+    Both are hard failures, never warnings (HARD_RULES §6)."""
+    tops = list(root.children)
+    groups = intents(root, piston)
+    placed = [b for g in groups for b in g]
+    ids = [id(b) for b in placed]
+    return {
+        "statements": len(tops),
+        "intents": len(groups),
+        "missing": len([b for b in tops if id(b) not in set(ids)]),
+        "twice": len(ids) - len(set(ids)),
+        "reordered": sum(1 for g in groups
+                         for a, b in zip(g, g[1:])
+                         if tops.index(a) > tops.index(b)),
+    }
+
+
 def read(piston: dict) -> list[Promise]:
     """Every promise the piston makes, in the order it makes them."""
     return _Reader(piston).read()

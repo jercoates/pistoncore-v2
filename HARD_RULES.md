@@ -216,6 +216,44 @@ Evidence it matters: reading the water piston from a screenshot surfaced the
 per-device battery accumulation, the speak sitting inside the `each`, and the
 "Any of" aggregation — all present in the JSON and all read past.
 
+## 2g. MEASURE IT BY WHETHER IT USES HA'S OWN IDIOMS — 0 OF 75 TODAY
+**(Jeremy's research, CONFIRMED BY COUNT 2026-08-10)**
+
+The question that separates an intent compiler from a transcoder, and it is
+countable: **of the places Home Assistant has a native idiom, how many does the
+compiler use?**
+
+Measured over all 76 corpus pistons, YAML band:
+
+```
+conditions emitted:  template 152 · trigger 143 · time 30 · or 8 · sun 3
+                     state      0     <- never emitted, not once
+of those templates:   75 are exactly {{ states('x') == 'y' }}
+                          — every one has a native `condition: state`
+```
+
+The transcoder owns ONE mechanism — render webCoRE's operand/comparison/operand
+as Jinja — and puts everything through it, because that is the shape it
+inherited. It never asks what HA has. `numeric_state`, `device` and native
+`for:` are missing from that census too, so **0/75 is a floor.**
+
+**Not cosmetic.** A native condition is an editable row in HA's visual editor; a
+template is an opaque blob needing Jinja to touch. The YAML must outlive
+PistonCore and be maintainable by whoever inherits it.
+
+**USE THIS YARDSTICK BECAUSE THE OBVIOUS ONES ARE WORTHLESS.** Band split proves
+nothing while nothing is device-validated (1 of 76 has been driven on real
+devices). "It compiled / routed / HA accepted it" is not behaviour (§7).
+Matching the old output proves the bug was reproduced (§2c). This number needs
+no device, counts in one pass, and moves only when the compiler starts CHOOSING
+an HA idiom instead of translating an expression.
+
+**It is also the only honest case FOR the intent engine.** "The user wanted the
+contact to be closed" maps to `condition: state`; "translate this expression"
+can only produce a template. There is still NO PROOF the intent engine will be
+better (Jeremy, 2026-08-10: *"it should, that does not mean it will"*) — as of
+today it drops delays and timer-backed waits. Measure it; do not believe it.
+
 ## 3. YAML FIRST. PYSCRIPT ONLY WHEN THERE IS NO OTHER WAY
 **(Jeremy, 2026-08-06)**
 
