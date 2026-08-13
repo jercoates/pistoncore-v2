@@ -37,7 +37,7 @@
     "independent_timed_branches": {
       "enabled": true,
       "becomes": "automation",
-      "why": "webCoRE cancels pending work per CONDITION GROUP - each timed branch is its own independent cancel unit. HA's `mode: restart` cancels the ENTIRE automation run. Two timed branches sharing one automation therefore kill each other's pending waits, silently. COMPILER_SPEC 2.5 point 4 already worked this out: one automation per condition group is what makes mode:restart exact; bundling is what breaks it."
+      "why": "BEHAVIOUR FIRST (Jeremy, 2026-08-10, asked in plain terms): a hall light that turns off 5 minutes after motion must get a FRESH 5 minutes when someone walks past again at minute 4. That is the thing a person notices, and it is what this rule delivers. Keep it for that reason.\n\nHOW IT BREAKS WITHOUT THE SPLIT: HA's `mode: restart` cancels the ENTIRE automation run, so two timed branches sharing one automation kill each other's pending waits, silently. One automation per timed branch is what makes the restart land on the right timer.\n\n(The original note read 'webCoRE cancels pending work per CONDITION GROUP - each timed branch is its own independent cancel unit', with the HA consequence second. That is a true statement about webCoRE's engine and a bad reason to keep a rule: a reason phrased as 'webCoRE does X' records nobody having checked whether a user would feel the difference, and reads as mechanism-copying to anyone applying HARD_RULES 2. Here somebody has now checked, and the answer was yes. COMPILER_SPEC 2.5 point 4 worked out the same conclusion.)"
     },
     "work_after_wait": {
       "enabled": true,
