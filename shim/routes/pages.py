@@ -164,8 +164,8 @@ TEST_DEVICE_TEMPLATES: dict[str, list[dict]] = {
 
 # Domains the virtual integration can reproduce as a settable test entity.
 _VIRTUAL_PLATFORM_DOMAINS = {
-    "alarm_control_panel", "binary_sensor", "button", "climate", "cover",
-    "device_tracker", "event", "fan", "humidifier", "light", "lock",
+    "alarm_control_panel", "binary_sensor", "button", "camera", "climate",
+    "cover", "device_tracker", "event", "fan", "humidifier", "light", "lock",
     "media_player", "number", "sensor", "siren", "switch", "vacuum", "valve",
 }
 

@@ -51,6 +51,8 @@ VIRTUAL_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,  # PistonCore addition (FORK_NOTES.md)
     Platform.BINARY_SENSOR,
     Platform.BUTTON,               # PistonCore addition
+    Platform.CAMERA,               # PistonCore addition (serves real image bytes,
+                                   # so HA's own camera.snapshot writes a real file)
     Platform.CLIMATE,              # PistonCore addition
     Platform.COVER,
     Platform.DEVICE_TRACKER,
