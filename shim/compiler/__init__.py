@@ -15,7 +15,7 @@ missing device is a real user-facing error on either band.
 """
 
 from .errors import CompilerError, NotYetImplemented, UnresolvableDevice  # noqa: F401
-from .routing import pyscript_reasons
+from .routing import handling_plan, pyscript_reasons
 from . import emit_pyscript, emit_yaml
 
 
@@ -35,26 +35,38 @@ def compile_piston(piston: dict, piston_id: str, piston_name: str,
                    error rather than a silent switch of execution model
     The preference lives in PistonCore's own settings, NEVER in the piston
     JSON (read-only-compiler rule)."""
-    if band == "pyscript":
-        return emit_pyscript.compile_pyscript(
-            piston, piston_id, piston_name, resolution_map, globals_map,
-            ["forced to PyScript by your setting for this piston"])
+    # The handling plan is computed on EVERY path, including forced-PyScript,
+    # because it answers "how did this piston have to be handled" — which the
+    # user is owed regardless of which band ran (HARD_RULES §11: a landing-page
+    # banner the first time, and a comment at the top of the emitted YAML).
+    # It is reported, never acted on here: routing decisions below are
+    # unchanged, so this cannot alter what any existing piston compiles to.
+    plan = handling_plan(piston)
 
-    reasons = pyscript_reasons(piston)
+    def _with_plan(result: dict) -> dict:
+        result["plan"] = plan
+        return result
+
+    if band == "pyscript":
+        return _with_plan(emit_pyscript.compile_pyscript(
+            piston, piston_id, piston_name, resolution_map, globals_map,
+            ["forced to PyScript by your setting for this piston"]))
+
+    reasons = plan["pyscript"]
     if band == "yaml":
         if reasons:
             raise NotYetImplemented(
                 "this piston is set to YAML-only, but it uses features HA "
                 "automations can't express: " + "; ".join(reasons[:3]),
                 piston_id=piston_id, piston_name=piston_name)
-        return emit_yaml.compile_yaml(piston, piston_id, piston_name,
-                                      resolution_map, globals_map)
+        return _with_plan(emit_yaml.compile_yaml(
+            piston, piston_id, piston_name, resolution_map, globals_map))
 
     if not reasons:
         try:
-            return emit_yaml.compile_yaml(piston, piston_id, piston_name,
-                                          resolution_map, globals_map)
+            return _with_plan(emit_yaml.compile_yaml(
+                piston, piston_id, piston_name, resolution_map, globals_map))
         except NotYetImplemented as exc:
             reasons = [f"YAML band can't express it: {exc}"]
-    return emit_pyscript.compile_pyscript(piston, piston_id, piston_name,
-                                          resolution_map, globals_map, reasons)
+    return _with_plan(emit_pyscript.compile_pyscript(
+        piston, piston_id, piston_name, resolution_map, globals_map, reasons))

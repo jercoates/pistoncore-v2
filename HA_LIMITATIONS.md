@@ -160,6 +160,25 @@ it is hardest to notice.
 
 ### Entity ID Changes Break Deployed Pistons
 
+> **⚠ SUPERSEDED — STALE v1. DO NOT BUILD FROM THIS SECTION (2026-08-07).**
+> The design below (30-minute registry sweep, `entity_missing` flag, warning on
+> the piston list, guided repair wizard) is v1's, and its own wording gives it
+> away: *"Entity IDs are stored directly on condition, action, and for_each
+> nodes. There is no device_map"* — all retired v2 concepts (CLAUDE.md).
+>
+> **What v2 actually does: nothing, because webCoRE does nothing.** Piston JSON
+> stores hashed ids; the editor resolves them against the LIVE device list, so a
+> deleted device simply has no name and shows as its hash — that is the
+> notification. Editing and saving that statement drops it automatically (the
+> picker only offers devices that exist). Untouched, it stays, and HA fails safe
+> the way it does for any native automation. VERIFIED against
+> `reference/webcore_source_reference.groovy:1757` (`listAvailableDevices`);
+> ruling by Jeremy 2026-08-07. See COMPILER_TODO's split-piston tracking entry.
+>
+> **This file is not in the authority chain** (CLAUDE.md: HARD_RULES → webCoRE
+> sources → the four specs → code). It is a coding doc and it contains v1
+> carry-over. Check the chain before treating anything here as a decision.
+
 If a user renames a device in HA, the entity ID may change. This breaks any piston
 that references that entity_id — the compiled YAML or PyScript will reference an entity
 that no longer exists.

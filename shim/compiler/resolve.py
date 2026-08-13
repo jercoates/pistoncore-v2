@@ -187,6 +187,13 @@ WAS_SENTINEL = "1970-01-01 00:00:00"
 _DURATION_UNITS = {"s": 1, "m": 60, "h": 3600, "d": 86400}
 
 
+# A raw HA service name as the hybrid feed spells it: `domain.service`, both
+# halves lowercase snake_case. This is the shape Home Assistant itself accepts,
+# so matching it is the whole check — anything that passes is a name HA can
+# call, and anything that fails is not a service at all.
+_RAW_SERVICE = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+")
+
+
 def duration_seconds(op) -> int | None:
     """A webCoRE duration operand in whole seconds; None if not a fixed number."""
     if not isinstance(op, dict):
@@ -445,14 +452,46 @@ def ha_name(key: str) -> str:
     return value
 
 
+def local_device_vars(piston: dict) -> dict:
+    """Device-type local variables: name -> the member device ids it stands for.
+
+    Piston-only, needing no resolution map and no Home Assistant, which is why
+    it lives at module level rather than on the Resolver — the intent reader
+    needs exactly this and cannot build a Resolver. It was written a second
+    time in `spec.py` before this was extracted (HARD_RULES §9: fix the tool in
+    place, never keep a copy)."""
+    return {v["n"]: ((v.get("v") or {}).get("d") or [])
+            for v in piston.get("v", []) if v.get("t") == "device" and v.get("n")}
+
+
+def local_var_decls(piston: dict) -> dict:
+    """Every local variable's DECLARED type, list-ness and initial value.
+
+    webCoRE offers 19 types (10 basic + 9 list forms). Read as a bare name a
+    device group, a string and a `time[]` list are the same token — so the
+    type has to travel with the variable. Same extraction reason as above."""
+    out = {}
+    for v in piston.get("v", []):
+        name = v.get("n")
+        if not name:
+            continue
+        vtype = str(v.get("t") or "dynamic")
+        init = v.get("v")
+        has_initial = isinstance(init, dict) and init.get("c") is not None
+        out[name] = {
+            "type": vtype,
+            "is_list": vtype.endswith("]"),
+            "has_initial": has_initial and not vtype.endswith("]"),
+            "initial": init.get("c") if isinstance(init, dict) else None,
+        }
+    return out
+
+
 class Resolver:
     def __init__(self, piston: dict, resolution_map: dict, globals_map: dict | None = None):
         self.resolution_map = resolution_map
         self.globals_map = globals_map if globals_map is not None else {}
-        self.local_device_vars = {
-            v["n"]: ((v.get("v") or {}).get("d") or [])
-            for v in piston.get("v", []) if v.get("t") == "device"
-        }
+        self.local_device_vars = local_device_vars(piston)
         # ONE read, one source. Commands AND values both come from the vocab;
         # the per-band command_maps.json and value_maps.json were deleted
         # 2026-07-26 (memory: one_translation_source_decision).
@@ -478,20 +517,7 @@ class Resolver:
         # Locals that need a real HA helper because their reads cross the
         # statement that wrote them (stage 3a). Keyed by variable name.
         self.helper_vars = variables_needing_helpers(piston)
-        self.local_var_decls = {}
-        for v in piston.get("v", []):
-            name = v.get("n")
-            if not name:
-                continue
-            vtype = str(v.get("t") or "dynamic")
-            init = v.get("v")
-            has_initial = isinstance(init, dict) and init.get("c") is not None
-            self.local_var_decls[name] = {
-                "type": vtype,
-                "is_list": vtype.endswith("]"),
-                "has_initial": has_initial and not vtype.endswith("]"),
-                "initial": init.get("c") if isinstance(init, dict) else None,
-            }
+        self.local_var_decls = local_var_decls(piston)
         self.unresolved: list[dict] = []   # devices kept but not currently in HA
         self.media_warnings: list[dict] = []   # Play-track URLs HA can't play as typed
         sys_ent = resolution_map.get("$system")
@@ -934,6 +960,24 @@ class Resolver:
         for entry in self.command_ha.get(command, []):
             if entry.get("domain") in (domain, "_any", "*") and _executable(entry):
                 return entry["service"], entry.get("data")
+
+        # VOCAB MISS IS NOT A FAILURE — IT MEANS RAW (Jeremy, 2026-08-09:
+        # "it should be check vocab, it's not there it is raw, push the names
+        # through ... the reason for the 'it works' is it's already HA names").
+        #
+        # The hybrid feed hands the editor every HA service for the device's
+        # domains under its DOMAIN-QUALIFIED name — `light.turn_on`,
+        # `camera.snapshot` — precisely so nothing needs translating: the name
+        # IS the service (device_pipeline.ha_service_commands). The vocab is
+        # curated and incomplete BY DESIGN; demanding an entry for a name that
+        # already came out of Home Assistant asked the user to translate
+        # English into English, and failed the compile when they hadn't.
+        #
+        # So: vocab first (a friendly command reads better and survives a
+        # device-type change), raw second, error only when the name is neither
+        # — which now means a name Home Assistant itself would reject.
+        if _RAW_SERVICE.fullmatch(command or ""):
+            return command, None
 
         raise UnresolvableDevice(
             f"no HA service mapping for command '{command}' on domain '{domain}' "

@@ -155,7 +155,18 @@ gv = {{ global_values if global_values is defined and global_values else {} }}
 _index = 0
 _device = None
 _STATE_ENTITY = "pyscript.{{ unique_name }}_state"
-_ALARM_ENTITY = {{ alarm_entity | tojson }}
+{# `tojson` writes JSON, and JSON's null/true/false are NOT valid Python.
+    `system_entity()` returns None whenever the install has no alarm panel
+    (its signature says so: `-> str | None`), so this line rendered
+    `_ALARM_ENTITY = null` and the WHOLE MODULE failed to import with
+    NameError — every PyScript piston dead, for anyone without an alarm.
+    The runtime already handles the absent case (`if _ALARM_ENTITY else None`,
+    expr_runtime :852); it simply never got to run.
+    Invisible to every check: the snapshot harness compares bytes and never
+    executes, `ast.parse` PASSES because `null` is a valid identifier, and the
+    test corpus fabricates an alarm entity for every piston. Found only by
+    loading it into Home Assistant. -#}
+_ALARM_ENTITY = {{ alarm_entity | tojson if alarm_entity else "None" }}
 {% include 'expr_runtime.py.j2' %}
 
 

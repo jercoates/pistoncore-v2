@@ -86,9 +86,19 @@
    "d": "adjustable color lights",
    "a": "color",
    "c": [
+    "adjustHue",
+    "adjustSaturation",
+    "fadeHue",
+    "fadeSaturation",
+    "setAdjustedColor",
+    "setAdjustedHSLColor",
     "setColor",
+    "setHSLColor",
     "setHue",
-    "setSaturation"
+    "setLoopTime",
+    "setSaturation",
+    "startLoop",
+    "stopLoop"
    ]
   },
   "colorTemperature": {
@@ -96,6 +106,8 @@
    "d": "adjustable white lights",
    "a": "colorTemperature",
    "c": [
+    "adjustColorTemperature",
+    "fadeColorTemperature",
     "setColorTemperature"
    ]
   },
@@ -165,6 +177,7 @@
    "d": "cameras, imaging devices",
    "a": "image",
    "c": [
+    "clearImages",
     "take"
    ]
   },
@@ -191,8 +204,12 @@
    "d": "lights",
    "a": "switch",
    "c": [
+    "flash",
+    "flashColor",
+    "flashLevel",
     "off",
-    "on"
+    "on",
+    "toggle"
    ]
   },
   "lock": {
@@ -378,7 +395,8 @@
    "a": "switch",
    "c": [
     "off",
-    "on"
+    "on",
+    "toggle"
    ]
   },
   "switchLevel": {
@@ -386,7 +404,10 @@
    "d": "dimmers and dimmable lights",
    "a": "level",
    "c": [
-    "setLevel"
+    "adjustLevel",
+    "fadeLevel",
+    "setLevel",
+    "toggleLevel"
    ]
   },
   "tamperAlert": {
@@ -506,6 +527,8 @@
    "a": "valve",
    "c": [
     "close",
+    "off",
+    "on",
     "open"
    ]
   },
@@ -526,7 +549,8 @@
    "c": [
     "close",
     "open",
-    "presetPosition"
+    "presetPosition",
+    "setPosition"
    ]
   }
  },
@@ -2430,6 +2454,12 @@
      "service": "siren.turn_off",
      "tag": "decision",
      "note": "alarm capability off command; cover.close does NOT belong here - that is the 'close' command"
+    },
+    {
+     "domain": "valve",
+     "service": "valve.close_valve",
+     "tag": "verified",
+     "note": "webCoRE users write off/on for a shut-off valve (Jeremy's 70_Water_Leak does). HA's valve domain uses open/close, and `close`/`open` already map here — this is the same action under the words a piston actually uses."
     }
    ]
   },
@@ -2481,6 +2511,12 @@
      "domain": "humidifier",
      "service": "humidifier.turn_on",
      "tag": "verified"
+    },
+    {
+     "domain": "valve",
+     "service": "valve.open_valve",
+     "tag": "verified",
+     "note": "webCoRE users write off/on for a shut-off valve (Jeremy's 70_Water_Leak does). HA's valve domain uses open/close, and `close`/`open` already map here — this is the same action under the words a piston actually uses."
     }
    ]
   },
@@ -2723,10 +2759,12 @@
      "domain": "cover",
      "service": "cover.set_cover_position",
      "data": {
-      "position": "$1"
-     }
+      "position": 50
+     },
+     "tag": "assumed"
     }
-   ]
+   ],
+   "note": "Fixed 2026-08-08: the data asked for $1 while the command declares NO parameters, so it could never emit and always fell through to the driver passthrough. The source says this command sets windowShade to 'partially open' (a:'windowShade', v:'partially open' - webcore_source_reference.groovy:2664), i.e. a FIXED position, not a parameter. ASSUMED: 'partially open' is emitted as 50%, the midpoint, because Home Assistant covers have no 'partially open' concept - only a position. Verify against a real cover before promoting the tag."
   },
   "previousTrack": {
    "n": "Previous track",
@@ -3527,6 +3565,7 @@
   },
   "setDirection": {
    "n": "Switch loop direction",
+   "note": "INCOMPLETE, and the incomplete part is the DATA, not the domain (examined 2026-08-08). VERIFIED: the command declares NO parameters, so `$1` can never be filled, this mapping can never emit, and every use falls through to the device's driver passthrough. That is the real defect. NOT a defect, and an earlier note wrongly said it was: the `fan` domain. webCoRE lists this under a `//hue` comment as 'Switch loop direction' (webcore_source_reference.groovy:2700-2703), but NO CAPABILITY ROW REFERENCES IT - it is a driver-advertised command, so which devices offer it is decided by the driver, not by webCoRE. A fan controller with a reverse function and an LED strip cycling a colour sequence can BOTH advertise setDirection, and the `ha` array exists to hold one mapping per domain (COMPILER_SPEC 3.1). So this is a MISSING light mapping, not a wrong fan one. TO SETTLE: webCoRE passes no value, so on a fan it means REVERSE - which needs the current direction read and inverted, not a literal $1. On a light, find whether HA exposes any loop/sequence direction (effects are the place to look). Until both are worked out the passthrough is doing the right thing for driver-backed devices; do not make $1 fillable without solving the reverse semantics first, or a fan would get a bogus direction value.",
    "ha": [
     {
      "domain": "fan",
@@ -3534,7 +3573,7 @@
      "data": {
       "direction": "$1"
      },
-     "tag": "verified"
+     "tag": "assumed"
     }
    ]
   },
@@ -3627,8 +3666,12 @@
      "domain": "light",
      "service": "light.turn_on",
      "data": {
-      "rgb_color": "$1|hex_rgb"
-     }
+      "hs_color": "$1",
+      "brightness_pct": "$3",
+      "transition": "$4"
+     },
+     "tag": "assumed",
+     "note": "Fixed 2026-08-08. Was rgb_color:'$1|hex_rgb', copy-pasted from setAdjustedColor - but $1 here is a HUE NUMBER, not a colour, so it could never emit and always fell through to the device's raw driver. Now matches its sibling setHSLColor (hs_color carries hue+saturation, level is brightness_pct) with the fade duration as `transition`. ASSUMED: transition is HA's fade field; not yet run against a real light."
     }
    ]
   }
@@ -7413,7 +7456,18 @@
    "mode_map",
    "round(x*...)"
   ],
-  "pending": "webCoRE places family (places, currentPlace, previousPlace, closestPlace, closestPlaceDistance, arrivingAtPlace, leavingAtPlace, distance, eta) intentionally unmapped: candidate future mapping is HA zones + proximity integration, decision deferred"
+  "pending": "webCoRE places family (places, currentPlace, previousPlace, closestPlace, closestPlaceDistance, arrivingAtPlace, leavingAtPlace, distance, eta) intentionally unmapped: candidate future mapping is HA zones + proximity integration, decision deferred",
+  "spoken_text_filter": {
+   "purpose": "Jinja filter applied to any SPOKEN message before it reaches the TTS engine. webCoRE pistons often carry SSML (<prosody>, <break>) which Hubitat's speakers understood; most Home Assistant TTS engines do NOT, and they read the tags out loud instead. Jeremy, 2026-08-08: 'i dont use a tts that can use it'.",
+   "filter": "regex_replace('<[^>]*>', '')",
+   "how_to_change": "Blank the 'filter' value to send the markup through untouched — correct for an SSML-capable engine such as Amazon Polly. This is text only; no code change.",
+   "applies_to": [
+    "speak",
+    "playText",
+    "playTextAndResume",
+    "playTextAndRestore"
+   ]
+  }
  },
  "_value_maps": {
   "_comment": "webCoRE value -> Home Assistant value, for values that are shared by several commands rather than belonging to one. Per-attribute state translation is NOT here — it lives on each attribute's own 'ha' rule (the 'map' key) and the compiler reads it backwards when writing. Colour NAMES are not here either: the full list is the 'colors' section above, straight from webCoRE. color_aliases only covers spellings webCoRE itself doesn't use.",

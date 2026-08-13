@@ -276,7 +276,8 @@ class _PyEmitter:
     def _reads(self, entities, attr, numeric: bool = False) -> list[str]:
         return [self._read(e, attr, numeric) for e in entities]
 
-    def _spec_data_py(self, data_spec: dict, params: list, ctx: dict) -> dict:
+    def _spec_data_py(self, data_spec: dict, params: list, ctx: dict,
+                      entity: str | None = None) -> dict:
         """Service data for THIS band — Python expressions, not Jinja.
 
         `$N` tokens resolve through _operand_expr, so a parameter given as a
@@ -297,6 +298,21 @@ class _PyEmitter:
             if not raw.startswith("$"):
                 out[key] = repr(raw)
                 continue
+            # $object_id / $entity_id name THE DEVICE the command is aimed at,
+            # not a piston parameter — `take` has no parameters at all, so a
+            # snapshot filename can only come from the camera. The YAML band
+            # has handled these since the media work; this band assumed every
+            # `$` token was positional and did int("object_id"), which took
+            # the WHOLE compile down with an internal error. Any camera piston
+            # that routes to PyScript hit it.
+            if entity and ("$object_id" in raw or "$entity_id" in raw):
+                out[key] = repr(raw.replace("$object_id", entity.split(".", 1)[1])
+                                   .replace("$entity_id", entity))
+                continue
+            if not raw[1:].isdigit():
+                raise NotYetImplemented(
+                    f"command data token {raw} is not a parameter and has no "
+                    f"device to resolve it against", **ctx)
             idx = int(raw[1:]) - 1
             if idx >= len(params):
                 raise NotYetImplemented(f"command param {raw} missing", **ctx)
@@ -1224,7 +1240,9 @@ class _PyEmitter:
                         # Jeremy's rule for volume specifically — "the default
                         # is keep what is there and don't send a new one" —
                         # which is exactly what dropping the key does.
-                        data = self._spec_data_py(data_spec, params, ctx)
+                        data = self._spec_data_py(
+                            data_spec, params, ctx,
+                            entity=(entities[0] if entities else None))
                 except NotYetImplemented:
                     # in the vocab, but unreachable on THIS device (a bridged
                     # camera has no camera entity to call `take` on)
@@ -1256,7 +1274,7 @@ class _PyEmitter:
                     # shape the YAML band emits.
                     start = self._spec_data_py(
                         {k: fade_from for k in data if k != "transition"},
-                        params, ctx)
+                        params, ctx, entity=(entities[0] if entities else None))
                     if start:
                         out.append({"kind": "service", "domain": domain,
                                     "service": svc, "entities": entities,

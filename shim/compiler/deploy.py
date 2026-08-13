@@ -311,9 +311,14 @@ async def _deploy_helpers(piston_id: str, writer, helpers: list) -> str:
         if not rows:
             return ""
         inc = helper_mod.ensure_include(writer)
-        helper_mod.write_helpers(rows, writer)
-        for domain, service in helper_mod.reload_services(
-                {r["entity"].split(".", 1)[0] for r in rows}):
+        # USE WHAT write_helpers RETURNS. Deriving the reload domain from the
+        # entity id here was a SECOND derivation of the same fact, and it was
+        # the wrong one: a device group is a `binary_sensor` entity, and
+        # binary_sensor has no reload service, so deploy failed with
+        # "Service binary_sensor.reload not found" and the group never loaded.
+        # write_helpers knows a group needs homeassistant.reload_all.
+        written = helper_mod.write_helpers(rows, writer)
+        for domain, service in helper_mod.reload_services(written["domains"]):
             await ha_client.call_service(domain, service, {})
         note = f"{len(rows)} variable helper(s)"
         if inc.get("changed"):

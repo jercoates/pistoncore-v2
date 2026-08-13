@@ -23,6 +23,9 @@ from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
 from .. import customize
 
+from . import emit_intent
+from . import routing
+from . import spec
 from .analyze import analyze, yaml_blockers
 from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
@@ -249,6 +252,42 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
         from .. import storage
         _MEDIA_CFG = storage.load_settings().get("media", {}) or {}
     branches = analyze(piston, piston_id, piston_name)
+    # ROUTING is decided from the analyzer's read, and stays that way: deciding
+    # YAML-vs-PyScript is a question about what this BAND can express, asked
+    # before anything is emitted. Emission is the part that must come from
+    # intent, and it does — below.
+    #
+    # INTENT REWRITE — OFF. DEVICE-PROVEN WRONG ON A DEVICE GROUP, with a
+    # control, after two bad tests (2026-08-08).
+    #
+    # It reads a held state correctly and emits a far cleaner automation: the
+    # wait moves into the trigger, so there is no delay, no timer and nothing
+    # pending to cancel. On a SINGLE sensor it is right and strictly better.
+    #
+    # It is wrong on a GROUP. Home Assistant tracks a state trigger's `for:`
+    # PER ENTITY, so it says "one of these has been clear for N", never "this
+    # group has been clear for N". Measured on the bench with one sensor going
+    # quiet while the other kept detecting, which is what an occupied room
+    # actually looks like:
+    #     OLD (delay + tcp_cancel)  light stays ON   correct
+    #     NEW (for: in the trigger) light goes OFF   wrong
+    # On `12_Cave_motion_V2` that is the lights going out while Jeremy is
+    # standing at the far sensor. His deployed version has run two weeks and
+    # has never done it, which is the fact that exposed this.
+    #
+    # WHY THE DELAY FORM IS RIGHT: `tcp_cancel` restarts the WHOLE automation,
+    # so activity on any sensor protects the group. The machinery this rewrite
+    # deletes is load-bearing on more than one device.
+    #
+    # HOW MY OWN TESTS LIED, twice, before this stood up:
+    #   1. Held sensor B statically "on" - a real sensor cycles, so nothing
+    #      fired tcp_cancel and both shapes looked identical.
+    #   2. Ran no control at all on the first claim, then reverted a working
+    #      change on one untested result (HARD_RULES §7).
+    #
+    # Group-wide hold now exists (spec._group_for -> a per-piston binary_sensor
+    # group), device-proven both directions on the bench: one sensor quiet
+    # while another kept firing left the light ON; both clear turned it OFF.
     # The analyzer READS shapes this band cannot express (see
     # analyze.yaml_blockers) instead of refusing to read them, so that the
     # PyScript band can share the same reader. This band still refuses them —
@@ -260,6 +299,38 @@ def compile_yaml(piston: dict, piston_id: str, piston_name: str,
         raise NotYetImplemented(_blocked[0], piston_id=piston_id,
                                 piston_name=piston_name)
     resolver = Resolver(piston, resolution_map, globals_map)
+    # AFTER the resolver exists: choosing a group entity needs entity
+    # resolution, and the rewrite must not run before the band has decided it
+    # can express the piston at all.
+    # EMISSION COMES FROM THE INTENT, NOT FROM THE STATEMENTS (Jeremy,
+    # 2026-08-09: "no transcoding", said until it was true). `plan()` builds
+    # the automations from what the piston PROMISES — grouped by what wakes
+    # them, held pairs already collapsed — so the number and shape of the
+    # automations is derived, never copied. Measured on the corpus: 12 pistons
+    # emit an automation count that does NOT match their statement count
+    # (Cave and Hall 2 statements -> 1 automation; Glass break 2 -> 4; Tamper
+    # 1 -> 3), which is the thing a per-statement transcoder cannot do.
+    #
+    # It returns None for any intent this band cannot yet express, and that
+    # falls back rather than approximating (HARD_RULES §6). apply_intent still
+    # runs on the fallback path, where it remains what it always was: a patch.
+    _intent = (emit_intent.plan(piston, piston_id, piston_name)
+               if emit_intent.enabled() else None)
+    if _intent is not None:
+        branches = _intent
+    # apply_intent runs on BOTH paths. It is not the reader — it is the
+    # emission idiom that turns "held clear for two minutes" into a group
+    # entity with `for:`, and that is needed no matter which layer produced
+    # the branch. Without it here, Cave's lights went off the moment ONE of
+    # the two sensors cleared: the device-proven-wrong behaviour from
+    # 2026-08-08, reintroduced by routing around the rewrite instead of
+    # feeding it.
+    branches = spec.apply_intent(branches, piston, resolver, piston_id)
+    # Which statements wait on a real timer entity rather than a `delay:`.
+    # Decided ONCE for the whole piston, before anything is emitted, because
+    # `cancelTasks` has to name every timer the piston owns and may well be
+    # emitted before the statement that owns one.
+    resolver.piston_timers = _timer_plan(piston, piston_id)
     blocks = []
     auto_ids = []
     header = (f"# Generated by PistonCore — piston \"{piston_name}\" ({piston_id})\n"
@@ -938,7 +1009,11 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
             return {"kind": "state", "entities": [sysent], "id": trig_id}
         raise NotYetImplemented(
             f"trigger on variable '{var}' ({co}) requires PyScript", **ctx)
-    entities = resolver.entities_for_attr(trig["devices"], trig["attr"], ctx)
+    # A DEVICE GROUP collapses to ONE entity when the intent layer asked for
+    # it (spec._group_for). `for:` on a list is per-entity and device-proven
+    # wrong for "this group has been clear for N".
+    entities = ([trig["_group_entity"]] if trig.get("_group_entity")
+                else resolver.entities_for_attr(trig["devices"], trig["attr"], ctx))
     attr, value = trig["attr"], trig["value"]
     hold = _duration_hms(trig.get("duration"))
 
@@ -1148,6 +1223,91 @@ def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | 
 
 # ── actions ─────────────────────────────────────────────────────────────────
 
+def _timer_plan(piston: dict, piston_id: str) -> dict:
+    """Which statements get a TIMER HELPER standing in for their wait.
+
+    Returns {statement id: timer entity_id}, empty when this piston has nothing
+    to cancel — an uncancellable wait is fine as a plain `delay:` and turning
+    every one of them into a helper entity would litter Home Assistant for no
+    behavioural gain.
+
+    ONE TIMER PER STATEMENT, matching how webCoRE scopes pending work: each
+    condition group is its own cancel unit (COMPILER_SPEC §2.5 point 4), and
+    the emitter already gives each wait-carrying statement its own automation.
+
+    `every` IS DELIBERATELY EXCLUDED. `vcmd_cancelTasks` cancels statement and
+    device schedules but the consumer's own comment (webcore-piston.groovy
+    :3702-3712) says it "does not cancel EVERY blocks". A naive "cancel every
+    timer this piston owns" would silently stop recurring pistons — a bug
+    webCoRE does not have, invented by us."""
+    rule = routing.timer_backed_waits()
+    if not rule.get("enabled"):
+        return {}
+    cancels = set(routing.cancel_commands())
+    waits = set(rule.get("wait_commands") or [])
+    if not waits or not (set(routing._commands_in(piston.get("s") or [])) & cancels):
+        return {}
+    plan = {}
+    for stmt in piston.get("s") or []:
+        if not isinstance(stmt, dict) or stmt.get("t") == "every":
+            continue
+        if set(routing._commands_in(stmt)) & waits:
+            plan[stmt.get("$")] = (f"{rule.get('helper_domain', 'timer')}."
+                                   f"pistoncore_{piston_id}_s{stmt.get('$')}")
+    return plan
+
+
+def _hms(seconds: int) -> str:
+    seconds = max(int(seconds), 0)
+    return f"{seconds // 3600:02d}:{(seconds % 3600) // 60:02d}:{seconds % 60:02d}"
+
+
+def _timer_wait_nodes(entity: str, hms: str, ctx: dict) -> list:
+    """A wait that a cancel can actually reach.
+
+        start the timer  ->  wait for its finished event  ->  carry on
+
+    `timer.cancel` puts the timer back to idle WITHOUT firing `finished`
+    (Home Assistant's own documentation, bench-verified both directions
+    2026-08-08), so a cancelled wait never gets its continuation.
+
+    IT WAITS FOR THE CANCELLATION TOO, and that is not belt-and-braces — it
+    was measured. Waiting only for `finished` and relying on the timeout to
+    give up does stop the cancelled work, but the run then SITS THERE holding
+    the automation until the timeout expires; under `mode: queued` the next
+    trigger queues behind it and fires late. On the bench that showed up as a
+    later run turning a light on ~40s after its trigger. webCoRE never blocks
+    like that: a cancel frees the piston immediately. So the wait ends on
+    EITHER event and the run stops at once when it was the cancellation.
+
+    `continue_on_timeout: false` stays as the backstop for the case where
+    neither event ever arrives (HA restarted, timer removed) — without it a
+    timeout would fall straight through into the work that was cancelled,
+    reproducing the original bug exactly."""
+    rule = routing.timer_backed_waits()
+    secs = sum(int(p) * m for p, m in zip(hms.split(":"), (3600, 60, 1))
+               if p.isdigit())
+    finished = rule.get("finished_event", "timer.finished")
+    cancelled = rule.get("cancelled_event", "timer.cancelled")
+    return [
+        {"kind": "service", "service": rule.get("start_service", "timer.start"),
+         "entities": [entity], "data": {"duration": f'"{hms}"'}},
+        {"kind": "wait_for_event",
+         "events": [{"event_type": finished, "entity": entity, "id": "finished"},
+                    {"event_type": cancelled, "entity": entity, "id": "cancelled"}],
+         "timeout": _hms(secs + int(rule.get("timeout_margin_seconds") or 30))},
+        # Anything other than a clean finish means the pending work must not
+        # run. `wait.trigger` is HA's own record of which trigger ended the
+        # wait, so this reads the outcome rather than re-deriving it.
+        {"kind": "if",
+         "conditions": [{"kind": "template",
+                         "template": "{{ wait.trigger is none or "
+                                     "wait.trigger.id != 'finished' }}"}],
+         "then": [{"kind": "stop", "reason": "pending work was cancelled"}],
+         "else": []},
+    ]
+
+
 def _has_wait(nodes) -> bool:
     """Does anything in here wait?
 
@@ -1155,10 +1315,17 @@ def _has_wait(nodes) -> bool:
     body, a switch case, or a condition's attached actions still needs its own
     cancellation scope — missing one puts a statement into the merged
     automation where an unrelated trigger can restart it and kill the wait.
-    Two pistons slipped through when this only recursed into `if`."""
+    Two pistons slipped through when this only recursed into `if`.
+
+    The command list is NOT kept here — it comes from routing_table.json via
+    `_routing.wait_commands()`, because which commands leave pending work is
+    part of the split rule and the split rule is editable data (HARD_RULES §3
+    + §8). The hardcoded copy that used to live on this line was missing
+    `waitForDateTime`.
+    """
     if isinstance(nodes, dict):
         if (nodes.get("kind") == "task"
-                and nodes.get("command") in ("wait", "waitForTime", "waitRandom")):
+                and nodes.get("command") in _routing.wait_commands()):
             return True
         return any(_has_wait(v) for k, v in nodes.items()
                    if k in ("then", "else", "body", "conditions", "children",
@@ -1194,7 +1361,14 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 # flags cm when the hub's driver advertised something it knows
                 # (playText) — so fall through to normal translation.
             if n["command"] == "wait":
-                out.append({"kind": "delay", "delay": _delay_hms(n["params"])})
+                timer = (getattr(resolver, "piston_timers", {}) or {}).get(
+                    ctx.get("stmt_id"))
+                if timer:
+                    out.extend(_timer_wait_nodes(
+                        timer, _delay_hms(n["params"]), ctx))
+                else:
+                    out.append({"kind": "delay",
+                                "delay": _delay_hms(n["params"])})
                 continue
             if n["command"] == "setSwitch":
                 # "Set switch to on/off" — a constant on/off value is just the
@@ -1266,16 +1440,45 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 continue
             if n["command"] == "cancelTasks":
                 # "Cancel all pending tasks" — vcmd_cancelTasks sets
-                # cancellations[ALL]=true (webcore-piston.groovy:7321), and
-                # Jeremy describes the effect as "stops the automation at that
-                # line". Everything still pending in this run IS this run, so
-                # HA's `stop:` expresses it exactly. YAML can do this reliably,
-                # so it stays in YAML.
+                # cancellations[ALL]=true (webcore-piston.groovy:7321).
                 #
-                # It was previously a silent no-op on the claim that
-                # mode: restart covers it. It does not — restart only fires on
-                # RE-TRIGGER, while this cancels on demand mid-run.
-                out.append({"kind": "stop", "reason": "cancelTasks"})
+                # `stop:` IS WRONG, TWICE OVER — proven on a device 2026-08-07,
+                # see COMPILER_TODO's cancelTasks entry:
+                #   * it does NOT reach the pending work. Every wait-carrying
+                #     statement gets its own automation, so the pending delay is
+                #     in a DIFFERENT run, and `stop:` only ends the run it is
+                #     in. The cancelled work fired anyway.
+                #   * it halts the CURRENT run, which webCoRE never does —
+                #     webCoRE cancels the pending tasks and CARRIES ON.
+                # ROUTE D — TIMER HELPERS. The pending work now waits on a
+                # timer ENTITY, and an entity can be reached from any
+                # automation, which is precisely what `stop:` could not do.
+                #
+                # `automation.turn_off`+`turn_on` was built, device-tested and
+                # REVERTED on 2026-08-07: it does cancel across automations, but
+                # inside a `mode: restart` automation a re-trigger can abort
+                # between the two calls and leave the target PERMANENTLY
+                # DISABLED. A timer has no such window — `timer.cancel` is one
+                # call and leaves nothing switched off.
+                #
+                # And it does NOT stop the current run any more. webCoRE
+                # cancels the pending tasks and CARRIES ON (vcmd_cancelTasks,
+                # webcore-piston.groovy:7321); `stop:` additionally halted the
+                # statement that issued the cancel, which webCoRE never does.
+                timers = sorted((getattr(resolver, "piston_timers", {}) or {}).values())
+                if timers:
+                    out.append({
+                        "kind": "service",
+                        "service": routing.timer_backed_waits().get(
+                            "cancel_service", "timer.cancel"),
+                        "entities": timers, "data": None})
+                else:
+                    # Nothing in this piston is waiting on a timer, so there is
+                    # no pending work to reach. `stop:` remains the honest
+                    # answer for the shapes route D does not cover yet
+                    # (waitForTime/waitForDateTime — see the routing table's
+                    # `_not_covered` note).
+                    out.append({"kind": "stop", "reason": "cancelTasks"})
                 continue
 
             # Commands that compile to NOTHING. Which ones those are is
@@ -1304,6 +1507,13 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 continue
             if n["command"] in ("fadeLevel", "fadeColorTemperature", "fadeHue", "fadeSaturation"):
                 out.extend(_fade(n, resolver, ctx))
+                continue
+            if n["command"] == "setAdjustedHSLColor":
+                # same three values, plus a fade — the guard sits one place
+                # later because of it.
+                out.append(_set_hsl(n, resolver, ctx,
+                                    command="setAdjustedHSLColor",
+                                    guard_index=4))
                 continue
             if n["command"] == "setHSLColor":
                 out.append(_set_hsl(n, resolver, ctx))
@@ -1412,6 +1622,15 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 # can't take. If the integration has a command passthrough,
                 # the device's own driver still knows the command, so send it
                 # there rather than failing.
+                #
+                # DELIBERATELY NOT catching UnresolvableDevice ("no mapping at
+                # all"), though the argument for it is real and is written up
+                # in COMPILER_TODO. Tried 2026-08-08: it re-routes 19 commands
+                # from the PyScript band to the raw driver in one go. That is
+                # probably an improvement on bridged devices and does nothing
+                # on native ones, but it is a wide behavioural change and it
+                # deserves its own verified pass, not a side effect of fixing
+                # one wrong mapping.
                 if resolver.passthrough(n["devices"], ctx):
                     out.append(_driver_command(n, resolver, ctx))
                     continue
@@ -1575,33 +1794,58 @@ def _fade(n: dict, resolver: Resolver, ctx: dict) -> list:
     return nodes
 
 
-def _set_hsl(n: dict, resolver: Resolver, ctx: dict) -> dict:
-    """setHSLColor -> HA `light.turn_on` with hs_color + brightness. webCoRE's
-    hue/saturation are 0-100 (same convention as the hue_hs/sat_hs transforms
-    the plain setHue/setSaturation use — HA hue is 0-360, so ×3.6; saturation
-    stays 0-100), and its L is a brightness percent -> brightness_pct.
-    Params: [0] hue, [1] saturation, [2] level, [3] optional 'only if switch'."""
+def _set_hsl(n: dict, resolver: Resolver, ctx: dict, command: str = "setHSLColor",
+             guard_index: int = 3) -> dict:
+    """setHSLColor (and its ...Adjusted twin) -> `light.turn_on` with an
+    hue/saturation pair plus brightness.
+
+    webCoRE's hue/saturation are 0-100 (the same convention the plain
+    setHue/setSaturation transforms use — HA hue is 0-360, so ×3.6; saturation
+    stays 0-100), and its L is a brightness percent.
+
+    SHARED WITH `setAdjustedHSLColor` rather than copied for it (HARD_RULES
+    §9). That command takes the same three values plus a fade duration, and its
+    vocab entry had been copy-pasted from `setAdjustedColor` — asking for
+    `rgb_color: $1|hex_rgb` when `$1` is a HUE NUMBER, not a colour. It could
+    therefore never emit and fell through to the device's raw driver every
+    time. Found by the commitment checker, 2026-08-08.
+
+    Which FIELD each value lands in comes from the vocab, and is matched by the
+    `$n` token rather than by position, so a mapping may name its fields in any
+    order and may add or omit the fade without this code changing (HARD_RULES
+    §8: the names move, the arithmetic does not)."""
     params = n["params"]
     if len(params) < 3:
-        raise NotYetImplemented("setHSLColor needs hue, saturation and level", **ctx)
-    if len(params) > 3 and params[3] and (params[3] or {}).get("c") is not None:
+        raise NotYetImplemented(f"{command} needs hue, saturation and level", **ctx)
+    if (len(params) > guard_index and params[guard_index]
+            and (params[guard_index] or {}).get("c") is not None):
         raise NotYetImplemented(
-            "setHSLColor with an 'only if switch is …' guard is not compiled yet", **ctx)
+            f"{command} with an 'only if switch is …' guard is not compiled yet",
+            **ctx)
     entities = resolver.entities_for_command(n["devices"], "setColor", ctx)
     service, _ = resolver.service_spec("setColor", entities[0], ctx)
 
     def num(p, label):
         v = (p or {}).get("c")
         if not isinstance(v, (int, float)) or isinstance(v, bool):
-            raise NotYetImplemented(f"setHSLColor with a non-constant {label}", **ctx)
+            raise NotYetImplemented(f"{command} with a non-constant {label}", **ctx)
         return v
 
-    hue, sat, level = num(params[0], "hue"), num(params[1], "saturation"), num(params[2], "level")
-    # webCoRE hue is 0-100, HA's is 0-360 — the conversion is compiler work and
-    # stays here. The two FIELD names it fills come from the vocab.
-    colour_field, level_field = list(resolver.ha_spec("setHSLColor", ctx)["data"])
-    data = {colour_field: _json_dumps([round(float(hue) * 3.6, 1), round(float(sat), 1)]),
-            level_field: level}
+    hue, sat, level = (num(params[0], "hue"), num(params[1], "saturation"),
+                       num(params[2], "level"))
+    spec = resolver.ha_spec(command, ctx)["data"]
+    by_token = {str(v).strip(): k for k, v in spec.items()}
+    data = {}
+    if "$1" in by_token:
+        data[by_token["$1"]] = _json_dumps(
+            [round(float(hue) * 3.6, 1), round(float(sat), 1)])
+    if "$3" in by_token:
+        data[by_token["$3"]] = level
+    # the fade, when this variant declares one and the piston gave a duration
+    if "$4" in by_token and len(params) > 3:
+        secs = _duration_seconds(params[3], ctx, f"{command} duration")
+        if secs is not None:
+            data[by_token["$4"]] = secs
     return {"kind": "service", "service": service, "entities": entities, "data": data}
 
 
@@ -1917,6 +2161,15 @@ def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
     # only a WHOLE-WORD self-reference means an accumulator (count = count+1);
     # word boundaries stop `count` matching inside `mycount`/`count2`,
     # which would over-route unrelated pistons (review 2026-07-20).
+    #
+    # TRIED AND REVERTED 2026-08-08: giving accumulators a helper entity (which
+    # DOES persist between runs) moves this refusal away and compiles them
+    # natively — it worked, and moved 3 pistons to YAML. It was reverted
+    # because two of those three are smoke/CO and water-leak pistons, and the
+    # YAML band silently drops their spoken alarm (a SEPARATE, pre-existing
+    # bug — see COMPILER_TODO). Moving a safety piston onto a band that loses
+    # its announcement is worse than leaving it on PyScript where it works.
+    # Fix the speak drop first, then this becomes a clean win.
     if re.search(r"\b" + re.escape(str(name)) + r"\b", source):
         raise NotYetImplemented(
             f"'{name}' is built from its own previous value, which only "
@@ -2122,6 +2375,26 @@ def _push_notification(n: dict, resolver: Resolver, ctx: dict) -> dict:
                      _text_param(p0, resolver, ctx, n.get("_piston"))}}
 
 
+def _spoken(msg: str, resolver: Resolver) -> str:
+    """A spoken message with markup the engine cannot use stripped out.
+
+    webCoRE pistons carry SSML (`<prosody rate='slow'>`) because Hubitat's
+    speakers honoured it. Most Home Assistant TTS engines do not — they read
+    the tags ALOUD. Device-checked 2026-08-08: the door chime reached
+    tts.speak with `<prosody...>` intact.
+
+    The filter itself lives in webcore_vocab.json under
+    `_ha_translation.spoken_text_filter` so a user with an SSML-capable engine
+    can blank it without touching code (HARD_RULES §8). Only applied to a
+    template — a plain constant is left exactly as written."""
+    from .resolve import _load_vocab
+    f = (((_load_vocab().get("_ha_translation") or {})
+          .get("spoken_text_filter") or {}).get("filter") or "").strip()
+    if not f or not msg.startswith('"{{') or not msg.endswith('}}"'):
+        return msg
+    return msg[:-3].rstrip() + " | " + f + ' }}"'
+
+
 def _speak(n: dict, resolver: Resolver, ctx: dict) -> dict:
     """SPEAK_ACTION_SPEC §5.4: tts.speak — target = the engine entity (global
     setting / sole engine), media players + message + cache in data. Constant
@@ -2141,7 +2414,8 @@ def _speak(n: dict, resolver: Resolver, ctx: dict) -> dict:
     # value belongs in each is the compiler's business.
     spec = resolver.ha_spec(n["command"], ctx)
     slots = {"$target": players,
-             "$1": _text_param(p0, resolver, ctx, n.get("_piston"))}
+             "$1": _spoken(_text_param(p0, resolver, ctx, n.get("_piston")),
+                           resolver)}
     data = {k: slots.get(v, "true" if v is True else v)
             for k, v in spec["data"].items()}
     return {"kind": "service", "service": spec["service"], "entities": [engine],
@@ -2323,9 +2597,25 @@ def _helpers_for(resolver: Resolver, piston_id: str, piston_name: str) -> list:
     # was_* watchers need a helper too, created the same way and reported
     # through the same list so DEPLOY has one thing to create and one thing to
     # clean up when the piston is deleted.
+    # Device groups the intent layer created. Same list as the variable
+    # helpers so deploy has ONE thing to create and one thing to remove when
+    # a piston is deleted.
+    for g in (getattr(resolver, "device_groups", {}) or {}).values():
+        out.append({"entity": g["entity"], "kind": "group",
+                    "name": g["name"], "device_class": g.get("device_class"),
+                    "members": g.get("entities") or []})
     for w in (getattr(resolver, "was_watchers", {}) or {}).values():
         out.append({"entity": w["entity"], "type": "datetime",
                     "name": f"{piston_name}: since '{w['attr']}' condition held"})
+    # Timer helpers standing in for cancellable waits (route D). Reported
+    # through the SAME list as every other helper so DEPLOY has one thing to
+    # create and one thing to clean up when the piston is deleted — a second
+    # creation path would be a second thing to forget.
+    for stmt_id, entity in sorted(
+            (getattr(resolver, "piston_timers", {}) or {}).items(),
+            key=lambda kv: str(kv[1])):
+        out.append({"entity": entity, "type": "timer",
+                    "name": f"{piston_name}: pending wait (statement {stmt_id})"})
     return sorted(out, key=lambda h: h["entity"])
 
 
@@ -2363,6 +2653,7 @@ def _attached_chain(conds: list, then_actions: list, else_actions: list,
              "conditions": [_condition(head, resolver, ctx)],
              "then": ts + inner,
              "else": fs + else_actions}]
+
 
 
 def _assert_no_orphan_attached(br: dict, handled: bool, ctx: dict) -> None:
@@ -2455,6 +2746,32 @@ def _accumulate_loop(n: dict, resolver: Resolver, ctx: dict):
     setvars = [t for t in tasks or []
                if t.get("kind") == "task" and t.get("command") == "setVariable"]
     if len(setvars) != 1:
+        return None
+    # THE LOOP BODY MUST BE *ONLY* THE ACCUMULATION.
+    #
+    # This function collapses a per-device loop into ONE template, so anything
+    # else standing beside the accumulation inside that loop has nowhere to go
+    # — and until 2026-08-08 it simply went nowhere. Only `setvars[0]` was ever
+    # read; every sibling task was discarded, silently, and the piston still
+    # compiled clean.
+    #
+    # That cost `11_Carbon_Monoxide_detected` and `29_Gas_Detector_2` their
+    # spoken alarm: both do `X = X + <device>` AND `setVolume` + `playText` in
+    # the same loop body, and the emitted automation contained no speak, no
+    # volume, no media_player at all. A carbon-monoxide piston compiled to an
+    # automation that never announces anything (HARD_RULES §6 — silence is the
+    # bug). Found by the commitment checker; the snapshot harness had reported
+    # NO DRIFT on it for weeks, because the output never changed — it was
+    # always wrong.
+    #
+    # Returning None routes the piston to PyScript, which runs the loop
+    # properly. That GROWS the PyScript band, which HARD_RULES §3 wants to
+    # shrink — accepted deliberately, because §6 outranks it: an honest
+    # PyScript route beats a silent drop. Shrinking it again means emitting the
+    # accumulation AND the per-device actions, which is real work (the
+    # accumulation collapses to one template while the siblings genuinely run
+    # once per device) and is written up in COMPILER_TODO.
+    if any(t is not setvars[0] for t in (tasks or [])):
         return None
     params = setvars[0].get("params") or []
     if len(params) < 2:
@@ -2624,6 +2941,30 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
              throttle=None if has_wait else _NOISY_THROTTLE)
 
 
+def _time_restriction_conds(br: dict) -> list:
+    """Day-of-week / month restrictions carried on a time operand.
+
+    webCoRE numbers days 0=Sunday..6=Saturday and months 1..12; the HA spelling
+    lives in the template (HARD_RULES §8). De-duplicated because the same
+    restriction is repeated on every operand of a statement, and emitting it
+    once per operand would stack fourteen identical conditions on the school
+    piston."""
+    out, seen = [], set()
+    for node in list(br.get("triggers") or []) + list(br.get("conditions") or []):
+        if not isinstance(node, dict):
+            continue
+        lo = (node.get("raw") or {}).get("lo") or {}
+        days = tuple(lo.get("odw") or ())
+        months = tuple(lo.get("omy") or ())
+        if days and ("d", days) not in seen:
+            seen.add(("d", days))
+            out.append({"kind": "time", "weekday": list(days)})
+        if months and ("m", months) not in seen:
+            seen.add(("m", months))
+            out.append({"kind": "months", "months": list(months)})
+    return out
+
+
 def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                  blocks: list, auto_ids: list, collect: list | None = None,
                  piston_has_triggers: bool = False) -> None:
@@ -2643,6 +2984,14 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
     cancel_triggers = []
     conditions = []
     direction_conds = []
+    # DAY / MONTH RESTRICTIONS. They ride on the OPERAND (`lo.odw`, `lo.omy`,
+    # `lo.owm`, `lo.odm`), not on the statement, which is why every review that
+    # walked statements missed them and why nothing in this file referenced
+    # `odw` until now. DEVICE-PROVEN LOST: a piston saying "every day except
+    # today" fired today, control and all. Nine corpus pistons are affected —
+    # the Christmas tree runs all year, the Halloween piston runs all year, and
+    # the school piston wakes the kids on Saturdays and through the summer.
+    conditions.extend(_time_restriction_conds(br))
 
     if br["kind"] == "timer":
         t = dict(br["timer"])
@@ -2737,6 +3086,7 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
 
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)
+
 
     if _has_attached(br["conditions"]):
         _assert_no_orphan_attached(br, True, ctx)

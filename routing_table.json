@@ -1,59 +1,107 @@
 {
- "_comment": "webCoRE-JSON signatures that FORCE the PyScript band (COMPILER_SPEC §3.2). YAML/classic is the default; these are the exceptions. Data-driven on purpose (COMPILER_DECISIONS_HOLDING §E1) - edit here, never in compiler code. Checked by shim/compiler/routing.py. cancelTasks was removed 2026-07-20: mode:restart already cancels this automation's pending delays when it retriggers, so the YAML band expresses it natively (as a no-op). piston_scope_commands moved here from command_maps.json 2026-07-26: it is ROUTING (which commands the YAML band cannot express, so they go to PyScript), not translation, and translation now lives solely in webcore_vocab.json.",
- "statement_types": [
-  "on",
-  "break"
- ],
- "task_commands": [],
- "group_operators": [
-  "xor"
- ],
- "condition_fields_present": [
-  "wd"
- ],
- "switch_ctp_values": [
-  "e"
- ],
- "statement_fields_nondefault": {
-  "tep": [
-   "c",
-   "p",
-   "b"
+  "_comment": "webCoRE-JSON signatures that FORCE the PyScript band (COMPILER_SPEC §3.2). YAML/classic is the default; these are the exceptions. Data-driven on purpose (COMPILER_DECISIONS_HOLDING §E1) - edit here, never in compiler code. Checked by shim/compiler/routing.py. cancelTasks was removed 2026-07-20: mode:restart already cancels this automation's pending delays when it retriggers, so the YAML band expresses it natively (as a no-op). piston_scope_commands moved here from command_maps.json 2026-07-26: it is ROUTING (which commands the YAML band cannot express, so they go to PyScript), not translation, and translation now lives solely in webcore_vocab.json.",
+  "statement_types": [
+    "on",
+    "break"
   ],
-  "tsp": [
-   "a"
-  ]
- },
- "piston_scope_commands": [
-  "setVariable",
-  "setState",
-  "saveStateLocally",
-  "saveState",
-  "loadStateLocally",
-  "loadState",
-  "log",
-  "setPistonState",
-  "setTileColor",
-  "setTileTitle",
-  "setTileText",
-  "setTile",
-  "clearTile",
-  "exit",
-  "break",
-  "executePiston",
-  "pausePiston",
-  "resumePiston",
-  "httpRequest",
-  "setLocationMode",
-  "storeMedia",
-  "wolRequest",
-  "iftttMaker",
-  "writeToFuelStream",
-  "comment",
-  "waitForTime",
-  "waitForDateTime",
-  "repeatAction",
-  "followUp",
-  "setHSMStatus"
- ]
+  "task_commands": [],
+  "group_operators": [
+    "xor"
+  ],
+  "condition_fields_present": [
+    "wd"
+  ],
+  "switch_ctp_values": [
+    "e"
+  ],
+  "statement_fields_nondefault": {
+    "tep": [
+      "c",
+      "p",
+      "b"
+    ],
+    "tsp": [
+      "a"
+    ]
+  },
+  "_split_rules_comment": "THE SPLIT RULE (COMPILER_SPEC 3.2b; HARD_RULES 10). A piston is ONE intent, but HA cannot always RUN one intent as one automation. These are the shapes HA structurally cannot hold in a single automation, so the compiler must break them out and then keep the pieces connected and in order. This is a MOVING line, exactly like the PyScript one above - HA gains abilities, and when it does you turn a rule off HERE instead of editing compiler code (HARD_RULES 3 + 8). Each rule: 'enabled' is the switch, 'becomes' is what the broken-out piece is emitted as, 'why' is the evidence so a later reader knows whether it still applies. Splitting is a CONSEQUENCE of what HA can run, never a style choice - never split a piston just because the pieces are easier to compile.",
+  "split_rules": {
+    "nested_subscription": {
+      "enabled": true,
+      "statement_types": [
+        "on"
+      ],
+      "becomes": "automation",
+      "why": "webCoRE's `on <event> do` is a trigger sitting INSIDE the piston. HA triggers exist only at automation level - you cannot nest one in an action sequence. 'Do X every time Y happens' therefore requires its own automation (WEBCORE_HA_BEHAVIOR_MAP.md:98, 'webCoRE pistons are event-driven internally; HA automations are event-driven externally'). NOTE: 'on' also appears in statement_types above, which sends the whole piston to PyScript today. That entry is what this rule is meant to RETIRE once splitting is wired through the emitters - do not remove it until then, or `on` pistons will compile to something that never fires."
+    },
+    "independent_timed_branches": {
+      "enabled": true,
+      "becomes": "automation",
+      "why": "webCoRE cancels pending work per CONDITION GROUP - each timed branch is its own independent cancel unit. HA's `mode: restart` cancels the ENTIRE automation run. Two timed branches sharing one automation therefore kill each other's pending waits, silently. COMPILER_SPEC 2.5 point 4 already worked this out: one automation per condition group is what makes mode:restart exact; bundling is what breaks it."
+    },
+    "work_after_wait": {
+      "enabled": true,
+      "becomes": "script",
+      "wait_commands": [
+        "wait",
+        "waitRandom",
+        "waitForTime",
+        "waitForDateTime"
+      ],
+      "cancel_commands": [
+        "cancelTasks",
+        "cancelPendingTasks"
+      ],
+      "why": "In webCoRE a pending task goes to a scheduler and the piston carries on. In HA a `delay` STOPS its sequence - everything behind it is hostage until it elapses. Emitting the continuation as its own script lets the parent carry on, and is the only shape where a cancel can reach the pending work at all, because scripts are individually addressable via script.turn_off (COMPILER_TODO.md:335-350, decision B)."
+    }
+  },
+  "piston_scope_commands": [
+    "setVariable",
+    "setState",
+    "saveStateLocally",
+    "saveState",
+    "loadStateLocally",
+    "loadState",
+    "log",
+    "setPistonState",
+    "setTileColor",
+    "setTileTitle",
+    "setTileText",
+    "setTileFooter",
+    "setTile",
+    "clearTile",
+    "exit",
+    "break",
+    "executePiston",
+    "pausePiston",
+    "resumePiston",
+    "httpRequest",
+    "setLocationMode",
+    "storeMedia",
+    "wolRequest",
+    "iftttMaker",
+    "writeToFuelStream",
+    "comment",
+    "waitForTime",
+    "waitForDateTime",
+    "repeatAction",
+    "followUp",
+    "setHSMStatus"
+  ],
+  "timer_backed_waits": {
+    "enabled": true,
+    "why": "A `delay:` cannot be cancelled from outside its own automation run, so `cancelTasks` could never reach pending work — PROVEN ON A DEVICE 2026-08-08: the cancel fired, was accepted, and the cancelled turn-off ran anyway. It only LOOKS fine on the common shape because the waiting automation usually shares the trigger that fired the cancel and `mode: restart` throws the delay away as a side effect; change the piston's cancellation policy so the mode becomes `queued` and the bug appears. An HA timer helper is a real entity, so `timer.cancel` reaches it from anywhere, and HA's own docs state it cancels WITHOUT firing the finished event - which is exactly what makes the continuation not run. Bench-verified both directions 2026-08-08.",
+    "start_service": "timer.start",
+    "cancel_service": "timer.cancel",
+    "finished_event": "timer.finished",
+    "cancelled_event": "timer.cancelled",
+    "helper_domain": "timer",
+    "wait_commands": [
+      "wait",
+      "waitRandom"
+    ],
+    "timeout_margin_seconds": 30,
+    "_margin_why": "The wait_for_trigger timeout is the backstop for a cancel: no finished event ever arrives, so the run must give up and stop rather than hang. The margin only has to outlast HA's own scheduling jitter.",
+    "_not_covered": "waitForTime / waitForDateTime wait for an ABSOLUTE time, not a duration, so they are a different shape and still emit their own wait. They carry the same cancellation gap; listing them here without building that shape would be a silent claim to fix something that is not fixed."
+  }
 }

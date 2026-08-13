@@ -39,7 +39,7 @@ _EQUALITY_OPS = {"is": "==", "is_equal_to": "==",
 _PRECEDENCE = {
     "!": 2, "!!": 2, "~": 2,
     "**": 3,
-    "*": 4, "/": 4, "\\": 4, "%": 4,
+    "*": 4, "/": 4, "\\": 4, "%": 4, "adj": 4,
     "+": 5, "-": 5,
     "<<": 6, ">>": 6,
     ">": 7, "<": 7, ">=": 7, "<=": 7,
@@ -326,8 +326,33 @@ class ExprTranspiler:
     # entry points ----------------------------------------------------------
 
     def transpile_operand(self, op: dict) -> str:
-        """Expression operand (t:'e'): prefer the dashboard-parsed exp tree
-        embedded at save time; fall back to parsing the source string."""
+        """One operand as a Jinja expression.
+
+        WAS EXPRESSION-ONLY, AND FAILED SILENTLY FOR EVERYTHING ELSE. It read
+        `exp`, then fell back to parsing `e` — but a VARIABLE operand
+        (`{t:'x', x:'Message'}`) has neither, so it parsed `None`, produced an
+        empty tree, and returned the literal string `none`.
+
+        Device-proven 2026-08-08 on the door/window chime: the piston builds
+        its announcement into `Message`, and the speak call emitted
+        `message: "{{ none }}"`. Home Assistant then threw on every single door
+        opening — *"string value is None for dictionary value @ data['message']"*
+        — after having already set the volume. Compiled clean, passed every
+        gate, and the chime never spoke.
+
+        The picker can put any operand kind in a text parameter, so the kinds
+        it actually produces are handled here rather than assumed away."""
+        kind = op.get("t")
+        if kind == "x" and op.get("x"):
+            # a local/global variable holding the text — the transpiler already
+            # renders these inside expressions, so hand it the same node shape
+            # instead of an empty tree.
+            item = {"t": "variable", "x": op.get("x")}
+            if op.get("xi") is not None:
+                item["xi"] = op.get("xi")
+            return self.expression({"i": [item]})
+        if kind == "s" and op.get("s"):
+            return self.expression({"i": [{"t": "string", "v": str(op.get("s"))}]})
         tree = op.get("exp")
         if not (isinstance(tree, dict) and tree.get("i") is not None):
             tree = parse_expression(op.get("e"), device_lookup=self._device_by_name,
@@ -389,9 +414,26 @@ class ExprTranspiler:
                 pending_unary = []
                 is_str = item.get("t") in ("string",)
                 if operands and operands[-1][1] is None:
-                    # adjacent operands, no operator: engine default
+                    # ADJACENT OPERANDS WITH NO OPERATOR. The engine decides
+                    # this AT RUNTIME from the VALUES — concatenate strings,
+                    # multiply numbers (groovy :10650-10724). Deciding it here
+                    # from whether the token is a string LITERAL is wrong for
+                    # the commonest case in the corpus: `{Battery_Status
+                    # $device " Battery:"}` joins two VARIABLES holding text,
+                    # neither of them a literal, so it compiled to `*`.
+                    #
+                    # DEVICE-PROVEN 2026-08-08: string * string coerces both to
+                    # 0, so every loop iteration multiplied the accumulated
+                    # report back to `0` and the push read
+                    # "0\n   Battery:12%" with two of the three devices gone.
+                    # Invisible to compile, ast.parse, HA's module load and all
+                    # five gates.
+                    #
+                    # `_op` already coerces at runtime (`_both_numeric`), so
+                    # the decision belongs there. 'adj' means "whatever these
+                    # values turn out to be".
                     operands[-1][1] = "+" if (concat_strings or is_str
-                                              or operands[-1][2]) else "*"
+                                              or operands[-1][2]) else "adj"
                 operands.append([expr, None, is_str])
         if pending_unary:
             raise NotYetImplemented("dangling unary operator", **self.ctx)
@@ -662,6 +704,14 @@ class JinjaTranspiler(ExprTranspiler):
             if str_context:
                 return a + " ~ " + b, True
             return "(" + a + " | float(0)) + (" + b + " | float(0))", False
+        if o == "adj":
+            # ADJACENCY resolved at RUNTIME, as the engine does: numbers
+            # multiply, anything else concatenates. Jinja can ask the same
+            # question with `is number`, so the template makes the decision
+            # from the VALUES instead of the compiler guessing from the source.
+            return ("((%s) | float(0)) * ((%s) | float(0)) "
+                    "if ((%s) is number and (%s) is number) "
+                    "else ((%s) ~ (%s))" % (a, b, a, b, a, b)), True
         if o in ("-", "*", "/", "%"):
             return "(" + a + " | float(0)) " + o + " (" + b + " | float(0))", False
         if o == "**":

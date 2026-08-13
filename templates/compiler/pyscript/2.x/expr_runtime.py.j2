@@ -42,6 +42,14 @@ def _op(a, o, b):
         return ("" if a is None else str(a)) + ("" if b is None else str(b))
     if o == "-":
         return _num(a) - _num(b)
+    if o == "adj":
+        # ADJACENCY: two operands written next to each other with no operator.
+        # The engine resolves it from the VALUES, not from the source text —
+        # numbers multiply, anything else concatenates. Compiling it to "*"
+        # coerced two strings to 0 and destroyed every accumulated report.
+        if numeric:
+            return _num(a) * _num(b)
+        return ("" if a is None else str(a)) + ("" if b is None else str(b))
     if o == "*":
         return _num(a) * _num(b)
     if o in ("/",):

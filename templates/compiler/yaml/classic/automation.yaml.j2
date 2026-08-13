@@ -99,6 +99,21 @@
 {%- if c.get('before') %}
   before: "{{ c.get('before') }}"
 {%- endif %}
+{#- webCoRE numbers days 0=Sunday..6=Saturday; HA names them. The NAMES live
+    here, not in Python, so an HA rename is a template edit (HARD_RULES §8).
+    Without this the "only on these weekdays" restriction was emitted nowhere
+    at all — device-proven: a piston saying "every day except today" fired. -#}
+{%- if c.get('weekday') %}
+  weekday:
+{%- for d in c.get('weekday') %}
+    - {{ ['sun','mon','tue','wed','thu','fri','sat'][d] }}
+{%- endfor %}
+{%- endif %}
+{%- elif c.kind == 'months' -%}
+{#- HA has no native month condition, so this is the one place it must be a
+    template. webCoRE numbers months 1-12, same as `now().month`. -#}
+- condition: template
+  value_template: "{{ '{{' }} now().month in {{ c.get('months') | list }} {{ '}}' }}"
 {%- elif c.kind == 'sun' -%}
 - condition: sun
 {%- if c.get('after') %}
@@ -204,6 +219,17 @@
   timeout:
     hours: 25
   continue_on_timeout: true
+{%- elif a.kind == 'wait_for_event' -%}
+- wait_for_trigger:
+{%- for e in a.events %}
+    - trigger: event
+      event_type: {{ e.event_type }}
+      event_data:
+        entity_id: {{ e.entity }}
+      id: {{ e.id }}
+{%- endfor %}
+  timeout: "{{ a.timeout }}"
+  continue_on_timeout: false
 {%- elif a.kind == 'stop' -%}
 - stop: "{{ a.get('reason') or 'piston exited' }}"
 {%- elif a.kind == 'if' -%}

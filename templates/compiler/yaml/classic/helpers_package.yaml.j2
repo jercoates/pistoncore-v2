@@ -42,6 +42,30 @@
 {%- endfor %}
 {%- endfor %}
 {% endfor %}
+{% if group_sensors %}
+{#- DEVICE GROUPS. A state trigger's `for:` is tracked PER ENTITY, so
+    "these five sensors have been clear for 5 minutes" cannot be written as a
+    list of five entities — it fires when any ONE of them goes quiet, and
+    device-proven turns the lights off while another sensor in the same room
+    is still detecting. A group has ONE combined state, so `for:` on it means
+    what the piston meant.
+
+    Named per piston per variable, never by device class: one broad "motion"
+    group would merge rooms that have nothing to do with each other. -#}
+binary_sensor:
+{%- for g in group_sensors | sort(attribute='object_id') %}
+  - platform: group
+    unique_id: {{ g.object_id | tojson }}
+    name: {{ g.name | tojson }}
+{%- if g.device_class %}
+    device_class: {{ g.device_class | tojson }}
+{%- endif %}
+    entities:
+{%- for e in g.entities %}
+      - {{ e }}
+{%- endfor %}
+{%- endfor %}
+{% endif %}
 {% if shell_commands %}
 # Deleting a file is not an action Home Assistant provides. `shell_command` is
 # the supported way to do it, and a package can declare one — so clearImages()

@@ -97,11 +97,65 @@ def helper_config(domain: str, name: str) -> dict:
         cfg.update({"max": 255})
     elif domain == "input_datetime":
         cfg.update({"has_date": True, "has_time": True})
+    elif domain == "timer":
+        # A timer standing in for a cancellable wait (route D). No duration is
+        # declared: every `timer.start` passes its own, so one declaration
+        # serves a statement whose wait length is a variable.
+        #
+        # `restore: true` survives an HA restart — but only the TIMER does. A
+        # timer that expires while HA is down does NOT fire `finished` on the
+        # way back up, so the continuation is silently lost. Bench-measured
+        # 2026-08-08 (30s timer, ~45s outage: idle on boot, no event, the work
+        # never ran). Written up as a divergence in /help/limitations rather
+        # than left as a surprise.
+        cfg.update({"duration": "00:00:00", "restore": True})
     return cfg
 
 
-def render_package(helpers: list) -> str:
+def group_sensor(piston_id: str, group_name: str, entities: list,
+                 device_class: str | None = None) -> dict:
+    """A binary_sensor GROUP standing in for one piston's device group.
+
+    WHY IT EXISTS. `for:` on a state trigger is tracked PER ENTITY, so a
+    trigger listing five motion sensors fires when ANY ONE of them has been
+    clear for the window — device-proven 2026-08-08 to turn the lights off
+    while another sensor in the same room was still detecting. A GROUP entity
+    has one combined state, so `for:` on it means "the whole group has been
+    clear", which is what the piston actually said. Proven both directions on
+    the bench: one sensor quiet while the other kept firing left the light ON;
+    both clear turned it OFF.
+
+    NAMED PER PISTON PER VARIABLE, never by device class (Jeremy, 2026-08-08:
+    *"we have to make uniq ones not a broad motion because i have many not just
+    1"*). Jeremy's Cave sensors and Hall sensors must not share a group, and
+    neither may collide with a group he made himself.
+
+    device_class is carried so the group reports as the same kind of thing its
+    members are; a group of motion sensors that reports as a generic binary
+    sensor reads wrong in the UI and in any condition keyed on class."""
+    slug = re.sub(r"[^a-z0-9_]+", "_", str(group_name).lower()).strip("_")
+    object_id = f"pistoncore_{piston_id}_{slug}"
+    return {"object_id": object_id,
+            "entity": f"binary_sensor.{object_id}",
+            # THE ENTITY_ID COMES FROM THE NAME, not from unique_id — measured
+            # on the bench 2026-08-08: `name: "PistonCore Cave_motion"` became
+            # `binary_sensor.pistoncore_cave_motion`, dropping the piston
+            # entirely. Two pistons each with a `Motion_sensor` variable would
+            # then both claim the same entity_id and HA would silently suffix
+            # the second `_2` — the same alias collision that fills the
+            # registry with corpses, and the automation would reference the
+            # wrong group. The piston id has to be IN THE NAME.
+            "name": f"PistonCore {piston_id} {group_name}",
+            "device_class": device_class,
+            "entities": sorted(set(entities))}
+
+
+def render_package(helpers: list, group_sensors: list | None = None) -> str:
     """helpers: [{entity, name}] -> the package YAML.
+
+    `group_sensors` are device-group binary sensors (see group_sensor above) —
+    the same package, because they are the same kind of thing: config the
+    piston needs in order to mean what it says.
 
     The SHAPE lives in helpers_package.yaml.j2, not here — it is HA config
     schema and therefore user-editable (COMPILER_SPEC "Jinja2 everywhere").
@@ -109,14 +163,22 @@ def render_package(helpers: list) -> str:
     from .emit_yaml import _env
 
     rows = []
+    groups = list(group_sensors or [])
     for h in helpers:
+        if h.get("kind") == "group":
+            groups.append({"object_id": h["entity"].split(".", 1)[1],
+                           "entity": h["entity"], "name": h["name"],
+                           "device_class": h.get("device_class"),
+                           "entities": h.get("members") or []})
+            continue
         domain, _, object_id = h["entity"].partition(".")
         cfg = helper_config(domain, h.get("name") or object_id)
         rows.append({"domain": domain, "object_id": object_id,
                      "name": cfg.pop("name"), "config": cfg})
     rows.sort(key=lambda r: (r["domain"], r["object_id"]))
     return _env.get_template("helpers_package.yaml.j2").render(
-        helpers=rows, shell_commands=shell_command_block())
+        helpers=rows, group_sensors=groups,
+        shell_commands=shell_command_block())
 
 
 def include_present(config_text: str) -> bool:
@@ -166,12 +228,29 @@ def ensure_include(writer=None) -> dict:
 
 
 def write_helpers(helpers: list, writer=None) -> dict:
-    """Write the package file. Returns the domains that need reloading."""
+    """Write the package file. Returns the domains that need reloading.
+
+    A DEVICE GROUP IS NOT A HELPER DOMAIN. `input_boolean`, `timer` and friends
+    each have a `reload` service; a `binary_sensor: platform: group` does NOT —
+    binary_sensor has no reload service at all, so deriving the call from the
+    entity's domain made deploy fail with "Service binary_sensor.reload not
+    found" and the group was never picked up. YAML platforms come back with
+    `homeassistant.reload_all`. Measured on the bench 2026-08-09."""
     writer = writer or deploy_writer.get_writer()
     writer.write(PACKAGE_FILE, render_package(helpers))
-    return {"domains": sorted({h["entity"].split(".", 1)[0] for h in helpers})}
+    domains = set()
+    for h in helpers:
+        if h.get("kind") == "group":
+            domains.add("homeassistant")
+        else:
+            domains.add(h["entity"].split(".", 1)[0])
+    return {"domains": sorted(domains)}
 
 
 def reload_services(domains) -> list:
-    """The reload calls that make HA pick the file up without a restart."""
-    return [(d, "reload") for d in sorted(set(domains))]
+    """The reload calls that make HA pick the file up without a restart.
+
+    `homeassistant` has no plain `reload` — its call is `reload_all`, which is
+    what a YAML platform (a device group) needs."""
+    return [(d, "reload_all" if d == "homeassistant" else "reload")
+            for d in sorted(set(domains))]

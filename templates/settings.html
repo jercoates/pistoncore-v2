@@ -80,6 +80,28 @@
         {% endif %}
       </p>
     </div>
+    <h2>Alarm system</h2>
+    <div class="form-group">
+      <label for="alarm_panel">Alarm panel (used by $alarmSystemStatus)</label>
+      <select id="alarm_panel" name="alarm_panel">
+        <option value="">&mdash; pick a panel &mdash;</option>
+        {% for e in alarm_panels %}
+        <option value="{{ e.entity_id }}" {{ 'selected' if e.entity_id == alarm_panel }}>{{ e.name }}</option>
+        {% endfor %}
+      </select>
+      <p class="field-hint">
+        {% if alarm_panels | length > 1 %}
+        You have more than one alarm panel, so PistonCore cannot tell which one your
+        pistons mean &mdash; pick it here, or pistons using the alarm system will not
+        compile.
+        {% elif alarm_panels %}
+        Only one panel exists, so this is picked automatically. Set it explicitly if
+        you add another.
+        {% else %}
+        Panels load from Home Assistant &mdash; save your HA connection above first.
+        {% endif %}
+      </p>
+    </div>
     <h2>Email</h2>
     <div class="form-group">
       <label for="email_notify_entity">Email notifier (used by Send email)</label>

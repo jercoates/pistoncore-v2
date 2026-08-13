@@ -683,6 +683,24 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
 # Full pipeline
 # ---------------------------------------------------------------------------
 
+def extract_alarm_panels(registries: dict) -> list[dict]:
+    """alarm_control_panel.* entities, for the $alarmSystemStatus setting.
+
+    webCoRE's alarm system maps to an HA alarm panel, but a house can have
+    more than one — Jeremy's has a keypad AND Hubitat Safety Monitor. The
+    pipeline binds automatically only when there is exactly ONE; with two it
+    refused, and every alarm piston failed to compile with "system variable
+    'alarmSystemStatus' not compiled yet" and no way for the user to resolve
+    it. Enumerated here so setup and Settings can offer the choice, the same
+    way the TTS engine is offered."""
+    return [
+        {"entity_id": s["entity_id"],
+         "name": s["attributes"].get("friendly_name", s["entity_id"])}
+        for s in registries["states"]
+        if s["entity_id"].startswith("alarm_control_panel.")
+    ]
+
+
 def extract_tts_engines(registries: dict) -> list[dict]:
     """
     tts.* entities (SESSION_BRIEF_SPEAK_VIRTUALS.md item 1b). VERIFIED live
@@ -1192,7 +1210,18 @@ def build_device_payload(registries: dict) -> dict:
     system_entities = {"mode": "input_select.pistoncore_location_mode"}
     alarm_panels = [s["entity_id"] for s in registries["states"]
                     if s["entity_id"].startswith("alarm_control_panel.")]
-    if len(alarm_panels) == 1:
+    # THE SETTING THIS COMMENT PROMISED NOW EXISTS. The one-panel rule is
+    # right for a house with one panel, but Jeremy's has a keypad AND HSM, and
+    # anyone with two panels got "system variable 'alarmSystemStatus' not
+    # compiled yet" on every alarm piston with no way to resolve it — the
+    # ambiguity was declared a settings question and then never given a
+    # setting. Measured 2026-08-09: three corpus pistons blocked by it.
+    from . import storage as _st
+    chosen = (_st.load_settings().get("alarm_panel") or "").strip()
+    if chosen and chosen in alarm_panels:
+        system_entities["alarmSystemStatus"] = chosen
+        system_entities["alarmSystemAlert"] = chosen
+    elif len(alarm_panels) == 1:
         system_entities["alarmSystemStatus"] = alarm_panels[0]
         # webCoRE's "alarm system alert" is the same panel reporting triggered
         system_entities["alarmSystemAlert"] = alarm_panels[0]
@@ -1237,5 +1266,6 @@ def build_device_payload(registries: dict) -> dict:
         "devices": devices,
         "resolution_map": resolution_map,
         "tts_engines": extract_tts_engines(registries),
+        "alarm_panels": extract_alarm_panels(registries),
         "skipped": skipped,
     }

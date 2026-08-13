@@ -464,16 +464,18 @@ def _verdict(band, bstat, bcode, vstat, vcode):
     return f"{band}:DROP" if dropped(bcode, vcode) else f"{band}:ok"
 
 
-def section_statements(verbose=False):
-    """Statement types, including the ones 0 of 84 corpus pistons use."""
-    print("\n" + "=" * 72)
-    print("STATEMENT TYPES")
-    print("=" * 72)
+def statement_shapes():
+    """One piston statement of every type webCoRE has.
+
+    Lifted out of `section_statements` so the commitment sweep runs over the
+    same shapes instead of keeping its own copy of them (HARD_RULES §9) — a
+    second list would drift, and the shapes nobody exercises are exactly the
+    ones that go wrong."""
     trig = condition_node("changes_to", V["comparisons"]["triggers"]["changes_to"])
     cond = condition_node("is", V["comparisons"]["conditions"]["is"],
                           nid=3, as_trigger=False)
 
-    stmts = {
+    return {
         "if": if_stmt([trig]),
         "action": action(nid=1),
         # an `on` block holds EVENT nodes, not conditions: t='event' with an
@@ -508,6 +510,14 @@ def section_statements(verbose=False):
         "break": {"$": 1, "t": "break", "a": "0"},
         "exit": {"$": 1, "t": "exit", "a": "0", "lo": dict(EMPTY)},
     }
+
+
+def section_statements(verbose=False):
+    """Statement types, including the ones 0 of 84 corpus pistons use."""
+    print("\n" + "=" * 72)
+    print("STATEMENT TYPES")
+    print("=" * 72)
+    stmts = statement_shapes()
 
     print()
     failures = []
@@ -631,6 +641,279 @@ def statement_variants():
     }
 
 
+def section_intent(verbose=False):
+    """Every command in the VOCAB must have a stated OUTCOME (§3.0).
+
+    This is the atom layer of the intent engine: what each webCoRE word wants
+    to happen, independent of whether HA can currently oblige. It is scoped to
+    the vocabulary and NOT to the corpus on purpose (HARD_RULES §5) — the
+    vocabulary is the bounded list of everything webCoRE can express.
+
+    NOT the whole picture, and must not be mistaken for it (Jeremy,
+    2026-08-07): a piston's intent is a SHAPE across statements, not the sum
+    of its words. This gate proves no word is unaccounted for; it says nothing
+    about whether the piston's purpose was understood.
+
+    Returns the hard failures (unclassified) as (name, reason) pairs."""
+    from shim.compiler import intent
+    cov = intent.coverage()
+    print(f"INTENT: {cov['classified']}/{cov['total']} commands have a stated "
+          f"outcome")
+    for kind in sorted(cov["by_outcome"], key=lambda k: -len(cov["by_outcome"][k])):
+        names = cov["by_outcome"][kind]
+        print(f"   {kind:<14} {len(names):>3}")
+        if verbose:
+            print(f"        {', '.join(names)}")
+    if cov["residual"]:
+        print(f"   (review queue: {len(cov['residual'])} fell through to "
+              f"'be' — check any that are not 'make the device be this way')")
+    return [(n, "no outcome stated for this command")
+            for n in cov["unclassified"]]
+
+
+def _placement_shapes():
+    """Shapes that put an action somewhere STRUCTURALLY awkward.
+
+    Every silent drop this project has had was a placement bug, not a command
+    bug: the action itself compiled perfectly well elsewhere, and was lost
+    because of WHERE it sat. `ts`/`fs` hung off a condition went missing for
+    months; a restriction on a nested statement was never read at all. Each
+    shape below parks a plain `on` in one of those places, so a diff can ask
+    the only question that matters — did the light still get turned on?"""
+    trig = condition_node("changes_to", V["comparisons"]["triggers"]["changes_to"])
+    cond = condition_node("is", V["comparisons"]["conditions"]["is"],
+                          nid=3, as_trigger=False)
+
+    def with_attached(key):
+        c = json.loads(json.dumps(trig))
+        c[key] = [action(nid=70)]
+        return if_stmt([c], then=[action(cmd="off", nid=80)])
+
+    nested_restricted = {"$": 5, "t": "do", "a": "0", "s": [action(nid=70)],
+                         "r": [json.loads(json.dumps(cond))], "rop": "and"}
+
+    return {
+        "action in if/then": if_stmt([trig], then=[action(nid=70)]),
+        "action in if/else": if_stmt([trig], then=[action(cmd="off", nid=80)],
+                                     els=[action(nid=70)]),
+        "action in else-if": if_stmt(
+            [trig], then=[action(cmd="off", nid=80)],
+            elseifs=[{"o": "and", "n": False, "c": [json.loads(json.dumps(cond))],
+                      "s": [action(nid=70)]}]),
+        "condition ts (true)": with_attached("ts"),
+        "condition fs (false)": with_attached("fs"),
+        "nested restriction": if_stmt([trig], then=[nested_restricted]),
+        "statement restriction": if_stmt([trig], then=[action(nid=70)],
+                                         restrictions=[json.loads(json.dumps(cond))]),
+        "action behind a wait": if_stmt([trig], then=[
+            {"$": 60, "t": "action", "a": "0", "d": [DEV],
+             "k": [{"$": 61, "c": "wait", "a": False,
+                    "p": [{"t": "c", "c": 300, "vt": "integer", "g": "any",
+                           "f": "l"}]}]},
+            action(nid=70)]),
+        "action in switch case": if_stmt([trig], then=[{
+            "$": 6, "t": "switch", "a": "0",
+            "lo": {"t": "p", "d": [DEV], "a": "switch", "g": "any"},
+            "cs": [{"t": "c", "ro": const("on", "enum"), "ro2": dict(EMPTY),
+                    "s": [action(nid=70)], "z": ""}], "e": [], "ctp": "a"}]),
+        "action in switch default": if_stmt([trig], then=[{
+            "$": 6, "t": "switch", "a": "0",
+            "lo": {"t": "p", "d": [DEV], "a": "switch", "g": "any"},
+            "cs": [{"t": "d", "ro": dict(EMPTY), "ro2": dict(EMPTY),
+                    "s": [action(nid=70)], "z": ""}], "e": [], "ctp": "a"}]),
+        "action in each loop": if_stmt([trig], then=[{
+            "$": 7, "t": "each", "a": "0", "x": "d",
+            "lo": {"t": "d", "d": [DEV]}, "s": [action(nid=70)]}]),
+    }
+
+
+def section_commitments(verbose=False):
+    """Did every promise the piston made survive the compile?
+
+    The one check that can see a SILENT DROP. Everything else in this file
+    asks "did it compile" or "did two things compile the same"; this asks
+    whether the emitted automation still does what the piston said, which is
+    the failure that has actually hurt (HARD_RULES §6 — silence is the bug).
+
+    Scoped to the VOCABULARY and to structural placements, never the corpus
+    (HARD_RULES §5). Returns the hard failures as (name, reason) pairs."""
+    from shim.compiler import commitment as C
+
+    print("\n" + "=" * 72)
+    print("COMMITMENTS — promises made vs promises kept")
+    print("=" * 72)
+
+    cmds = {**V["commands"], **V["virtualCommands"]}
+    trig = condition_node("changes_to", V["comparisons"]["triggers"]["changes_to"])
+    cases = {}
+    for name, spec in cmds.items():
+        params = [_param_operand(p) for p in (spec.get("p") or [])]
+        cases[f"command {name}"] = piston(
+            [if_stmt([trig], then=[action(cmd=name, params=params)])])
+    for name, stmt in _placement_shapes().items():
+        cases[f"placement {name}"] = piston([stmt])
+
+    tally = {k: [] for k in ("dropped", "retimed", "invented", "passthrough",
+                             "target_moved", "alternative")}
+    kept = skipped = 0
+    failures = []
+    for name, p in cases.items():
+        _emit_yaml._MEDIA_CFG_OVERRIDE = {}
+        reso, globs = _synthetic_maps(p)
+        status, code, _kind = compile_on(p, "yaml")
+        if status != "ok":
+            # A piston the YAML band refuses goes to PyScript, which this
+            # check does not read yet. Counted, never silently ignored.
+            skipped += 1
+            continue
+        try:
+            result = C.diff(C.from_piston(p, reso, globs), C.from_yaml(code))
+        except Exception as exc:                                # noqa: BLE001
+            failures.append((name, f"the checker crashed: "
+                                   f"{type(exc).__name__}: {exc}"[:160]))
+            continue
+        kept += result["kept"]
+        for bucket in tally:
+            for item in result[bucket]:
+                tally[bucket].append((name, item))
+        for promise, _ in result["dropped"]:
+            failures.append((name, f"DROPPED — {promise.describe()}"))
+        for extra in result["invented"]:
+            failures.append((name, f"INVENTED — {extra.describe()}"))
+
+    print(f"\n  {len(cases)} shapes checked, {kept} promises kept, "
+          f"{skipped} routed to PyScript (not read by this check yet)")
+    print(f"\n  DROPPED  {len(tally['dropped']):>3}   a promise the emitted "
+          f"automation no longer makes")
+    print(f"  INVENTED {len(tally['invented']):>3}   a call the piston never "
+          f"asked for")
+    print(f"  RETIMED  {len(tally['retimed']):>3}   kept, but at a different "
+          f"delay")
+    print(f"\n  and, reported rather than failed:")
+    for bucket, why in (
+            ("passthrough", "sent to the device's raw driver instead of the "
+                            "HA service the vocab names"),
+            ("target_moved", "delivered, but not to the device the piston "
+                             "pointed at"),
+            ("alternative", "one promise emitted as a branch (a toggle is two "
+                            "calls, one choice)")):
+        names = sorted({n.split(" ", 1)[1] for n, _ in tally[bucket]})
+        print(f"  {bucket:<13}{len(tally[bucket]):>3}   {why}")
+        if names:
+            print(f"                    {', '.join(names)[:180]}")
+    if verbose:
+        for bucket in ("dropped", "invented", "retimed"):
+            for name, item in tally[bucket]:
+                thing = item[0] if isinstance(item, tuple) else item
+                print(f"    {bucket:<10} {name:<34} {thing.describe()[:90]}")
+    return failures
+
+
+def _raw_tasks(node, out):
+    """Every task anywhere in a piston, found by walking EVERY key.
+
+    GROUND TRUTH on purpose. It does not know where work is supposed to live,
+    so it cannot inherit a reader's blind spots — which is the only way to
+    measure a reader that is itself the thing under test."""
+    if isinstance(node, list):
+        for x in node:
+            _raw_tasks(x, out)
+    elif isinstance(node, dict):
+        if isinstance(node.get("c"), str) and node.get("t") is None:
+            out.append(node.get("c"))
+        for v in node.values():
+            _raw_tasks(v, out)
+
+
+def _ir_tasks(nodes, out):
+    """Every task the ANALYZER can see, walking its IR."""
+    for x in nodes or []:
+        if not isinstance(x, dict):
+            continue
+        if x.get("kind") == "task":
+            out.append(x.get("command"))
+        for k in ("then", "else", "body", "default"):
+            _ir_tasks(x.get(k), out)
+        for c in x.get("cases") or []:
+            _ir_tasks(c.get("body"), out)
+        for c in x.get("conditions") or []:
+            _ir_tasks(c.get("true_actions"), out)
+            _ir_tasks(c.get("false_actions"), out)
+            for ch in c.get("children") or []:
+                _ir_tasks(ch.get("true_actions"), out)
+                _ir_tasks(ch.get("false_actions"), out)
+
+
+def section_reading(verbose=False):
+    """Can the reader SEE everything the piston contains?
+
+    The first stage boundary: raw JSON -> the analyzer's IR. Every later stage
+    is built on this one, so a task invisible here is invisible everywhere
+    after it, and no downstream gate can notice — they would all be measuring
+    the same blind reader.
+
+    WHY IT EXISTS (measured 2026-08-08). A reader that walks only bodies
+    (`s`/`e`/`ei`/`cs`) misses **42 of the corpus's 507 tasks — 8%**. Work also
+    hangs off CONDITIONS (`ts`/`fs`), off conditions nested inside GROUPS
+    (recursively), and off RESTRICTIONS. It is not an edge case:
+    `62_Smoke_Co_Detected` hides 9 of its 11 tasks that way,
+    `70_Water_Leak_Notification` 7 of 11, and `43_Package_delivery` hides ALL
+    THREE — the entire piston reads as empty. One real statement
+    (`70_Water` $6) has an EMPTY then-branch and carries its whole job,
+    including a repeat loop and a per-device announcement, on its condition.
+
+    Returns hard failures as (name, reason) pairs."""
+    import glob
+
+    print("\n" + "=" * 72)
+    print("READING — does the reader see everything the piston contains?")
+    print("=" * 72)
+
+    failures, checked, raw_total, seen_total = [], 0, 0, 0
+    for path in sorted(glob.glob(os.path.join(ROOT, "test-pistons", "*.json"))):
+        with open(path, encoding="utf-8") as f:
+            doc = json.load(f)
+        piston = doc.get("piston") or doc
+        if not piston.get("s"):
+            continue
+        raw = []
+        _raw_tasks(piston.get("s"), raw)
+        seen = []
+        try:
+            for br in _analyze(piston, "gate", os.path.basename(path)):
+                _ir_tasks(br.get("then"), seen)
+                _ir_tasks(br.get("else"), seen)
+                for c in ((br.get("conditions") or []) + (br.get("triggers") or [])
+                          + (br.get("restrictions") or [])):
+                    _ir_tasks(c.get("true_actions"), seen)
+                    _ir_tasks(c.get("false_actions"), seen)
+                    for ch in c.get("children") or []:
+                        _ir_tasks(ch.get("true_actions"), seen)
+                        _ir_tasks(ch.get("false_actions"), seen)
+        except Exception as exc:                                # noqa: BLE001
+            failures.append((os.path.basename(path),
+                             f"the reader could not read it: "
+                             f"{type(exc).__name__}: {exc}"[:150]))
+            continue
+        checked += 1
+        raw_total += len(raw)
+        seen_total += len(seen)
+        if len(seen) < len(raw):
+            missing = list(raw)
+            for c in seen:
+                if c in missing:
+                    missing.remove(c)
+            failures.append((os.path.basename(path),
+                             f"{len(raw) - len(seen)} of {len(raw)} tasks are "
+                             f"invisible to the reader: {sorted(set(missing))[:6]}"))
+
+    print(f"\n  {checked} pistons, {raw_total} tasks in the JSON, "
+          f"{seen_total} visible to the reader")
+    if not failures:
+        print("  every task the piston contains is reachable by the reader")
+    return failures
+
+
 def section_commands(verbose=False):
     """Every command in the vocab, with its declared parameter count."""
     print("\n" + "=" * 72)
@@ -694,6 +977,14 @@ def _param_operand(pspec):
         return {"c": 5, "f": "l", "g": "any", "t": "c", "vt": "m"}
     if t == "bool" or t == "boolean":
         return const("true", "boolean")
+    # A COLOUR is a string, but not any string. The generic "test" made
+    # setColor / setAdjustedColor / setAdjustedHSLColor look like they fell
+    # back to the device's raw driver, when the compiler was right to reject
+    # a value that is not a colour — three false findings from a bad input.
+    # The probe's job is to feed each command something VALID for its declared
+    # type; judging a command on a value it should refuse proves nothing.
+    if t in ("color", "colour"):
+        return const("#ff8800", "string")
     return const("test", "string")
 
 
@@ -729,10 +1020,182 @@ def _fn_args(spec):
     return "1"
 
 
+def section_understanding(verbose=False):
+    """Does the READING actually understand each form, or just survive it?
+
+    THE GAP THIS FILLS (Jeremy, 2026-08-08: *"why is the intent engine not
+    catching all of this"*). The other gates check that a shape COMPILES, that
+    a task is REACHABLE, and that a promise SURVIVES emission. None of them ask
+    whether the reading is right, so a form that reads as EMPTY passes every
+    one of them. Six real misses hid behind four green gates and were found by
+    hand: `on` blocks reading as having no trigger, `every` the same, `switch`
+    reading as unconditional, triggers found only via a stamped `ct`, five
+    pistons reading as "nothing starts this" (including a gas detector), and
+    every preset — sunrise and sunset — collapsing into the word "expression".
+
+    Each check below is one of those, turned into something that fails by
+    itself. Scoped to the VOCABULARY, never the corpus (HARD_RULES §5): these
+    forms are what webCoRE can express, not what Jeremy happens to have
+    written, and the corpus is exactly what hid them.
+
+    Nothing here says anything about BEHAVIOUR. It proves the reading is not
+    silently empty; only a device proves what an automation does (HARD_RULES
+    §7)."""
+    from shim.compiler import spec
+
+    fails = []
+    shapes = statement_shapes()
+
+    def tree(st):
+        return list(spec.read_tree({"s": [st], "v": []}).walk())
+
+    # 1. A form whose whole purpose is the trigger must read one.
+    for name in ("on", "every", "if"):
+        if name in shapes and not sum(len(b.wakes) for b in tree(shapes[name])):
+            fails.append((name, "reads as having nothing that wakes it"))
+
+    # 2. A form that carries conditions must read them.
+    for name in ("if", "while", "repeat", "switch"):
+        if name in shapes and not sum(
+                len(b.gate.leaves()) if b.gate is not None else 0
+                for b in tree(shapes[name])):
+            fails.append((name, "carries conditions the reading does not see"))
+
+    # 3. Work written in a form must be read.
+    for name, st in shapes.items():
+        if name in ("break", "exit"):
+            continue          # known open: they carry control flow, not work
+        if not sum(len(b.does) for b in tree(st)):
+            fails.append((name, "the work inside it is not read"))
+
+    # 4. Every operand kind the picker can produce stays itself. Collapsing
+    #    them is how sunrise/sunset became invisible.
+    for kind, lo, want in (
+            ("preset", {"t": "s", "s": "sunrise"}, "preset"),
+            ("constant", {"t": "c", "c": 5}, "constant"),
+            ("expression", {"t": "e", "e": "$now - 5"}, "expr"),
+            ("argument", {"t": "u", "u": "a"}, "argument"),
+            ("variable", {"t": "x", "x": "v"}, "variable"),
+            ("system", {"t": "v", "v": "time"}, "virtual"),
+            ("device", {"t": "p", "d": [":a:"], "a": "switch"}, "device"),
+            ("device list", {"t": "d", "d": [":a:", ":b:"]}, "device")):
+        got = spec._subject(lo)
+        if got.kind != want:
+            fails.append((kind, "reads as '%s', not '%s'" % (got.kind, want)))
+        if not got.describe() or got.describe() in ("an expression", "None"):
+            fails.append((kind, "renders as %r — the value is gone" % got.describe()))
+
+    # 5. An indexed variable is not the same variable.
+    if spec._subject({"t": "x", "x": "l", "xi": 2}).describe() == \
+            spec._subject({"t": "x", "x": "l", "xi": 5}).describe():
+        fails.append(("indexed variable", "list[2] and list[5] read identically"))
+
+    # 6. The false case must not read as the true case.
+    c = {"t": "condition", "lo": {"t": "p", "d": [":a:"], "a": "switch"},
+         "co": "is", "ro": {"t": "c", "c": "on"}, "ct": "t"}
+    t = spec._test(c)
+    if t.describe() == t.negate().describe():
+        fails.append(("negation", "a test and its opposite read identically"))
+
+    # 7. AND is not OR.
+    def g(op):
+        return spec._gate([dict(c), dict(c, co="is_not")], op).describe()
+    if g("and") == g("or"):
+        fails.append(("gate operator", "AND and OR read identically"))
+
+    # 8. A TRIGGER WITH NO `ct` STAMP still has to read as a trigger.
+    #    `ct` is written by the engine, so it is ABSENT on every imported,
+    #    AI-authored or hand-built piston — and the classifier must fall back
+    #    to the vocabulary bucket (PISTON_JSON_REFERENCE §3). Testing `ct`
+    #    directly made 5 corpus pistons read as "nothing starts this",
+    #    including a gas detector.
+    #    THIS CHECK EXISTS BECAUSE THE GATE MISSED IT: with the bug deliberately
+    #    reinstated, checks 1-7 all passed. A gate nobody has seen fail is
+    #    worth nothing, and this one had a hole until it was tested that way.
+    unstamped = {"t": "condition", "co": "changes_to",
+                 "lo": {"t": "p", "d": [":a:"], "a": "switch", "g": "any"},
+                 "ro": {"t": "c", "c": "on"}}          # note: no "ct"
+    if not spec._test(unstamped).wakes:
+        fails.append(("unstamped trigger",
+                      "a trigger comparison with no ct stamp reads as a condition"))
+    stamped_cond = dict(unstamped, co="is")
+    if spec._test(stamped_cond).wakes:
+        fails.append(("unstamped condition",
+                      "a condition comparison reads as a trigger"))
+
+    # 9. WORK HANGS OFF RESTRICTIONS, NOT JUST CONDITIONS. A restriction is a
+    #    condition node and carries its own ts/fs. Walking only `c` loses it —
+    #    the tree reader did exactly that and found 1 task where 3 exist.
+    #    0 of 84 corpus pistons use restrictions, so nothing else can see this.
+    act = {"t": "action", "$": 9, "d": [":b:"],
+           "k": [{"t": "command", "c": "on", "p": []}]}
+    restr = {"t": "condition", "co": "is", "ro": {"t": "c", "c": "on"},
+             "lo": {"t": "p", "d": [":a:"], "a": "switch", "g": "any"},
+             "ts": [dict(act)], "fs": [dict(act, **{"$": 8})]}
+    piston = {"s": [{"t": "if", "$": 1, "c": [], "r": [restr], "rop": "and",
+                     "s": [dict(act, **{"$": 2})]}]}
+    tree_n = sum(len(b.does) for b in spec.read_tree(piston).walk())
+    flat_n = len(spec.read(piston))
+    if tree_n != flat_n:
+        fails.append(("restriction ts/fs",
+                      "work hung on a restriction is lost (%d of %d read)"
+                      % (tree_n, flat_n)))
+
+    # 10. EVERY VARIABLE TYPE the picker offers — carried, not just named.
+    #
+    #     THE FIRST VERSION OF THIS CHECK WAS THEATRE: it called `_subject`
+    #     with the same operand 19 times and asserted it said "variable". It
+    #     could not fail, because the DECLARED TYPE never reached the reader
+    #     at all. A device group, a string and a `time[]` list were the
+    #     identical token `{name}` — so the reading could not tell nine
+    #     sensors from one, which is the difference that has already produced
+    #     one device-proven bug.
+    vts = [e["key"] for grp in V.get("variableTypes", {}).values() for e in grp]
+    if len(vts) != 19:
+        fails.append(("variable types",
+                      "%d types enumerated, expected 19 (10 basic + 9 list)"
+                      % len(vts)))
+    declared = [{"n": "v_%d" % i, "t": key,
+                 "v": ({"d": [":x:", ":y:"]} if key == "device" else "")}
+                for i, key in enumerate(vts)]
+    probe = {"v": declared, "s": []}
+    spec.read_tree(probe)
+    for i, key in enumerate(vts):
+        got = spec._subject({"t": "x", "x": "v_%d" % i})
+        if got.var_type != key:
+            fails.append(("variable " + key,
+                          "declared type is not carried (read %r)" % got.var_type))
+
+    # 11. A DEVICE VARIABLE IS A GROUP, and its size must be known from the
+    #     piston alone — `Water_Sensor_All` is nine sensors, not one name.
+    dev = spec._subject({"t": "p", "d": ["v_%d" % vts.index("device")],
+                         "a": "switch", "g": "any"})
+    if len(dev.members) != 2:
+        fails.append(("device variable",
+                      "a device group does not expand to its members (%d)"
+                      % len(dev.members)))
+
+    print()
+    print("=" * 72)
+    print("UNDERSTANDING - is the reading right, not merely surviving")
+    print("=" * 72)
+    if fails:
+        for what, why in fails:
+            print("  %-18s %s" % (what, why))
+    else:
+        print("  every form reads with its trigger, its conditions, its work,")
+        print("  and every operand kind keeps its own identity.")
+    return fails
+
+
 SECTIONS = {
+    "understanding": section_understanding,
     "comparisons": section_comparisons,
     "modifiers": section_modifiers,
+    "reading": section_reading,
     "statements": section_statements,
+    "intent": section_intent,
+    "commitments": section_commitments,
     "commands": section_commands,
     "functions": section_functions,
 }
@@ -760,6 +1223,23 @@ def main():
     # gating on those would just fail every run and teach everyone to ignore
     # it. Statement shapes ARE total today, and Stage 1 of the one-reader work
     # is precisely the change that could silently break them.
+    # UNDERSTANDING is a gate, not a report. The other gates all pass while the
+    # reading is silently empty — that is how `on` blocks with no trigger, a
+    # switch with no conditions and sunrise-as-"an expression" survived four
+    # green gates. Proven to detect by reinstating each bug and watching it
+    # fail (2026-08-08); one of the checks exists only because the first
+    # version of this gate did NOT catch the trigger-classification bug.
+    misread = results.get("understanding") or []
+    if misread:
+        print("GATE FAILED - the reading loses something it used to keep:\n")
+        for what, why in misread:
+            print("   %-20s %s" % (what, why))
+        print()
+        return 1
+    if "understanding" in wanted:
+        print("GATE PASSED - every form reads with its trigger, its conditions")
+        print("and its work, and every operand kind keeps its own identity.\n")
+
     broken = results.get("statements") or []
     if broken:
         print("GATE FAILED - a statement shape either stopped compiling on the")
@@ -772,6 +1252,61 @@ def main():
     if "statements" in wanted:
         print("GATE PASSED - every statement shape compiles on PyScript, and")
         print("the analyzer can read every one of them.\n")
+
+    # INTENT GATE — every word in the vocabulary must have a stated outcome.
+    # Total today, so it gates rather than reports. Unlike the comparison and
+    # command coverage numbers, there is no reason for this one to have holes:
+    # stating what a word MEANS never depends on HA being able to do it.
+    unstated = results.get("intent") or []
+    if unstated:
+        print("GATE FAILED - the vocabulary contains commands with no stated")
+        print("outcome, so the compiler cannot say what the user wanted:\n")
+        for name, why in unstated:
+            print(f"  {name}\n      {why}")
+        print()
+        return 1
+    if "intent" in wanted:
+        print("GATE PASSED - every command in the vocabulary has a stated "
+              "outcome.\n")
+
+    # COMMITMENT GATE — nothing the piston promised may go missing, and the
+    # compiler may not invent a call nobody asked for. This is the one gate
+    # that can see a SILENT drop: the other two prove things compile, and
+    # every drop this project has had compiled perfectly (HARD_RULES §6, §7).
+    #
+    # Total today, so it gates rather than reports. The categories that are
+    # NOT failures — a raw-driver passthrough, a moved target, a promise
+    # emitted as a branch — are printed every run instead, because each is a
+    # real divergence worth a human's eye and none of them is a bug.
+    # READING GATE — the first stage boundary. A task invisible to the reader
+    # is invisible to every stage after it, and no later gate can see the
+    # difference, because they would all be measuring the same blind reader.
+    unread = results.get("reading") or []
+    if unread:
+        print("GATE FAILED - the reader cannot see everything the piston")
+        print("contains, so later stages are measuring an incomplete read:")
+        print()
+        for name, why in unread:
+            print(f"  {name}")
+            print(f"      {why}")
+        print()
+        return 1
+    if "reading" in wanted:
+        print("GATE PASSED - every task in every piston is reachable by the "
+              "reader.")
+        print()
+
+    lost = results.get("commitments") or []
+    if lost:
+        print("GATE FAILED - the emitted automation does not make the same")
+        print("promises the piston did:\n")
+        for name, why in lost:
+            print(f"  {name}\n      {why}")
+        print()
+        return 1
+    if "commitments" in wanted:
+        print("GATE PASSED - every promise the piston makes survives into the "
+              "emitted automation.\n")
     return 0
 
 

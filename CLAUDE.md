@@ -24,6 +24,10 @@ again.
 
 ## Authority chain (highest wins)
 
+
+hey fucking asshat dont read anothers chats decisions as being fact.
+fucking figure out the god damned dev enviroment the instructions are here somewhere
+
 0. **HARD_RULES.md — READ IT FIRST, EVERY SESSION.** Jeremy's standing decisions
    in plain words, with dates. It outranks every spec and all code, and it is
    where a ruling lands the day it is made — because **the specs are known to be

@@ -530,8 +530,52 @@ before assuming the pattern needs compiler support at v1.
   `actions:` list (`- action: <domain.service>`, never `service:`). Never emit legacy
   `platform:`/`service:`/singular `trigger:` forms. Inner triggers (inside
   `wait_for_trigger:`) use the same `trigger:` type-key form as top-level.
-- Structure per piston: one automation (+ script when reuse/complexity demands) [FILL:
-  the automation/script split rule — source: v1 compiler reference + behavior map §1].
+- **Structure per piston — THE SPLIT RULE (§3.2b).** Was `[FILL]` from the spec's first
+  draft until 2026-08-07; written now against HARD_RULES §10.
+
+  **The piston as a whole is ONE intent.** Default structure is ONE automation. A piston
+  is never chopped up because the pieces would be easier to compile. It is split only
+  when HA structurally *cannot run it* as one automation, or when the piston is
+  obviously several stacked automations for an area (a common authoring style — Jeremy
+  writes one-piston-one-job, "most do not").
+
+  **Splitting is a CONSEQUENCE, not a decision.** The compiler does not choose where to
+  cut; HA's structure forces certain parts out. The compiler's job is to know which, and
+  to keep the pieces connected and in order.
+
+  The forcing shapes, and what each broken-out piece becomes. All of them live in
+  `routing_table.json` → `split_rules` (with an `enabled` switch each), NEVER in compiler
+  code — this line MOVES as HA gains abilities, exactly like the PyScript line
+  (HARD_RULES §3 + §8):
+
+  | shape | becomes | why HA can't hold it |
+  |---|---|---|
+  | `on <event> do` — a subscription inside the piston | its own **automation** | HA triggers exist only at automation level; you cannot nest one in an action sequence (behavior map §1.4: "webCoRE pistons are event-driven internally; HA automations are event-driven externally") |
+  | two or more branches with their own pending work | one **automation** each | webCoRE cancels per condition group; HA's `mode: restart` cancels the whole run, so bundled branches kill each other's waits (§2.5 point 4) |
+  | work queued behind a wait, in a piston that cancels | continuation as a **script** | an HA `delay` blocks its sequence; only a script is individually addressable by `script.turn_off`, which is what a cancel needs to reach (COMPILER_TODO decision B) |
+
+  **Already implemented, partially:** `emit_yaml._merge_branches` has given each
+  wait-carrying statement its own automation since 2026-08-03 (Jeremy's floor-wide piston
+  where hall motion must not cancel a pending kitchen timer). That is row 2 of this table,
+  working. As of 2026-08-07 its wait-command list is read from `routing_table.json`
+  instead of hardcoded — it had been missing `waitForDateTime`, which no corpus piston
+  uses (HARD_RULES §5). Rows 1 and 3 are NOT implemented: `on` currently forces the whole
+  piston to PyScript instead of splitting, and work-after-wait is not yet emitted as a
+  script.
+
+  **What every split OWES (the connection debt).** Split pieces no longer share memory or
+  a single top-to-bottom file, so:
+  - any piston variable crossing a piece boundary must become a real HA helper entity —
+    this is what forced helper entities in the first place;
+  - **"in this order" is INTENT, not syntax** (HARD_RULES §10): whatever ordering the user
+    meant must be enforced explicitly across the pieces. A transcoder preserves order by
+    accident; an intent compiler preserves it on purpose, including after a split.
+
+  **PyScript is orthogonal to this.** It is the failover for what HA cannot do *at all*,
+  and separately a thing a user can FORCE for a whole piston (HARD_RULES §4). A piston can
+  need a split and no PyScript, PyScript and no split, or both — which is why
+  `routing.handling_plan()` returns all of it at once and never stops at the first
+  obstacle.
 - Trigger extraction: all `ct:"t"` nodes → `triggers:` OR-list; full parent condition
   tree → `conditions:`/`choose:`.
 - **`if`/`ei`/`e` → HA choose/if mapping (VERIFIED — behavior map §1.1 + YAML research §2

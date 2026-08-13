@@ -202,6 +202,63 @@
     being exact.
   </p>
 
+  <h2>A pending wait is lost if Home Assistant restarts during it</h2>
+  <p>
+    When a piston says "wait ten minutes, then turn the light off", and that
+    piston can also cancel its own pending work, PistonCore uses a Home
+    Assistant timer to hold the wait. That is what lets a cancel actually reach
+    it — an ordinary delay cannot be cancelled once it has started.
+  </p>
+  <p>
+    <strong>What happens:</strong> if Home Assistant restarts while that wait is
+    running, and the wait would have finished during the downtime, the timer
+    comes back idle and the finishing event never arrives. The work behind the
+    wait <em>never runs</em> — the light in that example stays on.
+  </p>
+  <p>
+    <strong>How it differs from webCoRE:</strong> Hubitat's scheduler is
+    believed to persist pending work across a reboot and fire it late instead.
+    That difference has not been confirmed against the Hubitat engine, so treat
+    it as the likely behaviour rather than a measured one. The Home Assistant
+    side <em>is</em> measured: a thirty-second wait, a forty-five-second
+    outage, and the work never ran.
+  </p>
+  <p>
+    <strong>What to do:</strong> nothing for most pistons — restarts are rare
+    and a missed timeout usually just means a light stays on until the next
+    trigger. If a piston does something that must not be skipped, force PyScript
+    for it, or have it re-check the state on its next trigger rather than
+    relying on the wait alone.
+  </p>
+
+  <h2>"My device is missing an ability it has on Hubitat"</h2>
+  <p>
+    If a device came into Home Assistant through the <strong>Hubitat
+    integration</strong>, check that integration's settings first. It does
+    <strong>not</strong> share every capability by default &mdash; you have to
+    enable them. A capability that is not shared never becomes an entity in
+    Home Assistant, so PistonCore never sees it, and the ability simply is not
+    offered on that device.
+  </p>
+  <p>
+    The usual sign is a command that works on Hubitat and reads as unavailable
+    here. A camera is the common one: <code>take</code> (snapshot) lives on
+    whichever entity the bridge creates for it, and if the camera capability
+    was never shared there is no entity to call it on.
+  </p>
+  <p>
+    <strong>What to do:</strong> open the Hubitat integration in Home Assistant,
+    enable the capabilities you want, then recompile the piston. PistonCore
+    reads what each device offers at compile time, so the ability appears as
+    soon as the entity does.
+  </p>
+  <p>
+    The same device can also look different depending on how it arrives &mdash;
+    bridged through Hubitat versus a native Home Assistant integration &mdash;
+    so a piston written against one may need its devices re-picked after
+    switching to the other.
+  </p>
+
   <h2>"My variable got cut off"</h2>
   <p>
     Any value PistonCore stores in a Home Assistant helper is capped at
@@ -212,6 +269,45 @@
     <strong>What to do:</strong> if the piston genuinely needs a longer value — a
     large response, a long message — force that piston to PyScript, which has no
     such cap.
+  </p>
+
+  <h2>Readings from fitness trackers, printers and other specialist devices</h2>
+  <p>
+    A few readings that Hubitat and SmartThings had a standard name for don't
+    have one in Home Assistant. The main ones:
+  </p>
+  <ul>
+    <li>step count and step goal</li>
+    <li>sleeping / in-bed</li>
+    <li>consumable or filament status (3D printers, vacuums, printers)</li>
+    <li>tilt, orientation and three-axis motion</li>
+    <li>touch</li>
+    <li>altitude and the finer GPS accuracy figures</li>
+  </ul>
+  <p>
+    Home Assistant has about sixty standard reading types — temperature,
+    distance, speed, battery, weight, even blood glucose — but nothing for a step
+    count or for filament remaining. Those vary too much between brands, so
+    Home Assistant lets each integration name its own. Your tracker might call it
+    <em>Steps</em>, another calls it <em>Daily steps</em>, a third calls it
+    something else entirely.
+  </p>
+  <p>
+    <strong>What happens:</strong> a piston you import from Hubitat or
+    SmartThings that uses one of these will not find the reading, because it's
+    looking for the old hub's name. Nothing is silently guessed — the reading
+    simply isn't matched.
+  </p>
+  <p>
+    <strong>What to do:</strong> the reading <em>is</em> there, under whatever
+    your integration calls it. Open that part of the piston and pick the device's
+    real Home Assistant reading from the list. It's a remap, not a rewrite — you
+    are pointing the same piston at the same information under its actual name.
+  </p>
+  <p>
+    This only affects pistons brought over from an old hub. A piston you build
+    here picks from what your devices actually report, so the old names never
+    come up in the first place.
   </p>
 
   <h2>When to force PyScript</h2>
