@@ -1,0 +1,127 @@
+{
+ "name": "Test Xfinity Low Battery",
+ "meta": {
+  "active": true,
+  "build": 2,
+  "category": "0",
+  "name": "Test Xfinity Low Battery"
+ },
+ "piston": {
+  "o": {
+   "ced": 0,
+   "cto": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_away_from",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "batteryLow",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx205:"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "false",
+       "exp": {
+        "i": [
+         {
+          "l": "0:4",
+          "ok": true,
+          "t": "boolean",
+          "v": "false"
+         }
+        ],
+        "ok": true,
+        "str": "false",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "string"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "c": "Xfinity Battery Low",
+          "exp": {
+           "i": [
+            {
+             "l": "0:18",
+             "ok": true,
+             "t": "string",
+             "v": "Xfinity Battery Low"
+            }
+           ],
+           "ok": true,
+           "str": "Xfinity Battery Low",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [],
+  "z": ""
+ }
+}

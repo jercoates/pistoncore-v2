@@ -1,0 +1,822 @@
+{
+ "name": "Hub C8 Radio Issues ✳️",
+ "meta": {
+  "active": true,
+  "build": 2,
+  "category": "0",
+  "name": "Hub C8 Radio Issues ✳️"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "odw": [],
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 660,
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "integer",
+          "v": 660
+         }
+        ],
+        "ok": true,
+        "str": "660",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "time"
+      },
+      "ro2": {
+       "exp": {
+        "i": [],
+        "ok": true,
+        "str": "",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "datetime"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 4,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "RadioIssue"
+         },
+         {
+          "e": "\" \"",
+          "exp": {
+           "i": [
+            {
+             "l": "1",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            }
+           ],
+           "ok": true,
+           "str": "\" \"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 5,
+      "a": "0",
+      "d": [
+       "Hub_Status"
+      ],
+      "k": [
+       {
+        "$": 6,
+        "c": "configure",
+        "p": []
+       },
+       {
+        "$": 7,
+        "c": "wait",
+        "p": [
+         {
+          "c": 5,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 5
+            }
+           ],
+           "ok": true,
+           "str": "5",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       },
+       {
+        "$": 8,
+        "c": "initialize",
+        "cm": true,
+        "p": []
+       },
+       {
+        "$": 9,
+        "c": "wait",
+        "p": [
+         {
+          "c": 5,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 5
+            }
+           ],
+           "ok": true,
+           "str": "5",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       },
+       {
+        "$": 10,
+        "c": "refresh",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 11,
+      "a": "0",
+      "c": [
+       {
+        "$": 12,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "zigbeeStatus",
+         "d": [
+          "Hub_Status"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "disabled",
+         "exp": {
+          "i": [
+           {
+            "l": "0:7",
+            "ok": true,
+            "t": "string",
+            "v": "disabled"
+           }
+          ],
+          "ok": true,
+          "str": "disabled",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 13,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 14,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "RadioIssue"
+           },
+           {
+            "e": "RadioIssue \"Zigbee, \"",
+            "exp": {
+             "i": [
+              {
+               "l": "0:9",
+               "ok": true,
+               "t": "variable",
+               "x": "RadioIssue"
+              },
+              {
+               "l": "12:19",
+               "ok": true,
+               "t": "string",
+               "v": "Zigbee, "
+              }
+             ],
+             "ok": true,
+             "str": "RadioIssue \"Zigbee, \"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 15,
+      "a": "0",
+      "c": [
+       {
+        "$": 16,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "zigbeeStatus2",
+         "d": [
+          "Hub_Status"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "disabled",
+         "exp": {
+          "i": [
+           {
+            "l": "0:7",
+            "ok": true,
+            "t": "string",
+            "v": "disabled"
+           }
+          ],
+          "ok": true,
+          "str": "disabled",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 17,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 18,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "RadioIssue"
+           },
+           {
+            "e": "RadioIssue \"Zigbee2, \"",
+            "exp": {
+             "i": [
+              {
+               "l": "0:9",
+               "ok": true,
+               "t": "variable",
+               "x": "RadioIssue"
+              },
+              {
+               "l": "12:20",
+               "ok": true,
+               "t": "string",
+               "v": "Zigbee2, "
+              }
+             ],
+             "ok": true,
+             "str": "RadioIssue \"Zigbee2, \"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 19,
+      "a": "0",
+      "c": [
+       {
+        "$": 20,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "zwaveStatus",
+         "d": [
+          "Hub_Status"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "disabled",
+         "exp": {
+          "i": [
+           {
+            "l": "0:7",
+            "ok": true,
+            "t": "string",
+            "v": "disabled"
+           }
+          ],
+          "ok": true,
+          "str": "disabled",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 21,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 22,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "RadioIssue"
+           },
+           {
+            "e": "RadioIssue \"Z-Wave, \"",
+            "exp": {
+             "i": [
+              {
+               "l": "0:9",
+               "ok": true,
+               "t": "variable",
+               "x": "RadioIssue"
+              },
+              {
+               "l": "12:19",
+               "ok": true,
+               "t": "string",
+               "v": "Z-Wave, "
+              }
+             ],
+             "ok": true,
+             "str": "RadioIssue \"Z-Wave, \"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 23,
+      "a": "0",
+      "c": [
+       {
+        "$": 24,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "matterStatus",
+         "d": [
+          "Hub_Status"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "disabled",
+         "exp": {
+          "i": [
+           {
+            "l": "0:7",
+            "ok": true,
+            "t": "string",
+            "v": "disabled"
+           }
+          ],
+          "ok": true,
+          "str": "disabled",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 25,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 26,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "RadioIssue"
+           },
+           {
+            "e": "RadioIssue \"Matter, \"",
+            "exp": {
+             "i": [
+              {
+               "l": "0:9",
+               "ok": true,
+               "t": "variable",
+               "x": "RadioIssue"
+              },
+              {
+               "l": "12:19",
+               "ok": true,
+               "t": "string",
+               "v": "Matter, "
+              }
+             ],
+             "ok": true,
+             "str": "RadioIssue \"Matter, \"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 27,
+      "a": "0",
+      "c": [
+       {
+        "$": 28,
+        "co": "is_not",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "string",
+         "x": "RadioIssue"
+        },
+        "ro": {
+         "e": "\" \"",
+         "exp": {
+          "i": [
+           {
+            "l": "1",
+            "ok": true,
+            "t": "string",
+            "v": " "
+           }
+          ],
+          "ok": true,
+          "str": "\" \"",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "e",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 29,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:"
+        ],
+        "k": [
+         {
+          "$": 30,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"📡 C8 Radio Issues📡\nRadio(s) Disabled:\"RadioIssue",
+            "exp": {
+             "i": [
+              {
+               "l": "1:39",
+               "ok": true,
+               "t": "string",
+               "v": "📡 C8 Radio Issues📡\nRadio(s) Disabled:"
+              },
+              {
+               "l": "41:50",
+               "ok": true,
+               "t": "variable",
+               "x": "RadioIssue"
+              }
+             ],
+             "ok": true,
+             "str": "\"📡 C8 Radio Issues📡\nRadio(s) Disabled:\"RadioIssue",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Hub_Status",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx173:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "RadioIssue",
+    "t": "string"
+   }
+  ],
+  "z": ""
+ }
+}

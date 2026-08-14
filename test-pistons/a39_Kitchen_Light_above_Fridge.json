@@ -1,0 +1,659 @@
+{
+ "name": "Kitchen Light above Fridge 🌈💡",
+ "meta": {
+  "active": true,
+  "build": 5,
+  "category": "3",
+  "name": "Kitchen Light above Fridge 🌈💡"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "$sunset"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": -30,
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "integer",
+          "v": -30
+         }
+        ],
+        "ok": true,
+        "str": "-30",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Light_Switches"
+       ],
+       "f": "l",
+       "g": "all",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "d": [
+       "Hue_Lights"
+      ],
+      "k": [
+       {
+        "$": 5,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 2100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 2100
+            }
+           ],
+           "ok": true,
+           "str": "2100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 10,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 10
+            }
+           ],
+           "ok": true,
+           "str": "10",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 6,
+    "a": "0",
+    "c": [
+     {
+      "$": 7,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "$sunrise"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 30,
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "integer",
+          "v": 30
+         }
+        ],
+        "ok": true,
+        "str": "30",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 8,
+      "a": "0",
+      "d": [
+       "Hue_Lights"
+      ],
+      "k": [
+       {
+        "$": 9,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 10,
+    "a": "0",
+    "c": [
+     {
+      "$": 11,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Light_Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 12,
+      "co": "is_between",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "$sunset"
+      },
+      "ro2": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "$sunrise"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": -30,
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "integer",
+          "v": -30
+         }
+        ],
+        "ok": true,
+        "str": "-30",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "c": 30,
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "integer",
+          "v": 30
+         }
+        ],
+        "ok": true,
+        "str": "30",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "ts": []
+     }
+    ],
+    "e": [
+     {
+      "$": 13,
+      "a": "0",
+      "d": [
+       "Hue_Lights"
+      ],
+      "k": [
+       {
+        "$": 14,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 15,
+      "a": "0",
+      "c": [
+       {
+        "$": 16,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "switch",
+         "d": [
+          "Light_Switches"
+         ],
+         "f": "l",
+         "g": "all",
+         "p": "a",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "off",
+         "exp": {
+          "i": [
+           {
+            "l": "0:2",
+            "ok": true,
+            "t": "string",
+            "v": "off"
+           }
+          ],
+          "ok": true,
+          "str": "off",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 17,
+        "a": "0",
+        "d": [
+         "Hue_Lights"
+        ],
+        "k": [
+         {
+          "$": 18,
+          "c": "setColorTemperature",
+          "p": [
+           {
+            "c": 2100,
+            "exp": {
+             "i": [
+              {
+               "l": "0:3",
+               "ok": true,
+               "t": "integer",
+               "v": 2100
+              }
+             ],
+             "ok": true,
+             "str": "2100",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "integer"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "enum"
+           },
+           {
+            "c": 10,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 10
+              }
+             ],
+             "ok": true,
+             "str": "10",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "integer"
+           },
+           {
+            "c": 1,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 1
+              }
+             ],
+             "ok": true,
+             "str": "1",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "decimal"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Hue_Lights",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx176:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Light_Switches",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

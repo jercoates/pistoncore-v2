@@ -1,0 +1,214 @@
+{
+ "name": "Alarm System Arming - Exit Now - ⏰",
+ "meta": {
+  "active": true,
+  "build": 5,
+  "category": "1",
+  "name": "Alarm System Arming - Exit Now - ⏰"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "alarmSystemStatus",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "armingAway",
+       "exp": {
+        "i": [
+         {
+          "l": "0:9",
+          "ok": true,
+          "t": "string",
+          "v": "armingAway"
+         }
+        ],
+        "ok": true,
+        "str": "armingAway",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "@Speakers"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Alarm_Arming_Vol"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       },
+       {
+        "$": 5,
+        "c": "playTrack",
+        "p": [
+         {
+          "f": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:",
+          "g": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:",
+          "t": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:",
+          "vt": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:",
+          "x": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx16:"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Speakers",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Speakers"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Arming_Mp3",
+    "t": "string",
+    "v": {
+     "c": "http://10.1.10.254/local/SystemArming.mp3",
+     "exp": {
+      "i": [
+       {
+        "l": "0:40",
+        "ok": true,
+        "t": "string",
+        "v": "http://10.1.10.254/local/SystemArming.mp3"
+       }
+      ],
+      "ok": true,
+      "str": "http://10.1.10.254/local/SystemArming.mp3",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Alarm_Arming_Vol",
+    "t": "integer",
+    "v": {
+     "c": 100,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 100
+       }
+      ],
+      "ok": true,
+      "str": "100",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   }
+  ],
+  "z": "Play Track Example: x-file-cifs://10.1.20.135/PiShare/Music/SystemArming.mp3"
+ }
+}

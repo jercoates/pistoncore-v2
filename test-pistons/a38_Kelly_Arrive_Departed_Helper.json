@@ -1,0 +1,909 @@
+{
+ "name": "Kelly - Arrive / Departed Helper - 🎯",
+ "meta": {
+  "active": true,
+  "build": 1,
+  "category": "2",
+  "name": "Kelly - Arrive / Departed Helper - 🎯"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Phone"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "not present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:10",
+          "ok": true,
+          "t": "string",
+          "v": "not present"
+         }
+        ],
+        "ok": true,
+        "str": "not present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Owntracks"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "present"
+         }
+        ],
+        "ok": true,
+        "str": "present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "d": [
+       "Owntracks"
+      ],
+      "k": [
+       {
+        "$": 5,
+        "c": "departed",
+        "cm": true,
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 6,
+    "a": "0",
+    "c": [
+     {
+      "$": 7,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Owntracks"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "not present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:10",
+          "ok": true,
+          "t": "string",
+          "v": "not present"
+         }
+        ],
+        "ok": true,
+        "str": "not present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 8,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Phone"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "present"
+         }
+        ],
+        "ok": true,
+        "str": "present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 9,
+      "a": "0",
+      "d": [
+       "Phone"
+      ],
+      "k": [
+       {
+        "$": 10,
+        "c": "departed",
+        "cm": true,
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 11,
+    "a": "0",
+    "c": [
+     {
+      "$": 12,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Phone"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "present"
+         }
+        ],
+        "ok": true,
+        "str": "present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 13,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Owntracks"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "not present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:10",
+          "ok": true,
+          "t": "string",
+          "v": "not present"
+         }
+        ],
+        "ok": true,
+        "str": "not present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 14,
+      "a": "0",
+      "d": [
+       "Owntracks"
+      ],
+      "k": [
+       {
+        "$": 15,
+        "c": "arrived",
+        "cm": true,
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 16,
+    "a": "0",
+    "c": [
+     {
+      "$": 17,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Owntracks"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "present"
+         }
+        ],
+        "ok": true,
+        "str": "present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 18,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "presence",
+       "d": [
+        "Phone"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "not present",
+       "exp": {
+        "i": [
+         {
+          "l": "0:10",
+          "ok": true,
+          "t": "string",
+          "v": "not present"
+         }
+        ],
+        "ok": true,
+        "str": "not present",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 19,
+      "a": "0",
+      "d": [
+       "Phone"
+      ],
+      "k": [
+       {
+        "$": 20,
+        "c": "arrived",
+        "cm": true,
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 21,
+    "a": "0",
+    "c": [
+     {
+      "$": 22,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "SSID",
+       "d": [
+        "Owntracks"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "string",
+       "x": "SSID_1"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 23,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "SSID",
+       "d": [
+        "Owntracks"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "string",
+       "x": "SSID_2"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "or",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 24,
+      "a": "0",
+      "c": [
+       {
+        "$": 25,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "presence",
+         "d": [
+          "Owntracks"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "not present",
+         "exp": {
+          "i": [
+           {
+            "l": "0:10",
+            "ok": true,
+            "t": "string",
+            "v": "not present"
+           }
+          ],
+          "ok": true,
+          "str": "not present",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 26,
+        "co": "is_not",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "presence",
+         "d": [
+          "Phone"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "not present",
+         "exp": {
+          "i": [
+           {
+            "l": "0:10",
+            "ok": true,
+            "t": "string",
+            "v": "not present"
+           }
+          ],
+          "ok": true,
+          "str": "not present",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "or",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 27,
+        "a": "0",
+        "d": [
+         "Owntracks"
+        ],
+        "k": [
+         {
+          "$": 28,
+          "c": "arrived",
+          "cm": true,
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 29,
+        "a": "0",
+        "d": [
+         "Phone"
+        ],
+        "k": [
+         {
+          "$": 30,
+          "c": "arrived",
+          "cm": true,
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Phone",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx174:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Owntracks",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx175:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "SSID_1",
+    "t": "string",
+    "v": {
+     "c": "Morty, I'm Wifi Rick",
+     "exp": {
+      "i": [
+       {
+        "l": "0:19",
+        "ok": true,
+        "t": "string",
+        "v": "Morty, I'm Wifi Rick"
+       }
+      ],
+      "ok": true,
+      "str": "Morty, I'm Wifi Rick",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "SSID_2",
+    "t": "string",
+    "v": {
+     "c": "It Burns When IP",
+     "exp": {
+      "i": [
+       {
+        "l": "0:15",
+        "ok": true,
+        "t": "string",
+        "v": "It Burns When IP"
+       }
+      ],
+      "ok": true,
+      "str": "It Burns When IP",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   }
+  ],
+  "z": "(Owntracks, Phone, & SSID)"
+ }
+}

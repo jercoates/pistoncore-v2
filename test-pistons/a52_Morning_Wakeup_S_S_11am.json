@@ -1,0 +1,670 @@
+{
+ "name": "Morning Wakeup S-S 11am",
+ "meta": {
+  "active": false,
+  "build": 4,
+  "category": "5",
+  "name": "Morning Wakeup S-S 11am"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "odw": [
+        0,
+        6
+       ],
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "AlarmMinus30"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "Light"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 2000,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 2000
+            }
+           ],
+           "ok": true,
+           "str": "2000",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       },
+       {
+        "$": 5,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 6,
+      "a": "0",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 7,
+        "a": "0",
+        "d": [
+         "Light"
+        ],
+        "k": [
+         {
+          "$": 8,
+          "c": "setLevel",
+          "p": [
+           {
+            "c": 100,
+            "exp": {
+             "i": [
+              {
+               "l": "0:2",
+               "ok": true,
+               "t": "integer",
+               "v": 100
+              }
+             ],
+             "ok": true,
+             "str": "100",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "integer"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "enum"
+           },
+           {
+            "c": 1800,
+            "exp": {
+             "i": [
+              {
+               "l": "0:3",
+               "ok": true,
+               "t": "integer",
+               "v": 1800
+              }
+             ],
+             "ok": true,
+             "str": "1800",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "decimal"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "do",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 9,
+    "a": "0",
+    "c": [
+     {
+      "$": 10,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "odw": [
+        0,
+        6
+       ],
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "AlarmMinus30"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 15,
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "integer",
+          "v": 15
+         }
+        ],
+        "ok": true,
+        "str": "15",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 11,
+      "a": "0",
+      "d": [
+       "Light"
+      ],
+      "k": [
+       {
+        "$": 12,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 4000,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 4000
+            }
+           ],
+           "ok": true,
+           "str": "4000",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         },
+         {
+          "c": 900,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 900
+            }
+           ],
+           "ok": true,
+           "str": "900",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 13,
+    "a": "0",
+    "c": [
+     {
+      "$": 14,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "odw": [
+        0,
+        6
+       ],
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "AlarmMinus30"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 20,
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "integer",
+          "v": 20
+         }
+        ],
+        "ok": true,
+        "str": "20",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 15,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 16,
+        "c": "setVolume",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Vol"
+         }
+        ]
+       },
+       {
+        "$": 17,
+        "c": "playTrack",
+        "p": [
+         {
+          "f": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:",
+          "g": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:",
+          "t": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:",
+          "vt": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:",
+          "x": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx189:"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Light",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx149:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Alarm",
+    "t": "time",
+    "v": {
+     "c": 660,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 660
+       }
+      ],
+      "ok": true,
+      "str": "660",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "time"
+    }
+   },
+   {
+    "a": "d",
+    "n": "AlarmMinus30",
+    "t": "time",
+    "v": {
+     "c": 630,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 630
+       }
+      ],
+      "ok": true,
+      "str": "630",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "time"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speaker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx190:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "AudioFile",
+    "t": "string",
+    "v": {
+     "c": "http://10.1.10.254/local/morning_birds.mp3",
+     "exp": {
+      "i": [
+       {
+        "l": "0:41",
+        "ok": true,
+        "t": "string",
+        "v": "http://10.1.10.254/local/morning_birds.mp3"
+       }
+      ],
+      "ok": true,
+      "str": "http://10.1.10.254/local/morning_birds.mp3",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Vol",
+    "t": "integer",
+    "v": {
+     "c": 80,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 80
+       }
+      ],
+      "ok": true,
+      "str": "80",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

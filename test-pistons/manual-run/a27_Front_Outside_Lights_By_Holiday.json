@@ -1,0 +1,516 @@
+{
+ "name": "Front Outside Lights By Holiday",
+ "meta": {
+  "active": true,
+  "build": 4,
+  "category": "0",
+  "name": "Front Outside Lights By Holiday"
+ },
+ "piston": {
+  "o": {
+   "ced": 0,
+   "cto": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [],
+  "v": [
+   {
+    "a": "d",
+    "n": "January",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Default"
+   },
+   {
+    "a": "d",
+    "n": "Febuary",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Valentines Day"
+   },
+   {
+    "a": "d",
+    "n": "March",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "St Patricks Day"
+   },
+   {
+    "a": "d",
+    "n": "April",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Easter"
+   },
+   {
+    "a": "d",
+    "n": "May",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Default"
+   },
+   {
+    "a": "d",
+    "n": "May4",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Star Wars (Blue, Green, Red, Purple, Yellow, White)"
+   },
+   {
+    "a": "d",
+    "n": "May5",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Cinco de Mayo (Green, White, Red)"
+   },
+   {
+    "a": "d",
+    "n": "Mothers_Day",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "May (Second Sunday) (Pink, White, Red, Green, Purple)\n((month(now) == 5) && (weekdayOfMonth(now) == 2) && (dayOfWeek(now) == 1))"
+   },
+   {
+    "a": "d",
+    "n": "Memorial_Day",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "May Last Monday (Red, White, Blue)\n(month(now) == 5 && dayOfWeek(now) == 2 && month(addDays(now, 7)) != 5)"
+   },
+   {
+    "a": "d",
+    "n": "FathersDay",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "June 3rd Sunday - (White, Dark Red, Dark Blue, Black) \n((month(now) == 6) && (weekdayOfMonth(now) == 3) && (dayOfWeek(now) == 1))"
+   },
+   {
+    "a": "d",
+    "n": "June",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Default"
+   },
+   {
+    "a": "d",
+    "n": "July",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "(Red, White, Blue)"
+   },
+   {
+    "a": "d",
+    "n": "August",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Default"
+   },
+   {
+    "a": "d",
+    "n": "Labor_Day",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "September 1st - Labor Day (Red, White, Blue)"
+   },
+   {
+    "a": "d",
+    "n": "September",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Default"
+   },
+   {
+    "a": "d",
+    "n": "September_11",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "9/11 (Red, White, Blue)"
+   },
+   {
+    "a": "d",
+    "n": "October",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Halloween"
+   },
+   {
+    "a": "d",
+    "n": "November",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Thanksgiving"
+   },
+   {
+    "a": "d",
+    "n": "Descember",
+    "t": "integer",
+    "v": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    },
+    "z": "Christmas"
+   }
+  ],
+  "z": ""
+ }
+}

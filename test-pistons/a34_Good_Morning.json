@@ -1,0 +1,1331 @@
+{
+ "name": "Good Morning ☀️",
+ "meta": {
+  "active": true,
+  "build": 14,
+  "category": "5",
+  "name": "Good Morning ☀️"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "goodmorning"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Speaker_Vol"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       },
+       {
+        "$": 5,
+        "c": "playText",
+        "p": [
+         {
+          "e": "random(\"Good morning! Rise and shine, it's a new day!\",\n\"Good morning! Today is a blank canvas, ready for your masterpiece!\",\n\"Good morning! Let's greet the day with enthusiasm and optimism!\",\n\"Good morning! Make today so awesome that yesterday gets jealous!\",\n\"Good morning! Start your day with a smile and positive thoughts!\",\n\"Good morning! Here's to a day filled with laughter and joy!\",\n\"Good morning! Wake up with determination, go to bed with satisfaction!\",\n\"Good morning! The world is yours to conquer, go get 'em!\",\n\"Good morning! Seize the day and make it amazing!\",\n\"Good morning! Don't forget to be awesome!\",\n\"Good morning! The early bird catches the worm!\",\n\"Good morning! It's a brand new day filled with possibilities!\",\n\"Good morning! Time to wake up and conquer the day!\",\n\"Good morning! Let's make today better than yesterday!\",\n\"Good morning! Wishing you a day as bright as your smile!\",\n\"Good morning! May your coffee be strong and your day be productive!\",\n\"Good morning! Remember to take on the day with positivity!\",\n\"Good morning! Start your day with a grateful heart!\",\n\"Good morning! Embrace the day with enthusiasm and joy!\",\n\"Good morning! Carpe diem! Seize the day!\",\n\"Good morning! Rise and shine!\",\n\"Good morning! Ready to start the day?\",\n\"Good morning! Hope you slept well.\",\n\"Good morning! Another beautiful day ahead.\",\n\"Good morning! Time to seize the day!\",\n\"Good morning! Let's make today amazing!\",\n\"Good morning! Hope your day is off to a great start.\",\n\"Good morning! Wishing you a wonderful day ahead.\",\n\"Good morning! The world awaits you!\",\n\"Good morning! Here's to a fresh start.\")",
+          "exp": {
+           "i": [
+            {
+             "i": [
+              {
+               "i": [
+                {
+                 "l": "8:52",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Rise and shine, it's a new day!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "57:122",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Today is a blank canvas, ready for your masterpiece!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "127:189",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Let's greet the day with enthusiasm and optimism!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "194:257",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Make today so awesome that yesterday gets jealous!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "262:325",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Start your day with a smile and positive thoughts!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "330:388",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Here's to a day filled with laughter and joy!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "393:462",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Wake up with determination, go to bed with satisfaction!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "467:522",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! The world is yours to conquer, go get 'em!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "527:574",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Seize the day and make it amazing!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "579:619",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Don't forget to be awesome!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "624:669",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! The early bird catches the worm!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "674:734",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! It's a brand new day filled with possibilities!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "739:788",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Time to wake up and conquer the day!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "793:845",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Let's make today better than yesterday!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "850:905",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Wishing you a day as bright as your smile!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "910:976",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! May your coffee be strong and your day be productive!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "981:1038",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Remember to take on the day with positivity!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1043:1093",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Start your day with a grateful heart!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1098:1151",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Embrace the day with enthusiasm and joy!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1156:1195",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Carpe diem! Seize the day!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1200:1228",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Rise and shine!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1233:1269",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Ready to start the day?"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1274:1307",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Hope you slept well."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1312:1353",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Another beautiful day ahead."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1358:1393",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Time to seize the day!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1398:1436",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Let's make today amazing!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1441:1492",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Hope your day is off to a great start."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1497:1544",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Wishing you a wonderful day ahead."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1549:1583",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! The world awaits you!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1588:1625",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Good morning! Here's to a fresh start."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              }
+             ],
+             "l": "0:1627",
+             "n": "random",
+             "ok": true,
+             "t": "function"
+            }
+           ],
+           "ok": true,
+           "str": "random(\"Good morning! Rise and shine, it's a new day!\",\n\"Good morning! Today is a blank canvas, ready for your masterpiece!\",\n\"Good morning! Let's greet the day with enthusiasm and optimism!\",\n\"Good morning! Make today so awesome that yesterday gets jealous!\",\n\"Good morning! Start your day with a smile and positive thoughts!\",\n\"Good morning! Here's to a day filled with laughter and joy!\",\n\"Good morning! Wake up with determination, go to bed with satisfaction!\",\n\"Good morning! The world is yours to conquer, go get 'em!\",\n\"Good morning! Seize the day and make it amazing!\",\n\"Good morning! Don't forget to be awesome!\",\n\"Good morning! The early bird catches the worm!\",\n\"Good morning! It's a brand new day filled with possibilities!\",\n\"Good morning! Time to wake up and conquer the day!\",\n\"Good morning! Let's make today better than yesterday!\",\n\"Good morning! Wishing you a day as bright as your smile!\",\n\"Good morning! May your coffee be strong and your day be productive!\",\n\"Good morning! Remember to take on the day with positivity!\",\n\"Good morning! Start your day with a grateful heart!\",\n\"Good morning! Embrace the day with enthusiasm and joy!\",\n\"Good morning! Carpe diem! Seize the day!\",\n\"Good morning! Rise and shine!\",\n\"Good morning! Ready to start the day?\",\n\"Good morning! Hope you slept well.\",\n\"Good morning! Another beautiful day ahead.\",\n\"Good morning! Time to seize the day!\",\n\"Good morning! Let's make today amazing!\",\n\"Good morning! Hope your day is off to a great start.\",\n\"Good morning! Wishing you a wonderful day ahead.\",\n\"Good morning! The world awaits you!\",\n\"Good morning! Here's to a fresh start.\")",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 6,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 7,
+        "c": "on",
+        "p": []
+       },
+       {
+        "$": 8,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 9,
+      "a": "0",
+      "d": [
+       "Dyson"
+      ],
+      "k": [
+       {
+        "$": 10,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 11,
+      "a": "0",
+      "d": [
+       "Dresser"
+      ],
+      "k": [
+       {
+        "$": 12,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 6000,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 6000
+            }
+           ],
+           "ok": true,
+           "str": "6000",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       },
+       {
+        "$": 13,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 14,
+      "a": "0",
+      "d": [
+       "BoxFan",
+       "CeilingFan"
+      ],
+      "k": [
+       {
+        "$": 15,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 16,
+      "a": "0",
+      "d": [
+       "Dresser"
+      ],
+      "k": [
+       {
+        "$": 17,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 6000,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 6000
+            }
+           ],
+           "ok": true,
+           "str": "6000",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 18,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 19,
+        "c": "wait",
+        "p": [
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 20,
+      "a": "0",
+      "d": [
+       "Dresser"
+      ],
+      "k": [
+       {
+        "$": 21,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 22,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 23,
+        "c": "wait",
+        "p": [
+         {
+          "c": 10,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 10
+            }
+           ],
+           "ok": true,
+           "str": "10",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 24,
+      "a": "0",
+      "c": [
+       {
+        "$": 25,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "contact",
+         "d": [
+          "WindowOpen"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "open",
+         "exp": {
+          "i": [
+           {
+            "l": "0:3",
+            "ok": true,
+            "t": "string",
+            "v": "open"
+           }
+          ],
+          "ok": true,
+          "str": "open",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 26,
+        "a": "0",
+        "d": [
+         "Speaker"
+        ],
+        "k": [
+         {
+          "$": 27,
+          "c": "setLevel",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Speaker_Vol"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "enum"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "decimal"
+           }
+          ]
+         },
+         {
+          "$": 28,
+          "c": "playText",
+          "p": [
+           {
+            "e": "random(\"Remember to shut the master bedroom window.\",\n\"Make sure to close the master bedroom window.\",\n\"Don't overlook closing the master bedroom window.\",\n\"Please ensure the master bedroom window is closed.\",\n\"Don't neglect to close the master bedroom window.\",\n\"Ensure the master bedroom window is properly closed.\",\n\"Don't leave the master bedroom window open.\",\n\"Remember to secure the master bedroom window.\",\n\"Close the master bedroom window before leaving.\",\n\"Don't miss closing the master bedroom window.\")",
+            "exp": {
+             "i": [
+              {
+               "i": [
+                {
+                 "i": [
+                  {
+                   "l": "8:50",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Remember to shut the master bedroom window."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "55:99",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Make sure to close the master bedroom window."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "104:152",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Don't overlook closing the master bedroom window."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "157:206",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Please ensure the master bedroom window is closed."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "211:259",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Don't neglect to close the master bedroom window."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "264:315",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Ensure the master bedroom window is properly closed."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "320:362",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Don't leave the master bedroom window open."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "367:411",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Remember to secure the master bedroom window."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "416:462",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Close the master bedroom window before leaving."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "467:511",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Don't miss closing the master bedroom window."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                }
+               ],
+               "l": "0:513",
+               "n": "random",
+               "ok": true,
+               "t": "function"
+              }
+             ],
+             "ok": true,
+             "str": "random(\"Remember to shut the master bedroom window.\",\n\"Make sure to close the master bedroom window.\",\n\"Don't overlook closing the master bedroom window.\",\n\"Please ensure the master bedroom window is closed.\",\n\"Don't neglect to close the master bedroom window.\",\n\"Ensure the master bedroom window is properly closed.\",\n\"Don't leave the master bedroom window open.\",\n\"Remember to secure the master bedroom window.\",\n\"Close the master bedroom window before leaving.\",\n\"Don't miss closing the master bedroom window.\")",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 29,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 30,
+        "c": "wait",
+        "p": [
+         {
+          "c": 5,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 5
+            }
+           ],
+           "ok": true,
+           "str": "5",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 31,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 32,
+        "c": "stop",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 33,
+      "a": "0",
+      "d": [
+       "goodmorning"
+      ],
+      "k": [
+       {
+        "$": 34,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Speaker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx144:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Dyson",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx145:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "BoxFan",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx146:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "CeilingFan",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx147:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speaker_Vol",
+    "t": "integer",
+    "v": {
+     "c": 40,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 40
+       }
+      ],
+      "ok": true,
+      "str": "40",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Lights",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "WindowOpen",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx93:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "goodmorning",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx148:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Dresser",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx149:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

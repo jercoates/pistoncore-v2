@@ -152,26 +152,36 @@ Not the JSON's literal reading, not the emitted YAML, not another model's
 reading, not agreement between two models — on the water piston an assistant and
 Grok agreed with each other and were both wrong.
 
-## 2d. WHAT THE STATEMENTS SAY IS NOT WHAT THE PISTON DOES
-**(Jeremy, 2026-08-08, correcting a reading of `70_Water_Leak`)**
+## 2d. THE AUTHOR CAN BE WRONG ABOUT THEIR OWN PISTON
+**(Jeremy, 2026-08-08; the claim below RETRACTED 2026-08-13)**
 
-The water piston is written as a repeat loop with a 60-second wait that
-announces per wet sensor until everything is dry. Read literally — by an
-assistant AND by Grok, independently — that says "it keeps announcing until the
-leak clears."
+This section used to state as fact: *"Jeremy gets ONE push, ONE text and ONE
+speak per event"* on `70_Water_Leak`. **That was wrong, and it is deleted.**
+The piston is a repeat loop with a 60-second wait, and it does exactly what it
+says — re-sends every minute until every sensor is dry. Jeremy read the
+compiler's own output on 2026-08-13 and said *"it looks like it will spam me
+every minute untill dry."*
 
-**It does not. Jeremy gets ONE push, ONE text and ONE speak per event.**
+Why the wrong belief survived years of use: he has always been home when a
+sensor tripped, so he either never noticed the repeat or pulled the battery to
+silence the on-device siren. The path that would spam him — a non-critical
+sensor while somebody is home, so the valve never closes — has never happened.
 
-So the arrangement alone does NOT give the behaviour: what webCoRE's ENGINE does
-with that arrangement changes what it means (task cancellation on re-trigger,
-how a wait inside a loop behaves when the piston re-fires — COMPILER_SPEC §2.5,
-and §10h: the groovy is TIER ONE for this). A reading that walks the statements
-faithfully and stops there will be confidently wrong.
+**Two things follow, and they point in opposite directions. Keep both.**
 
-**And it is wrong on MOST pistons, not just this one** (Jeremy, same day:
-*"wrong on most"*). Do not present a structural reading as an intent reading,
-and do not report an accuracy score for one — there is no key to score against
-except Jeremy.
+1. A reading that walks the statements faithfully can still be wrong, because
+   what webCoRE's ENGINE does with an arrangement changes what it means (task
+   cancellation on re-trigger; a wait inside a loop when the piston re-fires —
+   COMPILER_SPEC §2.5, §10h: the groovy is TIER ONE for this).
+2. **But it must not be replaced by deferring to what the owner remembers.**
+   This entry was wrong for months precisely because a remembered behaviour was
+   written down as fact, and every session afterwards read the piston through
+   it. And most of the complex pistons are not his — Albert shared them and
+   Jeremy adapted the devices — so for those his description is a READING, with
+   no more authority than anyone else's.
+
+Do not present a structural reading as an intent reading, and do not report an
+accuracy score for one — there is no key to score against.
 
 ## 2e. EDGE vs STATE IS INTENT — NEVER NORMALISE ONE INTO THE OTHER
 **(Jeremy, 2026-08-08: *"the watching for the change is the key to not spamming

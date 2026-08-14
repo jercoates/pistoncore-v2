@@ -1,0 +1,573 @@
+{
+ "name": "new test",
+ "meta": {
+  "active": false,
+  "build": 3,
+  "category": "0",
+  "name": "new test"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "contact",
+       "d": [
+        "Contacts"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "open",
+       "exp": {
+        "i": [
+         {
+          "l": "0:3",
+          "ok": true,
+          "t": "string",
+          "v": "open"
+         }
+        ],
+        "ok": true,
+        "str": "open",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "d": [
+       "Notification_Device"
+      ],
+      "k": [
+       {
+        "$": 5,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "$currentEventDevice \", Opened - \" {[$currentEventDevice : battery]} \", Battery Level\"",
+          "exp": {
+           "i": [
+            {
+             "l": "0:18",
+             "ok": true,
+             "t": "variable",
+             "x": "$currentEventDevice"
+            },
+            {
+             "l": "21:31",
+             "ok": true,
+             "t": "string",
+             "v": ", Opened - "
+            },
+            {
+             "i": [
+              {
+               "a": "battery",
+               "l": "35:65",
+               "ok": true,
+               "t": "device",
+               "x": "$currentEventDevice"
+              }
+             ],
+             "l": "34:66",
+             "ok": true,
+             "t": "expression"
+            },
+            {
+             "l": "69:83",
+             "ok": true,
+             "t": "string",
+             "v": ", Battery Level"
+            }
+           ],
+           "ok": true,
+           "str": "$currentEventDevice \", Opened - \" {[$currentEventDevice : battery]} \", Battery Level\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 6,
+    "a": "0",
+    "c": [
+     {
+      "$": 7,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 8,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "contact",
+       "d": [
+        "Contacts"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "closed",
+       "exp": {
+        "i": [
+         {
+          "l": "0:5",
+          "ok": true,
+          "t": "string",
+          "v": "closed"
+         }
+        ],
+        "ok": true,
+        "str": "closed",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 9,
+      "a": "0",
+      "d": [
+       "Notification_Device"
+      ],
+      "k": [
+       {
+        "$": 10,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "$currentEventDevice \", Closed - \" {[$currentEventDevice : battery]} \", Battery Level\"",
+          "exp": {
+           "i": [
+            {
+             "l": "0:18",
+             "ok": true,
+             "t": "variable",
+             "x": "$currentEventDevice"
+            },
+            {
+             "l": "21:31",
+             "ok": true,
+             "t": "string",
+             "v": ", Closed - "
+            },
+            {
+             "i": [
+              {
+               "a": "battery",
+               "l": "35:65",
+               "ok": true,
+               "t": "device",
+               "x": "$currentEventDevice"
+              }
+             ],
+             "l": "34:66",
+             "ok": true,
+             "t": "expression"
+            },
+            {
+             "l": "69:83",
+             "ok": true,
+             "t": "string",
+             "v": ", Battery Level"
+            }
+           ],
+           "ok": true,
+           "str": "$currentEventDevice \", Closed - \" {[$currentEventDevice : battery]} \", Battery Level\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Message",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "Monthly_Test",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx108:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Contacts",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx71:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx72:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx100:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx101:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx76:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx103:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx78:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx79:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx138:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx80:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx104:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx81:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx105:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx83:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx84:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx85:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx87:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx88:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx89:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx90:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx91:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx92:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx93:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx94:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx95:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx96:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx106:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx97:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx98:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx99:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Water_Leak",
+    "t": "device",
+    "v": {
+     "d": [
+      "Water_Leak"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Door_Lock",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx42:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx43:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx44:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx45:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx46:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Motion",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx15:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx74:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx127:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx77:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx82:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx68:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Smoke_CO2",
+    "t": "device",
+    "v": {
+     "d": [
+      "Smoke_CO2"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Buttons",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx49:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx102:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx143:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx178:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Sirens",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx69:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx70:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Notification_Device",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": "Notes: \"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\""
+ }
+}

@@ -1,0 +1,1784 @@
+{
+ "name": "Driveway Lights 🌈💡",
+ "meta": {
+  "active": true,
+  "build": 3,
+  "category": "3",
+  "name": "Driveway Lights 🌈💡"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 1,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 1
+         }
+        ],
+        "ok": true,
+        "str": "1",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 5,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 6,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 7,
+    "a": "0",
+    "c": [
+     {
+      "$": 8,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 2,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 2
+         }
+        ],
+        "ok": true,
+        "str": "2",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 9,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 10,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 6410,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 6410
+            }
+           ],
+           "ok": true,
+           "str": "6410",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 11,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 12,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 13,
+    "a": "0",
+    "c": [
+     {
+      "$": 14,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 3,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 3
+         }
+        ],
+        "ok": true,
+        "str": "3",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 15,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 16,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 4292,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 4292
+            }
+           ],
+           "ok": true,
+           "str": "4292",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 17,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 18,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 19,
+    "a": "0",
+    "c": [
+     {
+      "$": 20,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 4,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 4
+         }
+        ],
+        "ok": true,
+        "str": "4",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 21,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 22,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 2890,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 2890
+            }
+           ],
+           "ok": true,
+           "str": "2890",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 23,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 24,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 25,
+    "a": "0",
+    "c": [
+     {
+      "$": 26,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 5,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 5
+         }
+        ],
+        "ok": true,
+        "str": "5",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 27,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 28,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 2257,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 2257
+            }
+           ],
+           "ok": true,
+           "str": "2257",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 29,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 30,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 31,
+    "a": "0",
+    "c": [
+     {
+      "$": 32,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "held",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 1,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 1
+         }
+        ],
+        "ok": true,
+        "str": "1",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 33,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 34,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 35,
+    "a": "0",
+    "c": [
+     {
+      "$": 36,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "held",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 2,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 2
+         }
+        ],
+        "ok": true,
+        "str": "2",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 37,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 38,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 75,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 75
+            }
+           ],
+           "ok": true,
+           "str": "75",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 39,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 40,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 75,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 75
+            }
+           ],
+           "ok": true,
+           "str": "75",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 41,
+    "a": "0",
+    "c": [
+     {
+      "$": 42,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "held",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 3,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 3
+         }
+        ],
+        "ok": true,
+        "str": "3",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 43,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 44,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 50,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 50
+            }
+           ],
+           "ok": true,
+           "str": "50",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 45,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 46,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 50,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 50
+            }
+           ],
+           "ok": true,
+           "str": "50",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 47,
+    "a": "0",
+    "c": [
+     {
+      "$": 48,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "held",
+       "d": [
+        "Switches"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 4,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 4
+         }
+        ],
+        "ok": true,
+        "str": "4",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 49,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 50,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 25,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 25
+            }
+           ],
+           "ok": true,
+           "str": "25",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 51,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 52,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 25,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 25
+            }
+           ],
+           "ok": true,
+           "str": "25",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Switches",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx128:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Lights",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx129:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

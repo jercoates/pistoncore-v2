@@ -1,0 +1,3850 @@
+{
+ "name": "Battery Check with Type/Qty 🔋 - Need ToFix",
+ "meta": {
+  "active": true,
+  "build": 30,
+  "category": "2",
+  "name": "Battery Check with Type/Qty 🔋 - Need ToFix"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 1080,
+       "exp": {
+        "i": [
+         {
+          "l": "0:3",
+          "ok": true,
+          "t": "integer",
+          "v": 1080
+         }
+        ],
+        "ok": true,
+        "str": "1080",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "time"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "or",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 4,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "Battery_Status"
+         },
+         {
+          "c": "\"\"",
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "string",
+             "v": "\"\""
+            }
+           ],
+           "ok": true,
+           "str": "\"\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         }
+        ]
+       },
+       {
+        "$": 5,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "Battery_Status"
+         },
+         {
+          "e": "\"🔋 Low Battery 🔋\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:18",
+             "ok": true,
+             "t": "string",
+             "v": "🔋 Low Battery 🔋\n"
+            },
+            {
+             "l": "20:29",
+             "ok": true,
+             "t": "variable",
+             "x": "$monthName"
+            },
+            {
+             "l": "31",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            },
+            {
+             "l": "33:36",
+             "ok": true,
+             "t": "variable",
+             "x": "$day"
+            },
+            {
+             "l": "38:44",
+             "ok": true,
+             "t": "string",
+             "v": "   -   "
+            },
+            {
+             "l": "46:50",
+             "ok": true,
+             "t": "variable",
+             "x": "$time"
+            },
+            {
+             "l": "52",
+             "ok": true,
+             "t": "string",
+             "v": "\n"
+            }
+           ],
+           "ok": true,
+           "str": "\"🔋 Low Battery 🔋\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 6,
+      "a": "0",
+      "c": [
+       {
+        "$": 7,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "AAx2_Smoke"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "SmokeBatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 8,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 9,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 10,
+        "a": "0",
+        "lo": {
+         "d": [
+          "AAx2_Smoke"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 11,
+          "a": "0",
+          "c": [
+           {
+            "$": 12,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "SmokeBatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 13,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 14,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a') \"\n   Batteries: AA x2\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "149:170",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: AA x2\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a') \"\n   Batteries: AA x2\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 15,
+      "a": "0",
+      "c": [
+       {
+        "$": 16,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "AA_x2"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 17,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 18,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 19,
+        "a": "0",
+        "lo": {
+         "d": [
+          "AA_x2"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 20,
+          "a": "0",
+          "c": [
+           {
+            "$": 21,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 22,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 23,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AA x2\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:169",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: AA x2\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AA x2\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 24,
+      "a": "0",
+      "c": [
+       {
+        "$": 25,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "AA_x3"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 26,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 27,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 28,
+        "a": "0",
+        "lo": {
+         "d": [
+          "AA_x3"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 29,
+          "a": "0",
+          "c": [
+           {
+            "$": 30,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 31,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 32,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AA x3\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:169",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: AA x3\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AA x3\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 33,
+      "a": "0",
+      "c": [
+       {
+        "$": 34,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "AA_x4"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 35,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 36,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 37,
+        "a": "0",
+        "lo": {
+         "d": [
+          "AA_x4"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 38,
+          "a": "0",
+          "c": [
+           {
+            "$": 39,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 40,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 41,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AA x4\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:169",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: AA x4\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AA x4\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 42,
+      "a": "0",
+      "c": [
+       {
+        "$": 43,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "AAA_x2"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 44,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 45,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 46,
+        "a": "0",
+        "lo": {
+         "d": [
+          "AAA_x2"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 47,
+          "a": "0",
+          "c": [
+           {
+            "$": 48,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 49,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 50,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AAA x2\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:170",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: AAA x2\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: AAA x2\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 51,
+      "a": "0",
+      "c": [
+       {
+        "$": 52,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "CR123_x1"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 53,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 54,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 55,
+        "a": "0",
+        "lo": {
+         "d": [
+          "CR123_x1"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 56,
+          "a": "0",
+          "c": [
+           {
+            "$": 57,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 58,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 59,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR123 x1\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:172",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: CR123 x1\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR123 x1\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 60,
+      "a": "0",
+      "c": [
+       {
+        "$": 61,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "CR123_x2"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 62,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 63,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 64,
+        "a": "0",
+        "lo": {
+         "d": [
+          "CR123_x2"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 65,
+          "a": "0",
+          "c": [
+           {
+            "$": 66,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 67,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 68,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR123 x2\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:172",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: CR123 x2\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR123 x2\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 69,
+      "a": "0",
+      "c": [
+       {
+        "$": 70,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "CR2_x1"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 71,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 72,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 73,
+        "a": "0",
+        "lo": {
+         "d": [
+          "CR2_x1"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 74,
+          "a": "0",
+          "c": [
+           {
+            "$": 75,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 76,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 77,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR2 x1\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:170",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: CR2 x1\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR2 x1\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 78,
+      "a": "0",
+      "c": [
+       {
+        "$": 79,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "CR2032_x1"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 80,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 81,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 82,
+        "a": "0",
+        "lo": {
+         "d": [
+          "CR2032_x1"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 83,
+          "a": "0",
+          "c": [
+           {
+            "$": 84,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 85,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 86,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR2032 x1\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:173",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: CR2032 x1\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR2032 x1\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 87,
+      "a": "0",
+      "c": [
+       {
+        "$": 88,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "battery",
+         "d": [
+          "CR2450_x1"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "integer",
+         "x": "BatteryPercent"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 89,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 90,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Battery_Status"
+           },
+           {
+            "e": "Battery_Status Separator",
+            "exp": {
+             "i": [
+              {
+               "l": "0:13",
+               "ok": true,
+               "t": "variable",
+               "x": "Battery_Status"
+              },
+              {
+               "l": "15:23",
+               "ok": true,
+               "t": "variable",
+               "x": "Separator"
+              }
+             ],
+             "ok": true,
+             "str": "Battery_Status Separator",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 91,
+        "a": "0",
+        "lo": {
+         "d": [
+          "CR2450_x1"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 92,
+          "a": "0",
+          "c": [
+           {
+            "$": 93,
+            "co": "is_less_than",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "battery",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "f": "l",
+             "g": "any",
+             "t": "x",
+             "vt": "integer",
+             "x": "BatteryPercent"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 94,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 95,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Battery_Status"
+               },
+               {
+                "e": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR2450 x1\n\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:13",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Battery_Status"
+                  },
+                  {
+                   "l": "15:21",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "24:36",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Battery: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "40:56",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "39:57",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "60:79",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%\n   Last Reported: "
+                  },
+                  {
+                   "i": [
+                    {
+                     "i": [
+                      {
+                       "l": "97:100",
+                       "ok": true,
+                       "t": "variable",
+                       "x": "$now"
+                      },
+                      {
+                       "l": "101",
+                       "o": "-",
+                       "ok": true,
+                       "t": "operator"
+                      },
+                      {
+                       "i": [
+                        {
+                         "i": [
+                          {
+                           "i": [
+                            {
+                             "a": "battery",
+                             "l": "107:123",
+                             "ok": true,
+                             "t": "device",
+                             "x": "$device"
+                            }
+                           ],
+                           "ok": true,
+                           "t": "expression"
+                          }
+                         ],
+                         "l": "103:124",
+                         "n": "age",
+                         "ok": true,
+                         "t": "function"
+                        }
+                       ],
+                       "l": "102:125",
+                       "ok": true,
+                       "t": "expression"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "i": [
+                      {
+                       "l": "129:144",
+                       "ok": true,
+                       "t": "string",
+                       "v": "M/dd/yy @ h:mm a"
+                      }
+                     ],
+                     "ok": true,
+                     "t": "expression"
+                    }
+                   ],
+                   "l": "82:146",
+                   "n": "formatdatetime",
+                   "ok": true,
+                   "t": "function"
+                  },
+                  {
+                   "l": "148:173",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n   Batteries: CR2450 x1\n\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Battery_Status $device \"\n   Battery: \" {[$device:battery]} \"%\n   Last Reported: \" formatDateTime($now-(age([$device:battery])), 'M/dd/yy @ h:mm a')\"\n   Batteries: CR2450 x1\n\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 96,
+      "a": "0",
+      "c": [
+       {
+        "$": 97,
+        "co": "is_not",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "string",
+         "x": "Battery_Status"
+        },
+        "ro": {
+         "e": "\"🔋 Low Battery 🔋\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+         "exp": {
+          "i": [
+           {
+            "l": "1:18",
+            "ok": true,
+            "t": "string",
+            "v": "🔋 Low Battery 🔋\n"
+           },
+           {
+            "l": "20:29",
+            "ok": true,
+            "t": "variable",
+            "x": "$monthName"
+           },
+           {
+            "l": "31",
+            "ok": true,
+            "t": "string",
+            "v": " "
+           },
+           {
+            "l": "33:36",
+            "ok": true,
+            "t": "variable",
+            "x": "$day"
+           },
+           {
+            "l": "38:44",
+            "ok": true,
+            "t": "string",
+            "v": "   -   "
+           },
+           {
+            "l": "46:50",
+            "ok": true,
+            "t": "variable",
+            "x": "$time"
+           },
+           {
+            "l": "52",
+            "ok": true,
+            "t": "string",
+            "v": "\n"
+           }
+          ],
+          "ok": true,
+          "str": "\"🔋 Low Battery 🔋\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "e",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 98,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:"
+        ],
+        "k": [
+         {
+          "$": 99,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Battery_Status"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "AAx2_Smoke",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx26:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx27:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx28:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx29:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx30:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx31:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx32:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx33:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx34:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx35:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx36:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx37:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "AA_x2",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx38:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx39:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx40:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx41:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "AA_x3",
+    "t": "device"
+   },
+   {
+    "a": "d",
+    "n": "AA_x4",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx15:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx42:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx43:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx44:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx45:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx46:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx47:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx48:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "AAA_x2",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx49:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx50:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx51:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx52:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx53:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx54:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx55:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx56:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx57:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx58:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx59:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx60:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx61:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx62:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx63:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx64:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx65:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx66:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "CR123_x1",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx67:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx68:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "CR123_x2",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx69:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx70:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "CR2_x1",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx19:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx71:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx72:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx73:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx74:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx75:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx76:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx77:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx78:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx79:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx80:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx81:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx82:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx83:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx84:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx85:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx86:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx87:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx88:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx89:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx90:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx91:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx92:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx93:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx94:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx95:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx96:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx62:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx97:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx98:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx99:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "CR2032_x1",
+    "t": "device"
+   },
+   {
+    "a": "d",
+    "n": "CR2450_x1",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx100:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx101:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx102:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx103:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx104:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx105:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx106:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Battery_Status",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "SmokeBatteryPercent",
+    "t": "integer",
+    "v": {
+     "c": 80,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 80
+       }
+      ],
+      "ok": true,
+      "str": "80",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "BatteryPercent",
+    "t": "integer",
+    "v": {
+     "c": 25,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 25
+       }
+      ],
+      "ok": true,
+      "str": "25",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Separator",
+    "t": "string",
+    "v": {
+     "e": "\"\n==========\n\"",
+     "exp": {
+      "i": [
+       {
+        "l": "1:12",
+        "ok": true,
+        "t": "string",
+        "v": "\n==========\n"
+       }
+      ],
+      "ok": true,
+      "str": "\"\n==========\n\"",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "e",
+     "vt": "string"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

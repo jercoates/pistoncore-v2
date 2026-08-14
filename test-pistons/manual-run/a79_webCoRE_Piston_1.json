@@ -1,0 +1,93 @@
+{
+ "name": "webCoRE Piston #1",
+ "meta": {
+  "active": true,
+  "build": 6,
+  "category": "0",
+  "name": "webCoRE Piston #1"
+ },
+ "piston": {
+  "o": {
+   "ced": 0,
+   "cto": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "d": [
+     ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx209:"
+    ],
+    "k": [
+     {
+      "$": 2,
+      "c": "setVolume",
+      "p": [
+       {
+        "c": 100,
+        "exp": {
+         "i": [
+          {
+           "l": "0:2",
+           "ok": true,
+           "t": "integer",
+           "v": 100
+          }
+         ],
+         "ok": true,
+         "str": "100",
+         "t": "expression"
+        },
+        "f": "l",
+        "g": "avg",
+        "t": "c",
+        "vt": "integer"
+       }
+      ]
+     },
+     {
+      "$": 3,
+      "c": "speak",
+      "p": [
+       {
+        "c": "This is a test of the emergency broadcasting system, this is only a test.",
+        "exp": {
+         "i": [
+          {
+           "l": "0:72",
+           "ok": true,
+           "t": "string",
+           "v": "This is a test of the emergency broadcasting system, this is only a test."
+          }
+         ],
+         "ok": true,
+         "str": "This is a test of the emergency broadcasting system, this is only a test.",
+         "t": "expression"
+        },
+        "f": "l",
+        "g": "avg",
+        "t": "c",
+        "vt": "string"
+       },
+       {
+        "d": [],
+        "f": "l",
+        "g": "avg",
+        "vt": "integer"
+       }
+      ]
+     }
+    ],
+    "r": [],
+    "rop": "and",
+    "t": "action",
+    "tcp": "c"
+   }
+  ],
+  "v": [],
+  "z": ""
+ }
+}

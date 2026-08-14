@@ -1,0 +1,668 @@
+{
+ "name": "Oven Preheat 🥧",
+ "meta": {
+  "active": true,
+  "build": 2,
+  "category": "4",
+  "name": "Oven Preheat 🥧"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "ovenJobState",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx186:"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "cooking",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "cooking"
+         }
+        ],
+        "ok": true,
+        "str": "cooking",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "string"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "c": [
+       {
+        "$": 4,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "ovenCavityStatus",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx187:"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "off",
+         "exp": {
+          "i": [
+           {
+            "l": "0:2",
+            "ok": true,
+            "t": "string",
+            "v": "off"
+           }
+          ],
+          "ok": true,
+          "str": "off",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 5,
+        "a": "0",
+        "d": [
+         "@Speakers"
+        ],
+        "k": [
+         {
+          "$": 6,
+          "c": "setVolume",
+          "p": [
+           {
+            "c": 100,
+            "exp": {
+             "i": [
+              {
+               "l": "0:2",
+               "ok": true,
+               "t": "integer",
+               "v": 100
+              }
+             ],
+             "ok": true,
+             "str": "100",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "integer"
+           }
+          ]
+         },
+         {
+          "$": 7,
+          "c": "playText",
+          "p": [
+           {
+            "c": "Upper Oven has been preheated",
+            "exp": {
+             "i": [
+              {
+               "l": "0:28",
+               "ok": true,
+               "t": "string",
+               "v": "Upper Oven has been preheated"
+              }
+             ],
+             "ok": true,
+             "str": "Upper Oven has been preheated",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 8,
+        "a": "0",
+        "d": [
+         "@Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 9,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🥧 Oven Preheat 🥧\n\"$monthName\" \"$day\"   -   \"$time\"\n\nUpper Oven has been preheated\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:19",
+               "ok": true,
+               "t": "string",
+               "v": "🥧 Oven Preheat 🥧\n"
+              },
+              {
+               "l": "21:30",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "32",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "34:37",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "39:45",
+               "ok": true,
+               "t": "string",
+               "v": "   -   "
+              },
+              {
+               "l": "47:51",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "53:83",
+               "ok": true,
+               "t": "string",
+               "v": "\n\nUpper Oven has been preheated"
+              }
+             ],
+             "ok": true,
+             "str": "\"🥧 Oven Preheat 🥧\n\"$monthName\" \"$day\"   -   \"$time\"\n\nUpper Oven has been preheated\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 10,
+        "a": "0",
+        "d": [
+         "@Speakers"
+        ],
+        "k": [
+         {
+          "$": 11,
+          "c": "setVolume",
+          "p": [
+           {
+            "c": 100,
+            "exp": {
+             "i": [
+              {
+               "l": "0:2",
+               "ok": true,
+               "t": "integer",
+               "v": 100
+              }
+             ],
+             "ok": true,
+             "str": "100",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "integer"
+           }
+          ]
+         },
+         {
+          "$": 12,
+          "c": "playText",
+          "p": [
+           {
+            "c": "Main Oven has been preheated",
+            "exp": {
+             "i": [
+              {
+               "l": "0:27",
+               "ok": true,
+               "t": "string",
+               "v": "Main Oven has been preheated"
+              }
+             ],
+             "ok": true,
+             "str": "Main Oven has been preheated",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 13,
+        "a": "0",
+        "d": [
+         "@Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 14,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🥧 Oven Preheat 🥧\n\"$monthName\" \"$day\"   -   \"$time\"\n\nMain Oven has been preheated\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:19",
+               "ok": true,
+               "t": "string",
+               "v": "🥧 Oven Preheat 🥧\n"
+              },
+              {
+               "l": "21:30",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "32",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "34:37",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "39:45",
+               "ok": true,
+               "t": "string",
+               "v": "   -   "
+              },
+              {
+               "l": "47:51",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "53:82",
+               "ok": true,
+               "t": "string",
+               "v": "\n\nMain Oven has been preheated"
+              }
+             ],
+             "ok": true,
+             "str": "\"🥧 Oven Preheat 🥧\n\"$monthName\" \"$day\"   -   \"$time\"\n\nMain Oven has been preheated\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 15,
+    "a": "0",
+    "c": [
+     {
+      "$": 16,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "ovenJobState",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx187:"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "cooking",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "cooking"
+         }
+        ],
+        "ok": true,
+        "str": "cooking",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "string"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 17,
+      "a": "0",
+      "d": [
+       "@Speakers"
+      ],
+      "k": [
+       {
+        "$": 18,
+        "c": "setVolume",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       },
+       {
+        "$": 19,
+        "c": "playText",
+        "p": [
+         {
+          "c": "Lower Oven has been preheated",
+          "exp": {
+           "i": [
+            {
+             "l": "0:28",
+             "ok": true,
+             "t": "string",
+             "v": "Lower Oven has been preheated"
+            }
+           ],
+           "ok": true,
+           "str": "Lower Oven has been preheated",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 20,
+      "a": "0",
+      "d": [
+       "@Notifications_Push_All"
+      ],
+      "k": [
+       {
+        "$": 21,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"🥧 Oven Preheat 🥧\n\"$monthName\" \"$day\"   -   \"$time\"\n\nLower Oven has been preheated\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:19",
+             "ok": true,
+             "t": "string",
+             "v": "🥧 Oven Preheat 🥧\n"
+            },
+            {
+             "l": "21:30",
+             "ok": true,
+             "t": "variable",
+             "x": "$monthName"
+            },
+            {
+             "l": "32",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            },
+            {
+             "l": "34:37",
+             "ok": true,
+             "t": "variable",
+             "x": "$day"
+            },
+            {
+             "l": "39:45",
+             "ok": true,
+             "t": "string",
+             "v": "   -   "
+            },
+            {
+             "l": "47:51",
+             "ok": true,
+             "t": "variable",
+             "x": "$time"
+            },
+            {
+             "l": "53:83",
+             "ok": true,
+             "t": "string",
+             "v": "\n\nLower Oven has been preheated"
+            }
+           ],
+           "ok": true,
+           "str": "\"🥧 Oven Preheat 🥧\n\"$monthName\" \"$day\"   -   \"$time\"\n\nLower Oven has been preheated\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [],
+  "z": "Once Preheated Speak Announcement"
+ }
+}

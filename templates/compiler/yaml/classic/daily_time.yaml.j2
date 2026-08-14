@@ -1,0 +1,69 @@
+{#-
+  IDIOM: "at this occasion, put these things in this state."
+
+  The commonest shape in the corpus -- 6 pistons across both authors, all
+  active (census 2026-08-13) -- and the one the compiler could not emit at all.
+
+  This is written from HOME ASSISTANT'S side, not webCoRE's. HA already has a
+  word for "every day at this time" (`trigger: time`) and for "relative to
+  sunrise/sunset" (`trigger: sun` with an offset), so the piston's loop-free
+  intent lands as two native triggers and nothing else. There is no variable,
+  no template condition and no helper here because the intent does not contain
+  any -- webCoRE's `happens_daily_at` is a way of SAYING it, not a mechanism to
+  reproduce.
+
+  HA-facing names live HERE, never in Python (COMPILER_SPEC "Jinja2
+  everywhere"): the weekday words, the service call spelling, the condition
+  keywords. Edit this file to follow HA if it renames any of them.
+
+  Expects: automations = [ {id, alias, when:{kind,at|event,offset},
+                            weekday:[0-6], months:[1-12],
+                            actions:[{service, entities, data}]} ]
+-#}
+{% for a in automations %}
+- id: "{{ a.id }}"
+  alias: "{{ a.alias }}"
+  mode: single
+  triggers:
+{%- if a.when.kind == 'sun' %}
+    - trigger: sun
+      event: {{ a.when.event }}
+{%- if a.when.offset %}
+      offset: "{{ a.when.offset }}"
+{%- endif %}
+{%- else %}
+    - trigger: time
+      at: "{{ a.when.at }}"
+{%- endif %}
+{%- if a.weekday or a.months %}
+  conditions:
+{%- if a.weekday %}
+    - condition: time
+      weekday:
+{%- for d in a.weekday %}
+        - {{ ['sun','mon','tue','wed','thu','fri','sat'][d] }}
+{%- endfor %}
+{%- endif %}
+{%- if a.months %}
+    - condition: template
+      value_template: "{{ '{{' }} now().month in {{ a.months }} {{ '}}' }}"
+{%- endif %}
+{%- else %}
+  conditions: []
+{%- endif %}
+  actions:
+{%- for act in a.actions %}
+    - action: {{ act.service }}
+      target:
+        entity_id:
+{%- for e in act.entities %}
+          - {{ e }}
+{%- endfor %}
+{%- if act.data %}
+      data:
+{%- for k, v in act.data.items() %}
+        {{ k }}: {{ v }}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+{% endfor %}

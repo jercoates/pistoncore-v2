@@ -1,0 +1,669 @@
+{
+ "name": "Doorbell (Back Door) Pushed 🚪🛎️",
+ "meta": {
+  "active": true,
+  "build": 5,
+  "category": "6",
+  "name": "Doorbell (Back Door) Pushed 🚪🛎️"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "DoorBell_Button"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 1,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 1
+         }
+        ],
+        "ok": true,
+        "str": "1",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "Speakers"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "setVolume",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Speaker_Vol"
+         }
+        ]
+       },
+       {
+        "$": 5,
+        "c": "playText",
+        "p": [
+         {
+          "e": "\"Someone is at the \"DoorLocation\" door\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:18",
+             "ok": true,
+             "t": "string",
+             "v": "Someone is at the "
+            },
+            {
+             "l": "20:31",
+             "ok": true,
+             "t": "variable",
+             "x": "DoorLocation"
+            },
+            {
+             "l": "33:37",
+             "ok": true,
+             "t": "string",
+             "v": " door"
+            }
+           ],
+           "ok": true,
+           "str": "\"Someone is at the \"DoorLocation\" door\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 6,
+      "a": "0",
+      "c": [
+       {
+        "$": 7,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "presence",
+         "d": [
+          "Presence_All"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "not present",
+         "exp": {
+          "i": [
+           {
+            "l": "0:10",
+            "ok": true,
+            "t": "string",
+            "v": "not present"
+           }
+          ],
+          "ok": true,
+          "str": "not present",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 8,
+        "a": "0",
+        "d": [
+         "DoorBell_Camera"
+        ],
+        "k": [
+         {
+          "$": 9,
+          "c": "takePicture",
+          "cm": true,
+          "p": [
+           {
+            "c": "main",
+            "exp": {
+             "i": [
+              {
+               "l": "0:3",
+               "ok": true,
+               "t": "string",
+               "v": "main"
+              }
+             ],
+             "ok": true,
+             "str": "main",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "enum"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 10,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 11,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "DoorBell_Camera_Image"
+           },
+           {
+            "a": "image",
+            "d": [
+             "DoorBell_Camera"
+            ],
+            "f": "l",
+            "g": "any",
+            "t": "p",
+            "vt": "string"
+           }
+          ]
+         },
+         {
+          "$": 12,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "DoorBell_Camera_Image"
+           },
+           {
+            "e": "mid(DoorBell_Camera_Image,5)",
+            "exp": {
+             "i": [
+              {
+               "i": [
+                {
+                 "i": [
+                  {
+                   "l": "4:24",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "DoorBell_Camera_Image"
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "26",
+                   "ok": true,
+                   "t": "integer",
+                   "v": 5
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                }
+               ],
+               "l": "0:27",
+               "n": "mid",
+               "ok": true,
+               "t": "function"
+              }
+             ],
+             "ok": true,
+             "str": "mid(DoorBell_Camera_Image,5)",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 13,
+        "a": "0",
+        "d": [
+         "Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 14,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🚪 \"DoorLocation\" Door Bell 🚪\nSomeone is at your \"DoorLocation\" Door.\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:3",
+               "ok": true,
+               "t": "string",
+               "v": "🚪 "
+              },
+              {
+               "l": "5:16",
+               "ok": true,
+               "t": "variable",
+               "x": "DoorLocation"
+              },
+              {
+               "l": "18:50",
+               "ok": true,
+               "t": "string",
+               "v": " Door Bell 🚪\nSomeone is at your "
+              },
+              {
+               "l": "52:63",
+               "ok": true,
+               "t": "variable",
+               "x": "DoorLocation"
+              },
+              {
+               "l": "65:70",
+               "ok": true,
+               "t": "string",
+               "v": " Door."
+              }
+             ],
+             "ok": true,
+             "str": "\"🚪 \"DoorLocation\" Door Bell 🚪\nSomeone is at your \"DoorLocation\" Door.\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 15,
+        "a": "0",
+        "d": [
+         "Email"
+        ],
+        "k": [
+         {
+          "$": 16,
+          "c": "deviceNotification",
+          "cm": true,
+          "p": [
+           {
+            "e": "\"'Subject:⚠️ 🚪 \"DoorLocation\" Door Bell 🚪 ⚠️, File:\" DoorBell_Camera_Image \",\"\n\"Someone was at the \"DoorLocation\" Door\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:15",
+               "ok": true,
+               "t": "string",
+               "v": "'Subject:⚠️ 🚪 "
+              },
+              {
+               "l": "17:28",
+               "ok": true,
+               "t": "variable",
+               "x": "DoorLocation"
+              },
+              {
+               "l": "30:52",
+               "ok": true,
+               "t": "string",
+               "v": " Door Bell 🚪 ⚠️, File:"
+              },
+              {
+               "l": "55:75",
+               "ok": true,
+               "t": "variable",
+               "x": "DoorBell_Camera_Image"
+              },
+              {
+               "l": "78",
+               "ok": true,
+               "t": "string",
+               "v": ","
+              },
+              {
+               "l": "82:100",
+               "ok": true,
+               "t": "string",
+               "v": "Someone was at the "
+              },
+              {
+               "l": "102:113",
+               "ok": true,
+               "t": "variable",
+               "x": "DoorLocation"
+              },
+              {
+               "l": "115:119",
+               "ok": true,
+               "t": "string",
+               "v": " Door"
+              }
+             ],
+             "ok": true,
+             "str": "\"'Subject:⚠️ 🚪 \"DoorLocation\" Door Bell 🚪 ⚠️, File:\" DoorBell_Camera_Image \",\"\n\"Someone was at the \"DoorLocation\" Door\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 17,
+        "a": "0",
+        "d": [
+         "DoorBell_Camera"
+        ],
+        "k": [
+         {
+          "$": 18,
+          "c": "clearImages",
+          "cm": true,
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "DoorBell_Camera",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx115:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DoorBell_Button",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx116:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DoorBell_Camera_Image",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "Speaker_Vol",
+    "t": "integer",
+    "v": {
+     "c": 100,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 100
+       }
+      ],
+      "ok": true,
+      "str": "100",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speakers",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Speakers"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Notifications_Push_All",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Notifications_Push_All"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Email",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Email_All"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Presence_All",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Presence_Sensors_All"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DoorLocation",
+    "t": "string",
+    "v": {
+     "c": "Back",
+     "exp": {
+      "i": [
+       {
+        "l": "0:3",
+        "ok": true,
+        "t": "string",
+        "v": "Back"
+       }
+      ],
+      "ok": true,
+      "str": "Back",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   }
+  ],
+  "z": "Doorbell Pushed / Notify"
+ }
+}

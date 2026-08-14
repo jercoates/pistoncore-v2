@@ -1,0 +1,1554 @@
+{
+ "name": "Nap Time (2 Hours) 💤",
+ "meta": {
+  "active": true,
+  "build": 5,
+  "category": "5",
+  "name": "Nap Time (2 Hours) 💤"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "naptime"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [
+     {
+      "$": 3,
+      "a": "0",
+      "c": [
+       {
+        "$": 4,
+        "co": "changes_to",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "switch",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx148:"
+         ],
+         "f": "l",
+         "g": "any",
+         "p": "a",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "on",
+         "exp": {
+          "i": [
+           {
+            "l": "0:1",
+            "ok": true,
+            "t": "string",
+            "v": "on"
+           }
+          ],
+          "ok": true,
+          "str": "on",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 5,
+        "co": "changes_to",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "switch",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx194:"
+         ],
+         "f": "l",
+         "g": "any",
+         "p": "a",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "on",
+         "exp": {
+          "i": [
+           {
+            "l": "0:1",
+            "ok": true,
+            "t": "string",
+            "v": "on"
+           }
+          ],
+          "ok": true,
+          "str": "on",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "or",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 6,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 7,
+          "c": "wait",
+          "p": [
+           {
+            "c": 1,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 1
+              }
+             ],
+             "ok": true,
+             "str": "1",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 8,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 9,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Speaker_Vol"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       },
+       {
+        "$": 10,
+        "c": "playText",
+        "p": [
+         {
+          "e": "random(\"Enjoy your nap! Catch you later.\",\n\"Rest up and recharge with your nap!\",\n\"Time for a well-deserved nap. Sleep tight!\",\n\"Nap time! Hope you have sweet dreams.\",\n\"Wishing you a peaceful nap. See you when you wake up!\",\n\"Embrace the nap and let yourself drift away.\",\n\"Nap o'clock! Take care and relax.\",\n\"Snuggle up and enjoy your nap time.\",\n\"Nap away the stress and wake up refreshed.\",\n\"Close your eyes and drift into nap bliss. Sweet dreams!\",\n\"Let the nap magic begin! Rest well.\",\n\"Take this time to unwind and nap like a pro.\",\n\"Nap mode: activated. Enjoy your snooze!\",\n\"Sending sleepy vibes your way. Nap time!\",\n\"Indulge in some nap therapy and wake up rejuvenated.\",\n\"Time to recharge your energy levels with a nap. Sleep soundly!\",\n\"May your nap be as cozy as a warm blanket on a chilly day.\",\n\"Close your eyes, relax, and drift off into nap paradise.\",\n\"Nap away the day's troubles and wake up feeling refreshed.\",\n\"Embrace the tranquility of your nap and let your worries fade away.\")",
+          "exp": {
+           "i": [
+            {
+             "i": [
+              {
+               "i": [
+                {
+                 "l": "8:39",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Enjoy your nap! Catch you later."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "44:78",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Rest up and recharge with your nap!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "83:124",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Time for a well-deserved nap. Sleep tight!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "129:165",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Nap time! Hope you have sweet dreams."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "170:222",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Wishing you a peaceful nap. See you when you wake up!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "227:270",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Embrace the nap and let yourself drift away."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "275:307",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Nap o'clock! Take care and relax."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "312:346",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Snuggle up and enjoy your nap time."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "351:392",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Nap away the stress and wake up refreshed."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "397:451",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Close your eyes and drift into nap bliss. Sweet dreams!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "456:490",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Let the nap magic begin! Rest well."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "495:538",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Take this time to unwind and nap like a pro."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "543:581",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Nap mode: activated. Enjoy your snooze!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "586:625",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Sending sleepy vibes your way. Nap time!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "630:681",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Indulge in some nap therapy and wake up rejuvenated."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "686:747",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Time to recharge your energy levels with a nap. Sleep soundly!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "752:809",
+                 "ok": true,
+                 "t": "string",
+                 "v": "May your nap be as cozy as a warm blanket on a chilly day."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "814:869",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Close your eyes, relax, and drift off into nap paradise."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "874:931",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Nap away the day's troubles and wake up feeling refreshed."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "936:1002",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Embrace the tranquility of your nap and let your worries fade away."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              }
+             ],
+             "l": "0:1004",
+             "n": "random",
+             "ok": true,
+             "t": "function"
+            }
+           ],
+           "ok": true,
+           "str": "random(\"Enjoy your nap! Catch you later.\",\n\"Rest up and recharge with your nap!\",\n\"Time for a well-deserved nap. Sleep tight!\",\n\"Nap time! Hope you have sweet dreams.\",\n\"Wishing you a peaceful nap. See you when you wake up!\",\n\"Embrace the nap and let yourself drift away.\",\n\"Nap o'clock! Take care and relax.\",\n\"Snuggle up and enjoy your nap time.\",\n\"Nap away the stress and wake up refreshed.\",\n\"Close your eyes and drift into nap bliss. Sweet dreams!\",\n\"Let the nap magic begin! Rest well.\",\n\"Take this time to unwind and nap like a pro.\",\n\"Nap mode: activated. Enjoy your snooze!\",\n\"Sending sleepy vibes your way. Nap time!\",\n\"Indulge in some nap therapy and wake up rejuvenated.\",\n\"Time to recharge your energy levels with a nap. Sleep soundly!\",\n\"May your nap be as cozy as a warm blanket on a chilly day.\",\n\"Close your eyes, relax, and drift off into nap paradise.\",\n\"Nap away the day's troubles and wake up feeling refreshed.\",\n\"Embrace the tranquility of your nap and let your worries fade away.\")",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 11,
+      "a": "0",
+      "d": [
+       "BoxFanOutlet"
+      ],
+      "k": [
+       {
+        "$": 12,
+        "c": "on",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 13,
+      "a": "0",
+      "d": [
+       "dyson_fan"
+      ],
+      "k": [
+       {
+        "$": 14,
+        "c": "fanOn",
+        "p": []
+       },
+       {
+        "$": 15,
+        "c": "setNightMode",
+        "cm": true,
+        "p": [
+         {
+          "c": "On",
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "string",
+             "v": "On"
+            }
+           ],
+           "ok": true,
+           "str": "On",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 16,
+        "c": "setFanSpeed",
+        "cm": true,
+        "p": [
+         {
+          "c": "10",
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 10
+            }
+           ],
+           "ok": true,
+           "str": "10",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 17,
+        "c": "setOscillationMode",
+        "cm": true,
+        "p": [
+         {
+          "c": "On",
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "string",
+             "v": "On"
+            }
+           ],
+           "ok": true,
+           "str": "On",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 18,
+      "a": "0",
+      "d": [
+       "CeilingFan"
+      ],
+      "k": [
+       {
+        "$": 19,
+        "c": "on",
+        "p": []
+       },
+       {
+        "$": 20,
+        "c": "setSpeed",
+        "p": [
+         {
+          "c": "medium",
+          "exp": {
+           "i": [
+            {
+             "l": "0:5",
+             "ok": true,
+             "t": "string",
+             "v": "medium"
+            }
+           ],
+           "ok": true,
+           "str": "medium",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 21,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 22,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 23,
+      "a": "0",
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx149:"
+      ],
+      "k": [
+       {
+        "$": 24,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 6000,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 6000
+            }
+           ],
+           "ok": true,
+           "str": "6000",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 25,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 26,
+        "c": "wait",
+        "p": [
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 27,
+      "a": "0",
+      "d": [
+       ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx149:"
+      ],
+      "k": [
+       {
+        "$": 28,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 29,
+      "a": "0",
+      "d": [
+       "naptime"
+      ],
+      "k": [
+       {
+        "$": 30,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 31,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 32,
+        "c": "wait",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "m",
+          "x": "NapLength"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 33,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 34,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Speaker_Vol"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       },
+       {
+        "$": 35,
+        "c": "playText",
+        "p": [
+         {
+          "e": "random(\"Hey sleepyhead, the world's been waiting for you to wake up!\",\n\"Rise and shine! Your nap time adventure awaits its next chapter.\",\n\"Hey there, nap time's over. Time to rejoin the land of the awake.\",\n\"Gently waking you from your nap; the world is ready for your return.\",\n\"Time to shake off that nap dust and embrace the day ahead.\",\n\"Hope your nap was as dreamy as can be. Ready to wake up?\",\n\"This is your wake-up call from napville!\",\n\"Hello there, sleepy soul. Time to flutter those eyelids open and greet the world anew.\",\n\"Just letting you know it's time to wake up from your cozy nap.\",\n\"Hey, sleepyhead! It's time to come back to the land of the living.\",\n\"Rise and shine, sunshine! Your nap time adventure is over.\",\n\"Hey there, time to emerge from your nap cocoon and join the waking world.\",\n\"Hello, sleepy! Ready to wake up and take on the rest of the day?\",\n\"Gently waking you from your peaceful slumber. Time to wake up.\",\n\"Hope you had a refreshing nap. It's time to wake up now.\",\n\"Wakey wakey, rise and shine! It's time to wake up.\",\n\"Gently waking you from your nap. Time to come back to the land of the awake.\",\n\"Hello! Nap's over, time to start the rest of your day.\",\n\"Hey sleepy, time to open those eyes and greet the world.\",\n\"Nap's done, time to stretch and get back into the swing of things.\")",
+          "exp": {
+           "i": [
+            {
+             "i": [
+              {
+               "i": [
+                {
+                 "l": "8:67",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hey sleepyhead, the world's been waiting for you to wake up!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "72:135",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Rise and shine! Your nap time adventure awaits its next chapter."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "140:204",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hey there, nap time's over. Time to rejoin the land of the awake."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "209:276",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Gently waking you from your nap; the world is ready for your return."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "281:338",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Time to shake off that nap dust and embrace the day ahead."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "343:398",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hope your nap was as dreamy as can be. Ready to wake up?"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "403:442",
+                 "ok": true,
+                 "t": "string",
+                 "v": "This is your wake-up call from napville!"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "447:532",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hello there, sleepy soul. Time to flutter those eyelids open and greet the world anew."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "537:598",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Just letting you know it's time to wake up from your cozy nap."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "603:668",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hey, sleepyhead! It's time to come back to the land of the living."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "673:730",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Rise and shine, sunshine! Your nap time adventure is over."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "735:807",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hey there, time to emerge from your nap cocoon and join the waking world."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "812:875",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hello, sleepy! Ready to wake up and take on the rest of the day?"
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "880:941",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Gently waking you from your peaceful slumber. Time to wake up."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "946:1001",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hope you had a refreshing nap. It's time to wake up now."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1006:1055",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Wakey wakey, rise and shine! It's time to wake up."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1060:1135",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Gently waking you from your nap. Time to come back to the land of the awake."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1140:1193",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hello! Nap's over, time to start the rest of your day."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1198:1253",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Hey sleepy, time to open those eyes and greet the world."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1258:1323",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Nap's done, time to stretch and get back into the swing of things."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              }
+             ],
+             "l": "0:1325",
+             "n": "random",
+             "ok": true,
+             "t": "function"
+            }
+           ],
+           "ok": true,
+           "str": "random(\"Hey sleepyhead, the world's been waiting for you to wake up!\",\n\"Rise and shine! Your nap time adventure awaits its next chapter.\",\n\"Hey there, nap time's over. Time to rejoin the land of the awake.\",\n\"Gently waking you from your nap; the world is ready for your return.\",\n\"Time to shake off that nap dust and embrace the day ahead.\",\n\"Hope your nap was as dreamy as can be. Ready to wake up?\",\n\"This is your wake-up call from napville!\",\n\"Hello there, sleepy soul. Time to flutter those eyelids open and greet the world anew.\",\n\"Just letting you know it's time to wake up from your cozy nap.\",\n\"Hey, sleepyhead! It's time to come back to the land of the living.\",\n\"Rise and shine, sunshine! Your nap time adventure is over.\",\n\"Hey there, time to emerge from your nap cocoon and join the waking world.\",\n\"Hello, sleepy! Ready to wake up and take on the rest of the day?\",\n\"Gently waking you from your peaceful slumber. Time to wake up.\",\n\"Hope you had a refreshing nap. It's time to wake up now.\",\n\"Wakey wakey, rise and shine! It's time to wake up.\",\n\"Gently waking you from your nap. Time to come back to the land of the awake.\",\n\"Hello! Nap's over, time to start the rest of your day.\",\n\"Hey sleepy, time to open those eyes and greet the world.\",\n\"Nap's done, time to stretch and get back into the swing of things.\")",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 36,
+      "a": "0",
+      "d": [
+       "Dresser"
+      ],
+      "k": [
+       {
+        "$": 37,
+        "c": "on",
+        "p": []
+       },
+       {
+        "$": 38,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 3000,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 3000
+            }
+           ],
+           "ok": true,
+           "str": "3000",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         },
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 39,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 40,
+        "c": "on",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 41,
+      "a": "0",
+      "d": [
+       "dyson_fan"
+      ],
+      "k": [
+       {
+        "$": 42,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 43,
+      "a": "0",
+      "d": [
+       "CeilingFan"
+      ],
+      "k": [
+       {
+        "$": 44,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 45,
+      "a": "0",
+      "d": [
+       "BoxFanOutlet"
+      ],
+      "k": [
+       {
+        "$": 46,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "naptime",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx195:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Lights",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "CeilingFan",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx147:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "BoxFanOutlet",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx146:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "dyson_fan",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx145:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speaker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx144:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speaker_Vol",
+    "t": "integer",
+    "v": {
+     "c": 60,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 60
+       }
+      ],
+      "ok": true,
+      "str": "60",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DoorLeftUnlocked",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "NapLength",
+    "t": "integer",
+    "v": {
+     "c": 120,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 120
+       }
+      ],
+      "ok": true,
+      "str": "120",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Voice",
+    "t": "string",
+    "v": {
+     "c": "Salli",
+     "exp": {
+      "i": [
+       {
+        "l": "0:4",
+        "ok": true,
+        "t": "string",
+        "v": "Salli"
+       }
+      ],
+      "ok": true,
+      "str": "Salli",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Dresser",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx149:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

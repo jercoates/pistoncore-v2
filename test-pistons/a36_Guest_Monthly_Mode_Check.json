@@ -1,0 +1,581 @@
+{
+ "name": "Guest / Monthly Mode Check",
+ "meta": {
+  "active": true,
+  "build": 1,
+  "category": "0",
+  "name": "Guest / Monthly Mode Check"
+ },
+ "piston": {
+  "o": {
+   "ced": 0,
+   "cto": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 545,
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "integer",
+          "v": 545
+         }
+        ],
+        "ok": true,
+        "str": "545",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "time"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "c": [
+       {
+        "$": 4,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "switch",
+         "d": [
+          "GuestMode",
+          "MonthlyTest"
+         ],
+         "f": "l",
+         "g": "any",
+         "p": "a",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "on",
+         "exp": {
+          "i": [
+           {
+            "l": "0:1",
+            "ok": true,
+            "t": "string",
+            "v": "on"
+           }
+          ],
+          "ok": true,
+          "str": "on",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 5,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 6,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Notify"
+           },
+           {
+            "e": "\"⚠️ Notice ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:13",
+               "ok": true,
+               "t": "string",
+               "v": "⚠️ Notice ⚠️\n"
+              },
+              {
+               "l": "15:24",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "26",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "28:31",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "33:39",
+               "ok": true,
+               "t": "string",
+               "v": "   -   "
+              },
+              {
+               "l": "41:45",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "47",
+               "ok": true,
+               "t": "string",
+               "v": "\n"
+              }
+             ],
+             "ok": true,
+             "str": "\"⚠️ Notice ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 7,
+        "a": "0",
+        "c": [
+         {
+          "$": 8,
+          "co": "is",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "switch",
+           "d": [
+            "GuestMode"
+           ],
+           "f": "l",
+           "g": "any",
+           "p": "a",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "on",
+           "exp": {
+            "i": [
+             {
+              "l": "0:1",
+              "ok": true,
+              "t": "string",
+              "v": "on"
+             }
+            ],
+            "ok": true,
+            "str": "on",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 9,
+          "a": "0",
+          "d": [],
+          "k": [
+           {
+            "$": 10,
+            "c": "setVariable",
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "Notify"
+             },
+             {
+              "e": "Notify\"\nGuest Mode is On\n\n\"",
+              "exp": {
+               "i": [
+                {
+                 "l": "0:5",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "Notify"
+                },
+                {
+                 "l": "7:25",
+                 "ok": true,
+                 "t": "string",
+                 "v": "\nGuest Mode is On\n\n"
+                }
+               ],
+               "ok": true,
+               "str": "Notify\"\nGuest Mode is On\n\n\"",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       },
+       {
+        "$": 11,
+        "a": "0",
+        "c": [
+         {
+          "$": 12,
+          "co": "is",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "switch",
+           "d": [
+            "MonthlyTest"
+           ],
+           "f": "l",
+           "g": "any",
+           "p": "a",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "on",
+           "exp": {
+            "i": [
+             {
+              "l": "0:1",
+              "ok": true,
+              "t": "string",
+              "v": "on"
+             }
+            ],
+            "ok": true,
+            "str": "on",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 13,
+          "a": "0",
+          "d": [],
+          "k": [
+           {
+            "$": 14,
+            "c": "setVariable",
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "Notify"
+             },
+             {
+              "e": "Notify\"\nMonthly Test is On\n\n\"",
+              "exp": {
+               "i": [
+                {
+                 "l": "0:5",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "Notify"
+                },
+                {
+                 "l": "7:27",
+                 "ok": true,
+                 "t": "string",
+                 "v": "\nMonthly Test is On\n\n"
+                }
+               ],
+               "ok": true,
+               "str": "Notify\"\nMonthly Test is On\n\n\"",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       },
+       {
+        "$": 15,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 16,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Notify"
+           },
+           {
+            "e": "Notify\"\nBe sure to turn them off\n\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "0:5",
+               "ok": true,
+               "t": "variable",
+               "x": "Notify"
+              },
+              {
+               "l": "7:33",
+               "ok": true,
+               "t": "string",
+               "v": "\nBe sure to turn them off\n\n"
+              }
+             ],
+             "ok": true,
+             "str": "Notify\"\nBe sure to turn them off\n\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 17,
+        "a": "0",
+        "d": [
+         "@Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 18,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Notify"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "GuestMode",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx114:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "MonthlyTest",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx108:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Notify",
+    "t": "string"
+   }
+  ],
+  "z": ""
+ }
+}

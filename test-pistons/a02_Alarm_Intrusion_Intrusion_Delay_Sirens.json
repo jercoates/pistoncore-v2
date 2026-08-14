@@ -1,0 +1,889 @@
+{
+ "name": "Alarm Intrusion / Intrusion Delay - Sirens - ⏰",
+ "meta": {
+  "active": true,
+  "build": 6,
+  "category": "1",
+  "name": "Alarm Intrusion / Intrusion Delay - Sirens - ⏰"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "executes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "alarmSystemAlert",
+       "vt": "string"
+      },
+      "ro": {
+       "e": "'intrusion'",
+       "exp": {
+        "i": [
+         {
+          "l": "1:9",
+          "ok": true,
+          "t": "string",
+          "v": "intrusion"
+         }
+        ],
+        "ok": true,
+        "str": "'intrusion'",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "e",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Intrustion_Alert_Helper"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "or",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "d": [
+       "Notifications_Push_All"
+      ],
+      "k": [
+       {
+        "$": 5,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"⚠️ Intrusion Detected ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+          "exp": {
+           "i": [
+            {
+             "l": "1:25",
+             "ok": true,
+             "t": "string",
+             "v": "⚠️ Intrusion Detected ⚠️\n"
+            },
+            {
+             "l": "27:36",
+             "ok": true,
+             "t": "variable",
+             "x": "$monthName"
+            },
+            {
+             "l": "38",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            },
+            {
+             "l": "40:43",
+             "ok": true,
+             "t": "variable",
+             "x": "$day"
+            },
+            {
+             "l": "45:51",
+             "ok": true,
+             "t": "string",
+             "v": "   -   "
+            },
+            {
+             "l": "53:57",
+             "ok": true,
+             "t": "variable",
+             "x": "$time"
+            },
+            {
+             "l": "59:62",
+             "ok": true,
+             "t": "string",
+             "v": "\n.\n."
+            },
+            {
+             "l": "65:83",
+             "ok": true,
+             "t": "variable",
+             "x": "$currentEventDevice"
+            }
+           ],
+           "ok": true,
+           "str": "\"⚠️ Intrusion Detected ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 6,
+      "a": "0",
+      "d": [
+       "Speakers"
+      ],
+      "k": [
+       {
+        "$": 7,
+        "c": "setVolume",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Siren_Track_Volume"
+         }
+        ]
+       },
+       {
+        "$": 8,
+        "c": "playTrack",
+        "p": [
+         {
+          "f": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:",
+          "g": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:",
+          "t": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:",
+          "vt": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:",
+          "x": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx6:"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 9,
+      "a": "0",
+      "d": [
+       "Sirens"
+      ],
+      "k": [
+       {
+        "$": 10,
+        "c": "strobe",
+        "p": []
+       },
+       {
+        "$": 11,
+        "c": "siren",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 12,
+      "a": "0",
+      "d": [
+       "Intrustion_Alert_Helper"
+      ],
+      "k": [
+       {
+        "$": 13,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 14,
+    "a": "0",
+    "c": [
+     {
+      "$": 15,
+      "co": "executes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "alarmSystemAlert",
+       "vt": "string"
+      },
+      "ro": {
+       "e": "'intrusion-delay'",
+       "exp": {
+        "i": [
+         {
+          "l": "1:15",
+          "ok": true,
+          "t": "string",
+          "v": "intrusion-delay"
+         }
+        ],
+        "ok": true,
+        "str": "'intrusion-delay'",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "e",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 16,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "IntrustionDelay_Alert_Helper"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "or",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 17,
+      "a": "0",
+      "d": [
+       "Notifications_Push_All"
+      ],
+      "k": [
+       {
+        "$": 18,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"⚠️ Intrusion-Delay Detected ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+          "exp": {
+           "i": [
+            {
+             "l": "1:31",
+             "ok": true,
+             "t": "string",
+             "v": "⚠️ Intrusion-Delay Detected ⚠️\n"
+            },
+            {
+             "l": "33:42",
+             "ok": true,
+             "t": "variable",
+             "x": "$monthName"
+            },
+            {
+             "l": "44",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            },
+            {
+             "l": "46:49",
+             "ok": true,
+             "t": "variable",
+             "x": "$day"
+            },
+            {
+             "l": "51:57",
+             "ok": true,
+             "t": "string",
+             "v": "   -   "
+            },
+            {
+             "l": "59:63",
+             "ok": true,
+             "t": "variable",
+             "x": "$time"
+            },
+            {
+             "l": "65:68",
+             "ok": true,
+             "t": "string",
+             "v": "\n.\n."
+            },
+            {
+             "l": "71:89",
+             "ok": true,
+             "t": "variable",
+             "x": "$currentEventDevice"
+            }
+           ],
+           "ok": true,
+           "str": "\"⚠️ Intrusion-Delay Detected ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 19,
+      "a": "0",
+      "d": [
+       "Speakers"
+      ],
+      "k": [
+       {
+        "$": 20,
+        "c": "setVolume",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Intruder_Track_Volume"
+         }
+        ]
+       },
+       {
+        "$": 21,
+        "c": "playTrack",
+        "p": [
+         {
+          "f": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2:",
+          "g": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3:",
+          "t": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4:",
+          "vt": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5:",
+          "x": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7:"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 22,
+      "a": "0",
+      "d": [
+       "IntrustionDelay_Alert_Helper"
+      ],
+      "k": [
+       {
+        "$": 23,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 24,
+    "a": "0",
+    "c": [
+     {
+      "$": 25,
+      "co": "executes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "alarmSystemAlert",
+       "vt": "string"
+      },
+      "ro": {
+       "e": "'cancel'",
+       "exp": {
+        "i": [
+         {
+          "l": "1:6",
+          "ok": true,
+          "t": "string",
+          "v": "cancel"
+         }
+        ],
+        "ok": true,
+        "str": "'cancel'",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "e",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 26,
+      "a": "0",
+      "d": [
+       "Notifications_Push_All"
+      ],
+      "k": [
+       {
+        "$": 27,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"⚠️ Intrusion-Alert Canceled ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+          "exp": {
+           "i": [
+            {
+             "l": "1:31",
+             "ok": true,
+             "t": "string",
+             "v": "⚠️ Intrusion-Alert Canceled ⚠️\n"
+            },
+            {
+             "l": "33:42",
+             "ok": true,
+             "t": "variable",
+             "x": "$monthName"
+            },
+            {
+             "l": "44",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            },
+            {
+             "l": "46:49",
+             "ok": true,
+             "t": "variable",
+             "x": "$day"
+            },
+            {
+             "l": "51:57",
+             "ok": true,
+             "t": "string",
+             "v": "   -   "
+            },
+            {
+             "l": "59:63",
+             "ok": true,
+             "t": "variable",
+             "x": "$time"
+            },
+            {
+             "l": "65:68",
+             "ok": true,
+             "t": "string",
+             "v": "\n.\n."
+            },
+            {
+             "l": "71:89",
+             "ok": true,
+             "t": "variable",
+             "x": "$currentEventDevice"
+            }
+           ],
+           "ok": true,
+           "str": "\"⚠️ Intrusion-Alert Canceled ⚠️\n\"$monthName\" \"$day\"   -   \"$time\"\n.\n.\"\n$currentEventDevice",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Notifications_Push_All",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Notifications_Push_All"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speakers",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Speakers"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Sirens",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Sirens"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Siren_Track",
+    "t": "string",
+    "v": {
+     "c": "http://10.1.10.254/local/Siren.mp3",
+     "exp": {
+      "i": [
+       {
+        "l": "0:33",
+        "ok": true,
+        "t": "string",
+        "v": "http://10.1.10.254/local/Siren.mp3"
+       }
+      ],
+      "ok": true,
+      "str": "http://10.1.10.254/local/Siren.mp3",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Intruder_Track",
+    "t": "string",
+    "v": {
+     "c": "http://10.1.10.254/local/Intruder.mp3",
+     "exp": {
+      "i": [
+       {
+        "l": "0:36",
+        "ok": true,
+        "t": "string",
+        "v": "http://10.1.10.254/local/Intruder.mp3"
+       }
+      ],
+      "ok": true,
+      "str": "http://10.1.10.254/local/Intruder.mp3",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Siren_Track_Volume",
+    "t": "integer",
+    "v": {
+     "c": 100,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 100
+       }
+      ],
+      "ok": true,
+      "str": "100",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Intruder_Track_Volume",
+    "t": "integer",
+    "v": {
+     "c": 100,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 100
+       }
+      ],
+      "ok": true,
+      "str": "100",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Intrustion_Alert_Helper",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx8:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "IntrustionDelay_Alert_Helper",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx9:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": "Play Track Example: x-file-cifs://10.1.20.135/PiShare/Music/Intruder.mp3"
+ }
+}

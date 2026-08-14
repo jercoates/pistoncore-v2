@@ -1,0 +1,289 @@
+{
+ "name": "Startup WebCoRE Wakeup",
+ "meta": {
+  "active": false,
+  "build": 1,
+  "category": "0",
+  "name": "Startup WebCoRE Wakeup"
+ },
+ "piston": {
+  "o": {
+   "ced": 0,
+   "cto": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "event_occurs",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "systemStart",
+       "vt": "string"
+      },
+      "ro": {
+       "g": "any",
+       "t": "c"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 4,
+        "c": "executePiston",
+        "p": [
+         {
+          "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx200:",
+          "exp": {
+           "i": [
+            {
+             "l": "0:33",
+             "ok": true,
+             "t": "string",
+             "v": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx200:"
+            }
+           ],
+           "ok": true,
+           "str": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx200:",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "piston"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "variable"
+         },
+         {
+          "c": "false",
+          "exp": {
+           "i": [
+            {
+             "l": "0:4",
+             "ok": true,
+             "t": "boolean",
+             "v": "false"
+            }
+           ],
+           "ok": true,
+           "str": "false",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       },
+       {
+        "$": 5,
+        "c": "executePiston",
+        "p": [
+         {
+          "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx201:",
+          "exp": {
+           "i": [
+            {
+             "l": "0:33",
+             "ok": true,
+             "t": "string",
+             "v": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx201:"
+            }
+           ],
+           "ok": true,
+           "str": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx201:",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "piston"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "variable"
+         },
+         {
+          "c": "false",
+          "exp": {
+           "i": [
+            {
+             "l": "0:4",
+             "ok": true,
+             "t": "boolean",
+             "v": "false"
+            }
+           ],
+           "ok": true,
+           "str": "false",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       },
+       {
+        "$": 6,
+        "c": "executePiston",
+        "p": [
+         {
+          "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx202:",
+          "exp": {
+           "i": [
+            {
+             "l": "0:33",
+             "ok": true,
+             "t": "string",
+             "v": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx202:"
+            }
+           ],
+           "ok": true,
+           "str": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx202:",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "piston"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "variable"
+         },
+         {
+          "c": "false",
+          "exp": {
+           "i": [
+            {
+             "l": "0:4",
+             "ok": true,
+             "t": "boolean",
+             "v": "false"
+            }
+           ],
+           "ok": true,
+           "str": "false",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       },
+       {
+        "$": 7,
+        "c": "executePiston",
+        "p": [
+         {
+          "c": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx203:",
+          "exp": {
+           "i": [
+            {
+             "l": "0:33",
+             "ok": true,
+             "t": "string",
+             "v": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx203:"
+            }
+           ],
+           "ok": true,
+           "str": ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx203:",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "piston"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "variable"
+         },
+         {
+          "c": "false",
+          "exp": {
+           "i": [
+            {
+             "l": "0:4",
+             "ok": true,
+             "t": "boolean",
+             "v": "false"
+            }
+           ],
+           "ok": true,
+           "str": "false",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "boolean"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [],
+  "z": ""
+ }
+}

@@ -1,0 +1,310 @@
+{
+ "name": "Owntracks Battery Unrestricted Check",
+ "meta": {
+  "active": true,
+  "build": 2,
+  "category": "2",
+  "name": "Owntracks Battery Unrestricted Check"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "1",
+    "lo": {
+     "c": 1,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 1
+       }
+      ],
+      "ok": true,
+      "str": "1",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "d"
+    },
+    "lo2": {
+     "c": 720,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 720
+       }
+      ],
+      "ok": true,
+      "str": "720",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "time"
+    },
+    "lo3": {
+     "c": 0,
+     "exp": {
+      "i": [
+       {
+        "l": "0",
+        "ok": true,
+        "t": "integer",
+        "v": 0
+       }
+      ],
+      "ok": true,
+      "str": "0",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "m"
+    },
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 2,
+      "a": "0",
+      "c": [
+       {
+        "$": 3,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "batteryOptimizations",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "Optimized/Restricted",
+         "exp": {
+          "i": [
+           {
+            "l": "0:19",
+            "ok": true,
+            "t": "string",
+            "v": "Optimized/Restricted"
+           }
+          ],
+          "ok": true,
+          "str": "Optimized/Restricted",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 4,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:"
+        ],
+        "k": [
+         {
+          "$": 5,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🎯Owntracks Battery Issue - Albert's🎯 \nBattery set to Optimized/Restricted please change to Unrestricted.\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:106",
+               "ok": true,
+               "t": "string",
+               "v": "🎯Owntracks Battery Issue - Albert's🎯 \nBattery set to Optimized/Restricted please change to Unrestricted."
+              }
+             ],
+             "ok": true,
+             "str": "\"🎯Owntracks Battery Issue - Albert's🎯 \nBattery set to Optimized/Restricted please change to Unrestricted.\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 6,
+      "a": "0",
+      "c": [
+       {
+        "$": 7,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "batteryOptimizations",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx175:"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "Optimized/Restricted",
+         "exp": {
+          "i": [
+           {
+            "l": "0:19",
+            "ok": true,
+            "t": "string",
+            "v": "Optimized/Restricted"
+           }
+          ],
+          "ok": true,
+          "str": "Optimized/Restricted",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 8,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx174:"
+        ],
+        "k": [
+         {
+          "$": 9,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🎯Owntracks Battery Issue - Kelly's🎯 \nBattery set to Optimized/Restricted please change to Unrestricted.\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:105",
+               "ok": true,
+               "t": "string",
+               "v": "🎯Owntracks Battery Issue - Kelly's🎯 \nBattery set to Optimized/Restricted please change to Unrestricted."
+              }
+             ],
+             "ok": true,
+             "str": "\"🎯Owntracks Battery Issue - Kelly's🎯 \nBattery set to Optimized/Restricted please change to Unrestricted.\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "every",
+    "tcp": "c"
+   }
+  ],
+  "v": [],
+  "z": ""
+ }
+}

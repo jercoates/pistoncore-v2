@@ -1,0 +1,889 @@
+{
+ "name": "AC/Heater On Based on Temp Outside ❄️/🔥",
+ "meta": {
+  "active": true,
+  "build": 18,
+  "category": "6",
+  "name": "AC/Heater On Based on Temp Outside ❄️/🔥"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "DayTimeStart"
+      },
+      "ro2": {
+       "c": 1140,
+       "exp": {
+        "i": [
+         {
+          "l": "0:3",
+          "ok": true,
+          "t": "integer",
+          "v": 1140
+         }
+        ],
+        "ok": true,
+        "str": "1140",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "time"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is_greater_than",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "forecastDay",
+       "d": [
+        ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "decimal",
+       "x": "OutsideHighTemp"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [
+     {
+      "$": 4,
+      "a": "0",
+      "c": [
+       {
+        "$": 5,
+        "co": "is_less_than",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "forecastDay",
+         "d": [
+          ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx0:"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "decimal",
+         "x": "OutsideLowTemp"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 6,
+        "co": "is_between",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "t": "v",
+         "v": "time",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "DayTimeStart"
+        },
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "DayTimeStart"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "to2": {
+         "c": 4,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 4
+           }
+          ],
+          "ok": true,
+          "str": "4",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 7,
+        "a": "0",
+        "d": [
+         "Thermostat"
+        ],
+        "k": [
+         {
+          "$": 8,
+          "c": "heat",
+          "p": []
+         },
+         {
+          "$": 9,
+          "c": "setHeatingSetpoint",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "decimal",
+            "x": "HeatingTemp"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 10,
+        "a": "0",
+        "d": [
+         "@Speakers"
+        ],
+        "k": [
+         {
+          "$": 11,
+          "c": "playText",
+          "p": [
+           {
+            "e": "\"Thermostat has been set to Heat at \" HeatingTemp \" degrees\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:35",
+               "ok": true,
+               "t": "string",
+               "v": "Thermostat has been set to Heat at "
+              },
+              {
+               "l": "38:48",
+               "ok": true,
+               "t": "variable",
+               "x": "HeatingTemp"
+              },
+              {
+               "l": "51:58",
+               "ok": true,
+               "t": "string",
+               "v": " degrees"
+              }
+             ],
+             "ok": true,
+             "str": "\"Thermostat has been set to Heat at \" HeatingTemp \" degrees\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 12,
+      "a": "0",
+      "d": [
+       "Thermostat"
+      ],
+      "k": [
+       {
+        "$": 13,
+        "c": "cool",
+        "p": []
+       },
+       {
+        "$": 14,
+        "c": "setCoolingSetpoint",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "decimal",
+          "x": "CoolingTemp"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 15,
+      "a": "0",
+      "d": [
+       "@Speakers"
+      ],
+      "k": [
+       {
+        "$": 16,
+        "c": "playText",
+        "p": [
+         {
+          "e": "\"Thermostat has been set to Cool at \" CoolingTemp \" degrees\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:35",
+             "ok": true,
+             "t": "string",
+             "v": "Thermostat has been set to Cool at "
+            },
+            {
+             "l": "38:48",
+             "ok": true,
+             "t": "variable",
+             "x": "CoolingTemp"
+            },
+            {
+             "l": "51:58",
+             "ok": true,
+             "t": "string",
+             "v": " degrees"
+            }
+           ],
+           "ok": true,
+           "str": "\"Thermostat has been set to Cool at \" CoolingTemp \" degrees\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 17,
+    "a": "0",
+    "c": [
+     {
+      "$": 18,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "EveningTimeEnd"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 19,
+      "co": "is_not",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "thermostatMode",
+       "d": [
+        "Thermostat"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 20,
+      "a": "0",
+      "d": [
+       "Thermostat"
+      ],
+      "k": [
+       {
+        "$": 21,
+        "c": "off",
+        "p": []
+       },
+       {
+        "$": 22,
+        "c": "fanOn",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 23,
+      "a": "0",
+      "d": [
+       "@Speakers"
+      ],
+      "k": [
+       {
+        "$": 24,
+        "c": "playText",
+        "p": [
+         {
+          "c": "Thermostat has been turned off with the circulation fan turned on.",
+          "exp": {
+           "i": [
+            {
+             "l": "0:65",
+             "ok": true,
+             "t": "string",
+             "v": "Thermostat has been turned off with the circulation fan turned on."
+            }
+           ],
+           "ok": true,
+           "str": "Thermostat has been turned off with the circulation fan turned on.",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 25,
+    "a": "0",
+    "c": [
+     {
+      "$": 26,
+      "co": "changes_away_from",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "thermostatFanMode",
+       "d": [
+        "Thermostat"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 27,
+      "a": "0",
+      "d": [
+       "Thermostat"
+      ],
+      "k": [
+       {
+        "$": 28,
+        "c": "fanOn",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Thermostat",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DayTimeStart",
+    "t": "time",
+    "v": {
+     "c": 540,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 540
+       }
+      ],
+      "ok": true,
+      "str": "540",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "time"
+    }
+   },
+   {
+    "a": "d",
+    "n": "OutsideHighTemp",
+    "t": "integer",
+    "v": {
+     "c": 80,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 80
+       }
+      ],
+      "ok": true,
+      "str": "80",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "CoolingTemp",
+    "t": "integer",
+    "v": {
+     "c": 75,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 75
+       }
+      ],
+      "ok": true,
+      "str": "75",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "OutsideLowTemp",
+    "t": "integer",
+    "v": {
+     "c": 60,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 60
+       }
+      ],
+      "ok": true,
+      "str": "60",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "HeatingTemp",
+    "t": "integer",
+    "v": {
+     "c": 72,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 72
+       }
+      ],
+      "ok": true,
+      "str": "72",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "EveningTimeEnd",
+    "t": "time",
+    "v": {
+     "c": 1140,
+     "exp": {
+      "i": [
+       {
+        "l": "0:3",
+        "ok": true,
+        "t": "integer",
+        "v": 1140
+       }
+      ],
+      "ok": true,
+      "str": "1140",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "time"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

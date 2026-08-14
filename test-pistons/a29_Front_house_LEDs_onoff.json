@@ -1,0 +1,213 @@
+{
+ "name": "Front house LEDs on/off 🌈💡",
+ "meta": {
+  "active": true,
+  "build": 3,
+  "category": "3",
+  "name": "Front house LEDs on/off 🌈💡"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "s": "sunset",
+       "t": "s",
+       "vt": "time"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "Wleds"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "on",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 5,
+    "a": "0",
+    "c": [
+     {
+      "$": 6,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "s": "midnight",
+       "t": "s",
+       "vt": "time"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 7,
+      "a": "0",
+      "d": [
+       "Wleds"
+      ],
+      "k": [
+       {
+        "$": 8,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Wleds",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx134:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

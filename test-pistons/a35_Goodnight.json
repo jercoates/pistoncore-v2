@@ -1,0 +1,3381 @@
+{
+ "name": "Goodnight 🌙",
+ "meta": {
+  "active": true,
+  "build": 21,
+  "category": "5",
+  "name": "Goodnight 🌙"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "goodnight"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "on",
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "string",
+          "v": "on"
+         }
+        ],
+        "ok": true,
+        "str": "on",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "setVolume",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Speaker_Vol"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 5,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 6,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "DoorLeftOpened"
+         },
+         {
+          "e": "\"\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:0",
+             "ok": true,
+             "t": "string",
+             "v": ""
+            }
+           ],
+           "ok": true,
+           "str": "\"\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       },
+       {
+        "$": 7,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "DoorLeftUnlocked"
+         },
+         {
+          "e": "\"\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:0",
+             "ok": true,
+             "t": "string",
+             "v": ""
+            }
+           ],
+           "ok": true,
+           "str": "\"\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 8,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 9,
+        "c": "setVolume",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "Speaker_Vol"
+         }
+        ]
+       },
+       {
+        "$": 10,
+        "c": "playText",
+        "p": [
+         {
+          "e": "random(\"Goodnight. Rest your weary head.\",\n\"Goodnight. May the stars watch over you.\",\n\"Goodnight. Time to drift off into dreamland.\",\n\"Goodnight. Close your eyes and let sleep take over.\",\n\"Goodnight. As the day ends, let your worries fade away.\",\n\"Goodnight. Sleep awaits, like a friend ready to embrace you.\",\n\"Goodnight. Until we meet again in the land of dreams.\",\n\"Goodnight. May the night be gentle and kind.\",\n\"Goodnight. Let your mind wander to far-off places.\",\n\"Goodnight. Tomorrow is a new day filled with possibilities.\",\n\"Goodnight. See you on the flip side.\",\n\"Goodnight. Catch some Z's.\",\n\"Goodnight. Rest up for tomorrow.\",\n\"Goodnight. May your dreams be as sweet as honey.\",\n\"Goodnight. Wishing you peaceful slumber.\",\n\"Goodnight. Time to recharge.\",\n\"Goodnight. Sleep like a log.\",\n\"Goodnight. Don't let the moon bugs bite.\",\n\"Goodnight. Sending sleepy vibes your way.\",\n\"Goodnight. Dream big, sleep tight.\",\n\"Goodnight. Sleep tight.\",\n\"Goodnight. Sweet dreams.\",\n\"Goodnight. See you in the morning.\",\n\"Goodnight. Don't let the bedbugs bite.\",\n\"Goodnight. Rest well.\",\n\"Goodnight. Take care.\",\n\"Goodnight. Have a peaceful sleep.\",\n\"Goodnight. Pleasant dreams.\",\n\"Goodnight. I'll be here when you wake up.\",\n\"Goodnight. Rest your mind and soul.\",\n\"Goodnight. Embrace the silence of the night.\",\n\"Goodnight. Let your worries fade into the darkness.\",\n\"Goodnight. Drift off to the land of nod.\",\n\"Goodnight. Sleep tight like a cozy bug in a rug.\",\n\"Goodnight. Allow your thoughts to gently drift away.\",\n\"Goodnight. Surrender to the tranquility of the night.\",\n\"Goodnight. Sink into the soft embrace of your dreams.\",\n\"Goodnight. Wishing you a pillow as soft as a cloud.\",\n\"Goodnight. Until the morning light brings a new day.\",)",
+          "exp": {
+           "i": [
+            {
+             "i": [
+              {
+               "i": [
+                {
+                 "l": "8:39",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Rest your weary head."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "44:83",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. May the stars watch over you."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "88:131",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Time to drift off into dreamland."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "136:186",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Close your eyes and let sleep take over."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "191:245",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. As the day ends, let your worries fade away."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "250:309",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Sleep awaits, like a friend ready to embrace you."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "314:366",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Until we meet again in the land of dreams."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "371:414",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. May the night be gentle and kind."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "419:468",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Let your mind wander to far-off places."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "473:531",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Tomorrow is a new day filled with possibilities."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "536:571",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. See you on the flip side."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "576:601",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Catch some Z's."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "606:637",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Rest up for tomorrow."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "642:689",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. May your dreams be as sweet as honey."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "694:733",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Wishing you peaceful slumber."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "738:765",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Time to recharge."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "770:797",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Sleep like a log."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "802:841",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Don't let the moon bugs bite."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "846:886",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Sending sleepy vibes your way."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "891:924",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Dream big, sleep tight."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "929:951",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Sleep tight."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "956:979",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Sweet dreams."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "984:1017",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. See you in the morning."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1022:1059",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Don't let the bedbugs bite."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1064:1084",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Rest well."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1089:1109",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Take care."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1114:1146",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Have a peaceful sleep."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1151:1177",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Pleasant dreams."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1182:1222",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. I'll be here when you wake up."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1227:1261",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Rest your mind and soul."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1266:1309",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Embrace the silence of the night."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1314:1364",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Let your worries fade into the darkness."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1369:1408",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Drift off to the land of nod."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1413:1460",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Sleep tight like a cozy bug in a rug."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1465:1516",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Allow your thoughts to gently drift away."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1521:1573",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Surrender to the tranquility of the night."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1578:1630",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Sink into the soft embrace of your dreams."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1635:1685",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Wishing you a pillow as soft as a cloud."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "1690:1741",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Goodnight. Until the morning light brings a new day."
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [],
+               "ok": true,
+               "t": "expression"
+              }
+             ],
+             "l": "0:1744",
+             "n": "random",
+             "ok": true,
+             "t": "function"
+            }
+           ],
+           "ok": true,
+           "str": "random(\"Goodnight. Rest your weary head.\",\n\"Goodnight. May the stars watch over you.\",\n\"Goodnight. Time to drift off into dreamland.\",\n\"Goodnight. Close your eyes and let sleep take over.\",\n\"Goodnight. As the day ends, let your worries fade away.\",\n\"Goodnight. Sleep awaits, like a friend ready to embrace you.\",\n\"Goodnight. Until we meet again in the land of dreams.\",\n\"Goodnight. May the night be gentle and kind.\",\n\"Goodnight. Let your mind wander to far-off places.\",\n\"Goodnight. Tomorrow is a new day filled with possibilities.\",\n\"Goodnight. See you on the flip side.\",\n\"Goodnight. Catch some Z's.\",\n\"Goodnight. Rest up for tomorrow.\",\n\"Goodnight. May your dreams be as sweet as honey.\",\n\"Goodnight. Wishing you peaceful slumber.\",\n\"Goodnight. Time to recharge.\",\n\"Goodnight. Sleep like a log.\",\n\"Goodnight. Don't let the moon bugs bite.\",\n\"Goodnight. Sending sleepy vibes your way.\",\n\"Goodnight. Dream big, sleep tight.\",\n\"Goodnight. Sleep tight.\",\n\"Goodnight. Sweet dreams.\",\n\"Goodnight. See you in the morning.\",\n\"Goodnight. Don't let the bedbugs bite.\",\n\"Goodnight. Rest well.\",\n\"Goodnight. Take care.\",\n\"Goodnight. Have a peaceful sleep.\",\n\"Goodnight. Pleasant dreams.\",\n\"Goodnight. I'll be here when you wake up.\",\n\"Goodnight. Rest your mind and soul.\",\n\"Goodnight. Embrace the silence of the night.\",\n\"Goodnight. Let your worries fade into the darkness.\",\n\"Goodnight. Drift off to the land of nod.\",\n\"Goodnight. Sleep tight like a cozy bug in a rug.\",\n\"Goodnight. Allow your thoughts to gently drift away.\",\n\"Goodnight. Surrender to the tranquility of the night.\",\n\"Goodnight. Sink into the soft embrace of your dreams.\",\n\"Goodnight. Wishing you a pillow as soft as a cloud.\",\n\"Goodnight. Until the morning light brings a new day.\",)",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "level"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 11,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 12,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "DoorLeftUnlocked"
+         },
+         {
+          "e": "\" \"",
+          "exp": {
+           "i": [
+            {
+             "l": "1",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            }
+           ],
+           "ok": true,
+           "str": "\" \"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       },
+       {
+        "$": 13,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "DoorLeftOpened"
+         },
+         {
+          "e": "\" \"",
+          "exp": {
+           "i": [
+            {
+             "l": "1",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            }
+           ],
+           "ok": true,
+           "str": "\" \"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 14,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 15,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 16,
+      "a": "0",
+      "d": [
+       "Hue_Lights"
+      ],
+      "k": [
+       {
+        "$": 17,
+        "c": "setColorTemperature",
+        "p": [
+         {
+          "c": 2257,
+          "exp": {
+           "i": [
+            {
+             "l": "0:3",
+             "ok": true,
+             "t": "integer",
+             "v": 2257
+            }
+           ],
+           "ok": true,
+           "str": "2257",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 50,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 50
+            }
+           ],
+           "ok": true,
+           "str": "50",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 18,
+      "a": "0",
+      "d": [
+       "Switches"
+      ],
+      "k": [
+       {
+        "$": 19,
+        "c": "setLevel",
+        "p": [
+         {
+          "c": 100,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 100
+            }
+           ],
+           "ok": true,
+           "str": "100",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "c": 1,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 1
+            }
+           ],
+           "ok": true,
+           "str": "1",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "integer"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 20,
+      "a": "0",
+      "d": [
+       "Ceiling_Fan"
+      ],
+      "k": [
+       {
+        "$": 21,
+        "c": "on",
+        "p": []
+       },
+       {
+        "$": 22,
+        "c": "setSpeed",
+        "p": [
+         {
+          "c": "medium",
+          "exp": {
+           "i": [
+            {
+             "l": "0:5",
+             "ok": true,
+             "t": "string",
+             "v": "medium"
+            }
+           ],
+           "ok": true,
+           "str": "medium",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 23,
+      "a": "0",
+      "d": [
+       "Box_Fan"
+      ],
+      "k": [
+       {
+        "$": 24,
+        "c": "on",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 25,
+      "a": "0",
+      "d": [
+       "dyson_fan"
+      ],
+      "k": [
+       {
+        "$": 26,
+        "c": "fanOn",
+        "p": []
+       },
+       {
+        "$": 27,
+        "c": "setNightMode",
+        "cm": true,
+        "p": [
+         {
+          "c": "On",
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "string",
+             "v": "On"
+            }
+           ],
+           "ok": true,
+           "str": "On",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 28,
+        "c": "setFanSpeed",
+        "cm": true,
+        "p": [
+         {
+          "c": "10",
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 10
+            }
+           ],
+           "ok": true,
+           "str": "10",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 29,
+        "c": "setOscillationMode",
+        "cm": true,
+        "p": [
+         {
+          "c": "On",
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "string",
+             "v": "On"
+            }
+           ],
+           "ok": true,
+           "str": "On",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "enum"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 30,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 31,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "DoorLeftUnlocked"
+         },
+         {
+          "e": "random(\"It appears that you may have overlooked locking \",\n\"It seems you might have missed securing \",\n\"Looks like you neglected to lock \",\n\"It appears you may have accidentally forgot to lock \",\n\"Seems like it slipped your mind to lock \",\n\"It looks like locking was overlooked for \",\n\"It appears you might have missed securing \")",
+          "exp": {
+           "i": [
+            {
+             "i": [
+              {
+               "i": [
+                {
+                 "l": "8:55",
+                 "ok": true,
+                 "t": "string",
+                 "v": "It appears that you may have overlooked locking "
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "60:99",
+                 "ok": true,
+                 "t": "string",
+                 "v": "It seems you might have missed securing "
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "104:136",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Looks like you neglected to lock "
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "141:192",
+                 "ok": true,
+                 "t": "string",
+                 "v": "It appears you may have accidentally forgot to lock "
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "197:236",
+                 "ok": true,
+                 "t": "string",
+                 "v": "Seems like it slipped your mind to lock "
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "241:281",
+                 "ok": true,
+                 "t": "string",
+                 "v": "It looks like locking was overlooked for "
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              },
+              {
+               "i": [
+                {
+                 "l": "286:327",
+                 "ok": true,
+                 "t": "string",
+                 "v": "It appears you might have missed securing "
+                }
+               ],
+               "ok": true,
+               "t": "expression"
+              }
+             ],
+             "l": "0:329",
+             "n": "random",
+             "ok": true,
+             "t": "function"
+            }
+           ],
+           "ok": true,
+           "str": "random(\"It appears that you may have overlooked locking \",\n\"It seems you might have missed securing \",\n\"Looks like you neglected to lock \",\n\"It appears you may have accidentally forgot to lock \",\n\"Seems like it slipped your mind to lock \",\n\"It looks like locking was overlooked for \",\n\"It appears you might have missed securing \")",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 32,
+      "a": "0",
+      "c": [
+       {
+        "$": 33,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "lock",
+         "d": [
+          "@Door_Locks"
+         ],
+         "f": "l",
+         "g": "any",
+         "i": [],
+         "p": "a",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "unlocked",
+         "exp": {
+          "i": [
+           {
+            "l": "0:7",
+            "ok": true,
+            "t": "string",
+            "v": "unlocked"
+           }
+          ],
+          "ok": true,
+          "str": "unlocked",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 34,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 35,
+          "c": "wait",
+          "p": [
+           {
+            "c": 10,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 10
+              }
+             ],
+             "ok": true,
+             "str": "10",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 36,
+        "a": "0",
+        "d": [
+         "Speaker"
+        ],
+        "k": [
+         {
+          "$": 37,
+          "c": "setVolume",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Speaker_Vol"
+           }
+          ]
+         },
+         {
+          "$": 38,
+          "c": "wait",
+          "p": [
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         },
+         {
+          "$": 39,
+          "c": "playText",
+          "p": [
+           {
+            "e": "random(\"Just so you know, all your doors have been locked, ensuring your safety and security for the night!\",\n\"I wanted to inform you that all your doors have been securely locked, so you can rest assured of your safety for the night.\",\n\"Quick update: I've ensured that all your doors are locked, providing you with a safe and secure environment for the night.\",\n\"Just a heads up: I've taken care of locking all your doors, so you can relax knowing you're safe and secure until morning.\",\n\"I thought you should know that I've locked all your doors, ensuring your safety and peace of mind throughout the night.\",\n\"Good news: I've checked and locked all your doors, so you can sleep soundly knowing you're safe and secure.\",\n\"By the way, I've made sure all your doors are locked, so you can enjoy a worry-free night's rest in a secure environment.\",\n\"In case you were wondering, I've gone ahead and locked all your doors, ensuring your safety and security for the night.\",\n\"Just wanted to update you: all your doors have been locked, providing you with a safe and secure space for the night.\",\n\"I wanted to reassure you that all your doors are locked, so you can have peace of mind and a restful sleep tonight.\")",
+            "exp": {
+             "i": [
+              {
+               "i": [
+                {
+                 "i": [
+                  {
+                   "l": "8:106",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Just so you know, all your doors have been locked, ensuring your safety and security for the night!"
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "111:233",
+                   "ok": true,
+                   "t": "string",
+                   "v": "I wanted to inform you that all your doors have been securely locked, so you can rest assured of your safety for the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "238:359",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Quick update: I've ensured that all your doors are locked, providing you with a safe and secure environment for the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "364:485",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Just a heads up: I've taken care of locking all your doors, so you can relax knowing you're safe and secure until morning."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "490:608",
+                   "ok": true,
+                   "t": "string",
+                   "v": "I thought you should know that I've locked all your doors, ensuring your safety and peace of mind throughout the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "613:719",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Good news: I've checked and locked all your doors, so you can sleep soundly knowing you're safe and secure."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "724:844",
+                   "ok": true,
+                   "t": "string",
+                   "v": "By the way, I've made sure all your doors are locked, so you can enjoy a worry-free night's rest in a secure environment."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "849:967",
+                   "ok": true,
+                   "t": "string",
+                   "v": "In case you were wondering, I've gone ahead and locked all your doors, ensuring your safety and security for the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "972:1088",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Just wanted to update you: all your doors have been locked, providing you with a safe and secure space for the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "1093:1207",
+                   "ok": true,
+                   "t": "string",
+                   "v": "I wanted to reassure you that all your doors are locked, so you can have peace of mind and a restful sleep tonight."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                }
+               ],
+               "l": "0:1209",
+               "n": "random",
+               "ok": true,
+               "t": "function"
+              }
+             ],
+             "ok": true,
+             "str": "random(\"Just so you know, all your doors have been locked, ensuring your safety and security for the night!\",\n\"I wanted to inform you that all your doors have been securely locked, so you can rest assured of your safety for the night.\",\n\"Quick update: I've ensured that all your doors are locked, providing you with a safe and secure environment for the night.\",\n\"Just a heads up: I've taken care of locking all your doors, so you can relax knowing you're safe and secure until morning.\",\n\"I thought you should know that I've locked all your doors, ensuring your safety and peace of mind throughout the night.\",\n\"Good news: I've checked and locked all your doors, so you can sleep soundly knowing you're safe and secure.\",\n\"By the way, I've made sure all your doors are locked, so you can enjoy a worry-free night's rest in a secure environment.\",\n\"In case you were wondering, I've gone ahead and locked all your doors, ensuring your safety and security for the night.\",\n\"Just wanted to update you: all your doors have been locked, providing you with a safe and secure space for the night.\",\n\"I wanted to reassure you that all your doors are locked, so you can have peace of mind and a restful sleep tonight.\")",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "level"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 40,
+        "a": "0",
+        "lo": {
+         "d": [
+          "@Door_Locks"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 41,
+          "a": "0",
+          "c": [
+           {
+            "$": 42,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "lock",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "i": [],
+             "p": "a",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "c": "unlocked",
+             "exp": {
+              "i": [
+               {
+                "l": "0:7",
+                "ok": true,
+                "t": "string",
+                "v": "unlocked"
+               }
+              ],
+              "ok": true,
+              "str": "unlocked",
+              "t": "expression"
+             },
+             "f": "l",
+             "g": "any",
+             "t": "c",
+             "vt": "enum"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 43,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 44,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "DoorLeftUnlocked"
+               },
+               {
+                "e": "DoorLeftUnlocked $device\".\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:15",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "DoorLeftUnlocked"
+                  },
+                  {
+                   "l": "17:23",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "25:26",
+                   "ok": true,
+                   "t": "string",
+                   "v": ".\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "DoorLeftUnlocked $device\".\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       },
+       {
+        "$": 45,
+        "a": "0",
+        "d": [
+         "Speaker"
+        ],
+        "k": [
+         {
+          "$": 46,
+          "c": "setVolume",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Speaker_Vol"
+           }
+          ]
+         },
+         {
+          "$": 47,
+          "c": "wait",
+          "p": [
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         },
+         {
+          "$": 48,
+          "c": "playText",
+          "p": [
+           {
+            "e": "DoorLeftUnlocked random(\", I'll make an effort to secure them for you.\",\n\", I'll try to lock them for you.\",\n\", I'll make an attempt to lock them up.\",\n\", I'll see if I can lock them for you.\",\n\", I'll aim to secure them as best I can.\",\n\", I'll do my best to lock them for you.\",\n\", I'll give it a shot to lock them up.\",\n\", I'll make an effort to put them under lock and key.\")",
+            "exp": {
+             "i": [
+              {
+               "l": "0:15",
+               "ok": true,
+               "t": "variable",
+               "x": "DoorLeftUnlocked"
+              },
+              {
+               "i": [
+                {
+                 "i": [
+                  {
+                   "l": "25:69",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll make an effort to secure them for you."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "74:105",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll try to lock them for you."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "110:148",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll make an attempt to lock them up."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "153:190",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll see if I can lock them for you."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "195:234",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll aim to secure them as best I can."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "239:277",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll do my best to lock them for you."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "282:319",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll give it a shot to lock them up."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "324:376",
+                   "ok": true,
+                   "t": "string",
+                   "v": ", I'll make an effort to put them under lock and key."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                }
+               ],
+               "l": "17:378",
+               "n": "random",
+               "ok": true,
+               "t": "function"
+              }
+             ],
+             "ok": true,
+             "str": "DoorLeftUnlocked random(\", I'll make an effort to secure them for you.\",\n\", I'll try to lock them for you.\",\n\", I'll make an attempt to lock them up.\",\n\", I'll see if I can lock them for you.\",\n\", I'll aim to secure them as best I can.\",\n\", I'll do my best to lock them for you.\",\n\", I'll give it a shot to lock them up.\",\n\", I'll make an effort to put them under lock and key.\")",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "level"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 49,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 50,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "DoorLeftUnlocked"
+           },
+           {
+            "e": "\"\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:0",
+               "ok": true,
+               "t": "string",
+               "v": ""
+              }
+             ],
+             "ok": true,
+             "str": "\"\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 51,
+        "a": "0",
+        "lo": {
+         "d": [
+          "@Door_Locks"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 52,
+          "a": "0",
+          "c": [
+           {
+            "$": 53,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "lock",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "i": [],
+             "p": "a",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "c": "unlocked",
+             "exp": {
+              "i": [
+               {
+                "l": "0:7",
+                "ok": true,
+                "t": "string",
+                "v": "unlocked"
+               }
+              ],
+              "ok": true,
+              "str": "unlocked",
+              "t": "expression"
+             },
+             "f": "l",
+             "g": "any",
+             "t": "c",
+             "vt": "enum"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": []
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 54,
+            "a": "0",
+            "d": [
+             "$device"
+            ],
+            "k": [
+             {
+              "$": 55,
+              "c": "lock",
+              "p": []
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       },
+       {
+        "$": 56,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 57,
+          "c": "wait",
+          "p": [
+           {
+            "c": 10,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 10
+              }
+             ],
+             "ok": true,
+             "str": "10",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 58,
+        "a": "0",
+        "c": [
+         {
+          "$": 59,
+          "co": "is",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "lock",
+           "d": [
+            "@Door_Locks"
+           ],
+           "f": "l",
+           "g": "all",
+           "i": [],
+           "p": "a",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "locked",
+           "exp": {
+            "i": [
+             {
+              "l": "0:5",
+              "ok": true,
+              "t": "string",
+              "v": "locked"
+             }
+            ],
+            "ok": true,
+            "str": "locked",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [
+         {
+          "$": 60,
+          "a": "0",
+          "d": [],
+          "k": [
+           {
+            "$": 61,
+            "c": "setVariable",
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "variable",
+              "x": "DoorLeftUnlocked"
+             },
+             {
+              "e": "\" \"",
+              "exp": {
+               "i": [
+                {
+                 "l": "1",
+                 "ok": true,
+                 "t": "string",
+                 "v": " "
+                }
+               ],
+               "ok": true,
+               "str": "\" \"",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         },
+         {
+          "$": 62,
+          "a": "0",
+          "lo": {
+           "d": [
+            "@Door_Locks"
+           ],
+           "f": "l",
+           "g": "avg",
+           "t": "d",
+           "vt": "device"
+          },
+          "r": [],
+          "rop": "and",
+          "s": [
+           {
+            "$": 63,
+            "a": "0",
+            "c": [
+             {
+              "$": 64,
+              "co": "is",
+              "ct": "c",
+              "fs": [],
+              "lo": {
+               "a": "lock",
+               "d": [
+                "$device"
+               ],
+               "f": "l",
+               "g": "any",
+               "i": [],
+               "p": "a",
+               "t": "p",
+               "vt": "string"
+              },
+              "ro": {
+               "c": "unlocked",
+               "exp": {
+                "i": [
+                 {
+                  "l": "0:7",
+                  "ok": true,
+                  "t": "string",
+                  "v": "unlocked"
+                 }
+                ],
+                "ok": true,
+                "str": "unlocked",
+                "t": "expression"
+               },
+               "f": "l",
+               "g": "any",
+               "t": "c",
+               "vt": "enum"
+              },
+              "ro2": {
+               "g": "any",
+               "t": "c"
+              },
+              "sm": "auto",
+              "t": "condition",
+              "to": {
+               "g": "any",
+               "t": "c"
+              },
+              "to2": {
+               "g": "any",
+               "t": "c"
+              },
+              "ts": []
+             }
+            ],
+            "e": [],
+            "ei": [],
+            "o": "and",
+            "r": [],
+            "rop": "and",
+            "s": [
+             {
+              "$": 65,
+              "a": "0",
+              "d": [],
+              "k": [
+               {
+                "$": 66,
+                "c": "setVariable",
+                "p": [
+                 {
+                  "f": "l",
+                  "g": "avg",
+                  "t": "x",
+                  "vt": "variable",
+                  "x": "DoorLeftUnlocked"
+                 },
+                 {
+                  "e": "DoorLeftUnlocked $device\".\n\"",
+                  "exp": {
+                   "i": [
+                    {
+                     "l": "0:15",
+                     "ok": true,
+                     "t": "variable",
+                     "x": "DoorLeftUnlocked"
+                    },
+                    {
+                     "l": "17:23",
+                     "ok": true,
+                     "t": "variable",
+                     "x": "$device"
+                    },
+                    {
+                     "l": "25:26",
+                     "ok": true,
+                     "t": "string",
+                     "v": ".\n"
+                    }
+                   ],
+                   "ok": true,
+                   "str": "DoorLeftUnlocked $device\".\n\"",
+                   "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "avg",
+                  "t": "e",
+                  "vt": "string"
+                 }
+                ]
+               }
+              ],
+              "r": [],
+              "rop": "and",
+              "t": "action",
+              "tcp": "c"
+             }
+            ],
+            "t": "if",
+            "tcp": "c"
+           }
+          ],
+          "t": "each",
+          "tcp": "c"
+         },
+         {
+          "$": 67,
+          "a": "0",
+          "d": [
+           "Speaker"
+          ],
+          "k": [
+           {
+            "$": 68,
+            "c": "setVolume",
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "integer",
+              "x": "Speaker_Vol"
+             }
+            ]
+           },
+           {
+            "$": 69,
+            "c": "wait",
+            "p": [
+             {
+              "c": 5,
+              "exp": {
+               "i": [
+                {
+                 "l": "0",
+                 "ok": true,
+                 "t": "integer",
+                 "v": 5
+                }
+               ],
+               "ok": true,
+               "str": "5",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "s"
+             }
+            ]
+           },
+           {
+            "$": 70,
+            "c": "playText",
+            "p": [
+             {
+              "e": "random(\"Apologies, I couldn't lock \",\n\"I regret to inform you that I couldn't lock \",\n\"Unfortunately, I couldn't secure \",\n\"I'm sorry, but I couldn't lock \",\n\"Regrettably, I wasn't able to lock \",\n\"My apologies, I couldn't secure \",\n\"Unfortunately, I encountered an issue locking \") DoorLeftUnlocked random(\", If you wish to ensure your safety for the night, you'll need to lock them manually.\",\n\", To ensure your safety and security, please consider locking them manually.\",\n\", If you'd like to feel safe and secure tonight, I recommend manually locking them.\",\n\", For your safety and peace of mind, it's best to lock them manually.\",\n\", To guarantee your safety for the night, please try locking them manually.\",\n\", To ensure your safety throughout the night, I suggest locking them manually.\",\n\", If you want to be safe and secure, you'll need to lock them manually.\",\n\", For your own safety, please consider locking them manually.\",\n\", To feel secure tonight, it's recommended to manually lock them.\",\n\", To ensure your safety for the night, please try locking them manually.\")",
+              "exp": {
+               "i": [
+                {
+                 "i": [
+                  {
+                   "i": [
+                    {
+                     "l": "8:34",
+                     "ok": true,
+                     "t": "string",
+                     "v": "Apologies, I couldn't lock "
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "39:82",
+                     "ok": true,
+                     "t": "string",
+                     "v": "I regret to inform you that I couldn't lock "
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "87:119",
+                     "ok": true,
+                     "t": "string",
+                     "v": "Unfortunately, I couldn't secure "
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "124:154",
+                     "ok": true,
+                     "t": "string",
+                     "v": "I'm sorry, but I couldn't lock "
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "159:193",
+                     "ok": true,
+                     "t": "string",
+                     "v": "Regrettably, I wasn't able to lock "
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "198:229",
+                     "ok": true,
+                     "t": "string",
+                     "v": "My apologies, I couldn't secure "
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "234:279",
+                     "ok": true,
+                     "t": "string",
+                     "v": "Unfortunately, I encountered an issue locking "
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  }
+                 ],
+                 "l": "0:281",
+                 "n": "random",
+                 "ok": true,
+                 "t": "function"
+                },
+                {
+                 "l": "283:298",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "DoorLeftUnlocked"
+                },
+                {
+                 "i": [
+                  {
+                   "i": [
+                    {
+                     "l": "308:392",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", If you wish to ensure your safety for the night, you'll need to lock them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "397:472",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", To ensure your safety and security, please consider locking them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "477:559",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", If you'd like to feel safe and secure tonight, I recommend manually locking them."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "564:632",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", For your safety and peace of mind, it's best to lock them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "637:711",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", To guarantee your safety for the night, please try locking them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "716:793",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", To ensure your safety throughout the night, I suggest locking them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "798:868",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", If you want to be safe and secure, you'll need to lock them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "873:933",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", For your own safety, please consider locking them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "938:1002",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", To feel secure tonight, it's recommended to manually lock them."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "1007:1078",
+                     "ok": true,
+                     "t": "string",
+                     "v": ", To ensure your safety for the night, please try locking them manually."
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  }
+                 ],
+                 "l": "300:1080",
+                 "n": "random",
+                 "ok": true,
+                 "t": "function"
+                }
+               ],
+               "ok": true,
+               "str": "random(\"Apologies, I couldn't lock \",\n\"I regret to inform you that I couldn't lock \",\n\"Unfortunately, I couldn't secure \",\n\"I'm sorry, but I couldn't lock \",\n\"Regrettably, I wasn't able to lock \",\n\"My apologies, I couldn't secure \",\n\"Unfortunately, I encountered an issue locking \") DoorLeftUnlocked random(\", If you wish to ensure your safety for the night, you'll need to lock them manually.\",\n\", To ensure your safety and security, please consider locking them manually.\",\n\", If you'd like to feel safe and secure tonight, I recommend manually locking them.\",\n\", For your safety and peace of mind, it's best to lock them manually.\",\n\", To guarantee your safety for the night, please try locking them manually.\",\n\", To ensure your safety throughout the night, I suggest locking them manually.\",\n\", If you want to be safe and secure, you'll need to lock them manually.\",\n\", For your own safety, please consider locking them manually.\",\n\", To feel secure tonight, it's recommended to manually lock them.\",\n\", To ensure your safety for the night, please try locking them manually.\")",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "vt": "level"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 71,
+          "a": "0",
+          "d": [
+           "Speaker"
+          ],
+          "k": [
+           {
+            "$": 72,
+            "c": "setVolume",
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "integer",
+              "x": "Speaker_Vol"
+             }
+            ]
+           },
+           {
+            "$": 73,
+            "c": "wait",
+            "p": [
+             {
+              "c": 5,
+              "exp": {
+               "i": [
+                {
+                 "l": "0",
+                 "ok": true,
+                 "t": "integer",
+                 "v": 5
+                }
+               ],
+               "ok": true,
+               "str": "5",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "s"
+             }
+            ]
+           },
+           {
+            "$": 74,
+            "c": "playText",
+            "p": [
+             {
+              "e": "random(\"The doors have been locked, ensuring your safety and security for the night!\",\n\"I've successfully secured the doors, ensuring your safety throughout the night!\",\n\"You can rest easy knowing that I've locked the doors, keeping you safe for the night!\",\n\"I've taken the necessary steps to lock the doors, ensuring your safety and peace of mind until morning!\",\n\"The doors are now locked, providing you with a sense of safety and security for the night!\",\n\"You can sleep soundly knowing that I've locked the doors, keeping you safe until dawn!\",\n\"Rest assured, I've locked the doors, ensuring your safety and security throughout the night!\",\n\"The doors have been securely locked, providing you with a safe haven for the night!\",\n\"With the doors locked, you can relax knowing that you're safe and secure until morning!\",\n\"I've ensured that the doors are locked, so you can enjoy a peaceful and secure night's rest!\")",
+              "exp": {
+               "i": [
+                {
+                 "i": [
+                  {
+                   "i": [
+                    {
+                     "l": "8:83",
+                     "ok": true,
+                     "t": "string",
+                     "v": "The doors have been locked, ensuring your safety and security for the night!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "88:166",
+                     "ok": true,
+                     "t": "string",
+                     "v": "I've successfully secured the doors, ensuring your safety throughout the night!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "171:255",
+                     "ok": true,
+                     "t": "string",
+                     "v": "You can rest easy knowing that I've locked the doors, keeping you safe for the night!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "260:362",
+                     "ok": true,
+                     "t": "string",
+                     "v": "I've taken the necessary steps to lock the doors, ensuring your safety and peace of mind until morning!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "367:456",
+                     "ok": true,
+                     "t": "string",
+                     "v": "The doors are now locked, providing you with a sense of safety and security for the night!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "461:546",
+                     "ok": true,
+                     "t": "string",
+                     "v": "You can sleep soundly knowing that I've locked the doors, keeping you safe until dawn!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "551:642",
+                     "ok": true,
+                     "t": "string",
+                     "v": "Rest assured, I've locked the doors, ensuring your safety and security throughout the night!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "647:729",
+                     "ok": true,
+                     "t": "string",
+                     "v": "The doors have been securely locked, providing you with a safe haven for the night!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "734:820",
+                     "ok": true,
+                     "t": "string",
+                     "v": "With the doors locked, you can relax knowing that you're safe and secure until morning!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "i": [
+                    {
+                     "l": "825:916",
+                     "ok": true,
+                     "t": "string",
+                     "v": "I've ensured that the doors are locked, so you can enjoy a peaceful and secure night's rest!"
+                    }
+                   ],
+                   "ok": true,
+                   "t": "expression"
+                  }
+                 ],
+                 "l": "0:918",
+                 "n": "random",
+                 "ok": true,
+                 "t": "function"
+                }
+               ],
+               "ok": true,
+               "str": "random(\"The doors have been locked, ensuring your safety and security for the night!\",\n\"I've successfully secured the doors, ensuring your safety throughout the night!\",\n\"You can rest easy knowing that I've locked the doors, keeping you safe for the night!\",\n\"I've taken the necessary steps to lock the doors, ensuring your safety and peace of mind until morning!\",\n\"The doors are now locked, providing you with a sense of safety and security for the night!\",\n\"You can sleep soundly knowing that I've locked the doors, keeping you safe until dawn!\",\n\"Rest assured, I've locked the doors, ensuring your safety and security throughout the night!\",\n\"The doors have been securely locked, providing you with a safe haven for the night!\",\n\"With the doors locked, you can relax knowing that you're safe and secure until morning!\",\n\"I've ensured that the doors are locked, so you can enjoy a peaceful and secure night's rest!\")",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             },
+             {
+              "d": [],
+              "f": "l",
+              "g": "avg",
+              "vt": "level"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 75,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 76,
+        "c": "wait",
+        "p": [
+         {
+          "c": 10,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 10
+            }
+           ],
+           "ok": true,
+           "str": "10",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 77,
+      "a": "0",
+      "c": [
+       {
+        "$": 78,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "contact",
+         "d": [
+          "WindowsContactOpen"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "closed",
+         "exp": {
+          "i": [
+           {
+            "l": "0:5",
+            "ok": true,
+            "t": "string",
+            "v": "closed"
+           }
+          ],
+          "ok": true,
+          "str": "closed",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 79,
+        "a": "0",
+        "d": [
+         "Speaker"
+        ],
+        "k": [
+         {
+          "$": 80,
+          "c": "setVolume",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Speaker_Vol"
+           }
+          ]
+         },
+         {
+          "$": 81,
+          "c": "wait",
+          "p": [
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         },
+         {
+          "$": 82,
+          "c": "playText",
+          "p": [
+           {
+            "e": "random(\"It appears that the master bedroom window is shut. Opening it could help prevent the room from getting too warm during the night.\",\n\"Looks like the master bedroom window is closed. You might want to open it to avoid getting overheated during the night.\",\n\"The master bedroom window seem to be closed. Opening it might be a good idea to stay cool through the night.\",\n\"It seems the master bedroom window is shut. If you prefer a cooler sleeping environment, you may want to consider opening it.\",\n\"The master bedroom window is currently closed. To regulate the temperature and ensure a comfortable sleep, opening it is recommended.\",\n\"From what I can see, the master bedroom window is closed. To avoid discomfort from the heat during the night, opening it might be wise.\",\n\"The master bedroom window appears to be closed. Opening it could help in preventing the room from becoming too warm as the night progresses.\",\n\"It looks like the master bedroom window is sealed shut. If you'd like to avoid feeling too hot during the night, I suggest cracking it open.\",\n\"The master bedroom window is closed. For a more comfortable sleep environment, you may want to consider opening it to let some fresh air in.\",\n\"Notice: The master bedroom window is closed. To maintain a comfortable temperature during the night, opening it is advisable.\")",
+            "exp": {
+             "i": [
+              {
+               "i": [
+                {
+                 "i": [
+                  {
+                   "l": "8:136",
+                   "ok": true,
+                   "t": "string",
+                   "v": "It appears that the master bedroom window is shut. Opening it could help prevent the room from getting too warm during the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "141:259",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Looks like the master bedroom window is closed. You might want to open it to avoid getting overheated during the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "264:371",
+                   "ok": true,
+                   "t": "string",
+                   "v": "The master bedroom window seem to be closed. Opening it might be a good idea to stay cool through the night."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "376:500",
+                   "ok": true,
+                   "t": "string",
+                   "v": "It seems the master bedroom window is shut. If you prefer a cooler sleeping environment, you may want to consider opening it."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "505:637",
+                   "ok": true,
+                   "t": "string",
+                   "v": "The master bedroom window is currently closed. To regulate the temperature and ensure a comfortable sleep, opening it is recommended."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "642:776",
+                   "ok": true,
+                   "t": "string",
+                   "v": "From what I can see, the master bedroom window is closed. To avoid discomfort from the heat during the night, opening it might be wise."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "781:920",
+                   "ok": true,
+                   "t": "string",
+                   "v": "The master bedroom window appears to be closed. Opening it could help in preventing the room from becoming too warm as the night progresses."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "925:1064",
+                   "ok": true,
+                   "t": "string",
+                   "v": "It looks like the master bedroom window is sealed shut. If you'd like to avoid feeling too hot during the night, I suggest cracking it open."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "1069:1208",
+                   "ok": true,
+                   "t": "string",
+                   "v": "The master bedroom window is closed. For a more comfortable sleep environment, you may want to consider opening it to let some fresh air in."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                },
+                {
+                 "i": [
+                  {
+                   "l": "1213:1337",
+                   "ok": true,
+                   "t": "string",
+                   "v": "Notice: The master bedroom window is closed. To maintain a comfortable temperature during the night, opening it is advisable."
+                  }
+                 ],
+                 "ok": true,
+                 "t": "expression"
+                }
+               ],
+               "l": "0:1339",
+               "n": "random",
+               "ok": true,
+               "t": "function"
+              }
+             ],
+             "ok": true,
+             "str": "random(\"It appears that the master bedroom window is shut. Opening it could help prevent the room from getting too warm during the night.\",\n\"Looks like the master bedroom window is closed. You might want to open it to avoid getting overheated during the night.\",\n\"The master bedroom window seem to be closed. Opening it might be a good idea to stay cool through the night.\",\n\"It seems the master bedroom window is shut. If you prefer a cooler sleeping environment, you may want to consider opening it.\",\n\"The master bedroom window is currently closed. To regulate the temperature and ensure a comfortable sleep, opening it is recommended.\",\n\"From what I can see, the master bedroom window is closed. To avoid discomfort from the heat during the night, opening it might be wise.\",\n\"The master bedroom window appears to be closed. Opening it could help in preventing the room from becoming too warm as the night progresses.\",\n\"It looks like the master bedroom window is sealed shut. If you'd like to avoid feeling too hot during the night, I suggest cracking it open.\",\n\"The master bedroom window is closed. For a more comfortable sleep environment, you may want to consider opening it to let some fresh air in.\",\n\"Notice: The master bedroom window is closed. To maintain a comfortable temperature during the night, opening it is advisable.\")",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "level"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 83,
+      "a": "0",
+      "d": [
+       "goodnight"
+      ],
+      "k": [
+       {
+        "$": 84,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "goodnight",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx150:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Lights",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx151:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx20:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx152:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx153:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx154:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx126:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx155:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx156:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx137:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx136:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx139:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx140:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx141:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx142:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx157:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx158:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx159:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx160:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx161:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx162:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx163:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx164:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx165:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx149:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx166:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx167:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx168:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx169:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx170:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx171:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx172:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx25:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx134:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speaker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx144:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speaker_Vol",
+    "t": "integer",
+    "v": {
+     "f": "l",
+     "g": "avg",
+     "t": "x",
+     "vt": "integer",
+     "x": "@Night_Vol"
+    }
+   },
+   {
+    "a": "d",
+    "n": "dyson_fan",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx145:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Box_Fan",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx146:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DoorLeftUnlocked",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "Ceiling_Fan",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx147:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DoorLeftOpened",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "WindowsContactOpen",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx93:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Hue_Lights",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx129:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx133:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Switches",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx128:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx132:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

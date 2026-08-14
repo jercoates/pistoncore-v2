@@ -1,0 +1,933 @@
+{
+ "name": "Upstairs Hallway Night Light .🌈💡",
+ "meta": {
+  "active": true,
+  "build": 1,
+  "category": "0",
+  "name": "Upstairs Hallway Night Light .🌈💡"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "drops_below",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "illuminance",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "LowLux"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "motion",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "inactive",
+       "exp": {
+        "i": [
+         {
+          "l": "0:7",
+          "ok": true,
+          "t": "string",
+          "v": "inactive"
+         }
+        ],
+        "ok": true,
+        "str": "inactive",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "d": [
+       "Night_Light"
+      ],
+      "k": [
+       {
+        "$": 5,
+        "c": "setColor",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "color",
+          "x": "LowColor"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 6,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "LowLevel"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 7,
+    "a": "0",
+    "c": [
+     {
+      "$": 8,
+      "co": "is_less_than",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "illuminance",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "LowLux"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 9,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "motion",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "inactive",
+       "exp": {
+        "i": [
+         {
+          "l": "0:7",
+          "ok": true,
+          "t": "string",
+          "v": "inactive"
+         }
+        ],
+        "ok": true,
+        "str": "inactive",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 10,
+      "a": "0",
+      "d": [
+       "Night_Light"
+      ],
+      "k": [
+       {
+        "$": 11,
+        "c": "setColor",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "color",
+          "x": "LowColor"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 12,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "LowLevel"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 13,
+    "a": "0",
+    "c": [
+     {
+      "$": 14,
+      "co": "is_less_than",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "illuminance",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "LowLux"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 15,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "motion",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "active",
+       "exp": {
+        "i": [
+         {
+          "l": "0:5",
+          "ok": true,
+          "t": "string",
+          "v": "active"
+         }
+        ],
+        "ok": true,
+        "str": "active",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 16,
+      "a": "0",
+      "d": [
+       "Night_Light"
+      ],
+      "k": [
+       {
+        "$": 17,
+        "c": "setColor",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "color",
+          "x": "HighColor"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 18,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "HighLevel"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 19,
+    "a": "0",
+    "c": [
+     {
+      "$": 20,
+      "co": "is_less_than",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "illuminance",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "LowLux"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 21,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "motion",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "active",
+       "exp": {
+        "i": [
+         {
+          "l": "0:5",
+          "ok": true,
+          "t": "string",
+          "v": "active"
+         }
+        ],
+        "ok": true,
+        "str": "active",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 22,
+      "a": "0",
+      "d": [
+       "Night_Light"
+      ],
+      "k": [
+       {
+        "$": 23,
+        "c": "setColor",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "color",
+          "x": "HighColor"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         }
+        ]
+       },
+       {
+        "$": 24,
+        "c": "setLevel",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "integer",
+          "x": "HighLevel"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 25,
+    "a": "0",
+    "c": [
+     {
+      "$": 26,
+      "co": "rises_to_or_above",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "illuminance",
+       "d": [
+        "Night_Light"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "HighLux"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 27,
+      "a": "0",
+      "d": [
+       "Night_Light"
+      ],
+      "k": [
+       {
+        "$": 28,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Night_Light",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx208:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "LowLux",
+    "t": "integer",
+    "v": {
+     "c": 20,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 20
+       }
+      ],
+      "ok": true,
+      "str": "20",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "LowLevel",
+    "t": "integer",
+    "v": {
+     "c": 20,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 20
+       }
+      ],
+      "ok": true,
+      "str": "20",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "LowColor",
+    "t": "string",
+    "v": {
+     "c": "Blue",
+     "exp": {
+      "i": [
+       {
+        "l": "0:3",
+        "ok": true,
+        "t": "string",
+        "v": "Blue"
+       }
+      ],
+      "ok": true,
+      "str": "Blue",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "HighLux",
+    "t": "integer",
+    "v": {
+     "c": 20,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 20
+       }
+      ],
+      "ok": true,
+      "str": "20",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "HighLevel",
+    "t": "integer",
+    "v": {
+     "c": 100,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 100
+       }
+      ],
+      "ok": true,
+      "str": "100",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "HighColor",
+    "t": "string",
+    "v": {
+     "c": "Burly Wood",
+     "exp": {
+      "i": [
+       {
+        "l": "0:9",
+        "ok": true,
+        "t": "string",
+        "v": "Burly Wood"
+       }
+      ],
+      "ok": true,
+      "str": "Burly Wood",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

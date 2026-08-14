@@ -1,0 +1,1071 @@
+{
+ "name": "Freezers Power 🔌🧊",
+ "meta": {
+  "active": true,
+  "build": 5,
+  "category": "2",
+  "name": "Freezers Power 🔌🧊"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "alarm",
+       "d": [
+        "Garage_Freezers_Power_Loss"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "g": "any",
+       "t": "c"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "c": [
+       {
+        "$": 5,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "alarm",
+         "d": [
+          "Garage_Freezers_Power_Loss"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "both",
+         "exp": {
+          "i": [
+           {
+            "l": "0:3",
+            "ok": true,
+            "t": "string",
+            "v": "both"
+           }
+          ],
+          "ok": true,
+          "str": "both",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 6,
+        "a": "0",
+        "d": [
+         "Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 7,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🔌🧊 Garage Freezers Power Restored 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:41",
+               "ok": true,
+               "t": "string",
+               "v": "🔌🧊 Garage Freezers Power Restored 🧊🔌\n"
+              },
+              {
+               "l": "43:52",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "54",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "56:59",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "61:63",
+               "ok": true,
+               "t": "string",
+               "v": " - "
+              },
+              {
+               "l": "65:69",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "71:72",
+               "ok": true,
+               "t": "string",
+               "v": "\n\n"
+              }
+             ],
+             "ok": true,
+             "str": "\"🔌🧊 Garage Freezers Power Restored 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 8,
+        "a": "0",
+        "d": [
+         "Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 9,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🔌🧊 Garage Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:37",
+               "ok": true,
+               "t": "string",
+               "v": "🔌🧊 Garage Freezers Power Loss 🧊🔌\n"
+              },
+              {
+               "l": "39:48",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "50",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "52:55",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "57:59",
+               "ok": true,
+               "t": "string",
+               "v": " - "
+              },
+              {
+               "l": "61:65",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "67:68",
+               "ok": true,
+               "t": "string",
+               "v": "\n\n"
+              }
+             ],
+             "ok": true,
+             "str": "\"🔌🧊 Garage Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 10,
+        "a": "0",
+        "c": [
+         {
+          "$": 11,
+          "co": "is",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "presence",
+           "d": [
+            "Presence_Sensors_All"
+           ],
+           "f": "l",
+           "g": "any",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "not present",
+           "exp": {
+            "i": [
+             {
+              "l": "0:10",
+              "ok": true,
+              "t": "string",
+              "v": "not present"
+             }
+            ],
+            "ok": true,
+            "str": "not present",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 12,
+          "a": "0",
+          "d": [
+           "Notifications_Text_All"
+          ],
+          "k": [
+           {
+            "$": 13,
+            "c": "deviceNotification",
+            "cm": true,
+            "p": [
+             {
+              "e": "\"🔌🧊 Garage Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+              "exp": {
+               "i": [
+                {
+                 "l": "1:37",
+                 "ok": true,
+                 "t": "string",
+                 "v": "🔌🧊 Garage Freezers Power Loss 🧊🔌\n"
+                },
+                {
+                 "l": "39:48",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "$monthName"
+                },
+                {
+                 "l": "50",
+                 "ok": true,
+                 "t": "string",
+                 "v": " "
+                },
+                {
+                 "l": "52:55",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "$day"
+                },
+                {
+                 "l": "57:59",
+                 "ok": true,
+                 "t": "string",
+                 "v": " - "
+                },
+                {
+                 "l": "61:65",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "$time"
+                },
+                {
+                 "l": "67:68",
+                 "ok": true,
+                 "t": "string",
+                 "v": "\n\n"
+                }
+               ],
+               "ok": true,
+               "str": "\"🔌🧊 Garage Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 14,
+    "a": "0",
+    "c": [
+     {
+      "$": 15,
+      "co": "changes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "alarm",
+       "d": [
+        "Chest_Freezer_Power_Loss"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "g": "any",
+       "t": "c"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 16,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 17,
+      "a": "0",
+      "c": [
+       {
+        "$": 18,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "alarm",
+         "d": [
+          "Chest_Freezer_Power_Loss"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "both",
+         "exp": {
+          "i": [
+           {
+            "l": "0:3",
+            "ok": true,
+            "t": "string",
+            "v": "both"
+           }
+          ],
+          "ok": true,
+          "str": "both",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 19,
+        "a": "0",
+        "d": [
+         "Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 20,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🔌🧊 Chest Freezers Power Restored 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:40",
+               "ok": true,
+               "t": "string",
+               "v": "🔌🧊 Chest Freezers Power Restored 🧊🔌\n"
+              },
+              {
+               "l": "42:51",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "53",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "55:58",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "60:62",
+               "ok": true,
+               "t": "string",
+               "v": " - "
+              },
+              {
+               "l": "64:68",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "70:71",
+               "ok": true,
+               "t": "string",
+               "v": "\n\n"
+              }
+             ],
+             "ok": true,
+             "str": "\"🔌🧊 Chest Freezers Power Restored 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 21,
+        "a": "0",
+        "d": [
+         "Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 22,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"🔌🧊 Chest Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:36",
+               "ok": true,
+               "t": "string",
+               "v": "🔌🧊 Chest Freezers Power Loss 🧊🔌\n"
+              },
+              {
+               "l": "38:47",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "49",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "51:54",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "56:58",
+               "ok": true,
+               "t": "string",
+               "v": " - "
+              },
+              {
+               "l": "60:64",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "66:67",
+               "ok": true,
+               "t": "string",
+               "v": "\n\n"
+              }
+             ],
+             "ok": true,
+             "str": "\"🔌🧊 Chest Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 23,
+        "a": "0",
+        "c": [
+         {
+          "$": 24,
+          "co": "is",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "presence",
+           "d": [
+            "Presence_Sensors_All"
+           ],
+           "f": "l",
+           "g": "any",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "not present",
+           "exp": {
+            "i": [
+             {
+              "l": "0:10",
+              "ok": true,
+              "t": "string",
+              "v": "not present"
+             }
+            ],
+            "ok": true,
+            "str": "not present",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 25,
+          "a": "0",
+          "d": [
+           "Notifications_Text_All"
+          ],
+          "k": [
+           {
+            "$": 26,
+            "c": "deviceNotification",
+            "cm": true,
+            "p": [
+             {
+              "e": "\"🔌🧊 Chest Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+              "exp": {
+               "i": [
+                {
+                 "l": "1:36",
+                 "ok": true,
+                 "t": "string",
+                 "v": "🔌🧊 Chest Freezers Power Loss 🧊🔌\n"
+                },
+                {
+                 "l": "38:47",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "$monthName"
+                },
+                {
+                 "l": "49",
+                 "ok": true,
+                 "t": "string",
+                 "v": " "
+                },
+                {
+                 "l": "51:54",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "$day"
+                },
+                {
+                 "l": "56:58",
+                 "ok": true,
+                 "t": "string",
+                 "v": " - "
+                },
+                {
+                 "l": "60:64",
+                 "ok": true,
+                 "t": "variable",
+                 "x": "$time"
+                },
+                {
+                 "l": "66:67",
+                 "ok": true,
+                 "t": "string",
+                 "v": "\n\n"
+                }
+               ],
+               "ok": true,
+               "str": "\"🔌🧊 Chest Freezers Power Loss 🧊🔌\n\"$monthName\" \"$day\" - \"$time\"\n\n\"",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "e",
+              "vt": "string"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Garage_Freezers_Power_Loss",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx130:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Notifications_Push_All",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Notifications_Push_All"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Presence_Sensors_All",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Presence_Sensors_All"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Notifications_Text_All",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Notifications_Text_All"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Monthly_Test",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx108:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Chest_Freezer_Power_Loss",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx131:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

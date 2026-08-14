@@ -1,0 +1,788 @@
+{
+ "name": "Kitchen Volume Controller",
+ "meta": {
+  "active": false,
+  "build": 1,
+  "category": "0",
+  "name": "Kitchen Volume Controller"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "level",
+       "d": [
+        "Controller"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "g": "any",
+       "t": "c"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 4,
+        "c": "setLevel",
+        "p": [
+         {
+          "a": "level",
+          "d": [
+           "Controller"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "p",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 5,
+    "a": "0",
+    "c": [
+     {
+      "$": 6,
+      "co": "changes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "status",
+       "d": [
+        "Speaker"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "playing",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "playing"
+         }
+        ],
+        "ok": true,
+        "str": "playing",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "or",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 7,
+      "a": "0",
+      "c": [
+       {
+        "$": 8,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "status",
+         "d": [
+          "Speaker"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "playing",
+         "exp": {
+          "i": [
+           {
+            "l": "0:6",
+            "ok": true,
+            "t": "string",
+            "v": "playing"
+           }
+          ],
+          "ok": true,
+          "str": "playing",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 9,
+        "a": "0",
+        "d": [
+         "Controller"
+        ],
+        "k": [
+         {
+          "$": 10,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 11,
+        "a": "0",
+        "d": [
+         "Controller"
+        ],
+        "k": [
+         {
+          "$": 12,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 13,
+    "a": "0",
+    "c": [
+     {
+      "$": 14,
+      "co": "changes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Controller"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "g": "any",
+       "t": "c"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 15,
+      "a": "0",
+      "c": [
+       {
+        "$": 16,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "switch",
+         "d": [
+          "Controller"
+         ],
+         "f": "l",
+         "g": "any",
+         "p": "a",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "off",
+         "exp": {
+          "i": [
+           {
+            "l": "0:2",
+            "ok": true,
+            "t": "string",
+            "v": "off"
+           }
+          ],
+          "ok": true,
+          "str": "off",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 17,
+        "a": "0",
+        "d": [
+         "Speaker"
+        ],
+        "k": [
+         {
+          "$": 18,
+          "c": "play",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 19,
+        "a": "0",
+        "d": [
+         "Speaker"
+        ],
+        "k": [
+         {
+          "$": 20,
+          "c": "pause",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 21,
+    "a": "0",
+    "c": [
+     {
+      "$": 22,
+      "co": "changes",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "level",
+       "d": [
+        "Speaker"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "g": "any",
+       "t": "c"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 23,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 24,
+        "c": "wait",
+        "p": [
+         {
+          "c": 500,
+          "exp": {
+           "i": [
+            {
+             "l": "0:2",
+             "ok": true,
+             "t": "integer",
+             "v": 500
+            }
+           ],
+           "ok": true,
+           "str": "500",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "ms"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 25,
+      "a": "0",
+      "d": [
+       "Controller"
+      ],
+      "k": [
+       {
+        "$": 26,
+        "c": "setLevel",
+        "p": [
+         {
+          "a": "level",
+          "d": [
+           "Speaker"
+          ],
+          "f": "l",
+          "g": "avg",
+          "t": "p",
+          "vt": "integer"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "enum"
+         },
+         {
+          "d": [],
+          "f": "l",
+          "g": "avg",
+          "vt": "decimal"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 27,
+    "a": "0",
+    "c": [
+     {
+      "$": 28,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "Controller"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 2,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 2
+         }
+        ],
+        "ok": true,
+        "str": "2",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 29,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 30,
+        "c": "nextTrack",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 31,
+    "a": "0",
+    "c": [
+     {
+      "$": 32,
+      "co": "gets",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "pushed",
+       "d": [
+        "Controller"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": 3,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 3
+         }
+        ],
+        "ok": true,
+        "str": "3",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "integer"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 33,
+      "a": "0",
+      "d": [
+       "Speaker"
+      ],
+      "k": [
+       {
+        "$": 34,
+        "c": "previousTrack",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Controller",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx181:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speaker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx182:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Controller_Volume",
+    "t": "integer"
+   },
+   {
+    "a": "d",
+    "n": "Speaker_Volume",
+    "t": "integer"
+   },
+   {
+    "a": "d",
+    "n": "Status",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "level",
+    "t": "string"
+   }
+  ],
+  "z": ""
+ }
+}

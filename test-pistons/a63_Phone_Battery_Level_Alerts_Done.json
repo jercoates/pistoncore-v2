@@ -1,0 +1,785 @@
+{
+ "name": "Phone Battery Level Alerts 🔋📱 - Done",
+ "meta": {
+  "active": true,
+  "build": 2,
+  "category": "2",
+  "name": "Phone Battery Level Alerts 🔋📱 - Done"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "drops_to_or_below",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "battery",
+       "d": [
+        "User_1_Tracker"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "User_1_Low_Battery_Level"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is_greater_than",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "battery",
+       "d": [
+        "User_1_Tracker"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "User_1_Critical_Batter_Level"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "d": [
+       "User_2_Phone"
+      ],
+      "k": [
+       {
+        "$": 5,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"📱🔋 \" User_1_Name \"'s Phone battery at \" [User_1_Tracker : battery] \"%\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:5",
+             "ok": true,
+             "t": "string",
+             "v": "📱🔋 "
+            },
+            {
+             "l": "8:18",
+             "ok": true,
+             "t": "variable",
+             "x": "User_1_Name"
+            },
+            {
+             "l": "21:40",
+             "ok": true,
+             "t": "string",
+             "v": "'s Phone battery at "
+            },
+            {
+             "a": "battery",
+             "l": "43:68",
+             "ok": true,
+             "t": "device",
+             "x": "User_1_Tracker"
+            },
+            {
+             "l": "71",
+             "ok": true,
+             "t": "string",
+             "v": "%"
+            }
+           ],
+           "ok": true,
+           "str": "\"📱🔋 \" User_1_Name \"'s Phone battery at \" [User_1_Tracker : battery] \"%\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 6,
+    "a": "0",
+    "c": [
+     {
+      "$": 7,
+      "co": "drops_to_or_below",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "battery",
+       "d": [
+        "User_1_Tracker"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "User_1_Critical_Batter_Level"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 8,
+      "a": "0",
+      "d": [
+       "User_2_Phone"
+      ],
+      "k": [
+       {
+        "$": 9,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"📱🔋 \" User_1_Name \"'s Phone battery critically low -  \" [User_1_Tracker : battery] \"%\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:5",
+             "ok": true,
+             "t": "string",
+             "v": "📱🔋 "
+            },
+            {
+             "l": "8:18",
+             "ok": true,
+             "t": "variable",
+             "x": "User_1_Name"
+            },
+            {
+             "l": "21:55",
+             "ok": true,
+             "t": "string",
+             "v": "'s Phone battery critically low -  "
+            },
+            {
+             "a": "battery",
+             "l": "58:83",
+             "ok": true,
+             "t": "device",
+             "x": "User_1_Tracker"
+            },
+            {
+             "l": "86",
+             "ok": true,
+             "t": "string",
+             "v": "%"
+            }
+           ],
+           "ok": true,
+           "str": "\"📱🔋 \" User_1_Name \"'s Phone battery critically low -  \" [User_1_Tracker : battery] \"%\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 10,
+    "a": "0",
+    "c": [
+     {
+      "$": 11,
+      "co": "drops_to_or_below",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "battery",
+       "d": [
+        "User_2_Phone"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "User_2_Low_Battery_Level"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 12,
+      "co": "is_greater_than",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "battery",
+       "d": [
+        "User_2_Phone"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "User_2_Critical_Batter_Level"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 13,
+      "a": "0",
+      "d": [
+       "User_1_Phone"
+      ],
+      "k": [
+       {
+        "$": 14,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"📱🔋 \" User_2_Name \"'s Phone battery at \" [User_2_Tracker : battery] \"%\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:5",
+             "ok": true,
+             "t": "string",
+             "v": "📱🔋 "
+            },
+            {
+             "l": "8:18",
+             "ok": true,
+             "t": "variable",
+             "x": "User_2_Name"
+            },
+            {
+             "l": "21:40",
+             "ok": true,
+             "t": "string",
+             "v": "'s Phone battery at "
+            },
+            {
+             "a": "battery",
+             "l": "43:68",
+             "ok": true,
+             "t": "device",
+             "x": "User_2_Tracker"
+            },
+            {
+             "l": "71",
+             "ok": true,
+             "t": "string",
+             "v": "%"
+            }
+           ],
+           "ok": true,
+           "str": "\"📱🔋 \" User_2_Name \"'s Phone battery at \" [User_2_Tracker : battery] \"%\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 15,
+    "a": "0",
+    "c": [
+     {
+      "$": 16,
+      "co": "drops_to_or_below",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "battery",
+       "d": [
+        "User_2_Tracker"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "integer",
+       "x": "User_2_Critical_Batter_Level"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 17,
+      "a": "0",
+      "d": [
+       "User_1_Phone"
+      ],
+      "k": [
+       {
+        "$": 18,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"📱🔋 \" User_2_Name \"'s Phone battery critically low -  \" [User_2_Tracker : battery] \"%\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:5",
+             "ok": true,
+             "t": "string",
+             "v": "📱🔋 "
+            },
+            {
+             "l": "8:18",
+             "ok": true,
+             "t": "variable",
+             "x": "User_2_Name"
+            },
+            {
+             "l": "21:55",
+             "ok": true,
+             "t": "string",
+             "v": "'s Phone battery critically low -  "
+            },
+            {
+             "a": "battery",
+             "l": "58:83",
+             "ok": true,
+             "t": "device",
+             "x": "User_2_Tracker"
+            },
+            {
+             "l": "86",
+             "ok": true,
+             "t": "string",
+             "v": "%"
+            }
+           ],
+           "ok": true,
+           "str": "\"📱🔋 \" User_2_Name \"'s Phone battery critically low -  \" [User_2_Tracker : battery] \"%\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "User_1_Name",
+    "t": "string",
+    "v": {
+     "c": "Albert",
+     "exp": {
+      "i": [
+       {
+        "l": "0:5",
+        "ok": true,
+        "t": "string",
+        "v": "Albert"
+       }
+      ],
+      "ok": true,
+      "str": "Albert",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_1_Tracker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_1_Phone",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx17:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_1_Low_Battery_Level",
+    "t": "integer",
+    "v": {
+     "c": 20,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 20
+       }
+      ],
+      "ok": true,
+      "str": "20",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_1_Critical_Batter_Level",
+    "t": "integer",
+    "v": {
+     "c": 10,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 10
+       }
+      ],
+      "ok": true,
+      "str": "10",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_2_Name",
+    "t": "string",
+    "v": {
+     "c": "Kelly",
+     "exp": {
+      "i": [
+       {
+        "l": "0:4",
+        "ok": true,
+        "t": "string",
+        "v": "Kelly"
+       }
+      ],
+      "ok": true,
+      "str": "Kelly",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_2_Tracker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx175:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_2_Phone",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx174:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_2_Low_Battery_Level",
+    "t": "integer",
+    "v": {
+     "c": 20,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 20
+       }
+      ],
+      "ok": true,
+      "str": "20",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "User_2_Critical_Batter_Level",
+    "t": "integer",
+    "v": {
+     "c": 10,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 10
+       }
+      ],
+      "ok": true,
+      "str": "10",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

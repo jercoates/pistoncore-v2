@@ -1,0 +1,1521 @@
+{
+ "name": "Door(s)/Window(s) Opened 📢",
+ "meta": {
+  "active": true,
+  "build": 5,
+  "category": "2",
+  "name": "Door(s)/Window(s) Opened 📢"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "contact",
+       "d": [
+        "Door_Contacts_Exterior",
+        "Windows"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "open",
+       "exp": {
+        "i": [
+         {
+          "l": "0:3",
+          "ok": true,
+          "t": "string",
+          "v": "open"
+         }
+        ],
+        "ok": true,
+        "str": "open",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 4,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "GuestMode"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 5,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 6,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "Message"
+         },
+         {
+          "e": "\"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:21",
+             "ok": true,
+             "t": "string",
+             "v": "<prosody rate='slow'>"
+            },
+            {
+             "l": "24:42",
+             "ok": true,
+             "t": "variable",
+             "x": "$currentEventDevice"
+            },
+            {
+             "l": "45:63",
+             "ok": true,
+             "t": "string",
+             "v": ", Opened </prosody>"
+            }
+           ],
+           "ok": true,
+           "str": "\"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 7,
+      "a": "0",
+      "c": [
+       {
+        "$": 8,
+        "co": "is_not_between",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "odw": [],
+         "t": "v",
+         "v": "time",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "Night_Time_Begin"
+        },
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "Night_Time_End"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "to2": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 9,
+        "a": "0",
+        "d": [
+         "Speakers"
+        ],
+        "k": [
+         {
+          "$": 10,
+          "c": "setVolume",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Night_Vol"
+           }
+          ]
+         },
+         {
+          "$": 11,
+          "c": "playText",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Message"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 12,
+        "a": "0",
+        "c": [
+         {
+          "$": 13,
+          "co": "is_not",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "status",
+           "d": [
+            "GarageSpeaker"
+           ],
+           "f": "l",
+           "g": "any",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "stopped",
+           "exp": {
+            "i": [
+             {
+              "l": "0:6",
+              "ok": true,
+              "t": "string",
+              "v": "stopped"
+             }
+            ],
+            "ok": true,
+            "str": "stopped",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 14,
+          "a": "0",
+          "d": [
+           "GarageSpeaker"
+          ],
+          "k": [
+           {
+            "$": 15,
+            "c": "playHighPriorityTTS",
+            "cm": true,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "string",
+              "x": "Message"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "decimal",
+              "x": "Night_Vol"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "enum",
+              "x": "@Voice"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "or",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 16,
+        "a": "0",
+        "d": [
+         "Speakers"
+        ],
+        "k": [
+         {
+          "$": 17,
+          "c": "setVolume",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Day_Vol"
+           }
+          ]
+         },
+         {
+          "$": 18,
+          "c": "playText",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Message"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 19,
+        "a": "0",
+        "c": [
+         {
+          "$": 20,
+          "co": "is_not",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "status",
+           "d": [
+            "GarageSpeaker"
+           ],
+           "f": "l",
+           "g": "any",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "stopped",
+           "exp": {
+            "i": [
+             {
+              "l": "0:6",
+              "ok": true,
+              "t": "string",
+              "v": "stopped"
+             }
+            ],
+            "ok": true,
+            "str": "stopped",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 21,
+          "a": "0",
+          "d": [
+           "GarageSpeaker"
+          ],
+          "k": [
+           {
+            "$": 22,
+            "c": "playHighPriorityTTS",
+            "cm": true,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "string",
+              "x": "Message"
+             },
+             {
+              "c": 90,
+              "exp": {
+               "i": [
+                {
+                 "l": "0:1",
+                 "ok": true,
+                 "t": "integer",
+                 "v": 90
+                }
+               ],
+               "ok": true,
+               "str": "90",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "decimal"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "enum",
+              "x": "@Voice"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 23,
+    "a": "0",
+    "c": [
+     {
+      "$": 24,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "contact",
+       "d": [
+        "Garage_Overhead_Door"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "closed",
+       "exp": {
+        "i": [
+         {
+          "l": "0:5",
+          "ok": true,
+          "t": "string",
+          "v": "closed"
+         }
+        ],
+        "ok": true,
+        "str": "closed",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 25,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 26,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "GuestMode"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 27,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 28,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "Message"
+         },
+         {
+          "e": "\"<prosody rate='slow'>\" $currentEventDevice \", Closed </prosody>\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:21",
+             "ok": true,
+             "t": "string",
+             "v": "<prosody rate='slow'>"
+            },
+            {
+             "l": "24:42",
+             "ok": true,
+             "t": "variable",
+             "x": "$currentEventDevice"
+            },
+            {
+             "l": "45:63",
+             "ok": true,
+             "t": "string",
+             "v": ", Closed </prosody>"
+            }
+           ],
+           "ok": true,
+           "str": "\"<prosody rate='slow'>\" $currentEventDevice \", Closed </prosody>\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 29,
+      "a": "0",
+      "c": [
+       {
+        "$": 30,
+        "co": "is_not_between",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "odw": [],
+         "t": "v",
+         "v": "time",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "Night_Time_Begin"
+        },
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "Night_Time_End"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "to2": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "ts": []
+       }
+      ],
+      "e": [
+       {
+        "$": 31,
+        "a": "0",
+        "d": [
+         "Speakers"
+        ],
+        "k": [
+         {
+          "$": 32,
+          "c": "setVolume",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Night_Vol"
+           }
+          ]
+         },
+         {
+          "$": 33,
+          "c": "playText",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Message"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 34,
+        "a": "0",
+        "c": [
+         {
+          "$": 35,
+          "co": "is_not",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "status",
+           "d": [
+            "GarageSpeaker"
+           ],
+           "f": "l",
+           "g": "any",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "stopped",
+           "exp": {
+            "i": [
+             {
+              "l": "0:6",
+              "ok": true,
+              "t": "string",
+              "v": "stopped"
+             }
+            ],
+            "ok": true,
+            "str": "stopped",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 36,
+          "a": "0",
+          "d": [
+           "GarageSpeaker"
+          ],
+          "k": [
+           {
+            "$": 37,
+            "c": "playHighPriorityTTS",
+            "cm": true,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "string",
+              "x": "Message"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "decimal",
+              "x": "Night_Vol"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "enum",
+              "x": "@Voice"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "ei": [],
+      "o": "or",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 38,
+        "a": "0",
+        "d": [
+         "Speakers"
+        ],
+        "k": [
+         {
+          "$": 39,
+          "c": "setVolume",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "integer",
+            "x": "Day_Vol"
+           }
+          ]
+         },
+         {
+          "$": 40,
+          "c": "playText",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Message"
+           },
+           {
+            "d": [],
+            "f": "l",
+            "g": "avg",
+            "vt": "integer"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 41,
+        "a": "0",
+        "c": [
+         {
+          "$": 42,
+          "co": "is_not",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "status",
+           "d": [
+            "GarageSpeaker"
+           ],
+           "f": "l",
+           "g": "any",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "stopped",
+           "exp": {
+            "i": [
+             {
+              "l": "0:6",
+              "ok": true,
+              "t": "string",
+              "v": "stopped"
+             }
+            ],
+            "ok": true,
+            "str": "stopped",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "s": false,
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": []
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 43,
+          "a": "0",
+          "d": [
+           "GarageSpeaker"
+          ],
+          "k": [
+           {
+            "$": 44,
+            "c": "playHighPriorityTTS",
+            "cm": true,
+            "p": [
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "string",
+              "x": "Message"
+             },
+             {
+              "c": 90,
+              "exp": {
+               "i": [
+                {
+                 "l": "0:1",
+                 "ok": true,
+                 "t": "integer",
+                 "v": 90
+                }
+               ],
+               "ok": true,
+               "str": "90",
+               "t": "expression"
+              },
+              "f": "l",
+              "g": "avg",
+              "t": "c",
+              "vt": "decimal"
+             },
+             {
+              "f": "l",
+              "g": "avg",
+              "t": "x",
+              "vt": "enum",
+              "x": "@Voice"
+             }
+            ]
+           }
+          ],
+          "r": [],
+          "rop": "and",
+          "t": "action",
+          "tcp": "c"
+         }
+        ],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Message",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "Garage_Overhead_Door",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx112:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Door_Contacts_Exterior",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Door_Contacts_Exterior"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Night_Time_Begin",
+    "t": "time",
+    "v": {
+     "c": 1260,
+     "exp": {
+      "i": [
+       {
+        "l": "0:3",
+        "ok": true,
+        "t": "integer",
+        "v": 1260
+       }
+      ],
+      "ok": true,
+      "str": "1260",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "time"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Night_Time_End",
+    "t": "time",
+    "v": {
+     "c": 480,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 480
+       }
+      ],
+      "ok": true,
+      "str": "480",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "time"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Night_Vol",
+    "t": "integer",
+    "v": {
+     "c": 75,
+     "exp": {
+      "i": [
+       {
+        "l": "0:1",
+        "ok": true,
+        "t": "integer",
+        "v": 75
+       }
+      ],
+      "ok": true,
+      "str": "75",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Day_Vol",
+    "t": "integer",
+    "v": {
+     "c": 100,
+     "exp": {
+      "i": [
+       {
+        "l": "0:2",
+        "ok": true,
+        "t": "integer",
+        "v": 100
+       }
+      ],
+      "ok": true,
+      "str": "100",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "integer"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Speakers",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Speakers"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Windows",
+    "t": "device",
+    "v": {
+     "d": [
+      "@Windows"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Monthly_Test",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx108:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "GarageSpeaker",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx113:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "GuestMode",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx114:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": "Notes: \"<prosody rate='slow'>\" $currentEventDevice \", Opened </prosody>\""
+ }
+}

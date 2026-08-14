@@ -217,6 +217,135 @@ def _wake_from_intent(promise):
     return tuple(out)
 
 
+_IDIOM_TIME_OPS = ("happens_daily_at", "happens_at")
+
+
+def _hms(seconds: int) -> str:
+    seconds = int(seconds)
+    sign = "-" if seconds < 0 else ""
+    seconds = abs(seconds)
+    return "%s%02d:%02d:%02d" % (sign, seconds // 3600, (seconds % 3600) // 60, seconds % 60)
+
+
+def _occasion(test):
+    """The occasion as HOME ASSISTANT states it, or None if this is not one.
+
+    webCoRE says "happens daily at", and stores either minutes-since-midnight
+    (1200 = 20:00) or a preset like `$sunset` with a separate offset in
+    seconds. HA has a native word for each of those and they are not the same
+    trigger, so the reading is asked WHICH occasion it is rather than being
+    translated one-to-one:
+
+        every day at a clock time   -> trigger: time, at:
+        relative to sun             -> trigger: sun, event:, offset:
+
+    Nothing about a loop, a variable or a re-check survives here, because the
+    intent never contained one -- `happens_daily_at` is how webCoRE SPELLS a
+    daily occasion, not a mechanism to reproduce."""
+    if not test.values:
+        return None
+    v = test.values[0]
+
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return {"kind": "time", "at": _hms(int(v) * 60)}
+
+    if not isinstance(v, str):
+        return None
+
+    # WHICH HA TRIGGER A TIME WORD MEANS IS DATA, NOT CODE (Jeremy, 2026-08-13:
+    # "they should just be added to the json not another place"). Each of
+    # webCoRE's time variables carries an `ha.trigger` in webcore_vocab.json
+    # beside the `ha.yaml`/`ha.pyscript` rules that READ its value -- so a user
+    # can add or repair one without touching Python, and there is exactly one
+    # place to look. `$sunset` and `$nextSunset` name the same trigger there,
+    # because HA's sun trigger already fires at the NEXT occurrence.
+    from .resolve import _load_vocab
+    sysvars = _load_vocab().get("systemVariables") or {}
+    key = v.strip()
+    if not key.startswith("$"):
+        key = "$" + key
+    for name, entry in sysvars.items():
+        if name.lower() != key.lower():
+            continue
+        trig = (entry.get("ha") or {}).get("trigger")
+        if not trig:
+            return None
+        out = dict(trig)
+        if test.offset:
+            if out.get("kind") == "sun":
+                out["offset"] = _hms(test.offset)
+            else:
+                h, m, s = (int(x) for x in str(out.get("at", "0:0:0")).split(":"))
+                out["at"] = _hms((h * 3600 + m * 60 + s + int(test.offset)) % 86400)
+        return out
+    return None
+
+
+def daily_time(piston: dict, piston_id: str, piston_name: str, resolver):
+    """IDIOM: "at this occasion, put these things in this state."
+
+    Six pistons in the corpus, from both authors, all active, and the compiler
+    emitted nothing for any of them. Returns rendered YAML, or None when the
+    piston is not this shape -- never an approximation (HARD_RULES §6).
+
+    ONE IDIOM IN, ONE HA CONSTRUCT OUT. The emitter is handed the recognised
+    occasion and the state wanted, never a statement, so there is nowhere for
+    webCoRE's machinery to ride along even if the piston contained some."""
+    from . import intent as _intent_vocab
+    from jinja2 import ChoiceLoader, Environment, FileSystemLoader
+    from .. import customize
+
+    promises = spec.read(piston)
+    if not promises:
+        return None
+
+    autos = []
+    for i, p in enumerate(promises):
+        # every promise must be a bare "make this thing be that way" on an
+        # occasion; anything else (a report, a loop, a remembered value) is a
+        # different idiom and must not be forced into this one.
+        if p.per_device or p.repeating or p.writes or p.reads or p.after:
+            return None
+        if _intent_vocab.outcome_of(p.command) != "be":
+            return None
+        if len(p.wakes_on) != 1 or not p.devices:
+            return None
+        t = p.wakes_on[0]
+        if t.subject.kind != "virtual" or t.subject.virtual != "time":
+            return None
+        if t.operator not in _IDIOM_TIME_OPS:
+            return None
+        when = _occasion(t)
+        if when is None:
+            return None
+
+        ctx = {"piston_id": piston_id, "piston_name": piston_name, "stmt_id": p.source}
+        entities = resolver.entities_for_command(list(p.devices), p.command, ctx)
+        if not entities:
+            return None
+        service, data_spec = resolver.service_spec(p.command, entities[0], ctx)
+        if not service or data_spec:
+            # a command needing parameter substitution is not this idiom yet
+            return None
+
+        autos.append({
+            "id": "%s_%d" % (piston_id, i),
+            "alias": "%s (%d)" % (piston_name, i + 1),
+            "when": when,
+            "weekday": list(t.only_days_of_week or ()),
+            "months": list(t.only_months or ()),
+            "actions": [{"service": service, "entities": entities, "data": None}],
+        })
+
+    if not autos:
+        return None
+    env = Environment(
+        loader=ChoiceLoader([FileSystemLoader(d)
+                             for d in customize.search_dirs("templates/compiler/yaml/classic")]),
+        trim_blocks=False, lstrip_blocks=False, keep_trailing_newline=True)
+    return env.get_template("daily_time.yaml.j2").render(automations=autos)
+
+
 def plan(piston: dict, piston_id: str, piston_name: str):
     """Branch IR built from the piston's INTENT, or None if not expressible."""
     promises = spec.read(piston)
@@ -287,7 +416,25 @@ def plan(piston: dict, piston_id: str, piston_name: str):
                     return None
                 gates.append(n)
 
-        then = [_task(p) for p in sorted(members, key=lambda x: x.order)]
+        # THE DELAY IS PART OF THE PROMISE AND WAS BEING LEFT BEHIND HERE
+        # (2026-08-13). `Promise.after` is read correctly -- "wait 10 seconds,
+        # then play reveille" -- and `_task()` never carried it, so on the
+        # intent path the whole sequence fired at once. Measured against the
+        # pistons' own promises: 08 lost a 30-minute turn-off, 09 and 46 lost
+        # the 10 seconds before the volume and the announcement, 42 lost the
+        # five gaps in the school wake-up, 48 lost 200ms and 1s.
+        #
+        # `after` is measured from the TRIGGER, not from the previous action,
+        # so the wait to insert is the difference. Two promises both at
+        # after=10 are simultaneous; emitting 10 then another 10 would push the
+        # second one out to 20 and invent a delay the piston never asked for.
+        then, clock = [], 0
+        for p in sorted(members, key=lambda x: x.order):
+            gap = int(p.after or 0) - clock
+            if gap > 0:
+                then.append({"kind": "delay", "delay_seconds": gap})
+                clock = int(p.after or 0)
+            then.append(_task(p))
         if any(t is None for t in then):
             return None
 

@@ -1,0 +1,1666 @@
+{
+ "name": "Alarm System Armed - Toggle Lights Walking Through",
+ "meta": {
+  "active": true,
+  "build": 3,
+  "category": "5",
+  "name": "Alarm System Armed - Toggle Lights Walking Through"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "e": "{addMinutes('22:00', random(0,90))}",
+       "exp": {
+        "i": [
+         {
+          "i": [
+           {
+            "i": [
+             {
+              "i": [
+               {
+                "l": "13:17",
+                "ok": true,
+                "t": "string",
+                "v": "22:00"
+               }
+              ],
+              "ok": true,
+              "t": "expression"
+             },
+             {
+              "i": [
+               {
+                "i": [
+                 {
+                  "i": [
+                   {
+                    "l": "28",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                   }
+                  ],
+                  "ok": true,
+                  "t": "expression"
+                 },
+                 {
+                  "i": [
+                   {
+                    "l": "30:31",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 90
+                   }
+                  ],
+                  "ok": true,
+                  "t": "expression"
+                 }
+                ],
+                "l": "21:32",
+                "n": "random",
+                "ok": true,
+                "t": "function"
+               }
+              ],
+              "ok": true,
+              "t": "expression"
+             }
+            ],
+            "l": "1:33",
+            "n": "addminutes",
+            "ok": true,
+            "t": "function"
+           }
+          ],
+          "l": "0:34",
+          "ok": true,
+          "t": "expression"
+         }
+        ],
+        "ok": true,
+        "str": "{addMinutes('22:00', random(0,90))}",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "e",
+       "vt": "time"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 3,
+      "a": "0",
+      "c": [
+       {
+        "$": 4,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "t": "v",
+         "v": "alarmSystemStatus",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "armedAway",
+         "exp": {
+          "i": [
+           {
+            "l": "0:8",
+            "ok": true,
+            "t": "string",
+            "v": "armedAway"
+           }
+          ],
+          "ok": true,
+          "str": "armedAway",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 5,
+        "co": "is_between",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "t": "v",
+         "v": "time",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "$sunset"
+        },
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "$nextSunrise"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "to2": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 6,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:"
+        ],
+        "k": [
+         {
+          "$": 7,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 8,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 9,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 2,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 2
+              }
+             ],
+             "ok": true,
+             "str": "2",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 10,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:"
+        ],
+        "k": [
+         {
+          "$": 11,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 12,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 13,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 4,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 4
+              }
+             ],
+             "ok": true,
+             "str": "4",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 8,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 8
+              }
+             ],
+             "ok": true,
+             "str": "8",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 14,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:"
+        ],
+        "k": [
+         {
+          "$": 15,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 16,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 17,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 10,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 10
+              }
+             ],
+             "ok": true,
+             "str": "10",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 18,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:"
+        ],
+        "k": [
+         {
+          "$": 19,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 20,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 21,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 30,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 30
+              }
+             ],
+             "ok": true,
+             "str": "30",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 2,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 2
+              }
+             ],
+             "ok": true,
+             "str": "2",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "m"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 22,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:"
+        ],
+        "k": [
+         {
+          "$": 23,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 24,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 25,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 10,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 10
+              }
+             ],
+             "ok": true,
+             "str": "10",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 26,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:"
+        ],
+        "k": [
+         {
+          "$": 27,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 28,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 29,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 4,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 4
+              }
+             ],
+             "ok": true,
+             "str": "4",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 8,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 8
+              }
+             ],
+             "ok": true,
+             "str": "8",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 30,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:"
+        ],
+        "k": [
+         {
+          "$": 31,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 32,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 33,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 2,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 2
+              }
+             ],
+             "ok": true,
+             "str": "2",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 34,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:"
+        ],
+        "k": [
+         {
+          "$": 35,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 36,
+    "a": "0",
+    "c": [
+     {
+      "$": 37,
+      "co": "happens_daily_at",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "e": "{addMinutes('23:30', random(0,120))}",
+       "exp": {
+        "i": [
+         {
+          "i": [
+           {
+            "i": [
+             {
+              "i": [
+               {
+                "l": "13:17",
+                "ok": true,
+                "t": "string",
+                "v": "23:30"
+               }
+              ],
+              "ok": true,
+              "t": "expression"
+             },
+             {
+              "i": [
+               {
+                "i": [
+                 {
+                  "i": [
+                   {
+                    "l": "28",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 0
+                   }
+                  ],
+                  "ok": true,
+                  "t": "expression"
+                 },
+                 {
+                  "i": [
+                   {
+                    "l": "30:32",
+                    "ok": true,
+                    "t": "integer",
+                    "v": 120
+                   }
+                  ],
+                  "ok": true,
+                  "t": "expression"
+                 }
+                ],
+                "l": "21:33",
+                "n": "random",
+                "ok": true,
+                "t": "function"
+               }
+              ],
+              "ok": true,
+              "t": "expression"
+             }
+            ],
+            "l": "1:34",
+            "n": "addminutes",
+            "ok": true,
+            "t": "function"
+           }
+          ],
+          "l": "0:35",
+          "ok": true,
+          "t": "expression"
+         }
+        ],
+        "ok": true,
+        "str": "{addMinutes('23:30', random(0,120))}",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "e",
+       "vt": "time"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 38,
+      "a": "0",
+      "c": [
+       {
+        "$": 39,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "t": "v",
+         "v": "alarmSystemStatus",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "armedAway",
+         "exp": {
+          "i": [
+           {
+            "l": "0:8",
+            "ok": true,
+            "t": "string",
+            "v": "armedAway"
+           }
+          ],
+          "ok": true,
+          "str": "armedAway",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 40,
+        "co": "is_between",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "f": "l",
+         "g": "any",
+         "t": "v",
+         "v": "time",
+         "vt": "string"
+        },
+        "ro": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "$sunset"
+        },
+        "ro2": {
+         "f": "l",
+         "g": "any",
+         "t": "x",
+         "vt": "time",
+         "x": "$nextSunrise"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "to2": {
+         "c": 0,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 0
+           }
+          ],
+          "ok": true,
+          "str": "0",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 41,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:"
+        ],
+        "k": [
+         {
+          "$": 42,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 43,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 44,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 2,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 2
+              }
+             ],
+             "ok": true,
+             "str": "2",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 45,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:"
+        ],
+        "k": [
+         {
+          "$": 46,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 47,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 48,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 4,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 4
+              }
+             ],
+             "ok": true,
+             "str": "4",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 8,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 8
+              }
+             ],
+             "ok": true,
+             "str": "8",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 49,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:"
+        ],
+        "k": [
+         {
+          "$": 50,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 51,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 52,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 10,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 10
+              }
+             ],
+             "ok": true,
+             "str": "10",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 53,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:"
+        ],
+        "k": [
+         {
+          "$": 54,
+          "c": "on",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 55,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 56,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 30,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 30
+              }
+             ],
+             "ok": true,
+             "str": "30",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 2,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 2
+              }
+             ],
+             "ok": true,
+             "str": "2",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "m"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 57,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx14:"
+        ],
+        "k": [
+         {
+          "$": 58,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 59,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 60,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 10,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 10
+              }
+             ],
+             "ok": true,
+             "str": "10",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 61,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx13:"
+        ],
+        "k": [
+         {
+          "$": 62,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 63,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 64,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 4,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 4
+              }
+             ],
+             "ok": true,
+             "str": "4",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 8,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 8
+              }
+             ],
+             "ok": true,
+             "str": "8",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 65,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx12:"
+        ],
+        "k": [
+         {
+          "$": 66,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 67,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 68,
+          "c": "waitRandom",
+          "p": [
+           {
+            "c": 2,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 2
+              }
+             ],
+             "ok": true,
+             "str": "2",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           },
+           {
+            "c": 5,
+            "exp": {
+             "i": [
+              {
+               "l": "0",
+               "ok": true,
+               "t": "integer",
+               "v": 5
+              }
+             ],
+             "ok": true,
+             "str": "5",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 69,
+        "a": "0",
+        "d": [
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx10:",
+         ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx11:"
+        ],
+        "k": [
+         {
+          "$": 70,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [],
+  "z": ""
+ }
+}

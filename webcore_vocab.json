@@ -7886,7 +7886,11 @@
    "engine_line": 13823,
    "dynamic": true,
    "ha": {
-    "pyscript": "_daytime_ms(0, 0)"
+    "pyscript": "_daytime_ms(0, 0)",
+    "trigger": {
+     "kind": "time",
+     "at": "00:00:00"
+    }
    }
   },
   "$minute": {
@@ -7933,7 +7937,13 @@
    "engine_line": 13827,
    "dynamic": true,
    "ha_lead": "today_at('00:00') + timedelta(days=1)",
-   "ha_lead_tag": "assumed"
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "trigger": {
+     "kind": "time",
+     "at": "00:00:00"
+    }
+   }
   },
   "$nextNoon": {
    "type": "datetime",
@@ -7941,7 +7951,13 @@
    "engine_line": 13828,
    "dynamic": true,
    "ha_lead": "today_at('12:00') + timedelta(days=1)",
-   "ha_lead_tag": "assumed"
+   "ha_lead_tag": "assumed",
+   "ha": {
+    "trigger": {
+     "kind": "time",
+     "at": "12:00:00"
+    }
+   }
   },
   "$nextSunrise": {
    "type": "datetime",
@@ -7949,7 +7965,11 @@
    "engine_line": 13829,
    "dynamic": true,
    "ha": {
-    "pyscript": "_sun_ms('next_rising')"
+    "pyscript": "_sun_ms('next_rising')",
+    "trigger": {
+     "kind": "sun",
+     "event": "sunrise"
+    }
    }
   },
   "$nextSunset": {
@@ -7958,7 +7978,11 @@
    "engine_line": 13830,
    "dynamic": true,
    "ha": {
-    "pyscript": "_sun_ms('next_setting')"
+    "pyscript": "_sun_ms('next_setting')",
+    "trigger": {
+     "kind": "sun",
+     "event": "sunset"
+    }
    }
   },
   "$nfl": {
@@ -7975,7 +7999,11 @@
    "engine_line": 13824,
    "dynamic": true,
    "ha": {
-    "pyscript": "_daytime_ms(12, 0)"
+    "pyscript": "_daytime_ms(12, 0)",
+    "trigger": {
+     "kind": "time",
+     "at": "12:00:00"
+    }
    }
   },
   "$now": {
@@ -8169,7 +8197,11 @@
    "dynamic": true,
    "ha": {
     "yaml": "state_attr('sun.sun', 'next_rising')",
-    "pyscript": "_sun_ms('next_rising')"
+    "pyscript": "_sun_ms('next_rising')",
+    "trigger": {
+     "kind": "sun",
+     "event": "sunrise"
+    }
    }
   },
   "$sunset": {
@@ -8179,7 +8211,11 @@
    "dynamic": true,
    "ha": {
     "yaml": "state_attr('sun.sun', 'next_setting')",
-    "pyscript": "_sun_ms('next_setting')"
+    "pyscript": "_sun_ms('next_setting')",
+    "trigger": {
+     "kind": "sun",
+     "event": "sunset"
+    }
    }
   },
   "$temperatureScale": {
@@ -8472,7 +8508,8 @@
     "engine_equivalent": null,
     "why": "not a system variable - virtualDevices.datetime"
    }
-  }
+  },
+  "trigger_rule": "ha.trigger is the HOME ASSISTANT TRIGGER form for a variable used as an OCCASION (\"every day at sunset\"), as opposed to ha.yaml/ha.pyscript which READ its value. kind 'sun' carries an event; kind 'time' carries a clock 'at'. The piston's own offset is applied by the compiler. `$next*` and the bare form share a trigger because HA's sun trigger already fires at the NEXT occurrence -- the difference is semantics, not a different trigger (Jeremy, 2026-08-13)."
  },
  "_picker_rules": {
   "_meta": {

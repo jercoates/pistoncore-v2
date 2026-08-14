@@ -1,0 +1,1549 @@
+{
+ "name": "Water Leak Detected 💧 - Repeat 60sec",
+ "meta": {
+  "active": true,
+  "build": 7,
+  "category": "2",
+  "name": "Water Leak Detected 💧 - Repeat 60sec"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "water",
+       "d": [
+        "@Water_Leak_Detectors"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "wet",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "wet"
+         }
+        ],
+        "ok": true,
+        "str": "wet",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 4,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 5,
+        "c": "setVariable",
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "variable",
+          "x": "Water_Status"
+         },
+         {
+          "e": "\"💧 Water Leak detected 💧\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+          "exp": {
+           "i": [
+            {
+             "l": "1:26",
+             "ok": true,
+             "t": "string",
+             "v": "💧 Water Leak detected 💧\n"
+            },
+            {
+             "l": "28:37",
+             "ok": true,
+             "t": "variable",
+             "x": "$monthName"
+            },
+            {
+             "l": "39",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            },
+            {
+             "l": "41:44",
+             "ok": true,
+             "t": "variable",
+             "x": "$day"
+            },
+            {
+             "l": "46:52",
+             "ok": true,
+             "t": "string",
+             "v": "   -   "
+            },
+            {
+             "l": "54:58",
+             "ok": true,
+             "t": "variable",
+             "x": "$time"
+            },
+            {
+             "l": "60:61",
+             "ok": true,
+             "t": "string",
+             "v": "\n\n"
+            }
+           ],
+           "ok": true,
+           "str": "\"💧 Water Leak detected 💧\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 6,
+      "a": "0",
+      "lo": {
+       "d": [
+        "@Water_Leak_Detectors"
+       ],
+       "f": "l",
+       "g": "avg",
+       "t": "d",
+       "vt": "device"
+      },
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 7,
+        "a": "0",
+        "c": [
+         {
+          "$": 8,
+          "co": "is",
+          "ct": "c",
+          "fs": [],
+          "lo": {
+           "a": "water",
+           "d": [
+            "$device"
+           ],
+           "f": "l",
+           "g": "any",
+           "t": "p",
+           "vt": "string"
+          },
+          "ro": {
+           "c": "wet",
+           "exp": {
+            "i": [
+             {
+              "l": "0:2",
+              "ok": true,
+              "t": "string",
+              "v": "wet"
+             }
+            ],
+            "ok": true,
+            "str": "wet",
+            "t": "expression"
+           },
+           "f": "l",
+           "g": "any",
+           "t": "c",
+           "vt": "enum"
+          },
+          "ro2": {
+           "g": "any",
+           "t": "c"
+          },
+          "sm": "auto",
+          "t": "condition",
+          "to": {
+           "g": "any",
+           "t": "c"
+          },
+          "to2": {
+           "g": "any",
+           "t": "c"
+          },
+          "ts": [
+           {
+            "$": 9,
+            "a": "0",
+            "d": [],
+            "k": [
+             {
+              "$": 10,
+              "c": "setVariable",
+              "p": [
+               {
+                "f": "l",
+                "g": "avg",
+                "t": "x",
+                "vt": "variable",
+                "x": "Water_Status"
+               },
+               {
+                "e": "Water_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                "exp": {
+                 "i": [
+                  {
+                   "l": "0:11",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "Water_Status"
+                  },
+                  {
+                   "l": "13:19",
+                   "ok": true,
+                   "t": "variable",
+                   "x": "$device"
+                  },
+                  {
+                   "l": "22:24",
+                   "ok": true,
+                   "t": "string",
+                   "v": " - "
+                  },
+                  {
+                   "i": [
+                    {
+                     "a": "battery",
+                     "l": "28:44",
+                     "ok": true,
+                     "t": "device",
+                     "x": "$device"
+                    }
+                   ],
+                   "l": "27:45",
+                   "ok": true,
+                   "t": "expression"
+                  },
+                  {
+                   "l": "47",
+                   "ok": true,
+                   "t": "string",
+                   "v": "%"
+                  },
+                  {
+                   "l": "51",
+                   "ok": true,
+                   "t": "string",
+                   "v": "\n"
+                  }
+                 ],
+                 "ok": true,
+                 "str": "Water_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                 "t": "expression"
+                },
+                "f": "l",
+                "g": "avg",
+                "t": "e",
+                "vt": "string"
+               }
+              ]
+             }
+            ],
+            "r": [],
+            "rop": "and",
+            "t": "action",
+            "tcp": "c"
+           }
+          ]
+         }
+        ],
+        "e": [],
+        "ei": [],
+        "o": "and",
+        "r": [],
+        "rop": "and",
+        "s": [],
+        "t": "if",
+        "tcp": "c"
+       }
+      ],
+      "t": "each",
+      "tcp": "c"
+     },
+     {
+      "$": 11,
+      "a": "0",
+      "c": [
+       {
+        "$": 12,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "presence",
+         "d": [
+          "Presence"
+         ],
+         "f": "l",
+         "g": "all",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "not present",
+         "exp": {
+          "i": [
+           {
+            "l": "0:10",
+            "ok": true,
+            "t": "string",
+            "v": "not present"
+           }
+          ],
+          "ok": true,
+          "str": "not present",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 13,
+        "a": "0",
+        "d": [
+         "@Notifications_Text_All"
+        ],
+        "k": [
+         {
+          "$": 14,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Water_Status"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 15,
+      "a": "0",
+      "c": [
+       {
+        "$": 16,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "water",
+         "d": [
+          "@Water_Leak_Detectors"
+         ],
+         "f": "l",
+         "g": "all",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "dry",
+         "exp": {
+          "i": [
+           {
+            "l": "0:2",
+            "ok": true,
+            "t": "string",
+            "v": "dry"
+           }
+          ],
+          "ok": true,
+          "str": "dry",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 17,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 18,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Water_Status"
+           },
+           {
+            "e": "\"💧 Water Leak detected 💧\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "1:26",
+               "ok": true,
+               "t": "string",
+               "v": "💧 Water Leak detected 💧\n"
+              },
+              {
+               "l": "28:37",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "39",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "41:44",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "46:52",
+               "ok": true,
+               "t": "string",
+               "v": "   -   "
+              },
+              {
+               "l": "54:58",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              },
+              {
+               "l": "60:61",
+               "ok": true,
+               "t": "string",
+               "v": "\n\n"
+              }
+             ],
+             "ok": true,
+             "str": "\"💧 Water Leak detected 💧\n\"$monthName\" \"$day\"   -   \"$time\"\n\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 19,
+        "a": "0",
+        "lo": {
+         "d": [
+          "@Water_Leak_Detectors"
+         ],
+         "f": "l",
+         "g": "avg",
+         "t": "d",
+         "vt": "device"
+        },
+        "r": [],
+        "rop": "and",
+        "s": [
+         {
+          "$": 20,
+          "a": "0",
+          "c": [
+           {
+            "$": 21,
+            "co": "is",
+            "ct": "c",
+            "fs": [],
+            "lo": {
+             "a": "water",
+             "d": [
+              "$device"
+             ],
+             "f": "l",
+             "g": "any",
+             "t": "p",
+             "vt": "string"
+            },
+            "ro": {
+             "c": "wet",
+             "exp": {
+              "i": [
+               {
+                "l": "0:2",
+                "ok": true,
+                "t": "string",
+                "v": "wet"
+               }
+              ],
+              "ok": true,
+              "str": "wet",
+              "t": "expression"
+             },
+             "f": "l",
+             "g": "any",
+             "t": "c",
+             "vt": "enum"
+            },
+            "ro2": {
+             "g": "any",
+             "t": "c"
+            },
+            "sm": "auto",
+            "t": "condition",
+            "to": {
+             "g": "any",
+             "t": "c"
+            },
+            "to2": {
+             "g": "any",
+             "t": "c"
+            },
+            "ts": [
+             {
+              "$": 22,
+              "a": "0",
+              "d": [],
+              "k": [
+               {
+                "$": 23,
+                "c": "setVariable",
+                "p": [
+                 {
+                  "f": "l",
+                  "g": "avg",
+                  "t": "x",
+                  "vt": "variable",
+                  "x": "Water_Status"
+                 },
+                 {
+                  "e": "Water_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                  "exp": {
+                   "i": [
+                    {
+                     "l": "0:11",
+                     "ok": true,
+                     "t": "variable",
+                     "x": "Water_Status"
+                    },
+                    {
+                     "l": "13:19",
+                     "ok": true,
+                     "t": "variable",
+                     "x": "$device"
+                    },
+                    {
+                     "l": "22:24",
+                     "ok": true,
+                     "t": "string",
+                     "v": " - "
+                    },
+                    {
+                     "i": [
+                      {
+                       "a": "battery",
+                       "l": "28:44",
+                       "ok": true,
+                       "t": "device",
+                       "x": "$device"
+                      }
+                     ],
+                     "l": "27:45",
+                     "ok": true,
+                     "t": "expression"
+                    },
+                    {
+                     "l": "47",
+                     "ok": true,
+                     "t": "string",
+                     "v": "%"
+                    },
+                    {
+                     "l": "51",
+                     "ok": true,
+                     "t": "string",
+                     "v": "\n"
+                    }
+                   ],
+                   "ok": true,
+                   "str": "Water_Status $device \" - \" {[$device:battery]}\"%\" \"\n\"",
+                   "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "avg",
+                  "t": "e",
+                  "vt": "string"
+                 }
+                ]
+               }
+              ],
+              "r": [],
+              "rop": "and",
+              "t": "action",
+              "tcp": "c"
+             },
+             {
+              "$": 24,
+              "a": "0",
+              "d": [
+               "@Speakers"
+              ],
+              "k": [
+               {
+                "$": 25,
+                "c": "setVolume",
+                "p": [
+                 {
+                  "c": 100,
+                  "exp": {
+                   "i": [
+                    {
+                     "l": "0:2",
+                     "ok": true,
+                     "t": "integer",
+                     "v": 100
+                    }
+                   ],
+                   "ok": true,
+                   "str": "100",
+                   "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "avg",
+                  "t": "c",
+                  "vt": "integer"
+                 }
+                ]
+               },
+               {
+                "$": 26,
+                "c": "playText",
+                "p": [
+                 {
+                  "e": "\"Water Leak detected from\" $device",
+                  "exp": {
+                   "i": [
+                    {
+                     "l": "1:24",
+                     "ok": true,
+                     "t": "string",
+                     "v": "Water Leak detected from"
+                    },
+                    {
+                     "l": "27:33",
+                     "ok": true,
+                     "t": "variable",
+                     "x": "$device"
+                    }
+                   ],
+                   "ok": true,
+                   "str": "\"Water Leak detected from\" $device",
+                   "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "avg",
+                  "t": "e",
+                  "vt": "string"
+                 },
+                 {
+                  "d": [],
+                  "f": "l",
+                  "g": "avg",
+                  "vt": "integer"
+                 }
+                ]
+               }
+              ],
+              "r": [],
+              "rop": "and",
+              "t": "action",
+              "tcp": "c"
+             },
+             {
+              "$": 27,
+              "a": "0",
+              "d": [
+               "@Sirens"
+              ],
+              "k": [
+               {
+                "$": 28,
+                "c": "strobe",
+                "p": []
+               },
+               {
+                "$": 29,
+                "c": "siren",
+                "p": []
+               }
+              ],
+              "r": [],
+              "rop": "and",
+              "t": "action",
+              "tcp": "c"
+             },
+             {
+              "$": 30,
+              "a": "0",
+              "d": [],
+              "k": [
+               {
+                "$": 31,
+                "c": "wait",
+                "p": [
+                 {
+                  "c": 10,
+                  "exp": {
+                   "i": [
+                    {
+                     "l": "0:1",
+                     "ok": true,
+                     "t": "integer",
+                     "v": 10
+                    }
+                   ],
+                   "ok": true,
+                   "str": "10",
+                   "t": "expression"
+                  },
+                  "f": "l",
+                  "g": "avg",
+                  "t": "c",
+                  "vt": "s"
+                 }
+                ]
+               }
+              ],
+              "r": [],
+              "rop": "and",
+              "t": "action",
+              "tcp": "c"
+             },
+             {
+              "$": 32,
+              "a": "0",
+              "d": [
+               "@Sirens"
+              ],
+              "k": [
+               {
+                "$": 33,
+                "c": "off",
+                "p": []
+               },
+               {
+                "$": 34,
+                "c": "stop",
+                "p": []
+               },
+               {
+                "$": 35,
+                "c": "on",
+                "p": []
+               }
+              ],
+              "r": [],
+              "rop": "and",
+              "t": "action",
+              "tcp": "c"
+             }
+            ]
+           }
+          ],
+          "e": [],
+          "ei": [],
+          "o": "and",
+          "r": [],
+          "rop": "and",
+          "s": [],
+          "t": "if",
+          "tcp": "c"
+         }
+        ],
+        "t": "each",
+        "tcp": "c"
+       },
+       {
+        "$": 36,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 37,
+          "c": "setVariable",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "variable",
+            "x": "Water_Status"
+           },
+           {
+            "e": "Water_Status\"\n\"",
+            "exp": {
+             "i": [
+              {
+               "l": "0:11",
+               "ok": true,
+               "t": "variable",
+               "x": "Water_Status"
+              },
+              {
+               "l": "13",
+               "ok": true,
+               "t": "string",
+               "v": "\n"
+              }
+             ],
+             "ok": true,
+             "str": "Water_Status\"\n\"",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 38,
+        "a": "0",
+        "d": [
+         "@Notifications_Push_All"
+        ],
+        "k": [
+         {
+          "$": 39,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "f": "l",
+            "g": "avg",
+            "t": "x",
+            "vt": "string",
+            "x": "Water_Status"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       },
+       {
+        "$": 40,
+        "a": "0",
+        "d": [],
+        "k": [
+         {
+          "$": 41,
+          "c": "wait",
+          "p": [
+           {
+            "c": 60,
+            "exp": {
+             "i": [
+              {
+               "l": "0:1",
+               "ok": true,
+               "t": "integer",
+               "v": 60
+              }
+             ],
+             "ok": true,
+             "str": "60",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "c",
+            "vt": "s"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "repeat",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 42,
+    "a": "0",
+    "c": [
+     {
+      "$": 43,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "water",
+       "d": [
+        "@Water_Leak_Detectors"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "dry",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "dry"
+         }
+        ],
+        "ok": true,
+        "str": "dry",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 44,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "water",
+       "d": [
+        "@Water_Leak_Detectors"
+       ],
+       "f": "l",
+       "g": "all",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "dry",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "dry"
+         }
+        ],
+        "ok": true,
+        "str": "dry",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     },
+     {
+      "$": 45,
+      "co": "is",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "switch",
+       "d": [
+        "Monthly_Test"
+       ],
+       "f": "l",
+       "g": "any",
+       "p": "a",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "off",
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "string",
+          "v": "off"
+         }
+        ],
+        "ok": true,
+        "str": "off",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "enum"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 46,
+      "a": "0",
+      "d": [
+       "@Notifications_Push_All"
+      ],
+      "k": [
+       {
+        "$": 47,
+        "c": "deviceNotification",
+        "p": [
+         {
+          "e": "\"💧 Water Leak Cleared 💧\n\"$monthName\" \"$day\"   -   \"$time",
+          "exp": {
+           "i": [
+            {
+             "l": "1:25",
+             "ok": true,
+             "t": "string",
+             "v": "💧 Water Leak Cleared 💧\n"
+            },
+            {
+             "l": "27:36",
+             "ok": true,
+             "t": "variable",
+             "x": "$monthName"
+            },
+            {
+             "l": "38",
+             "ok": true,
+             "t": "string",
+             "v": " "
+            },
+            {
+             "l": "40:43",
+             "ok": true,
+             "t": "variable",
+             "x": "$day"
+            },
+            {
+             "l": "45:51",
+             "ok": true,
+             "t": "string",
+             "v": "   -   "
+            },
+            {
+             "l": "53:57",
+             "ok": true,
+             "t": "variable",
+             "x": "$time"
+            }
+           ],
+           "ok": true,
+           "str": "\"💧 Water Leak Cleared 💧\n\"$monthName\" \"$day\"   -   \"$time",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "e",
+          "vt": "string"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 48,
+      "a": "0",
+      "c": [
+       {
+        "$": 49,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "presence",
+         "d": [
+          "Presence"
+         ],
+         "f": "l",
+         "g": "all",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "not present",
+         "exp": {
+          "i": [
+           {
+            "l": "0:10",
+            "ok": true,
+            "t": "string",
+            "v": "not present"
+           }
+          ],
+          "ok": true,
+          "str": "not present",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "enum"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 50,
+        "a": "0",
+        "d": [
+         "@Notifications_Text_All"
+        ],
+        "k": [
+         {
+          "$": 51,
+          "c": "deviceNotification",
+          "p": [
+           {
+            "e": "\"💧 Water Leak Cleared 💧\n\"$monthName\" \"$day\"   -   \"$time",
+            "exp": {
+             "i": [
+              {
+               "l": "1:25",
+               "ok": true,
+               "t": "string",
+               "v": "💧 Water Leak Cleared 💧\n"
+              },
+              {
+               "l": "27:36",
+               "ok": true,
+               "t": "variable",
+               "x": "$monthName"
+              },
+              {
+               "l": "38",
+               "ok": true,
+               "t": "string",
+               "v": " "
+              },
+              {
+               "l": "40:43",
+               "ok": true,
+               "t": "variable",
+               "x": "$day"
+              },
+              {
+               "l": "45:51",
+               "ok": true,
+               "t": "string",
+               "v": "   -   "
+              },
+              {
+               "l": "53:57",
+               "ok": true,
+               "t": "variable",
+               "x": "$time"
+              }
+             ],
+             "ok": true,
+             "str": "\"💧 Water Leak Cleared 💧\n\"$monthName\" \"$day\"   -   \"$time",
+             "t": "expression"
+            },
+            "f": "l",
+            "g": "avg",
+            "t": "e",
+            "vt": "string"
+           }
+          ]
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     },
+     {
+      "$": 52,
+      "a": "0",
+      "d": [
+       "@Sirens"
+      ],
+      "k": [
+       {
+        "$": 53,
+        "c": "off",
+        "p": []
+       },
+       {
+        "$": 54,
+        "c": "stop",
+        "p": []
+       },
+       {
+        "$": 55,
+        "c": "off",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Water_Status",
+    "t": "string"
+   },
+   {
+    "a": "d",
+    "n": "Monthly_Test",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx108:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Presence",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx18:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": "Check for Smoke send Notification and Speak"
+ }
+}

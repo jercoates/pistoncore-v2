@@ -1,0 +1,515 @@
+{
+ "name": "Doorbell (Front Door) Switch Screen View 🚪🎦",
+ "meta": {
+  "active": true,
+  "build": 7,
+  "category": "6",
+  "name": "Doorbell (Front Door) Switch Screen View 🚪🎦"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "c": [
+       {
+        "$": 3,
+        "co": "changes_to_any_of",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "smartDetectType",
+         "d": [
+          "DoorBell_Camera"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "person, package",
+         "exp": {
+          "i": [
+           {
+            "l": "0:14",
+            "ok": true,
+            "t": "string",
+            "v": "person, package"
+           }
+          ],
+          "ok": true,
+          "str": "person, package",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 4,
+        "co": "gets",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "pushed",
+         "d": [
+          "DoorBell_Button"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": 1,
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 1
+           }
+          ],
+          "ok": true,
+          "str": "1",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "integer"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": [],
+        "wd": {
+         "c": "1",
+         "exp": {
+          "i": [
+           {
+            "l": "0",
+            "ok": true,
+            "t": "integer",
+            "v": 1
+           }
+          ],
+          "ok": true,
+          "str": "1",
+          "t": "expression"
+         },
+         "t": "c",
+         "vt": "m"
+        },
+        "wt": "l"
+       }
+      ],
+      "fs": [],
+      "o": "or",
+      "sm": "auto",
+      "t": "group",
+      "ts": []
+     },
+     {
+      "$": 5,
+      "co": "is_not",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "liveview",
+       "d": [
+        "Camera_Viewer"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "string",
+       "x": "Camera_View"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 6,
+      "a": "0",
+      "d": [
+       "Camera_Viewer"
+      ],
+      "k": [
+       {
+        "$": 7,
+        "c": "selectLiveview",
+        "cm": true,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "string",
+          "x": "Camera_View"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 8,
+    "a": "0",
+    "c": [
+     {
+      "$": 9,
+      "c": [
+       {
+        "$": 10,
+        "co": "changes_to",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "smartDetectType",
+         "d": [
+          "DoorBell_Camera"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "waiting",
+         "exp": {
+          "i": [
+           {
+            "l": "0:6",
+            "ok": true,
+            "t": "string",
+            "v": "waiting"
+           }
+          ],
+          "ok": true,
+          "str": "waiting",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "fs": [],
+      "o": "or",
+      "sm": "auto",
+      "t": "group",
+      "ts": []
+     },
+     {
+      "$": 11,
+      "co": "is_not",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "a": "liveview",
+       "d": [
+        "Camera_Viewer"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "string",
+       "x": "Camera_Default_View"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "g": "any",
+       "t": "c"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 12,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 13,
+        "c": "wait",
+        "p": [
+         {
+          "c": 5,
+          "exp": {
+           "i": [
+            {
+             "l": "0",
+             "ok": true,
+             "t": "integer",
+             "v": 5
+            }
+           ],
+           "ok": true,
+           "str": "5",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 14,
+      "a": "0",
+      "d": [
+       "Camera_Viewer"
+      ],
+      "k": [
+       {
+        "$": 15,
+        "c": "selectLiveview",
+        "cm": true,
+        "p": [
+         {
+          "f": "l",
+          "g": "avg",
+          "t": "x",
+          "vt": "string",
+          "x": "Camera_Default_View"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "DoorBell_Camera",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx118:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "DoorBell_Button",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx119:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Camera_Viewer",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxx107:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Camera_View",
+    "t": "string",
+    "v": {
+     "c": "Front Door",
+     "exp": {
+      "i": [
+       {
+        "l": "0:9",
+        "ok": true,
+        "t": "string",
+        "v": "Front Door"
+       }
+      ],
+      "ok": true,
+      "str": "Front Door",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Camera_Default_View",
+    "t": "string",
+    "v": {
+     "c": "16 Live View",
+     "exp": {
+      "i": [
+       {
+        "l": "0:11",
+        "ok": true,
+        "t": "string",
+        "v": "16 Live View"
+       }
+      ],
+      "ok": true,
+      "str": "16 Live View",
+      "t": "expression"
+     },
+     "f": "l",
+     "g": "avg",
+     "t": "c",
+     "vt": "string"
+    }
+   }
+  ],
+  "z": ""
+ }
+}

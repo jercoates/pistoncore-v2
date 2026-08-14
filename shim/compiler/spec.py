@@ -932,8 +932,22 @@ class _Reader:
                     after += _seconds((task.get("p") or [{}])[0]) or 0
                     continue
                 self.n += 1
+                # THE VALUE FLOW BELONGS TO BOTH READERS, NOT ONE (2026-08-13).
+                # `writes`/`reads` were wired into the tree reader's promise
+                # builder only, so every promise from THIS reader came back with
+                # empty sets and `accumulates()` was False everywhere — which is
+                # why 38_Low_Battery_Check read "start {Battery_Status}" where it
+                # means "add to". `emit_intent.plan()` consumes this reader, so
+                # the whole report shape was invisible to emission. Same helper,
+                # same vocabulary lookup — never a second copy (HARD_RULES §9).
+                from .resolve import _load_vocab
+                _v = _load_vocab()
+                _cmd = ((_v.get("commands") or {}).get(cmd)
+                        or (_v.get("virtualCommands") or {}).get(cmd) or {})
+                _writes, _reads = _writes_reads(task, _cmd)
                 self.out.append(Promise(
                     command=cmd,
+                    writes=_writes, reads=_reads,
                     devices=tuple(str(d) for d in (st.get("d") or [])),
                     values=tuple(operand_value(p) for p in (task.get("p") or [])
                                  if isinstance(p, dict)),

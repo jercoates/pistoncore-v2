@@ -88,7 +88,26 @@
 {%- endmacro -%}
 
 {%- macro cond_block(c) -%}
-{%- if c.kind == 'template' -%}
+{%- if c.kind == 'state' -%}
+{#- HA's OWN word for "this entity is in this state". A native state condition
+    shows up as an editable row in Home Assistant's own automation editor; the
+    equivalent `{{ '{{' }} states('x') == 'y' {{ '}}' }}` template shows up as
+    an opaque blob nobody can change without writing Jinja. The emitted YAML is
+    meant to outlive PistonCore, so it uses HA's word wherever HA has one.
+    Several entities here mean ALL of them must match — that is what HA's state
+    condition means, and the emitter only sends a list when the piston asked
+    for "all". -#}
+- condition: state
+{%- if c.entities | length == 1 %}
+  entity_id: {{ c.entities[0] }}
+{%- else %}
+  entity_id:
+{%- for e in c.entities %}
+    - {{ e }}
+{%- endfor %}
+{%- endif %}
+  state: "{{ c.state }}"
+{%- elif c.kind == 'template' -%}
 - condition: template
   value_template: "{{ c.template }}"
 {%- elif c.kind == 'time' -%}

@@ -1,0 +1,551 @@
+{
+ "name": "Back Yard Cameras 🎦 - WLED 💡🌈",
+ "meta": {
+  "active": true,
+  "build": 4,
+  "category": "6",
+  "name": "Back Yard Cameras 🎦 - WLED 💡🌈"
+ },
+ "piston": {
+  "o": {
+   "aps": 0,
+   "ced": 0,
+   "cto": 0,
+   "dco": 0,
+   "des": 0,
+   "ish": 0,
+   "mps": 0,
+   "pep": 0
+  },
+  "r": [],
+  "rn": false,
+  "rop": "and",
+  "s": [
+   {
+    "$": 1,
+    "a": "0",
+    "c": [
+     {
+      "$": 2,
+      "co": "is_between",
+      "ct": "c",
+      "fs": [],
+      "lo": {
+       "f": "l",
+       "g": "any",
+       "t": "v",
+       "v": "time",
+       "vt": "string"
+      },
+      "ro": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "$sunset"
+      },
+      "ro2": {
+       "f": "l",
+       "g": "any",
+       "t": "x",
+       "vt": "time",
+       "x": "$sunrise"
+      },
+      "s": false,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 30,
+       "exp": {
+        "i": [
+         {
+          "l": "0:1",
+          "ok": true,
+          "t": "integer",
+          "v": 30
+         }
+        ],
+        "ok": true,
+        "str": "30",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "to2": {
+       "c": -30,
+       "exp": {
+        "i": [
+         {
+          "l": "0:2",
+          "ok": true,
+          "t": "integer",
+          "v": -30
+         }
+        ],
+        "ok": true,
+        "str": "-30",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "m"
+      },
+      "ts": []
+     },
+     {
+      "$": 3,
+      "c": [
+       {
+        "$": 4,
+        "co": "changes_to",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "smartDetectType",
+         "d": [
+          "Cameras"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "animal",
+         "exp": {
+          "i": [
+           {
+            "l": "0:5",
+            "ok": true,
+            "t": "string",
+            "v": "animal"
+           }
+          ],
+          "ok": true,
+          "str": "animal",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 5,
+        "co": "changes_to",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "smartDetectType",
+         "d": [
+          "Cameras"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "person",
+         "exp": {
+          "i": [
+           {
+            "l": "0:5",
+            "ok": true,
+            "t": "string",
+            "v": "person"
+           }
+          ],
+          "ok": true,
+          "str": "person",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       },
+       {
+        "$": 6,
+        "co": "changes_to",
+        "ct": "t",
+        "fs": [],
+        "lo": {
+         "a": "smartDetectType",
+         "d": [
+          "Cameras"
+         ],
+         "f": "l",
+         "g": "any",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "vehicle",
+         "exp": {
+          "i": [
+           {
+            "l": "0:6",
+            "ok": true,
+            "t": "string",
+            "v": "vehicle"
+           }
+          ],
+          "ok": true,
+          "str": "vehicle",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": true,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "g": "any",
+         "t": "c"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "fs": [],
+      "o": "or",
+      "sm": "auto",
+      "t": "group",
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 7,
+      "a": "0",
+      "d": [
+       "Lights"
+      ],
+      "k": [
+       {
+        "$": 8,
+        "c": "on",
+        "p": []
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   },
+   {
+    "$": 9,
+    "a": "0",
+    "c": [
+     {
+      "$": 10,
+      "co": "changes_to",
+      "ct": "t",
+      "fs": [],
+      "lo": {
+       "a": "smartDetectType",
+       "d": [
+        "Cameras"
+       ],
+       "f": "l",
+       "g": "any",
+       "t": "p",
+       "vt": "string"
+      },
+      "ro": {
+       "c": "waiting",
+       "exp": {
+        "i": [
+         {
+          "l": "0:6",
+          "ok": true,
+          "t": "string",
+          "v": "waiting"
+         }
+        ],
+        "ok": true,
+        "str": "waiting",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "string"
+      },
+      "ro2": {
+       "g": "any",
+       "t": "c"
+      },
+      "s": true,
+      "sm": "auto",
+      "t": "condition",
+      "to": {
+       "c": 0,
+       "exp": {
+        "i": [
+         {
+          "l": "0",
+          "ok": true,
+          "t": "integer",
+          "v": 0
+         }
+        ],
+        "ok": true,
+        "str": "0",
+        "t": "expression"
+       },
+       "f": "l",
+       "g": "any",
+       "t": "c",
+       "vt": "s"
+      },
+      "to2": {
+       "g": "any",
+       "t": "c"
+      },
+      "ts": []
+     }
+    ],
+    "e": [],
+    "ei": [],
+    "o": "and",
+    "r": [],
+    "rop": "and",
+    "s": [
+     {
+      "$": 11,
+      "a": "0",
+      "d": [],
+      "k": [
+       {
+        "$": 12,
+        "c": "wait",
+        "p": [
+         {
+          "c": 15,
+          "exp": {
+           "i": [
+            {
+             "l": "0:1",
+             "ok": true,
+             "t": "integer",
+             "v": 15
+            }
+           ],
+           "ok": true,
+           "str": "15",
+           "t": "expression"
+          },
+          "f": "l",
+          "g": "avg",
+          "t": "c",
+          "vt": "s"
+         }
+        ]
+       }
+      ],
+      "r": [],
+      "rop": "and",
+      "t": "action",
+      "tcp": "c"
+     },
+     {
+      "$": 13,
+      "a": "0",
+      "c": [
+       {
+        "$": 14,
+        "co": "is",
+        "ct": "c",
+        "fs": [],
+        "lo": {
+         "a": "smartDetectType",
+         "d": [
+          "Cameras"
+         ],
+         "f": "l",
+         "g": "all",
+         "t": "p",
+         "vt": "string"
+        },
+        "ro": {
+         "c": "waiting",
+         "exp": {
+          "i": [
+           {
+            "l": "0:6",
+            "ok": true,
+            "t": "string",
+            "v": "waiting"
+           }
+          ],
+          "ok": true,
+          "str": "waiting",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "string"
+        },
+        "ro2": {
+         "g": "any",
+         "t": "c"
+        },
+        "s": false,
+        "sm": "auto",
+        "t": "condition",
+        "to": {
+         "c": 15,
+         "exp": {
+          "i": [
+           {
+            "l": "0:1",
+            "ok": true,
+            "t": "integer",
+            "v": 15
+           }
+          ],
+          "ok": true,
+          "str": "15",
+          "t": "expression"
+         },
+         "f": "l",
+         "g": "any",
+         "t": "c",
+         "vt": "s"
+        },
+        "to2": {
+         "g": "any",
+         "t": "c"
+        },
+        "ts": []
+       }
+      ],
+      "e": [],
+      "ei": [],
+      "o": "and",
+      "r": [],
+      "rop": "and",
+      "s": [
+       {
+        "$": 15,
+        "a": "0",
+        "d": [
+         "Lights"
+        ],
+        "k": [
+         {
+          "$": 16,
+          "c": "off",
+          "p": []
+         }
+        ],
+        "r": [],
+        "rop": "and",
+        "t": "action",
+        "tcp": "c"
+       }
+      ],
+      "t": "if",
+      "tcp": "c"
+     }
+    ],
+    "t": "if",
+    "tcp": "c"
+   }
+  ],
+  "v": [
+   {
+    "a": "d",
+    "n": "Cameras",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx21:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx22:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx23:",
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx24:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   },
+   {
+    "a": "d",
+    "n": "Lights",
+    "t": "device",
+    "v": {
+     "d": [
+      ":xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx25:"
+     ],
+     "f": "l",
+     "g": "avg",
+     "t": "d",
+     "vt": "device"
+    }
+   }
+  ],
+  "z": ""
+ }
+}
