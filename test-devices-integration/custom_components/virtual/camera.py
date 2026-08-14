@@ -105,13 +105,17 @@ class VirtualCamera(VirtualEntity, Camera):
         Camera.__init__(self)
         super().__init__(config, PLATFORM_DOMAIN, old_style)
 
-        # No streaming: there is no video, only stills. A clone of a real
-        # camera can still declare whatever that camera advertised.
         self._attr_supported_features = feature_flags(
             config, CameraEntityFeature, CameraEntityFeature(0))
+        # There is no video here, only stills. A cloned camera may well have
+        # advertised STREAM, but declaring it would put a live-view button in
+        # the UI that fails the moment it is pressed — the same reason
+        # media_player drops BROWSE_MEDIA and SEARCH_MEDIA from a clone.
+        self._attr_supported_features &= ~CameraEntityFeature.STREAM
 
         self._frames = _frames()
         self._index = 0
+        self._last_frame: str | None = None
         if not self._frames:
             _LOGGER.warning(
                 f"VirtualCamera: {self.name} has no frames — {IMAGE_DIR} is "
@@ -140,9 +144,28 @@ class VirtualCamera(VirtualEntity, Camera):
         # Say which frame was just served and which is next, so a test can
         # assert the camera actually moved rather than inferring it from the
         # image bytes.
+        #
+        # Both halves below are needed and neither is optional:
+        #   * _update_attributes() REBUILDS the attribute dict from scratch in
+        #     VirtualEntity, so these keys have to be re-applied there or the
+        #     next availability change wipes them.
+        #   * without async_write_ha_state() nothing reaches the state machine
+        #     at all — the attributes existed on the object and were invisible
+        #     to exactly the tests they were added for.
+        # This writes state on every image read, deliberately: observing that
+        # the camera advanced IS the feature.
+        self._last_frame = frame.name
+        self._update_attributes()
+        if self.hass is not None and self.entity_id:
+            self.async_write_ha_state()
+        return image
+
+    def _update_attributes(self):
+        super()._update_attributes()
+        if self._last_frame is None or not self._frames:
+            return
         self._attr_extra_state_attributes.update({
             "frame_count": len(self._frames),
-            "last_frame": frame.name,
+            "last_frame": self._last_frame,
             "next_frame": self._frames[self._index % len(self._frames)].name,
         })
-        return image

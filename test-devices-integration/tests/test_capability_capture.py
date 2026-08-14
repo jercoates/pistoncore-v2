@@ -219,6 +219,42 @@ def test_fan_speed_count_derives_from_percentage_step():
     assert spec["speed_count"] == 3
 
 
+# ── the platform lists must agree ───────────────────────────────────────────
+
+def test_every_platform_can_be_cloned():
+    """A platform this integration provides must also be one a clone can copy.
+
+    ADDING A PLATFORM TOUCHES THREE LISTS: `VIRTUAL_PLATFORMS` in __init__.py,
+    `REPRODUCIBLE_DOMAINS` here, and `_VIRTUAL_PLATFORM_DOMAINS` in PistonCore.
+    When the camera platform was added, two of the three were updated — so
+    PistonCore offered cameras as cloneable while clone_device rejected them
+    with "has nothing this integration can reproduce". Nothing caught it,
+    because nothing compared the lists.
+
+    The PistonCore copy lives in another repo and cannot be imported from here,
+    so this guards the two that ship together; PistonCore's own list is checked
+    against the add-on's on its side.
+    """
+    import pathlib
+    import re
+    integration = pathlib.Path(clone.__file__).parent
+    init = (integration / "__init__.py").read_text(encoding="utf-8")
+    block = init.split("VIRTUAL_PLATFORMS", 1)[1].split("]", 1)[0]
+    provided = {name.lower() for name in re.findall(r"Platform\.([A-Z_]+)", block)}
+    assert provided, "could not read VIRTUAL_PLATFORMS — the check is broken, not the code"
+
+    missing = sorted(provided - set(clone.REPRODUCIBLE_DOMAINS))
+    assert not missing, (
+        f"\n\nThese platforms are provided but a clone refuses them: {missing}\n"
+        f"Add them to REPRODUCIBLE_DOMAINS in clone.py — and remember the third "
+        f"list, _VIRTUAL_PLATFORM_DOMAINS in PistonCore's shim/routes/pages.py.\n")
+
+    stale = sorted(set(clone.REPRODUCIBLE_DOMAINS) - provided)
+    assert not stale, (
+        f"\n\nclone.py claims it can reproduce {stale}, but this integration "
+        f"provides no such platform — cloning one would create nothing.\n")
+
+
 # ── credentials must never reach a clone ────────────────────────────────────
 
 @pytest.mark.parametrize("domain,attrs", [

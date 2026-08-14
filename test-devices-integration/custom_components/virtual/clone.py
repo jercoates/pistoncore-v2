@@ -70,8 +70,8 @@ DESCRIBE_DEVICE_SCHEMA = vol.Schema({
 
 # Domains this integration can reproduce as a settable test entity.
 REPRODUCIBLE_DOMAINS = {
-    "alarm_control_panel", "binary_sensor", "button", "climate", "cover",
-    "device_tracker", "event", "fan", "humidifier", "light", "lock",
+    "alarm_control_panel", "binary_sensor", "button", "camera", "climate",
+    "cover", "device_tracker", "event", "fan", "humidifier", "light", "lock",
     "media_player", "number", "sensor", "siren", "switch", "vacuum", "valve",
 }
 
@@ -101,8 +101,8 @@ CLONE_ATTRS: dict[str, tuple[str, ...]] = {
 # Domains whose platform here accepts `supported_features`. Deliberately not all
 # of them: switch/binary_sensor/button have no feature flags to copy.
 CLONE_FEATURES = {
-    "alarm_control_panel", "climate", "cover", "fan", "humidifier", "light",
-    "lock", "media_player", "siren", "vacuum",
+    "alarm_control_panel", "camera", "climate", "cover", "fan", "humidifier",
+    "light", "lock", "media_player", "siren", "vacuum",
 }
 
 

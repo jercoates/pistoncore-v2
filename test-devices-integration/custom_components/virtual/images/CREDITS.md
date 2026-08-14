@@ -11,14 +11,15 @@ the kind of image it will meet in service.
 
 ## Credit
 
-Photographs by Jeremy Coates' father, used with permission and included here
-under this package's GPL-3.0 licence. `cannon.jpg` is from a historical
-re-enactment.
-
-*(Jeremy — replace this paragraph with however you'd like him named.)*
+Photographs by **Curtis J Coates**, included here under this package's GPL-3.0
+licence.
 
 ## Replacing them
 
 Drop JPEGs in this folder and remove the ones you don't want; the camera globs
 the folder in sorted order, so nothing in the code needs changing. Keep them
 small — these are ~30-65 KB at 640px, and they ship with every install.
+
+Note that anything placed here is redistributed to every user under GPL-3.0,
+which permits commercial use and modification. Only add images you are happy to
+release on those terms.
