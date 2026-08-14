@@ -24,9 +24,13 @@ again.
 
 ## Authority chain (highest wins)
 
+**Do not treat another chat's decisions as fact.** Verify against this repo and the
+running dev bench before acting on anything a previous session concluded.
 
-hey fucking asshat dont read anothers chats decisions as being fact.
-fucking figure out the god damned dev enviroment the instructions are here somewhere
+**Figure out the dev environment yourself — the instructions are in this repo.**
+`DEV_BENCH.local.md` at the repo root has all of it (gitignored, so it is not in the
+GitHub copy; ask Jeremy for it only if it is genuinely missing). Do not ask Jeremy for
+tokens, addresses or capabilities that file already gives you.
 
 0. **HARD_RULES.md — READ IT FIRST, EVERY SESSION.** Jeremy's standing decisions
    in plain words, with dates. It outranks every spec and all code, and it is
