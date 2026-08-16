@@ -328,9 +328,17 @@ def daily_time(piston: dict, piston_id: str, piston_name: str, resolver):
             # a command needing parameter substitution is not this idiom yet
             return None
 
+        # THE NAMING IS THE APP'S, NOT MINE (device-proven on the bench,
+        # 2026-08-14). An idiom that invents its own id and alias produced
+        # `automation.real_path_bench_test_1` where every other automation
+        # PistonCore owns is `automation.pistoncore_<piston>_s<stmt>`, and it
+        # reported no auto_ids at all -- so the app could not enable, disable or
+        # PAUSE what it had just deployed ("enabled": "no automation ids").
+        # Only the real compile-and-deploy showed this; the snapshot harness
+        # never looks at an id. Same convention as emit_yaml.py:2742.
         autos.append({
-            "id": "%s_%d" % (piston_id, i),
-            "alias": "%s (%d)" % (piston_name, i + 1),
+            "id": "pistoncore_%s_s%s" % (piston_id, _sid(p.source, i)),
+            "alias": "PistonCore: %s — $%s" % (piston_name, _sid(p.source, i)),
             "when": when,
             "weekday": list(t.only_days_of_week or ()),
             "months": list(t.only_months or ()),
@@ -343,7 +351,11 @@ def daily_time(piston: dict, piston_id: str, piston_name: str, resolver):
         loader=ChoiceLoader([FileSystemLoader(d)
                              for d in customize.search_dirs("templates/compiler/yaml/classic")]),
         trim_blocks=False, lstrip_blocks=False, keep_trailing_newline=True)
-    return env.get_template("daily_time.yaml.j2").render(automations=autos)
+    # The ids go back WITH the yaml. The deploy step needs them to enable,
+    # disable and pause what it wrote; returning only text left the app holding
+    # an automation it could not name.
+    return {"yaml": env.get_template("daily_time.yaml.j2").render(automations=autos),
+            "auto_ids": [a["id"] for a in autos]}
 
 
 def plan(piston: dict, piston_id: str, piston_name: str):
