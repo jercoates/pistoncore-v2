@@ -2531,6 +2531,49 @@ def _spec_data(data_spec: dict, params: list, ctx: dict,
     return out
 
 
+_CONST_VARS: dict = {}
+
+
+def _constant_variable(name, ctx: dict):
+    """A local variable's value when it is knowably fixed at compile time.
+
+    Two conditions, both required: it is DECLARED with an initial value, and
+    NOTHING in the piston ever assigns it. The second half is what makes this
+    safe rather than a guess, and it is answerable now that the reader carries
+    the value flow — `Promise.writes` is exactly "which variable this statement
+    sets". A variable the piston writes is a runtime value and must stay a
+    template; folding one of those would freeze a value that is supposed to
+    move.
+
+    Returns None when either condition fails, so the caller's existing refusal
+    still applies (HARD_RULES §6 — refuse rather than approximate)."""
+    if not name:
+        return None
+    piston = _PISTON.get("cur")
+    if not piston:
+        return None
+    key = id(piston)
+    table = _CONST_VARS.get(key)
+    if table is None:
+        from .resolve import local_var_decls
+        written = set()
+        try:
+            for pr in spec.read(piston):
+                written |= set(pr.writes or ())
+        except Exception:                                          # noqa: BLE001
+            # the reader failing must not take emission down with it; without a
+            # write list nothing can be proven constant, which is the safe answer
+            written = None
+        table = {}
+        if written is not None:
+            for var, decl in (local_var_decls(piston) or {}).items():
+                if (decl.get("has_initial") and decl.get("initial") is not None
+                        and not decl.get("is_list") and var not in written):
+                    table[var] = decl["initial"]
+        _CONST_VARS[key] = table
+    return table.get(str(name))
+
+
 def _param_value(token: str, params: list, ctx: dict, resolver=None,
                  entity: str | None = None):
     """$1/$2 (+|transform) tokens from the vocab's data specs."""
@@ -2577,6 +2620,17 @@ def _param_value(token: str, params: list, ctx: dict, resolver=None,
                 from .resolve import rescale_template
                 inner = rescale_template(tname, inner)
             elif transform is not None:
+                # A VARIABLE THAT IS NEVER WRITTEN IS A CONSTANT, so the
+                # transform can still run — it just needs the value from the
+                # define instead of from the operand. Albert's four night
+                # lights say `Set color to {LowColor}` with LowColor declared
+                # "Blue" and never assigned; without this the whole command
+                # gave up and fell back to the integration's raw driver
+                # passthrough, which accepts any command name and fails at
+                # RUNTIME rather than compile. Device-proven shape, 4 pistons.
+                folded = _constant_variable(prm.get("x"), ctx)
+                if folded is not None:
+                    return transform(folded)
                 raise NotYetImplemented(
                     f"a '{tname}' parameter given as a variable is not "
                     f"compiled yet", **ctx)
