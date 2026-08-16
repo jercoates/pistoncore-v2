@@ -28,6 +28,65 @@ COMPILER_DECISIONS_DEPLOY.md — restated here; on conflict, this doc wins once 
 
 ---
 
+## 00. THE CONSTANT, AND EVERYTHING THAT IS ALLOWED TO MOVE
+**(Jeremy, 2026-08-15 — written because the specs were fighting the work)**
+
+> **Read what the piston is for, then build the automation Home Assistant's own
+> way, so the house behaves the same.**
+
+That sentence is the project. Nothing else in this document outranks it, and
+changing it means changing what PistonCore is.
+
+Two words in it are load-bearing:
+
+- **"behaves the same" is a RESULT, never a structure.** It is what licenses the
+  loop disappearing, the helper variable disappearing, one piston becoming two
+  automations. Read as "same shape", it silently re-authorises a transcoder.
+- **"Home Assistant", not "YAML".** Which band a piston lands on is a fact about
+  what HA can express today, and that line moves. Naming a band in the goal makes
+  the band an end instead of a consequence.
+
+### Everything below the constant is METHOD, and is expected to pivot
+
+This is uncharted work and it is being figured out as it goes, so this document
+must not be written as though the method were settled. **Anything that is still
+moving gets recorded as "we chose X over Y because Z, on this date" — never as
+"the system does X".** The first survives a pivot as useful history; the second
+becomes a lie the moment you change direction, and then the spec fights you.
+
+Explicitly NOT constant, and none of it needs a spec change to revisit: which
+band a piston lands on · how many automations one piston becomes · whether
+recognition happens per-shape (idioms) or per-construct · what the intent
+representation looks like · how many compilers there are.
+
+**Two things this document must never carry**, both learned the hard way:
+
+1. **Counts.** A number written in prose is wrong the moment the thing improves,
+   and it is then quoted with authority. Section 0's figure was measured by
+   nothing for three days and is already out of date. Numbers belong in a check
+   that re-measures and goes red; a paragraph goes unread.
+2. **The internals of anything still moving.** Documenting the intent layer's
+   shape while it changes every session guarantees rot, and rot is what does the
+   damage — twice on 2026-08-13 a stale doc nearly sent a session to rebuild
+   working code.
+
+### The arrangement as of 2026-08-15 — PROVISIONAL
+
+Three emission paths exist: the **YAML transcoder** (`emit_yaml.py`, live and
+default), **PyScript** (`emit_pyscript.py`, for what YAML cannot express), and
+the **intent path** (`emit_intent.py`, behind `PISTONCORE_INTENT_EMIT` /
+`compiler.intent_emit`, **default off**, exposed in no template and no route).
+
+**DECISION (Jeremy, 2026-08-13): both YAML paths stay current until the intent
+path can meet the constant on its own.** They are not two goals — they are one
+goal with a safety net. The transcoder is live and is maintained, not frozen;
+improvements land on both. The transcoder retires when the intent path can do
+its job, and not before. Keeping both is also what makes the comparison
+possible: every intent-path defect found so far was found by compiling a piston
+both ways and diffing against what the piston promised.
+
+---
+
 ## 0. THE MEASUREMENT THAT SAYS WHETHER ANY OF THIS IS WORKING
 **(Jeremy's research, CONFIRMED BY COUNT 2026-08-10)**
 
