@@ -710,6 +710,19 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     # piston asked for `all`; an `any` fan-out is a different question and stays
     # a template. Attribute-backed readings stay too -- `read_expr` spells those
     # `state_attr(...)`, and HA's state condition compares the STATE.
+    # A THRESHOLD HELD IN A VARIABLE IS STILL A THRESHOLD. `illuminance is less
+    # than LowLux` arrives with value=None and the name in value_expr, so every
+    # native-form check below saw "no value" and fell through to a template —
+    # which is how 51 lux comparisons stayed Jinja. Albert declares his
+    # thresholds as variables precisely so he can find them, so this is the
+    # common case rather than an edge one. Same rule as everywhere else: fold
+    # only a piston-local variable the piston never assigns (_constant_variable
+    # proves both), and leave anything runtime-dependent alone.
+    if cond.get("value") is None and isinstance(cond.get("value_expr"), str):
+        _folded = _constant_variable(cond["value_expr"].strip(), ctx)
+        if _folded is not None:
+            cond = dict(cond, value=_folded)
+
     _plain = reads and all(r.startswith("states('") for r in reads)
     _eq = co in ("is", "changes_to", "gets", "arrives")
     _ne = co in ("is_not", "changes_away_from")
@@ -727,6 +740,38 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         # HA has no not-equals state condition, but it does have `not`, and 30
         # conditions in the corpus were falling back to Jinja for want of it.
         return node if _eq else {"kind": "not", "conditions": [node]}
+
+    # ── HA'S OWN NUMERIC COMPARISON ─────────────────────────────────────────
+    # `condition: numeric_state` is an editable row; the template form is not.
+    # STRICT ONLY, and that is the whole subtlety: HA's above/below exclude the
+    # boundary, so `>` and `<` are exact while `>=` and `<=` have no native
+    # form. Widening one by a hair to fit would be inventing behaviour the
+    # piston did not ask for -- 60 comparisons in the corpus are strict and 12
+    # are inclusive, so the inclusive dozen keep the honest template.
+    #
+    # The direction comes from the canonical operator table in expression.py,
+    # never a second copy of it (HARD_RULES §9 -- a hand-written partial copy
+    # of that table is exactly how `is`/`is_not` went missing once).
+    #
+    # Fail-closed is preserved rather than lost: numeric_state does not match
+    # when a reading is non-numeric, unavailable or unknown, which is what the
+    # template spelled out as `| is_number`.
+    # `_num_str`, NOT `_is_number`: webCoRE stores comparison values as strings
+    # ("20"), so the strict check rejects every real case — the same trap that
+    # once sent numeric is_between to PyScript instead of compiling it.
+    _numop = _NUMERIC_OPS.get(co)
+    # `duration` is PRESENT BUT EMPTY on an ordinary comparison -- {'g','t'} with
+    # no value -- so testing its truthiness excludes every condition. Ask the
+    # existing converter whether there is a real hold ("stays above X for 5
+    # minutes", which numeric_state cannot express as a condition).
+    if (_numop in (">", "<") and _plain and _num_str(cond["value"])
+            and not _duration_hms(cond.get("duration"))):
+        _side = "above" if _numop == ">" else "below"
+        _one = lambda ents: {"kind": "numeric_state", "entities": ents,
+                             _side: cond["value"]}
+        if len(entities) == 1 or cond.get("aggregation") == "all":
+            return _one(entities)
+        return {"kind": "or", "conditions": [_one([e]) for e in entities]}
 
     if co in _NUMERIC_OPS:
         op = _NUMERIC_OPS[co]

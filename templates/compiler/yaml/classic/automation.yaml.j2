@@ -107,6 +107,30 @@
 {%- endfor %}
 {%- endif %}
   state: "{{ c.state }}"
+{#- HA's own numeric comparison. `above`/`below` are STRICT, and it simply does
+    not match when the state is non-numeric, unavailable or unknown — which is
+    the same fail-closed behaviour the template form spells out with
+    `| is_number`. An inclusive comparison (>=, <=) has no exact native form
+    and stays a template rather than being silently widened by a hair. -#}
+{%- elif c.kind == 'numeric_state' -%}
+- condition: numeric_state
+{%- if c.entities | length == 1 %}
+  entity_id: {{ c.entities[0] }}
+{%- else %}
+  entity_id:
+{%- for e in c.entities %}
+    - {{ e }}
+{%- endfor %}
+{%- endif %}
+{%- if c.get('attribute') %}
+  attribute: {{ c.get('attribute') }}
+{%- endif %}
+{%- if c.get('above') is not none %}
+  above: {{ c.get('above') }}
+{%- endif %}
+{%- if c.get('below') is not none %}
+  below: {{ c.get('below') }}
+{%- endif %}
 {%- elif c.kind == 'template' -%}
 - condition: template
   value_template: "{{ c.template }}"
