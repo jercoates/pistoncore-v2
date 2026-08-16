@@ -358,6 +358,19 @@ def daily_time(piston: dict, piston_id: str, piston_name: str, resolver):
             "auto_ids": [a["id"] for a in autos]}
 
 
+# WHY THE INTENT PATH REFUSED, for the last plan() call. Coverage is the number
+# that decides whether this path can ever replace the transcoder, and "it
+# returned None" is not an answer you can prioritise from. Diagnostic only:
+# nothing branches on it, and the refusal behaviour is unchanged.
+last_refusal: str | None = None
+
+
+def _refuse(why: str):
+    global last_refusal
+    last_refusal = why
+    return None
+
+
 def plan(piston: dict, piston_id: str, piston_name: str):
     """Branch IR built from the piston's INTENT, or None if not expressible."""
     promises = spec.read(piston)
@@ -377,8 +390,8 @@ def plan(piston: dict, piston_id: str, piston_name: str):
     flat = []
     for b in behaviours:
         if isinstance(b, spec.Held):
-            if b.engage.per_device or b.release.per_device: return None
-            if b.engage.repeating or b.release.repeating: return None
+            if b.engage.per_device or b.release.per_device: return _refuse("held pair is per-device (fan-out)")
+            if b.engage.repeating or b.release.repeating: return _refuse("held pair is inside a loop")
             # BOTH HALVES, ALWAYS. A held state is one intent but two
             # promises, and the first version of this loop emitted only the
             # engage — on 12_Cave_motion_V2 the lights came on and NOTHING
@@ -388,7 +401,7 @@ def plan(piston: dict, piston_id: str, piston_name: str):
             flat.append(b.engage)
             flat.append(b.release)
         else:
-            if b.per_device or b.repeating: return None
+            if b.per_device or b.repeating: return _refuse("per-device fan-out" if b.per_device else "inside a loop")
             # A custom (`cm`) command is NOT a reason to refuse. It is a raw
             # HA service name that the hybrid feed put in front of the user
             # precisely because the vocab does not carry it, and it needs no
@@ -411,13 +424,13 @@ def plan(piston: dict, piston_id: str, piston_name: str):
         members = groups[key]
         lead = members[0]
         if not lead.wakes_on:
-            return None                       # no event: not this path's shape
+            return _refuse("nothing wakes it and no wake could be derived")
 
         triggers, gates = [], []
         for t in lead.wakes_on:
             n = _leaf(t)
             if n is None:
-                return None
+                return _refuse("trigger shape not expressible: %s" % (t.operator,))
             triggers.append(n)
         for g in lead.gated_by:
             for t in (g.leaves() if isinstance(g, spec.Gate) else [g]):
@@ -425,7 +438,7 @@ def plan(piston: dict, piston_id: str, piston_name: str):
                     continue
                 n = _leaf(t)
                 if n is None:
-                    return None
+                    return _refuse("gate shape not expressible: %s" % (t.operator,))
                 gates.append(n)
 
         # THE DELAY IS PART OF THE PROMISE AND WAS BEING LEFT BEHIND HERE
@@ -448,7 +461,7 @@ def plan(piston: dict, piston_id: str, piston_name: str):
                 clock = int(p.after or 0)
             then.append(_task(p))
         if any(t is None for t in then):
-            return None
+            return _refuse("an action could not be expressed")
 
         branches.append({
             "stmt_id": _sid(lead.source, i), "kind": "if", "tcp": "c",
@@ -481,18 +494,26 @@ def _param(sub) -> dict:
     This is the translation step, and it is the right way round: the intent
     says "five minutes" and this spells it for the emitter. It does not read
     the piston."""
+    # `t` IS NOT OPTIONAL. The emitter decides how to render a parameter from
+    # the operand's TYPE key -- `prm.get("t") in ("x", "e")` is what makes a
+    # variable become a runtime template instead of a literal. Building the
+    # operand without it meant `{"x": "Day_Vol"}` fell through to the constant
+    # path, arrived as None, and six of Albert's pistons died on "a 'pct_float'
+    # parameter has no value" while the transcoder compiled them fine. Operands
+    # read from the piston JSON carry `t` already; synthesised ones have to say
+    # it too. Same class as the delay that was read and then not passed on.
     if sub.kind == "constant":
-        return {"c": sub.constant, "vt": sub.vt}
+        return {"t": "c", "c": sub.constant, "vt": sub.vt}
     if sub.kind == "preset":
-        return {"s": sub.preset, "vt": sub.vt}
+        return {"t": "s", "s": sub.preset, "vt": sub.vt}
     if sub.kind == "variable":
-        return {"x": sub.variable, "vt": sub.vt}
+        return {"t": "x", "x": sub.variable, "vt": sub.vt}
     if sub.kind == "expr":
-        return {"e": sub.expression, "vt": sub.vt}
+        return {"t": "e", "e": sub.expression, "vt": sub.vt}
     if sub.kind == "argument":
-        return {"u": sub.argument, "vt": sub.vt}
+        return {"t": "u", "u": sub.argument, "vt": sub.vt}
     if sub.kind == "device":
-        return {"d": list(sub.devices), "vt": sub.vt}
+        return {"t": "d", "d": list(sub.devices), "vt": sub.vt}
     return {"vt": sub.vt}
 
 

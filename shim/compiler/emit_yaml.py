@@ -710,12 +710,23 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     # piston asked for `all`; an `any` fan-out is a different question and stays
     # a template. Attribute-backed readings stay too -- `read_expr` spells those
     # `state_attr(...)`, and HA's state condition compares the STATE.
-    if (co in ("is", "changes_to", "gets", "arrives")
-            and not _is_number(cond["value"])
-            and reads and all(r.startswith("states('") for r in reads)
-            and (len(entities) == 1 or cond.get("aggregation") == "all")):
-        return {"kind": "state", "entities": entities,
-                "state": str(resolver.ha_state_value(cond["attr"], cond["value"]))}
+    _plain = reads and all(r.startswith("states('") for r in reads)
+    _eq = co in ("is", "changes_to", "gets", "arrives")
+    _ne = co in ("is_not", "changes_away_from")
+    if _plain and (_eq or _ne) and not _is_number(cond["value"]):
+        _st = str(resolver.ha_state_value(cond["attr"], cond["value"]))
+        _all = len(entities) == 1 or cond.get("aggregation") == "all"
+        # `condition: state` with a list means ALL of them, so "any of these is
+        # X" is HA's `or` over one state condition each -- still editable rows,
+        # which a template never is. Restricting this to the all-case (the
+        # first version of this) left 15 fan-outs as blobs for no reason.
+        node = ({"kind": "state", "entities": entities, "state": _st} if _all else
+                {"kind": "or", "conditions": [{"kind": "state", "entities": [e],
+                                               "state": _st} for e in entities]})
+        # "is NOT in this state" is `condition: not` wrapping the same thing.
+        # HA has no not-equals state condition, but it does have `not`, and 30
+        # conditions in the corpus were falling back to Jinja for want of it.
+        return node if _eq else {"kind": "not", "conditions": [node]}
 
     if co in _NUMERIC_OPS:
         op = _NUMERIC_OPS[co]
@@ -2611,6 +2622,26 @@ def _param_value(token: str, params: list, ctx: dict, resolver=None,
         # resolves at runtime. Reading only `c`/`s` made a volume set from a
         # declared variable arrive as None and blow up the whole piston.
         if prm.get("t") in ("x", "e") and (prm.get("x") or prm.get("e")):
+            # IF THE VALUE IS KNOWN AT COMPILE TIME, WRITE THE VALUE IN
+            # (Jeremy, 2026-08-15: "pistoncore can write the fucking value
+            # in"). `Day_Vol` is declared 100 and never assigned, so the
+            # automation wants `volume_level: 1.0` -- not a template, and
+            # certainly not a template referring to a name nothing defines.
+            #
+            # That was the live bug: a helper is only created for a variable
+            # the piston WRITES, so a never-written define was emitted as a
+            # bare Jinja reference, HA resolved it to undefined, `| float(0)`
+            # turned it into 0, and the announcement played at volume zero.
+            # Silent, on both bands, on every piston that sets a volume from a
+            # declared level.
+            #
+            # Folding also removes a template and a would-be helper from the
+            # output, which is the maintainability measure moving in the right
+            # direction for free.
+            if prm.get("t") == "x":
+                folded = _constant_variable(prm.get("x"), ctx)
+                if folded is not None:
+                    return transform(folded) if transform else folded
             if resolver is None:
                 raise NotYetImplemented(
                     "a variable command parameter needs the resolver", **ctx)

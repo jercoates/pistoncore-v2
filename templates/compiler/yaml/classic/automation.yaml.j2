@@ -141,7 +141,9 @@
 {%- if c.get('before') %}
   before: {{ c.get('before') }}
 {%- endif %}
-{%- elif c.kind in ('and', 'or') -%}
+{#- `not` takes the same `conditions:` list as and/or, so "this entity is NOT in
+    that state" stays an editable row instead of becoming a Jinja blob. -#}
+{%- elif c.kind in ('and', 'or', 'not') -%}
 - condition: {{ c.kind }}
   conditions:
 {%- for k in c.conditions %}
