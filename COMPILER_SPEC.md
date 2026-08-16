@@ -91,47 +91,45 @@ both ways and diffing against what the piston promised.
 ---
 
 ## 0. THE MEASUREMENT THAT SAYS WHETHER ANY OF THIS IS WORKING
-**(Jeremy's research, CONFIRMED BY COUNT 2026-08-10)**
 
-**Ask: of the places Home Assistant has a native idiom, how many does the
-compiler use?** Measured across all 76 corpus pistons on the YAML band:
+**Ask: could a person keep these automations working if PistonCore vanished?**
+(Jeremy, 2026-08-15: *"working automations that dont rely hevily on blobs people
+cant keep up without pistoncore"*.)
 
 ```
-condition types emitted:   template 152 · trigger 143 · time 30 · or 8 · sun 3
-                           state      0      <- never emitted, not once
-of those 152 templates:     75 are exactly {{ states('x') == 'y' }}
-                               — every one has a native `condition: state`
+python test_intent_probe.py --section maintainability
 ```
 
-**Zero out of seventy-five on the simplest and commonest idiom HA has.** Not a
-rounding error — a systematic tell. The transcoder owns ONE mechanism, "render
-webCoRE's left-operand / comparison / right-operand as Jinja", inherited from
-webCoRE's shape, and puts everything through it. It never asks what Home
-Assistant has for this. `condition: numeric_state`, `condition: device` and
-native `for:` durations are absent from that census too, so 0/75 is a FLOOR.
+It counts what a human INHERITS: how much lands on the readable band rather than
+PyScript, how many conditions are editable rows in HA's own editor rather than
+Jinja blobs, how many helper entities the automations cannot run without, and
+how many branches only make sense next to their siblings.
 
-**Why this is not cosmetic.** A native condition is an editable row in Home
-Assistant's visual editor; a template condition is an opaque blob a user cannot
-touch without writing Jinja. The emitted YAML is supposed to outlive PistonCore
-being deleted and be maintainable by whoever owns it
-([[no_runtime_pistoncore_dependency]]) — 152 template blobs are a far worse
-inheritance than 75 state conditions plus templates for the genuinely hard
-cases.
+**Run it. Do not quote a number from this file.** This section used to carry a
+census — "0 of 75 places where a native `condition: state` belongs" — which was
+true when written, was measured by nothing afterwards, and was wrong within
+days of being fixed. Both it and the copy in HARD_RULES §2g were then quoted
+with authority while being false. A number that re-measures cannot rot; a
+paragraph goes unread (§00).
 
-**USE THIS AS THE YARDSTICK, because the obvious ones are worthless.** Band
-split proves nothing (nothing on either band is device-validated — 1 of 76 has
-been driven on real devices). "It compiled", "it routed" and "HA accepted it"
-are not behaviour (HARD_RULES §7). Matching the old output proves the bug was
-reproduced (§2c). This number needs no device, is countable in one pass, and
-moves only when the compiler starts choosing HA idioms instead of translating
-expressions.
+**Why these four things and not the obvious ones.** Band split alone proves
+nothing, "it compiled" / "it routed" / "HA accepted it" are not behaviour
+(HARD_RULES §7), and matching the previous output only proves the old bug was
+reproduced (§2c). These four need no device, are countable in one pass, and move
+only when the compiler starts choosing Home Assistant's own idioms instead of
+translating webCoRE's expressions.
 
-**And it is the honest case FOR the intent engine**, which otherwise has none:
-"the user wanted the door contact to be closed" maps to `condition: state`
-directly, while "translate this expression" can only ever produce a template.
-As of 2026-08-10 there is still no proof the intent engine will be better — it
-currently drops delays and timer-backed waits — so this is the thing to measure
-it by, not a belief to build on.
+**Why it is not cosmetic.** A native condition is an editable row in HA's visual
+editor; a template condition is a blob nobody can touch without writing Jinja.
+Worse, a missing helper entity does not merely look bad — the automation stops
+working. The emitted YAML is meant to outlive PistonCore being deleted
+([[no_runtime_pistoncore_dependency]]).
+
+**It reports; it does not gate — deliberately.** Nobody yet knows what these
+numbers *should* be: some templates are the only honest way to express a thing,
+and some pistons belong on PyScript. Setting a threshold now would lock in a
+decision before the how is known (§00). Make it a gate once a baseline is
+agreed.
 
 ---
 

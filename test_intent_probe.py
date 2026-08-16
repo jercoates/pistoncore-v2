@@ -1188,7 +1188,79 @@ def section_understanding(verbose=False):
     return fails
 
 
+def section_maintainability(verbose=False):
+    """Could a person keep the emitted automations working if PistonCore vanished?
+
+    Jeremy, 2026-08-15: the goal is "working automations that dont rely heavily
+    on blobs people cant keep up without pistoncore." That is the question the
+    output is finally judged on, and nothing measured it.
+
+    It replaces the 0-of-75 figure in COMPILER_SPEC §0, which was written into
+    two documents, measured by nothing, and was already wrong days later. A
+    number that re-measures cannot rot.
+
+    REPORTS, DOES NOT GATE — deliberately, for now. Nobody yet knows what these
+    numbers *should* be: some templates are genuinely the only way to say a
+    thing, and some pistons belong on PyScript. Picking a threshold today would
+    lock in a decision before the how is known, which is the failure mode this
+    project keeps hitting. Turn it into a gate once a baseline is agreed.
+
+    Corpus-scoped on purpose, against §5's usual rule: this asks what a human
+    INHERITS, and that only exists once something is emitted. The vocabulary
+    says what can be built; only real output says what it reads like."""
+    import glob
+    import re
+    import test_compile_snapshots as H
+    from shim.compiler import emit_yaml as _ey
+
+    print("\n" + "=" * 72)
+    print("MAINTAINABILITY - what a person inherits if PistonCore disappears")
+    print("=" * 72)
+
+    n = {"pistons": 0, "yaml": 0, "pyscript": 0, "errored": 0,
+         "native_cond": 0, "template_cond": 0, "helper_refs": 0, "demux": 0}
+    helper_domains = ("input_text.", "input_boolean.", "input_number.",
+                      "input_datetime.", "timer.", "counter.")
+
+    for path in sorted(glob.glob("test-pistons/*.json")):
+        try:
+            doc = json.load(open(path, encoding="utf-8"))
+            piston = doc.get("piston", doc)
+            reso, globs = H._synthetic_maps(piston)
+            _ey._MEDIA_CFG_OVERRIDE = {}
+            out = H.compile_piston(piston, "probe", doc.get("name"), reso, globs)
+        except Exception:                                          # noqa: BLE001
+            n["errored"] += 1
+            continue
+        n["pistons"] += 1
+        band = out.get("target")
+        n["pyscript" if band == "pyscript" else "yaml"] += 1
+        body = out.get("yaml") or out.get("code") or ""
+        n["native_cond"] += len(re.findall(r"- condition: (?:state|numeric_state|time|sun|zone|device)\b", body))
+        n["template_cond"] += len(re.findall(r"- condition: template\b", body))
+        n["demux"] += len(re.findall(r"- condition: trigger\b", body))
+        n["helper_refs"] += sum(body.count(d) for d in helper_domains)
+
+    total_cond = n["native_cond"] + n["template_cond"]
+    pct = (100.0 * n["native_cond"] / total_cond) if total_cond else 0.0
+    yaml_pct = (100.0 * n["yaml"] / n["pistons"]) if n["pistons"] else 0.0
+
+    print("  pistons compiled            %d   (errored %d)" % (n["pistons"], n["errored"]))
+    print("  readable band (YAML)        %d of %d   %.0f%%" % (n["yaml"], n["pistons"], yaml_pct))
+    print("      on PyScript             %d        - Python is a blob to most owners" % n["pyscript"])
+    print("  conditions a person can edit %d of %d  %.0f%%" % (n["native_cond"], total_cond, pct))
+    print("      opaque templates        %d        - editable only by writing Jinja" % n["template_cond"])
+    print("  helper entities referenced  %d        - automation breaks if these go" % n["helper_refs"])
+    print("  cross-automation demux      %d        - branches that only make sense together"
+          % n["demux"])
+    print()
+    print("  lower is better for the last three. No threshold is set yet, on")
+    print("  purpose: some templates are the only way to say a thing.")
+    return []
+
+
 SECTIONS = {
+    "maintainability": section_maintainability,
     "understanding": section_understanding,
     "comparisons": section_comparisons,
     "modifiers": section_modifiers,

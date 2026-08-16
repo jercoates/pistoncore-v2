@@ -226,43 +226,44 @@ Evidence it matters: reading the water piston from a screenshot surfaced the
 per-device battery accumulation, the speak sitting inside the `each`, and the
 "Any of" aggregation — all present in the JSON and all read past.
 
-## 2g. MEASURE IT BY WHETHER IT USES HA'S OWN IDIOMS — 0 OF 75 TODAY
-**(Jeremy's research, CONFIRMED BY COUNT 2026-08-10)**
+## 2g. MEASURE IT BY WHAT A PERSON INHERITS — RUN IT, DO NOT QUOTE IT
+**(Jeremy, 2026-08-15)**
 
-The question that separates an intent compiler from a transcoder, and it is
-countable: **of the places Home Assistant has a native idiom, how many does the
-compiler use?**
-
-Measured over all 76 corpus pistons, YAML band:
+**Could someone keep these automations working if PistonCore vanished?** That is
+what the output is finally judged on — *"working automations that dont rely
+hevily on blobs people cant keep up without pistoncore"*.
 
 ```
-conditions emitted:  template 152 · trigger 143 · time 30 · or 8 · sun 3
-                     state      0     <- never emitted, not once
-of those templates:   75 are exactly {{ states('x') == 'y' }}
-                          — every one has a native `condition: state`
+python test_intent_probe.py --section maintainability
 ```
 
-The transcoder owns ONE mechanism — render webCoRE's operand/comparison/operand
-as Jinja — and puts everything through it, because that is the shape it
-inherited. It never asks what HA has. `numeric_state`, `device` and native
-`for:` are missing from that census too, so **0/75 is a floor.**
+It counts what a human inherits: how much lands on the readable band rather than
+PyScript, how many conditions are editable rows in HA's own editor rather than
+Jinja blobs, how many helper entities the automations cannot run without, and
+how many branches only make sense next to their siblings.
 
-**Not cosmetic.** A native condition is an editable row in HA's visual editor; a
-template is an opaque blob needing Jinja to touch. The YAML must outlive
-PistonCore and be maintainable by whoever inherits it.
+**NEVER QUOTE A FIGURE FROM THIS FILE FOR IT.** This section used to state "0 of
+75" as current fact. It was true when measured, nothing re-measured it, and it
+was wrong within days — while still being read as authoritative by every session
+that opened this file, because HARD_RULES is mandated reading. A count in prose
+rots; a check re-measures and can be run by anyone in one command.
 
-**USE THIS YARDSTICK BECAUSE THE OBVIOUS ONES ARE WORTHLESS.** Band split proves
-nothing while nothing is device-validated (1 of 76 has been driven on real
-devices). "It compiled / routed / HA accepted it" is not behaviour (§7).
-Matching the old output proves the bug was reproduced (§2c). This number needs
-no device, counts in one pass, and moves only when the compiler starts CHOOSING
-an HA idiom instead of translating an expression.
+**Why these and not the obvious measures.** Band split alone proves nothing.
+"It compiled / routed / HA accepted it" is not behaviour (§7). Matching the
+previous output only proves the old bug was faithfully reproduced (§2c). These
+need no device, count in one pass, and move only when the compiler starts
+CHOOSING an HA idiom instead of translating an expression.
 
-**It is also the only honest case FOR the intent engine.** "The user wanted the
-contact to be closed" maps to `condition: state`; "translate this expression"
-can only produce a template. There is still NO PROOF the intent engine will be
-better (Jeremy, 2026-08-10: *"it should, that does not mean it will"*) — as of
-today it drops delays and timer-backed waits. Measure it; do not believe it.
+**Not cosmetic, and one of them is not even about looks.** A native condition is
+an editable row in HA's visual editor and a template is a blob needing Jinja —
+but a missing helper entity does not just read badly, it stops the automation
+working. The emitted YAML must outlive PistonCore being deleted.
+
+**It reports rather than gates, on purpose.** Nobody yet knows what these numbers
+*should* be: some templates are the only honest way to say a thing, and some
+pistons belong on PyScript. A threshold set today would lock in a decision
+before the how is known. Make it a gate once a baseline is agreed — and record
+that as a decision with a date when you do.
 
 ## 3. YAML FIRST. PYSCRIPT ONLY WHEN THERE IS NO OTHER WAY
 **(Jeremy, 2026-08-06)**
