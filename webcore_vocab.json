@@ -7965,6 +7965,7 @@
    "engine_line": 13829,
    "dynamic": true,
    "ha": {
+    "yaml": "state_attr('sun.sun', 'next_rising')",
     "pyscript": "_sun_ms('next_rising')",
     "trigger": {
      "kind": "sun",
@@ -7978,6 +7979,7 @@
    "engine_line": 13830,
    "dynamic": true,
    "ha": {
+    "yaml": "state_attr('sun.sun', 'next_setting')",
     "pyscript": "_sun_ms('next_setting')",
     "trigger": {
      "kind": "sun",

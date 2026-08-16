@@ -1088,9 +1088,51 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
             sun_ev = _sun_bound(trig, 1)
             if sun_ev:
                 return {"kind": "sun", "event": sun_ev, "id": trig_id}
-            if _is_number(trig["value"]):
-                return {"kind": "time", "at": _minutes_hms(int(trig["value"])),
+            # THE TIME IS OFTEN HELD IN A NAME, and the name is not the problem
+            # — the value is. Three separate things arrive here as "not a
+            # number" and only one of them is genuinely beyond YAML:
+            #
+            #   AlarmMinus30 / DayTimeStart  a declared constant. PistonCore
+            #                                knows it; write it in.
+            #   $nextSunrise / $nextSunset   a system variable whose HA trigger
+            #                                form is DATA, in the vocab.
+            #   {addMinutes('22:00',random)} computed fresh every night. HA's
+            #                                time trigger takes a fixed time,
+            #                                so this one is PyScript's — see
+            #                                routing_table.json.
+            _v = trig.get("value")
+            _x = trig.get("value_expr")
+            if _v is None and isinstance(_x, str):
+                _folded = _constant_variable(_x.strip(), ctx)
+                if _folded is not None and _num_str(_folded):
+                    _v = _folded
+                else:
+                    # `ha.trigger` beside the ha.yaml/ha.pyscript rules that
+                    # READ a system variable: which trigger it means when used
+                    # as an OCCASION. Data, so a user can add one.
+                    from .resolve import _load_vocab as _lv
+                    _sv = (_lv().get("systemVariables") or {})
+                    _key = _x.strip() if _x.strip().startswith("$") else "$" + _x.strip()
+                    for _n, _e in _sv.items():
+                        if _n.lower() != _key.lower():
+                            continue
+                        _t = (_e.get("ha") or {}).get("trigger") or {}
+                        if _t.get("kind") == "sun":
+                            return {"kind": "sun", "event": _t["event"], "id": trig_id}
+                        if _t.get("kind") == "time" and _t.get("at"):
+                            return {"kind": "time", "at": _t["at"], "id": trig_id}
+                        break
+            if _num_str(_v):
+                return {"kind": "time", "at": _minutes_hms(int(float(_v))),
                         "id": trig_id}
+        # HA STARTING UP IS ITS OWN TRIGGER PLATFORM, not a state change.
+        # webCoRE's $systemStart fires when the engine comes up; HA's
+        # equivalent occasion is `trigger: homeassistant, event: start`
+        # (verified against HA's own schema — EVENT_START/EVENT_SHUTDOWN).
+        # Without this the piston had no expressible wake and fell to PyScript,
+        # which could not express it either.
+        if var in ("systemStart", "systemStarted"):
+            return {"kind": "homeassistant", "event": "start", "id": trig_id}
         sysent = resolver.system_entity(var) if var else None
         if sysent and co in ("executes", "changes_to_any_of", "is_any_of"):
             raw = trig["value"]
@@ -1795,6 +1837,18 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             else:
                 raise NotYetImplemented(
                     "loop with neither a count nor a condition", **ctx)
+            out.append(node)
+        elif n["kind"] == "report":
+            # "Which of these match" — emitted by the INTENT path, which knows
+            # this shape from the reading rather than by matching node shapes.
+            # Same translation as the transcoder's own accumulate loop; one
+            # implementation, two callers.
+            node = report_variables(n["var"], n.get("over") or [], n.get("attr"),
+                                    n.get("test"), n.get("expr") or "",
+                                    resolver, ctx)
+            if node is None:
+                raise NotYetImplemented(
+                    "a report over a device list could not be resolved", **ctx)
             out.append(node)
         elif n["kind"] == "stop":
             out.append({"kind": "stop"})
@@ -2959,11 +3013,31 @@ def _accumulate_loop(n: dict, resolver: Resolver, ctx: dict):
         attr = m.group(1) if m else None
     if not attr:
         return None
+    return report_variables(var, n.get("devices") or [], attr, test_cond,
+                            src["e"], resolver, ctx)
+
+
+def report_variables(var, drefs, attr, test_cond, expr, resolver, ctx):
+    """"Which of these match" as ONE Home Assistant template.
+
+    Split out of `_accumulate_loop` so the INTENT path can reach it without a
+    second copy (HARD_RULES §9). The transcoder finds this shape by matching
+    node shapes; the intent path knows it from the reading, because a value
+    built out of its own previous value IS a report. Both then need the same
+    translation, and there is one of it.
+
+    `$device` becomes `device_name(<item>)`, not an entity id and not the
+    entity's friendly_name — a battery sensor's friendly name is "Kitchen
+    Sensor Battery", so a report built from it reads "Kitchen Sensor Battery
+    Battery: 45%". The device registry name is what webCoRE's $device meant.
+
+    Returns a `variables` action node, or None when the shape cannot be
+    resolved — the caller routes rather than guessing."""
     # Resolution failures mean "not the shape we recognise", not "broken
     # piston" — return None so the caller can route, never escape.
     try:
         hashes = []
-        for dref in n.get("devices") or []:
+        for dref in drefs:
             hashes.extend(resolver._hashes(str(dref), ctx))
         if not hashes:
             return None
@@ -2986,7 +3060,7 @@ def _accumulate_loop(n: dict, resolver: Resolver, ctx: dict):
     jt = _jinja(resolver, ctx, _PISTON.get("cur"))
     jt.loop_entity, jt.loop_sample = loopvar, sample
     try:
-        text = jt.transpile_operand({"e": _strip_accumulator(src["e"], var)})
+        text = jt.transpile_operand({"e": _strip_accumulator(expr, var)})
         test = None
         if test_cond is not None:
             # CANONICAL operator tables and comparison builder — never a local

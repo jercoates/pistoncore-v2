@@ -419,6 +419,10 @@ class Promise:
     gated_by: tuple = ()           # Tests that must hold (incl. restrictions)
     after: int = 0                 # seconds of delay ahead of it
     per_device: bool = False       # inside an each -> runs once per device
+    # WHAT THE `each` RUNS OVER. "for each of THESE" is part of the intent, and
+    # without it a per-device promise says it repeats but not over what — which
+    # left the only route to the device list as guessing from a sibling gate.
+    per_device_over: tuple = ()
     repeating: bool = False        # inside a repeat/while
     order: int = 0                 # position, and order IS intent (§10)
     virtual: bool = False          # a CONTROL command, not a device command
@@ -899,6 +903,8 @@ class _Reader:
         self.waits = set(routing.wait_commands())
         self.out: list[Promise] = []
         self.n = 0
+        # the `each` device lists currently open, innermost last
+        self._each_over: list[tuple] = []
 
     def read(self) -> list[Promise]:
         global _VARS
@@ -954,7 +960,9 @@ class _Reader:
                     params=tuple(_subject(p) for p in (task.get("p") or [])
                                  if isinstance(p, dict)),
                     wakes_on=wake, gated_by=gate, after=after,
-                    per_device=per_device, repeating=repeating,
+                    per_device=per_device,
+                    per_device_over=(self._each_over[-1] if self._each_over else ()),
+                    repeating=repeating,
                     order=self.n, source=me,
                     custom=bool(task.get("cm")),
                     # For TRANSLATION only — the parameters and the device list
@@ -1011,8 +1019,13 @@ class _Reader:
         elif t == "every":
             self._statements(st.get("s"), wake, gate, me, per_device, True)
         elif t == "each":
-            self._statements(st.get("s"), wake + wakes, gate + (g,), me,
-                             True, repeating)
+            over = tuple(str(d) for d in ((st.get("lo") or {}).get("d") or []))
+            self._each_over.append(over)
+            try:
+                self._statements(st.get("s"), wake + wakes, gate + (g,), me,
+                                 True, repeating)
+            finally:
+                self._each_over.pop()
         elif t in ("repeat", "while", "for"):
             self._statements(st.get("s"), wake + wakes, gate + (g,), me,
                              per_device, True)

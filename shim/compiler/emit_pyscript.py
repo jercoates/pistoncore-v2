@@ -72,6 +72,25 @@ _TRIGGER_COS = {
 }
 
 
+
+def _any_of_values(value) -> list:
+    """The VALUES behind an "any of" comparison, however webCoRE stored them.
+
+    A real list is already the answer. A plain comma-separated string is what
+    the editor produces when the attribute is not one the vocab knows, so it
+    offered a text box instead of a multi-select -- a UniFi camera's
+    `smartDetectType` arrives as "person, package". An expression string is NOT
+    a list: its commas sit inside braces and splitting it would shred it, so it
+    is returned whole and the caller compares against it as one value.
+    """
+    if isinstance(value, list):
+        return value
+    if not isinstance(value, str):
+        return [value]
+    if any(ch in value for ch in "{}\"'"):
+        return [value]
+    return [v.strip() for v in value.split(",") if v.strip()] or [value]
+
 def _hold_seconds(op) -> int | None:
     """The `to` operand on stays/remains — hold time in seconds, or None."""
     if not isinstance(op, dict):
@@ -646,6 +665,24 @@ class _PyEmitter:
             parts = [f"({r} in ({opts},) and "
                      f"(_fn_age({_q(e)}) or 0) >= {hold * 1000})"
                      for e, r in zip(entities, sread)]
+        elif co in ("changes_to_any_of", "is_any_of", "changes_away_from_any_of",
+                    "is_not_any_of"):
+            # "changes to anything on this list". HA's own answer is a plain
+            # list (state trigger `to:` and state condition `state:` both take
+            # vol.Any(str, [str]) — checked against HA's schema, 2026-08-16),
+            # and PyScript's is a membership test. Either way the job is to
+            # produce the VALUES.
+            #
+            # webCoRE stores them three ways: a real list (the usual), a plain
+            # comma string when the attribute is one the vocab does not know so
+            # the editor gave a text box — Albert's UniFi camera
+            # `smartDetectType` is "person, package" — and an expression string
+            # whose commas are INSIDE braces. Splitting blindly would shred the
+            # third, so only a plain string is split.
+            vals = _any_of_values(value)
+            opts = ", ".join(_q(self.resolver.ha_state_value(attr, v)) for v in vals)
+            neg = "not " if co in ("is_not_any_of", "changes_away_from_any_of") else ""
+            parts = [f"({neg}{r} in ({opts},))" for r in sread]
         elif co in ("was", "was_not"):
             # "was (not) X for T": exact via last_changed — the state has been
             # its CURRENT value since last_changed, so current-check + age

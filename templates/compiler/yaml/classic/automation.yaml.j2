@@ -52,6 +52,12 @@
 {%- if t.get('for') %}
   for: "{{ t.get('for') }}"
 {%- endif %}
+{#- HA starting up. Its own platform, verified against HA's schema: the
+    `homeassistant` trigger takes event: start or shutdown. webCoRE's
+    $systemStart means the same occasion. -#}
+{%- elif t.kind == 'homeassistant' -%}
+- trigger: homeassistant
+  event: {{ t.get('event', 'start') }}
 {%- elif t.kind == 'template' -%}
 - trigger: template
   value_template: "{{ t.template }}"

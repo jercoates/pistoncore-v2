@@ -371,6 +371,63 @@ def _refuse(why: str):
     return None
 
 
+def report_groups(promises):
+    """The promises that together are ONE report: "tell me which of these match".
+
+    THE LOOP IS NOT THE POINT. webCoRE writes "for each device, if it matches,
+    add its name to a string" because it has no way to ask a list a question.
+    16 of the 17 per-device loops in the corpus are this one shape, and Home
+    Assistant answers it with a single template — so the loop does not get
+    translated, it stops existing.
+
+    Recognised from the READING, not from node shapes: a value that is started
+    fresh, added to once per device, and then used. `accumulates()` is exactly
+    "this promise builds a value out of its own previous value", which is what
+    the value-flow layer exists to know.
+
+    ONE PER VALUE, not one per piston. `38_Low_Battery_Check` builds TWO
+    reports — the ordinary batteries and the smoke/CO ones — and an earlier
+    version of this refused the whole piston for having two, which threw away
+    the very case that motivates the work. A piston may say "which of these,
+    and also which of those".
+
+    Returns [(variable, [start], [adds], [users]), ...], empty when none.
+    """
+    out = []
+    for var in sorted({n for p in promises if p.per_device and p.accumulates()
+                       for n in p.writes}):
+        adds = [p for p in promises
+                if p.per_device and p.accumulates() and var in p.writes]
+        starts = [p for p in promises
+                  if not p.per_device and var in p.writes and not p.accumulates()]
+        users = [p for p in promises if var in p.reads and var not in p.writes]
+        out.append((var, starts, adds, users))
+    return out
+
+
+
+def _report_node(p, var):
+    """One report, as the node the emitter resolves. Slots only — no HA words.
+
+    The emitter turns these into the single template (report_variables); this
+    side just says WHAT the report is: which devices, which test decides
+    membership, and what each match contributes."""
+    test = None
+    for g in p.gated_by:
+        for t in (g.leaves() if isinstance(g, spec.Gate) else [g]):
+            if t.subject.devices == ("$device",):
+                test = t
+    expr = ""
+    for sub in p.params:
+        if sub.kind == "expr" and sub.expression:
+            expr = sub.expression
+    return {"kind": "report", "var": var,
+            "over": list(p.per_device_over),
+            "attr": test.subject.attribute if test else None,
+            "test": _leaf(test) if test is not None else None,
+            "expr": expr}
+
+
 def plan(piston: dict, piston_id: str, piston_name: str):
     """Branch IR built from the piston's INTENT, or None if not expressible."""
     promises = spec.read(piston)
@@ -383,6 +440,12 @@ def plan(piston: dict, piston_id: str, piston_name: str):
     promises = [p if p.wakes_on else replace(p, wakes_on=_wake_from_intent(p))
                 for p in promises]
     behaviours = spec.behaviours(promises)
+
+    # Which promises are the per-device half of a report. Worked out ONCE,
+    # before grouping, because a report is a property of the piston's value
+    # flow rather than of any single promise.
+    reports = report_groups(promises)
+    report_for = {id(p): var for var, _s, adds, _u in reports for p in adds}
 
     # Anything the intent layer carries but emission cannot yet honour must
     # refuse, not approximate: a per-device fan-out, a repeat, or a poll
@@ -401,6 +464,14 @@ def plan(piston: dict, piston_id: str, piston_name: str):
             flat.append(b.engage)
             flat.append(b.release)
         else:
+            # A PER-DEVICE LOOP THAT BUILDS A REPORT IS NOT A LOOP. 16 of the
+            # 17 per-device loops in the corpus say "tell me which of these
+            # match", and Home Assistant answers that with one template — so
+            # the loop stops existing rather than being translated. Anything
+            # else per-device still refuses.
+            if b.per_device and id(b) in report_for:
+                flat.append(b)
+                continue
             if b.per_device or b.repeating: return _refuse("per-device fan-out" if b.per_device else "inside a loop")
             # A custom (`cm`) command is NOT a reason to refuse. It is a raw
             # HA service name that the hybrid feed put in front of the user
@@ -459,7 +530,8 @@ def plan(piston: dict, piston_id: str, piston_name: str):
             if gap > 0:
                 then.append({"kind": "delay", "delay_seconds": gap})
                 clock = int(p.after or 0)
-            then.append(_task(p))
+            then.append(_report_node(p, report_for[id(p)]) if id(p) in report_for
+                        else _task(p))
         if any(t is None for t in then):
             return _refuse("an action could not be expressed")
 
