@@ -59,16 +59,19 @@ band a piston lands on · how many automations one piston becomes · whether
 recognition happens per-shape (idioms) or per-construct · what the intent
 representation looks like · how many compilers there are.
 
-**Two things this document must never carry**, both learned the hard way:
+**Two habits that have burned this project so far.** Working rules, not law —
+they are what the evidence says today, and they are open to being wrong:
 
-1. **Counts.** A number written in prose is wrong the moment the thing improves,
-   and it is then quoted with authority. Section 0's figure was measured by
-   nothing for three days and is already out of date. Numbers belong in a check
-   that re-measures and goes red; a paragraph goes unread.
-2. **The internals of anything still moving.** Documenting the intent layer's
-   shape while it changes every session guarantees rot, and rot is what does the
-   damage — twice on 2026-08-13 a stale doc nearly sent a session to rebuild
-   working code.
+1. **Counts in prose.** A number is wrong the moment the thing improves, and it
+   is then quoted with authority. Section 0's figure went unmeasured for days
+   and is already out of date. A check that re-measures goes red; a paragraph
+   goes unread. (If a count ever needs to be frozen deliberately — a baseline
+   someone must not silently move — say so and date it.)
+2. **Writing down the internals of something still moving.** Documenting the
+   intent layer's shape while it changes every session has produced rot twice
+   (2026-08-13), and rot is what nearly sent sessions to rebuild working code.
+   This stops applying to any part that settles: once the how is genuinely
+   known, writing it down in detail is the right move, not a risk.
 
 ### The arrangement as of 2026-08-15 — PROVISIONAL
 
