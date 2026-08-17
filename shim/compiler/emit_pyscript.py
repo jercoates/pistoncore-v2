@@ -29,7 +29,7 @@ from .. import customize
 from .analyze import analyze
 from .errors import NotYetImplemented
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
-from .resolve import (Resolver, WAS_TO_IS, was_watcher_entity,
+from .resolve import (Resolver, WAS_TO_IS, button_gestures, was_watcher_entity,
                       last_changed_is_exact, duration_seconds,
                       pause_target_automations)
 
@@ -699,7 +699,7 @@ class _PyEmitter:
             parts = [f"({r} {eq} {_q(mapped)} and "
                      f"(_fn_age({_q(e)}) or 0) {qual} {dur})"
                      for e, r in zip(entities, sread)]
-        elif co == "gets" and attr in ("pushed", "held", "doubleTapped", "released"):
+        elif co == "gets" and attr in button_gestures():
             # A button press RE-CHECKED as a condition. It is momentary: there
             # is no state to test a moment later, and the piston only ran
             # because it fired, so it is true by construction. Same answer the
@@ -940,7 +940,7 @@ class _PyEmitter:
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown', 'unavailable') "
                  f"and float({e}) {op} {value}" for e in refs], sid, True)
-        elif co == "gets" and attr in ("pushed", "held", "doubleTapped", "released"):
+        elif co == "gets" and attr in button_gestures():
             # A BUTTON PRESS. HA gives a bridged button one `event` entity per
             # button whose state is the timestamp of the last press, so any
             # change to it is a press — same resolution as the YAML band uses

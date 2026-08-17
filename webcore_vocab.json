@@ -671,7 +671,9 @@
    "t": "enum",
    "o": [
     "pushed",
-    "held"
+    "held",
+    "doubleTapped",
+    "released"
    ],
    "c": "button",
    "m": true,
@@ -685,13 +687,19 @@
      ],
      "read": "attr:event_type",
      "map": {
+      "pushed": "pushed",
       "press": "pushed",
       "single": "pushed",
+      "held": "held",
       "hold": "held",
-      "long_press": "held"
+      "long_press": "held",
+      "double_tapped": "doubleTapped",
+      "double_press": "doubleTapped",
+      "released": "released",
+      "release": "released"
      },
-     "tag": "assumed",
-     "note": "event_type values are integration-specific (Z2M/ZHA/Hue differ); map covers common values, extend per integration"
+     "tag": "verified",
+     "note": "HA's event_type spelling for each gesture. Hubitat-bridged spellings are listed FIRST on purpose: _write_value_maps takes first-listed as the canonical value to EMIT, and those four are verified against real bridged hardware (Zen32, Zen77, Zooz Switch Advanced, UniFi doorbell all advertise event_types ['pushed','held','double_tapped','released'] -- 2026-08-16). The rest are native-integration spellings (Z2M/ZHA/Hue/ESPHome) kept so the same gesture is still RECOGNISED when read from those. Extend per integration; do not copy this table into code."
     }
    ]
   },

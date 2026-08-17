@@ -29,7 +29,7 @@ from . import spec
 from .analyze import analyze, yaml_blockers
 from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
-from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL,
+from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL, button_gestures,
                       was_watcher_entity, last_changed_is_exact,
                       duration_seconds, pause_target_automations)
 from . import routing as _routing
@@ -456,16 +456,17 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
 
 # The momentary attributes: a press, a hold, a double tap, a release. Each is
 # webCoRE's name for an event, and each becomes the same HA shape -- one event
-# entity per button. Kept here rather than in the vocab because the vocab binds
-# ONE entity per attribute, and a button device has several.
-_BUTTON_ATTRS = ("pushed", "held", "doubleTapped", "released")
+# entity per button. The list itself comes from the vocab (resolve.
+# button_gestures) so it sits beside the HA spellings it has to agree with.
 
-# webCoRE's gesture name -> HA's event_type. Verified against real bridged
-# devices: a Zen32's button entities carry
-# ['pushed','held','double_tapped','released'].
-_BUTTON_EVENT_TYPES = {"pushed": "pushed", "held": "held",
-                       "doubleTapped": "double_tapped",
-                       "released": "released"}
+# The HA spelling of a gesture is NOT kept here. It lives in the vocab's
+# `button` attribute map and arrives through resolver.ha_state_value(), the
+# same flip every other value translation uses (_write_value_maps: "keeping
+# both directions on disk is what let the old value_maps.json drift"). This
+# file briefly held a hand-written copy of that table; it was a second,
+# partial copy of translation that already existed, and it silently lost every
+# native-integration spelling the vocab already knew (press/hold/long_press).
+# Mechanism stays in code, names stay in the vocab (Jeremy, 2026-07-26).
 
 
 def _is_button_cond(node: dict) -> bool:
@@ -476,7 +477,7 @@ def _is_button_cond(node: dict) -> bool:
     without it a non-button device that happens to own a `pushed` attribute
     would be routed down the button path on a non-numeric comparison."""
     return (node.get("co") == "gets"
-            and node.get("attr") in _BUTTON_ATTRS
+            and node.get("attr") in button_gestures()
             and _num_str(node.get("value")))
 
 
@@ -891,11 +892,13 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         # Reading event_type off the trigger, not off the entity, matters: the
         # entity's attribute still reads 'pushed' long after the press, so an
         # entity-level test would be true for unrelated runs.
-        # Single quotes, like every other value test here: the template is
-        # emitted inside a double-quoted YAML scalar, so a JSON-style "pushed"
-        # closes the scalar early and the automation will not load.
-        parts = [f"trigger.to_state.attributes.event_type == "
-                 f"'{_BUTTON_EVENT_TYPES[cond['attr']]}'"]
+        # The gesture's HA spelling comes from the vocab (attribute "button"),
+        # never from a table in this file. Single quotes, like every other
+        # value test here: the template is emitted inside a double-quoted YAML
+        # scalar, so a JSON-style "pushed" closes the scalar early and the
+        # automation will not load.
+        gesture = resolver.ha_state_value("button", cond["attr"])
+        parts = [f"trigger.to_state.attributes.event_type == '{gesture}'"]
     elif co in ("rises_above", "rises", "rises_to_or_above"):
         parts = [f"{e} | float(default=-1.0e9) > {cond['value']}"
                  for e in reads]
@@ -1246,7 +1249,7 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
     # no state change at all — measured on the bench, last_changed and
     # last_updated both stayed put. So it refuses rather than emitting an
     # automation that works exactly once (HARD_RULES §6).
-    if co == "gets" and attr in _BUTTON_ATTRS and _num_str(value):
+    if co == "gets" and attr in button_gestures() and _num_str(value):
         _btn = resolver.button_entities(trig["devices"], value, ctx)
         if _btn:
             return {"kind": "state", "entities": _btn, "id": trig_id}

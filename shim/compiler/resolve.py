@@ -65,6 +65,20 @@ def _load_command_ha(vocab: dict) -> dict:
     return out
 
 
+def button_gestures() -> tuple:
+    """The webCoRE attributes that name a button gesture, from the vocab.
+
+    Read from `attributes.button.o` rather than written out here, so the list
+    and the HA spellings beside it in the same vocab entry can never disagree.
+    Both emitter bands ask this; it was briefly spelled out inline in three
+    places, which is the duplication that hides bugs.
+
+    Unlike the event_type spellings these names are webCoRE's and cannot move,
+    so the fallback is safe if a user's edited vocab drops the list."""
+    o = (((_load_vocab().get("attributes") or {}).get("button") or {}).get("o"))
+    return tuple(o) if o else ("pushed", "held", "doubleTapped", "released")
+
+
 def _attribute_value_maps(vocab: dict) -> dict:
     """webCoRE value -> HA value, per attribute, DERIVED by flipping the
     vocab's own read rules.
