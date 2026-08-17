@@ -603,6 +603,28 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
     for attr_key in sub_device_members:
         sub_device_members[attr_key].sort(key=_trailing_number)
 
+    # What each entity says its own event values are, kept per entity so the
+    # compiler can emit the spelling THIS device uses instead of guessing one.
+    #
+    # The same physical button reaches HA with different words depending on how
+    # it got there: a Hubitat-bridged Zen32 advertises
+    # ['pushed','held','double_tapped','released'], while a natively integrated
+    # button says ['press','double_press','triple_press','hold','release']
+    # (both measured on real devices, 2026-08-16). The vocab knows both
+    # spellings, but a single canonical choice is wrong for half of them —
+    # which is exactly the case the compiler is allowed to settle by LOOKING at
+    # the device (COMPILER_SPEC compile-time resolution; recompile is the
+    # refresh, so nothing here is a runtime dependency).
+    #
+    # `event_types` stays in _PLUMBING_FIELDS: it is a capability declaration,
+    # not a reading, so it must not become a webCoRE attribute the user can
+    # compare against. This carries it as resolution metadata instead.
+    entity_event_types: dict[str, list] = {}
+    for entity_id in member_ids_sorted:
+        types = ((state_map.get(entity_id) or {}).get("attributes") or {}).get("event_types")
+        if isinstance(types, (list, tuple)) and types:
+            entity_event_types[entity_id] = [str(t) for t in types]
+
     # Stage 6 — commands: union of vocab.capabilities[k].c across this
     # group's capability keys, bound to whichever member contributed that
     # capability's attribute (commands route to that member).
@@ -673,6 +695,7 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
         "attr_bindings": attr_bindings,
         "attr_field_bindings": attr_field_bindings,
         "sub_device_bindings": sub_device_members,
+        "entity_event_types": entity_event_types,
         "cmd_bindings": cmd_bindings,
     }
 

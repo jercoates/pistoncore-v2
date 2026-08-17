@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from shim.compiler import compile_piston                      # noqa: E402
 from shim.compiler import emit_yaml as _emit_yaml             # noqa: E402
+from shim.compiler.resolve import button_gestures             # noqa: E402
 
 SNAPSHOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         "test-compile-snapshots.json")
@@ -174,8 +175,7 @@ def _synthetic_maps(piston):
         nonlocal _max_button
         if isinstance(node, dict):
             if (node.get("co") == "gets"
-                    and (node.get("lo") or {}).get("a") in
-                    ("pushed", "held", "doubleTapped", "released")):
+                    and (node.get("lo") or {}).get("a") in button_gestures()):
                 try:
                     _max_button = max(_max_button, int((node.get("ro") or {}).get("c")))
                 except (TypeError, ValueError):
@@ -199,7 +199,7 @@ def _synthetic_maps(piston):
         # again. Verified shape on real bridged devices: a doorbell has
         # button_1, a paddle dimmer has button_1..10, and the count matches the
         # device's own numberOfButtons.
-        if any(a in ("pushed", "held", "doubleTapped", "released") for a in attrs):
+        if any(a in button_gestures() for a in attrs):
             # HOW MANY BUTTONS COMES FROM THE PISTON, not a number I picked.
             # A first version capped this at ten and a45/a48 use button 11 --
             # Zooz encodes multi-tap gestures as extra button numbers, so the
@@ -210,11 +210,26 @@ def _synthetic_maps(piston):
                 binds[f"{slug}_button_{n}"] = f"event.{slug}_button_{n}"
         return (binds, {c: f"{cmd_domain.get(c, 'light')}.{slug}" for c in cmds})
 
+    def _buttons(slug):
+        """What the device pipeline publishes for a button device: the ordered
+        sub-device list, and what each entity says its event words are.
+
+        Modelled on the BRIDGED shape because that is what the corpus was
+        authored against and what four real devices were measured to report.
+        The native shape is exercised by test_intent_probe, not here."""
+        if _max_button < 1:
+            return {}, {}
+        ents = [f"event.{slug}_button_{n}" for n in range(1, _max_button + 1)]
+        return ({"button": ents},
+                {e: ["pushed", "held", "double_tapped", "released"] for e in ents})
+
     reso = {}
     for i, h in enumerate(real):
         slug = f"dev{i}"
         attr_b, cmd_b = _bindings(slug)
-        reso[h] = {"name": f"Device {i}", "attr_bindings": attr_b, "cmd_bindings": cmd_b}
+        sub_b, ev_types = _buttons(slug)
+        reso[h] = {"name": f"Device {i}", "attr_bindings": attr_b, "cmd_bindings": cmd_b,
+                   "sub_device_bindings": sub_b, "entity_event_types": ev_types}
     globals_map = {g: {"t": "device", "v": {"d": real[:1] or [":synthetic:"]}}
                    for g in sorted(globs)}
     if not real:

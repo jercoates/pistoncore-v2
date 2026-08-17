@@ -79,6 +79,23 @@ def button_gestures() -> tuple:
     return tuple(o) if o else ("pushed", "held", "doubleTapped", "released")
 
 
+def _attribute_read_map(vocab: dict, attr: str) -> dict:
+    """HA value -> webCoRE value for one attribute, as the vocab stores it.
+
+    The mirror of _attribute_value_maps, which flips this for writing. Reading
+    needs the unflipped direction because several HA words can mean the same
+    webCoRE one ('press', 'single' and 'pushed' are all a push) and the flip
+    keeps only the canonical one. Asking "what does THIS device's word mean"
+    needs them all."""
+    out: dict = {}
+    for rule in (vocab.get("attributes", {}).get(attr, {}).get("ha") or []):
+        if isinstance(rule, dict):
+            for ha_value, wc_value in (rule.get("map") or {}).items():
+                if ha_value != "*":
+                    out.setdefault(str(ha_value), str(wc_value))
+    return out
+
+
 def _attribute_value_maps(vocab: dict) -> dict:
     """webCoRE value -> HA value, per attribute, DERIVED by flipping the
     vocab's own read rules.
@@ -549,6 +566,14 @@ class Resolver:
                 ent = binds.get(attr)
                 if ent:
                     self._raw_fields[(ent, attr)] = field
+        # What each entity declares its own event values to be, flattened the
+        # same way, so a lookup needs only an entity id. Lets the compiler emit
+        # the word THIS device uses rather than one canonical guess — the whole
+        # reason the payload carries it (device_pipeline, entity_event_types).
+        self.entity_event_types: dict[str, list] = {}
+        for entry in resolution_map.values():
+            if isinstance(entry, dict):
+                self.entity_event_types.update(entry.get("entity_event_types") or {})
 
     def read_field(self, entity: str, attr: str) -> str | None:
         """The HA field holding this reading, or None to read the entity state.
@@ -807,30 +832,61 @@ class Resolver:
         TIMESTAMP of the last press, so every press is a state change; that is
         what makes repeat presses work.
 
-        KNOWN FRAGILITY, stated rather than hidden: the button number is only
-        available in the entity id (`..._button_3`), so this matches on that
-        suffix. A user who renames the entity breaks the link. There is no
-        other signal — the number appears nowhere else in the payload.
+        The button number is a SUB-DEVICE INDEX, which the device pipeline
+        already resolves: an attribute carrying `s` in the vocab (button's is
+        "numberOfButtons,numButtons") collects every matching entity into
+        `sub_device_bindings`, sorted by trailing number so index N is
+        physical button N (device_pipeline Stage 3/5). That list is built from
+        whatever HA actually reported for this device, which is why it needs
+        no knowledge of how the device got here.
+
+        This used to regex `_button_(\\d+)$` over attr_bindings and carried a
+        docstring claiming the number "appears nowhere else in the payload".
+        That was wrong — it is the index into the list below — and the regex
+        also broke if a user renamed an entity. Both went away with it.
 
         Devices that report numberOfButtons as unknown get NO event entities
-        (an Inovelli dimmer does this) and return [] here, so the caller can
-        decide rather than being handed something that fires once."""
-        import re as _re
+        (both Inovelli S2 scene switches do this) and return [] here, so the
+        caller can decide rather than being handed something that fires once."""
         out = []
+        try:
+            idx = int(number) - 1          # webCoRE numbers buttons from 1
+        except (TypeError, ValueError):
+            return out
+        if idx < 0:
+            return out
         for dref in drefs:
             for h in self._hashes(dref, ctx):
                 entry = self.resolution_map.get(h) or {}
-                found = None
-                for ent in (entry.get("attr_bindings") or {}).values():
-                    if not isinstance(ent, str) or not ent.startswith("event."):
-                        continue
-                    m = _re.search(r"_button_(\d+)$", ent)
-                    if m and int(m.group(1)) == int(number):
-                        found = ent
-                        break
-                if found:
-                    out.append(found)
+                members = (entry.get("sub_device_bindings") or {}).get("button") or []
+                if idx < len(members):
+                    out.append(members[idx])
         return out
+
+    def button_event_type(self, entity: str, gesture: str) -> str:
+        """The word THIS entity uses for a webCoRE gesture.
+
+        Bridged and native buttons mean the same thing in different words —
+        a Hubitat-bridged Zen32 advertises event_types ['pushed','held',
+        'double_tapped','released'], a natively integrated button says
+        ['press','double_press','triple_press','hold','release'] (both
+        measured on real devices, 2026-08-16). The vocab's button map knows
+        every spelling; this picks the one the entity in hand actually
+        declares, so the emitted condition matches the device instead of a
+        house style.
+
+        Falls back to the vocab's canonical (first-listed) spelling when the
+        entity declares nothing — an unavailable device at compile time, or a
+        payload built before entity_event_types existed."""
+        read_map = _attribute_read_map(self.vocab, "button")
+        for ha_value in self.entity_event_types.get(entity) or []:
+            if read_map.get(ha_value) == gesture:
+                return ha_value
+        # Either the entity declared nothing, or it declared a vocabulary that
+        # does not contain this gesture. Fall back to the canonical spelling
+        # rather than picking an unrelated event type off its list — a wrong
+        # match here would silently bind the piston to the wrong gesture.
+        return self.ha_state_value("button", gesture)
 
     def entities_for_command(self, drefs: list[str], command: str, ctx: dict) -> list[str]:
         out = []

@@ -892,13 +892,25 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         # Reading event_type off the trigger, not off the entity, matters: the
         # entity's attribute still reads 'pushed' long after the press, so an
         # entity-level test would be true for unrelated runs.
-        # The gesture's HA spelling comes from the vocab (attribute "button"),
-        # never from a table in this file. Single quotes, like every other
+        # The gesture's HA spelling is asked of the ENTITY, so a bridged button
+        # gets 'double_tapped' and a native one 'double_press' from the same
+        # piston. Never a table in this file. Single quotes, like every other
         # value test here: the template is emitted inside a double-quoted YAML
         # scalar, so a JSON-style "pushed" closes the scalar early and the
         # automation will not load.
-        gesture = resolver.ha_state_value("button", cond["attr"])
-        parts = [f"trigger.to_state.attributes.event_type == '{gesture}'"]
+        ents = resolver.button_entities(cond["devices"], cond["value"], ctx)
+        # One clause per DISTINCT spelling, not per entity: a condition naming
+        # several devices usually gets the same word from all of them, and
+        # repeating it would just be noise. They only differ when the devices
+        # arrived in HA by different routes — one bridged, one native — which
+        # is exactly when both clauses are needed.
+        spellings = list(dict.fromkeys(
+            resolver.button_event_type(e, cond["attr"]) for e in ents))
+        parts = [f"trigger.to_state.attributes.event_type == '{g}'"
+                 for g in spellings]
+        if not parts:
+            raise NotYetImplemented(
+                f"'{cond['attr']}' on a device with no per-button entities", **ctx)
     elif co in ("rises_above", "rises", "rises_to_or_above"):
         parts = [f"{e} | float(default=-1.0e9) > {cond['value']}"
                  for e in reads]
