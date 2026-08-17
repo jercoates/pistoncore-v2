@@ -221,15 +221,17 @@ def _synthetic_maps(piston):
             return {}, {}
         ents = [f"event.{slug}_button_{n}" for n in range(1, _max_button + 1)]
         return ({"button": ents},
-                {e: ["pushed", "held", "double_tapped", "released"] for e in ents})
+                {e: {"device_class": "button",
+                     "event_types": ["pushed", "held", "double_tapped", "released"]}
+                 for e in ents})
 
     reso = {}
     for i, h in enumerate(real):
         slug = f"dev{i}"
         attr_b, cmd_b = _bindings(slug)
-        sub_b, ev_types = _buttons(slug)
+        sub_b, signals = _buttons(slug)
         reso[h] = {"name": f"Device {i}", "attr_bindings": attr_b, "cmd_bindings": cmd_b,
-                   "sub_device_bindings": sub_b, "entity_event_types": ev_types}
+                   "sub_device_bindings": sub_b, "entity_signals": signals}
     globals_map = {g: {"t": "device", "v": {"d": real[:1] or [":synthetic:"]}}
                    for g in sorted(globs)}
     if not real:

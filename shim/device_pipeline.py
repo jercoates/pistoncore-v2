@@ -603,27 +603,43 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
     for attr_key in sub_device_members:
         sub_device_members[attr_key].sort(key=_trailing_number)
 
-    # What each entity says its own event values are, kept per entity so the
-    # compiler can emit the spelling THIS device uses instead of guessing one.
+    # EVERY CAPABILITY DECLARATION EACH ENTITY MAKES, kept per entity.
     #
-    # The same physical button reaches HA with different words depending on how
-    # it got there: a Hubitat-bridged Zen32 advertises
-    # ['pushed','held','double_tapped','released'], while a natively integrated
-    # button says ['press','double_press','triple_press','hold','release']
-    # (both measured on real devices, 2026-08-16). The vocab knows both
-    # spellings, but a single canonical choice is wrong for half of them —
-    # which is exactly the case the compiler is allowed to settle by LOOKING at
-    # the device (COMPILER_SPEC compile-time resolution; recompile is the
-    # refresh, so nothing here is a runtime dependency).
+    # THE INVARIANT (Jeremy, 2026-08-16, after this went wrong): an HA field is
+    # either a READING or a DECLARATION, and the compiler must be able to see
+    # both. Readings reach it through attr_bindings / attr_field_bindings / the
+    # raw feed. Declarations reach it here. _PLUMBING_FIELDS is already the
+    # exact line between the two — it is the set deliberately kept OUT of the
+    # attribute lane because nobody writes "if the thermostat's hvac_modes
+    # changes" — so carrying precisely that set means no field can fall between
+    # the two paths and vanish.
     #
-    # `event_types` stays in _PLUMBING_FIELDS: it is a capability declaration,
-    # not a reading, so it must not become a webCoRE attribute the user can
-    # compare against. This carries it as resolution metadata instead.
-    entity_event_types: dict[str, list] = {}
+    # WHY THIS EXISTS: Stage 3 already reads device_class, supported_features,
+    # supported_color_modes and the declaration attrs to decide what a device
+    # can do (_entity_signals, below), and then drops them — they were a local
+    # variable. The compiler needs the same answers to BUILD the automation:
+    # which colour modes a light really has, a fan's percentage_step, a
+    # cover's supported_features, and the case that exposed it — the words a
+    # button uses. The same physical button reaches HA as
+    # ['pushed','held','double_tapped','released'] when bridged and
+    # ['press','double_press','triple_press','hold','release'] when native
+    # (both measured on real devices, 2026-08-16), so a single canonical guess
+    # is wrong for half of them.
+    #
+    # Deliberately NOT filtered down to "the ones we need today". Choosing that
+    # subset is what lost event_types for months, and the same mistake is
+    # already recorded one function up in _declaration_attr_keys: "a rule
+    # nobody reads looks exactly like a rule that doesn't match".
+    #
+    # Compile-time only. Nothing here creates a runtime dependency — a
+    # recompile is the refresh (COMPILER_SPEC, no-runtime-dependency rule).
+    entity_signals: dict[str, dict] = {}
     for entity_id in member_ids_sorted:
-        types = ((state_map.get(entity_id) or {}).get("attributes") or {}).get("event_types")
-        if isinstance(types, (list, tuple)) and types:
-            entity_event_types[entity_id] = [str(t) for t in types]
+        attrs = (state_map.get(entity_id) or {}).get("attributes") or {}
+        declared = {k: v for k, v in attrs.items()
+                    if k in _PLUMBING_FIELDS and v is not None}
+        if declared:
+            entity_signals[entity_id] = declared
 
     # Stage 6 — commands: union of vocab.capabilities[k].c across this
     # group's capability keys, bound to whichever member contributed that
@@ -695,7 +711,7 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
         "attr_bindings": attr_bindings,
         "attr_field_bindings": attr_field_bindings,
         "sub_device_bindings": sub_device_members,
-        "entity_event_types": entity_event_types,
+        "entity_signals": entity_signals,
         "cmd_bindings": cmd_bindings,
     }
 

@@ -566,14 +566,21 @@ class Resolver:
                 ent = binds.get(attr)
                 if ent:
                     self._raw_fields[(ent, attr)] = field
-        # What each entity declares its own event values to be, flattened the
-        # same way, so a lookup needs only an entity id. Lets the compiler emit
-        # the word THIS device uses rather than one canonical guess — the whole
-        # reason the payload carries it (device_pipeline, entity_event_types).
-        self.entity_event_types: dict[str, list] = {}
+        # Every capability DECLARATION each entity makes, flattened so a lookup
+        # needs only an entity id. This is the other half of what the compiler
+        # can know about a device: readings come through _raw_fields and the
+        # bindings above, declarations come through here (device_pipeline,
+        # entity_signals — see the invariant recorded there).
+        #
+        # Carried whole rather than filtered to today's needs: picking the
+        # useful subset is what lost event_types, and the compiler needs
+        # different keys for different jobs (supported_color_modes to know a
+        # light takes colour, percentage_step for a fan, event_types for the
+        # word a button uses).
+        self.entity_signals: dict[str, dict] = {}
         for entry in resolution_map.values():
             if isinstance(entry, dict):
-                self.entity_event_types.update(entry.get("entity_event_types") or {})
+                self.entity_signals.update(entry.get("entity_signals") or {})
 
     def read_field(self, entity: str, attr: str) -> str | None:
         """The HA field holding this reading, or None to read the entity state.
@@ -863,6 +870,22 @@ class Resolver:
                     out.append(members[idx])
         return out
 
+    def declares(self, entity: str, key: str, default=None):
+        """What this entity DECLARED about itself under `key`, or default.
+
+        The declaration half of the compiler's view of a device — what it can
+        do, as opposed to what it currently reads. Every field HA published
+        that is not a reading is here (device_pipeline.entity_signals), so a
+        new use needs no pipeline change: supported_features for a cover,
+        supported_color_modes before emitting a colour, percentage_step for a
+        fan's speed maths, event_types for a button's vocabulary.
+
+        Returns default when the entity declared nothing, which is the honest
+        answer for a device that was unavailable when the payload was built —
+        callers must decide what to do about it rather than be handed a
+        fabricated capability."""
+        return (self.entity_signals.get(entity) or {}).get(key, default)
+
     def button_event_type(self, entity: str, gesture: str) -> str:
         """The word THIS entity uses for a webCoRE gesture.
 
@@ -877,9 +900,9 @@ class Resolver:
 
         Falls back to the vocab's canonical (first-listed) spelling when the
         entity declares nothing — an unavailable device at compile time, or a
-        payload built before entity_event_types existed."""
+        payload built before entity_signals existed."""
         read_map = _attribute_read_map(self.vocab, "button")
-        for ha_value in self.entity_event_types.get(entity) or []:
+        for ha_value in self.declares(entity, "event_types") or []:
             if read_map.get(ha_value) == gesture:
                 return ha_value
         # Either the entity declared nothing, or it declared a vocabulary that
