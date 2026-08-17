@@ -699,6 +699,16 @@ class _PyEmitter:
             parts = [f"({r} {eq} {_q(mapped)} and "
                      f"(_fn_age({_q(e)}) or 0) {qual} {dur})"
                      for e, r in zip(entities, sread)]
+        elif co == "gets" and attr in ("pushed", "held", "doubleTapped", "released"):
+            # A button press RE-CHECKED as a condition. It is momentary: there
+            # is no state to test a moment later, and the piston only ran
+            # because it fired, so it is true by construction. Same answer the
+            # YAML band gives, and the same reasoning as `changes`.
+            #
+            # Comparing the button-number sensor instead would be false the
+            # moment a DIFFERENT button was pressed, silently killing every
+            # later run.
+            parts = ["True"]
         else:
             raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
 
@@ -930,6 +940,22 @@ class _PyEmitter:
             self._add_state_trigger(
                 [f"{e} is not None and {e} not in ('unknown', 'unavailable') "
                  f"and float({e}) {op} {value}" for e in refs], sid, True)
+        elif co == "gets" and attr in ("pushed", "held", "doubleTapped", "released"):
+            # A BUTTON PRESS. HA gives a bridged button one `event` entity per
+            # button whose state is the timestamp of the last press, so any
+            # change to it is a press — same resolution as the YAML band uses
+            # (Resolver.button_entities), never a second copy.
+            #
+            # PyScript must be TOTAL (HARD_RULES §3): a piston reaching this
+            # band because of some unrelated command must not then fail on a
+            # trigger the YAML band can express perfectly well. That is what
+            # happened here — four of Albert's doorbell pistons route to
+            # PyScript for their camera commands and died on the doorbell.
+            btn = self.resolver.button_entities(lo.get("d", []), value, ctx)
+            if not btn:
+                raise NotYetImplemented(
+                    f"'{attr}' on a device with no per-button entities", **ctx)
+            self._add_state_trigger([f"{e}" for e in btn], sid, False)
         else:
             raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
 

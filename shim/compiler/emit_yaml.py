@@ -454,6 +454,33 @@ def _compile_script(branches: list, resolver: Resolver, piston_id: str,
 
 # ── conditions ──────────────────────────────────────────────────────────────
 
+# The momentary attributes: a press, a hold, a double tap, a release. Each is
+# webCoRE's name for an event, and each becomes the same HA shape -- one event
+# entity per button. Kept here rather than in the vocab because the vocab binds
+# ONE entity per attribute, and a button device has several.
+_BUTTON_ATTRS = ("pushed", "held", "doubleTapped", "released")
+
+# webCoRE's gesture name -> HA's event_type. Verified against real bridged
+# devices: a Zen32's button entities carry
+# ['pushed','held','double_tapped','released'].
+_BUTTON_EVENT_TYPES = {"pushed": "pushed", "held": "held",
+                       "doubleTapped": "double_tapped",
+                       "released": "released"}
+
+
+def _is_button_cond(node: dict) -> bool:
+    """"{Controller}'s pushed gets 3" — a gesture on a numbered button.
+
+    One predicate, used by the trigger, the condition and the noisy-wake
+    classifier, so the three cannot drift apart. The numeric test matters:
+    without it a non-button device that happens to own a `pushed` attribute
+    would be routed down the button path on a non-numeric comparison."""
+    return (node.get("co") == "gets"
+            and node.get("attr") in _BUTTON_ATTRS
+            and _num_str(node.get("value")))
+
+
+
 _SUN_EVENTS = {"sunrise": "sunrise", "sunset": "sunset"}
 
 
@@ -830,7 +857,14 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         parts = [f"({neg}{r} in {mapped!r} and "
                  f"(as_timestamp(now()) - as_timestamp({s})) >= {secs})"
                  for r, s in zip(reads, stamps)]
-    elif co in ("changes_to", "gets", "arrives", "stays", "stays_equal_to"):
+    elif co in ("changes_to", "gets", "arrives", "stays", "stays_equal_to") \
+            and not _is_button_cond(cond):
+        # The button exclusion is load-bearing, not tidiness: "gets" lives in
+        # this tuple, so without it the generic equality below swallows every
+        # button gesture and the branch further down is unreachable. It WAS
+        # unreachable — which is why no emitted automation ever carried an
+        # event_type test, and every gesture on a button ran every branch
+        # bound to it.
         mapped = resolver.ha_state_value(cond["attr"], cond["value"])
         parts = [f"{e} == '{mapped}'" for e in reads]
     elif co in ("changes_away_from", "stays_away_from"):
@@ -842,6 +876,26 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         parts = [f"{e} in {mapped!r}" for e in reads]
     elif co in ("changes", "changed"):
         parts = ["true"]      # the automation only ran because something changed
+    elif _is_button_cond(cond):
+        # WHICH GESTURE, not whether it happened. One HA `event` entity serves
+        # ALL of a button's gestures — event_types is
+        # ['pushed','held','double_tapped','released'] — so the trigger "that
+        # button fired" is not enough on its own: a double-tap of button 3
+        # would otherwise run every automation bound to pushing button 3.
+        # (Jeremy, 2026-08-16, pointing at a Zen32 showing Pushed 2 and Double
+        # Tapped 3 at the same moment: "there is no 1 way for these".)
+        #
+        # The trigger stays "the button fired" because the entity's state is
+        # the timestamp and therefore always changes — which is what makes a
+        # repeated press work at all — and the GESTURE is filtered here.
+        # Reading event_type off the trigger, not off the entity, matters: the
+        # entity's attribute still reads 'pushed' long after the press, so an
+        # entity-level test would be true for unrelated runs.
+        # Single quotes, like every other value test here: the template is
+        # emitted inside a double-quoted YAML scalar, so a JSON-style "pushed"
+        # closes the scalar early and the automation will not load.
+        parts = [f"trigger.to_state.attributes.event_type == "
+                 f"'{_BUTTON_EVENT_TYPES[cond['attr']]}'"]
     elif co in ("rises_above", "rises", "rises_to_or_above"):
         parts = [f"{e} | float(default=-1.0e9) > {cond['value']}"
                  for e in reads]
@@ -1007,13 +1061,23 @@ _HELD_OPS = _REMAIN_ABOVE + _REMAIN_BELOW + (
 def _is_noisy_trigger(trig: dict) -> bool:
     """A trigger that must wake on EVERY change of the value it watches.
 
-    Only the "was and still is" family, and only when authored WITHOUT a
-    duration. With one it compiles to a native trigger plus `for:` — fires
+    Two families. The "was and still is" one, and only when authored WITHOUT a
+    duration: with one it compiles to a native trigger plus `for:` — fires
     once, silent — so `stays_*` (which declares a duration in the vocab) is
     normally not noisy at all. This is the small remainder that is.
+
+    And BUTTONS. One HA `event` entity carries every gesture of a button
+    (event_types is ['pushed','held','double_tapped','released'] on a real
+    bridged Zen32), and its state is the press TIMESTAMP — so it wakes on the
+    hold and the release too, not just the push the piston asked for. Waking
+    on all of them is what makes a repeated press work at all, so the wake
+    stays broad and the GESTURE is re-checked here, exactly like the family
+    above. (Jeremy, 2026-08-16, on a Zen32 reading Pushed 2 and Double Tapped
+    3 at once: "there is no 1 way for these this uses the push double tap".)
     """
-    return (trig.get("co") in _HELD_OPS
-            and not _duration_hms(trig.get("duration")))
+    return _is_button_cond(trig) or (
+        trig.get("co") in _HELD_OPS
+        and not _duration_hms(trig.get("duration")))
 
 
 def _noisy_state_trigger(entities, trig_id) -> dict:
@@ -1035,6 +1099,12 @@ def _recheck_condition(trig: dict, resolver: Resolver, ctx: dict) -> dict | None
     trigger's own IR (same shape _cond_node already produces, co swapped to
     its instantaneous-check sibling) and runs it through the real _condition()
     dispatch — zero new boolean logic, just borrowing what's already there."""
+    if _is_button_cond(trig):
+        # No sibling op to swap to: "gets" IS the gesture test, and _condition
+        # already knows how to write it. Kept out of _TRIGGER_RECHECK_OP on
+        # purpose — putting "gets" in that table would re-check every ordinary
+        # equality trigger in the corpus, not just buttons.
+        return _condition(trig, resolver, ctx)
     mapped = _TRIGGER_RECHECK_OP.get(trig.get("co"))
     if mapped is None or trig.get("lo_type") == "v":
         return None
@@ -1160,6 +1230,30 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
 
     def as_list(v):
         return [mapped(x) for x in v] if isinstance(v, list) else [mapped(v)]
+
+    # ── a BUTTON was pressed ────────────────────────────────────────────────
+    # "{Switch}'s pushed gets 3" — a momentary event, not a state. HA models a
+    # bridged button as one `event` entity per button whose state is the
+    # timestamp of the last press, so ANY state change on it is a press; the
+    # kind (pushed / held / double_tapped) is the attribute name, and the
+    # number picks which entity. Verified against a real doorbell, a 2-button
+    # switch, a 5-button scene controller and a 10-button paddle dimmer.
+    #
+    # A device whose numberOfButtons is unknown gets no event entities (an
+    # Inovelli dimmer does this) and only exposes `sensor.<device>_pushed`,
+    # whose value is the button number. That CANNOT be triggered on reliably:
+    # pressing the same button twice leaves the value unchanged, and HA raises
+    # no state change at all — measured on the bench, last_changed and
+    # last_updated both stayed put. So it refuses rather than emitting an
+    # automation that works exactly once (HARD_RULES §6).
+    if co == "gets" and attr in _BUTTON_ATTRS and _num_str(value):
+        _btn = resolver.button_entities(trig["devices"], value, ctx)
+        if _btn:
+            return {"kind": "state", "entities": _btn, "id": trig_id}
+        raise NotYetImplemented(
+            f"'{attr}' on a device that reports no per-button entities — HA "
+            f"only exposes the button number as a sensor value, which does not "
+            f"change when the same button is pressed twice", **ctx)
 
     # ── state (equality) family ──
     if co in ("changes_to", "gets", "arrives"):

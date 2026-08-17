@@ -778,6 +778,46 @@ class Resolver:
                 out.append(ent)
         return out
 
+    def button_entities(self, drefs: list[str], number, ctx: dict) -> list[str]:
+        """The entity for button `number` on each device, or [] if it has none.
+
+        webCoRE says "{Switch}'s pushed gets 3" — the button NUMBER is the
+        comparison's value, so it selects WHICH of the device's entities to
+        watch. That is unlike every other attribute here, where the attribute
+        alone picks the entity and the value is only compared.
+
+        Home Assistant gives a bridged button device one `event` entity per
+        button, and the count matches the device's own numberOfButtons —
+        verified against four real devices (a doorbell with 1, a switch with 2,
+        a scene controller with 5, a paddle dimmer with 10). Its state is the
+        TIMESTAMP of the last press, so every press is a state change; that is
+        what makes repeat presses work.
+
+        KNOWN FRAGILITY, stated rather than hidden: the button number is only
+        available in the entity id (`..._button_3`), so this matches on that
+        suffix. A user who renames the entity breaks the link. There is no
+        other signal — the number appears nowhere else in the payload.
+
+        Devices that report numberOfButtons as unknown get NO event entities
+        (an Inovelli dimmer does this) and return [] here, so the caller can
+        decide rather than being handed something that fires once."""
+        import re as _re
+        out = []
+        for dref in drefs:
+            for h in self._hashes(dref, ctx):
+                entry = self.resolution_map.get(h) or {}
+                found = None
+                for ent in (entry.get("attr_bindings") or {}).values():
+                    if not isinstance(ent, str) or not ent.startswith("event."):
+                        continue
+                    m = _re.search(r"_button_(\d+)$", ent)
+                    if m and int(m.group(1)) == int(number):
+                        found = ent
+                        break
+                if found:
+                    out.append(found)
+        return out
+
     def entities_for_command(self, drefs: list[str], command: str, ctx: dict) -> list[str]:
         out = []
         for dref in drefs:

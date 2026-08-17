@@ -167,14 +167,48 @@ def _synthetic_maps(piston):
         _vocab_cmds = set(cmds)
     cmds = [c for c in cmds if c in _vocab_cmds] or ["on"]
 
+    # The highest button number this piston actually asks for, so the fake
+    # device has at least that many. Derived, never guessed.
+    _max_button = 1
+    def _scan_buttons(node):
+        nonlocal _max_button
+        if isinstance(node, dict):
+            if (node.get("co") == "gets"
+                    and (node.get("lo") or {}).get("a") in
+                    ("pushed", "held", "doubleTapped", "released")):
+                try:
+                    _max_button = max(_max_button, int((node.get("ro") or {}).get("c")))
+                except (TypeError, ValueError):
+                    pass
+            for v in node.values():
+                _scan_buttons(v)
+        elif isinstance(node, list):
+            for v in node:
+                _scan_buttons(v)
+    _scan_buttons(piston)
+
     def _bindings(slug):
         # attributes read from an entity of their own domain; commands act on
         # one of theirs. Anything the vocab has no domain for keeps the old
         # stand-in, so unmapped things still produce a stable, recorded result.
-        return (
-            {a: f"{attr_domain.get(a, 'sensor')}.{slug}_{a.lower()}" for a in attrs},
-            {c: f"{cmd_domain.get(c, 'light')}.{slug}" for c in cmds},
-        )
+        binds = {a: f"{attr_domain.get(a, 'sensor')}.{slug}_{a.lower()}" for a in attrs}
+        # A BUTTON DEVICE HAS ONE `event` ENTITY PER BUTTON, and without them
+        # the harness cannot represent one at all — it bound `pushed` to a
+        # single sensor, so every "button 3 was pressed" resolved to the same
+        # entity and compiled to a trigger that fires once and then never
+        # again. Verified shape on real bridged devices: a doorbell has
+        # button_1, a paddle dimmer has button_1..10, and the count matches the
+        # device's own numberOfButtons.
+        if any(a in ("pushed", "held", "doubleTapped", "released") for a in attrs):
+            # HOW MANY BUTTONS COMES FROM THE PISTON, not a number I picked.
+            # A first version capped this at ten and a45/a48 use button 11 --
+            # Zooz encodes multi-tap gestures as extra button numbers, so the
+            # count has nothing to do with how many buttons you can see (a
+            # two-paddle dimmer reports 10). A real device advertises its own;
+            # the harness has to cover whatever the corpus asks for.
+            for n in range(1, _max_button + 1):
+                binds[f"{slug}_button_{n}"] = f"event.{slug}_button_{n}"
+        return (binds, {c: f"{cmd_domain.get(c, 'light')}.{slug}" for c in cmds})
 
     reso = {}
     for i, h in enumerate(real):
