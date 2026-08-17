@@ -7503,7 +7503,7 @@
    "high": "high"
   },
   "fan_speed": {
-   "_note": "TO VERIFY (2026-07-26): these are fixed percentages, but fans differ — Jeremy's report percentage_step 20 (five speeds) while he describes them as three-speed, and 'auto' here becomes 66% even on a fan that has a real 'auto' preset. The right fix is reading the fan's own preset_modes/percentage_step at compile time rather than a fixed table; until then these are the previous behaviour, unchanged.",
+   "_note": "These are ORDINAL POSITIONS expressed as percentages, not literal values to send. The compiler ranks them and maps the rank onto the fan's OWN percentage_step at compile time (_fan_speed_pct), so a five-step fan gets 20/60/100 and a three-speed gets 33/67/100 from these same numbers. Edit the ORDER to change which speed a word means; the absolute numbers only matter for a fan that declares no percentage_step, which keeps them as-is. Fixed values alone were a MEASURED silent failure (HA_LIMITATIONS §3, 2026-07-26): 33 sent to a five-step fan already on medium moved nothing at all and errored nowhere.",
    "low": 33,
    "medium": 66,
    "medium-low": 50,

@@ -175,6 +175,60 @@ def _duration_secs_param(prm: dict):
     return secs
 
 
+def _fan_speed_pct(v, resolver=None, entity=None):
+    """A webCoRE fan speed word -> a percentage THIS fan can actually reach.
+
+    MEASURED FAILURE this exists to fix (HA_LIMITATIONS §3, 2026-07-26): a
+    five-step fan sent 33 (the fixed table's "low") while running on medium
+    moved not at all — the bridge folded 33 into the speed it already had and
+    sent nothing onward. The piston compiled, deployed and "ran". Nothing
+    errored anywhere, which is the worst failure this compiler can produce.
+    `percentage_step` is only a HINT to HA core, so HA passes 33 straight
+    through and the absorption happens inside the integration — meaning no
+    fixed table can be right for every device.
+
+    So the WORD's ordinal position stays in the vocab (editable, and webCoRE's
+    own vocabulary), and the DEVICE supplies the step. Taking the highest whole
+    step not exceeding the requested fraction lands on a value the fan actually
+    has: on a five-step fan low/medium/high become 20/60/100 rather than
+    33/66/100, and each is unambiguously distinct from its neighbours so an
+    integration cannot fold it into the current speed. Never rounds down to 0
+    — "low" must still turn the fan on.
+
+    A fan that declares no percentage_step keeps the vocab's number unchanged,
+    which is the previous behaviour."""
+    pct = _mode_value("fan_speed")(v)
+    step = resolver.declares(entity, "percentage_step") if (resolver and entity) else None
+    try:
+        step = float(step)
+        pct_f = float(pct)
+    except (TypeError, ValueError):
+        return pct
+    if not (0 < step <= 100) or pct_f <= 0:
+        return pct                      # off stays off; a nonsense step is ignored
+    steps = int(round(100.0 / step))
+    if steps < 1:
+        return pct
+    # The word's ORDINAL comes from its rank among the vocab's own speeds, not
+    # from its percentage: 66 is an approximation of "third of five", and
+    # scaling the approximation put medium on a three-speed fan back down to
+    # low. Ranking keeps one source of truth (edit the vocab, the ordering
+    # follows) and survives a user adding or removing a speed word.
+    from .resolve import value_map
+    ladder = sorted({float(x) for x in value_map("fan_speed").values()
+                     if isinstance(x, (int, float)) and x > 0})
+    if pct_f not in ladder:
+        return pct
+    rank = ladder.index(pct_f) + 1
+    index = max(1, min(steps, int(rank / len(ladder) * steps + 0.5)))
+    return int(round(index * (100.0 / steps)))
+
+
+# Transforms that need to ask the DEVICE, not just convert a value. Called with
+# (value, resolver, entity) instead of (value); listed separately so the plain
+# ones keep their one-argument shape.
+_DEVICE_PARAM_TRANSFORMS = {"speed_pct"}
+
 _PARAM_TRANSFORMS = {"duration_secs": _duration_secs_param,
                      "hex_rgb": _hex_rgb,
                      "pct_float": _rescaled("pct_float"),
@@ -182,7 +236,7 @@ _PARAM_TRANSFORMS = {"duration_secs": _duration_secs_param,
                      "sat_hs": lambda v: [0, _rescaled("sat_hs")(v)],
                      "hvac_mode": _mode_value("hvac_mode"),
                      "fan_mode": _mode_value("fan_mode"),
-                     "speed_pct": _mode_value("fan_speed")}
+                     "speed_pct": _fan_speed_pct}
 
 
 def _delay_hms(params: list) -> str:
@@ -2804,6 +2858,9 @@ def _param_value(token: str, params: list, ctx: dict, resolver=None,
         transform = _PARAM_TRANSFORMS.get(tname)
         if transform is None:
             raise NotYetImplemented(f"unknown command param transform '{tname}'", **ctx)
+        if tname in _DEVICE_PARAM_TRANSFORMS:
+            # asks the device what it can reach; see _fan_speed_pct
+            transform = (lambda fn: lambda v: fn(v, resolver, entity))(transform)
     # $object_id / $entity_id — the DEVICE this command is aimed at, for specs
     # that need to build a path or an id rather than take a piston parameter.
     # webCoRE's `take` has NO parameters, so a snapshot filename cannot come
