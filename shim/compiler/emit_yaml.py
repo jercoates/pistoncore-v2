@@ -1127,6 +1127,36 @@ _HELD_OPS = _REMAIN_ABOVE + _REMAIN_BELOW + (
 )
 
 
+def _interaction_condition(node: dict, ctx: dict) -> dict | None:
+    """"only when physically operated" as an extra branch condition, or None.
+
+    WAS SILENTLY DROPPED. The compiler read the flag (spec.Promise.interaction)
+    and used it only to render the human-readable line, so a piston saying
+    "only when someone physically turns this off" also fired on its own
+    automated changes -- the feedback-loop shape, live in 7 corpus pistons.
+
+    Only answerable on a TRIGGER, because it reads the context of the state
+    change that woke the automation; a plain condition has no such change to
+    look at. All 8 real occurrences are trigger-classified, so the refusal
+    below costs nothing today and stays honest if that changes.
+
+    The expression itself lives in interaction.j2 so a user can repair or
+    retune it without touching Python (COMPILER_SPEC "Jinja2 everywhere" --
+    this tracks HA's context model, which is exactly the moving target that
+    rule is about)."""
+    how = node.get("interaction")
+    if how not in ("p", "s"):
+        return None                      # "any" -- webCoRE's default, no filter
+    if node.get("ct") != "t":
+        raise NotYetImplemented(
+            "'only when physically/programmatically operated' on a condition "
+            "that is not a trigger — HA can only tell who caused the change "
+            "that woke the automation", **ctx)
+    body = _env.get_template("interaction.j2").render(
+        physical=(how == "p"), trigger_var="trigger.to_state").strip()
+    return {"kind": "template", "template": "{{ " + body + " }}"}
+
+
 def _is_noisy_trigger(trig: dict) -> bool:
     """A trigger that must wake on EVERY change of the value it watches.
 
@@ -3493,6 +3523,15 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         conditions.append(_condition(r, resolver, ctx))
 
     cond_nodes = [_condition(c, resolver, ctx) for c in br["conditions"]] + direction_conds
+
+    # "only when physically operated" filters the WAKE, so it rides with the
+    # branch's own conditions rather than replacing anything — same placement
+    # as the button gesture check, and for the same reason: the trigger has to
+    # stay broad enough to fire, and the narrowing happens here.
+    for _t in br["triggers"] + br["conditions"]:
+        _ia = _interaction_condition(_t, ctx)
+        if _ia and _ia not in cond_nodes:
+            cond_nodes.append(_ia)
 
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)

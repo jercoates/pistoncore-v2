@@ -1,0 +1,40 @@
+{#-
+  "only when PHYSICALLY operated" / "only when PROGRAMMATICALLY operated".
+
+  webCoRE asks whether a PERSON touched the device. Home Assistant cannot
+  answer that directly -- a Hubitat hub knows, and tags its own events
+  [physical] or [digital], but that tag does not survive the bridge: measured
+  2026-08-16, no HA event type, no attribute, nothing across 1306 entities.
+
+  What HA CAN answer is who caused the change, and that is enough. Every state
+  change carries a context; an automation stamps its own on everything it does,
+  and that context survives the bridge intact -- verified on a real
+  Hubitat-bridged dimmer, where all 8 changes were attributed to the PistonCore
+  automation that made them. A physical press arrives with no context at all
+  (verified on a real bridged Zooz dimmer, paddle pressed by hand).
+
+  So:
+    parent_id  set   -> an automation or script did it (ours or someone else's)
+    user_id    set   -> a person acting THROUGH Home Assistant: the app, the
+                        dashboard, a voice assistant, an API call
+    neither set -> the change came from the device itself, which is a human at
+                        the switch
+
+  DIVERGENCE, deliberate and documented: webCoRE's "physically" means the
+  device's own driver reported a physical operation. This means "not through
+  Home Assistant". They agree on the cases pistons actually care about, and
+  differ for a device operated by some other system entirely. See
+  HA_LIMITATIONS.md.
+
+  EDIT THIS FILE if your setup needs a different rule -- for instance to treat
+  a specific automation as "physical" because it mirrors a real switch. It is
+  the whole reason the expression is not buried in Python.
+
+  Variables: `physical` (true for p:"p", false for p:"s"), `trigger_var`
+  (the Jinja name holding the triggering state, normally `trigger.to_state`).
+-#}
+{% if physical -%}
+{{ trigger_var }}.context.parent_id is none and {{ trigger_var }}.context.user_id is none
+{%- else -%}
+not ({{ trigger_var }}.context.parent_id is none and {{ trigger_var }}.context.user_id is none)
+{%- endif %}

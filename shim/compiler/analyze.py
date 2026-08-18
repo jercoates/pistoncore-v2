@@ -105,6 +105,11 @@ def _cond_node(cond: dict, kwargs: dict) -> dict:
         "value2_preset": ro2.get("s"),
         "value_expr": ro.get("x"),          # bare expression operand ($sunrise)
         "value2_expr": ro2.get("x"),
+        # "only when physically/programmatically operated" (PISTON_JSON_REFERENCE
+        # §4, `p`: "a"|"p"|"s"). Was never carried, so the emitters could not
+        # honour it and the filter was silently dropped — a piston asking for a
+        # human's touch also fired on its own automated changes.
+        "interaction": lo.get("p"),
         "ct": _classify(cond),
         # the untouched node: PyScript transpiles operands straight from this,
         # so consuming this IR costs it no fidelity (Stage 1 of the brief).
