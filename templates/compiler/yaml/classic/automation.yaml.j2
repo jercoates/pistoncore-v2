@@ -193,6 +193,9 @@
 {%- elif a.get('delay_seconds') is not none -%}
 - delay:
     seconds: "{{ a.get('delay_seconds') }}"
+{%- elif a.get('delay_minutes') is not none -%}
+- delay:
+    minutes: "{{ a.get('delay_minutes') }}"
 {%- else -%}
 - delay: "{{ a.delay }}"
 {%- endif -%}

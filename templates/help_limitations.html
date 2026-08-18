@@ -165,6 +165,35 @@
     </li>
   </ul>
 
+  <h2>A daily time with a random offset</h2>
+  <p>
+    "Happens daily at 22:00 plus a random 0&ndash;90 minutes" works, and the
+    offset is re-rolled every night, so the piston really does run at a
+    different time each day.
+  </p>
+  <p>
+    Behind the scenes it is built as "wake at 22:00, then wait a random amount
+    before acting", because Home Assistant's time trigger only takes a fixed
+    time. You will see that wait in the generated automation. The effect is the
+    same; the wait is just where the randomness lives.
+  </p>
+  <p>
+    <strong>Two things to know:</strong>
+  </p>
+  <ul>
+    <li>
+      <strong>If Home Assistant restarts during the wait, that night's run is
+      lost.</strong> The next night is unaffected. A hub does the same thing
+      unless it is on a battery backup.
+    </li>
+    <li>
+      <strong>A piston can have more than one randomised time.</strong> Say
+      22:00 with one spread and 23:30 with another &mdash; each gets its own
+      clock, and the later one will not start early just because the earlier
+      one fired.
+    </li>
+  </ul>
+
   <h2>Setting hue or saturation on a light that's off</h2>
   <p>
     Home Assistant has no "set hue only" or "set saturation only" service — it

@@ -158,6 +158,44 @@ list `preset_modes: ['auto']` while `supported_features` does not include the pr
 flag. Trust `supported_features` — calling an undeclared capability fails at runtime, where
 it is hardest to notice.
 
+### Randomised Daily Time Cannot Live in the Trigger (MEASURED 2026-08-17)
+
+`happens_daily_at {addMinutes('22:00', random(0,90))}` cannot be transcribed
+into HA's time trigger. Two independent reasons, both measured on the bench:
+
+1. **`at:` accepts only a LIMITED template.** HA's own error: *"Use of
+   'today_at' is not supported in limited templates"*. No `now()`, no state
+   access, so a time-of-day cannot be computed there.
+2. **It would be evaluated once**, when the trigger is set up — so the
+   "random" time would be frozen until the next reload.
+
+**And it fails SILENTLY.** The automation loads, reports state `on`, and its
+trigger was never set up. Only HA's log says so. On the front door it looks
+perfectly healthy and simply never fires — the worst shape of failure this
+compiler can produce.
+
+**What is emitted instead:** a fixed `trigger: time` at the base time, and the
+offset as a templated `delay:` in front of the actions. The delay template IS
+re-evaluated per run — verified by firing one automation three times and
+measuring waits of 7s, 5s and 7s from `{{ range(2,9)|random }}`. The expression
+lives in `templates/compiler/yaml/classic/random_offset.j2`.
+
+**Limits, both deliberate:**
+
+- **Non-negative offsets only.** The offset becomes a wait AFTER the base time,
+  so `sunset + random(-30,30)` has no base to wait from. It refuses rather than
+  pretending. (The general form moves the trigger to `base+min` and the wait to
+  `0..max-min`; unbuilt until needed.)
+- **Several randomised times in one piston are fine**, but each gets its OWN
+  automation carrying ONLY its own trigger (`_solo`, the same quarantine
+  `_noisy` uses). The shared trigger pool is what makes this necessary: with
+  both times in both automations, the 23:30 statement also starts at 22:00 and
+  fires its actions hours early. That was measured on `test-pistons/a04` before
+  the quarantine existed. DIVERGENCE, documented: webCoRE wakes the whole
+  piston on every trigger and each statement's own time simply fails to match —
+  same result, reached by excluding the trigger instead of failing the match.
+- A restart during the wait loses that night's run (same as an unbacked hub).
+
 ### Entity ID Changes Break Deployed Pistons
 
 > **⚠ SUPERSEDED — STALE v1. DO NOT BUILD FROM THIS SECTION (2026-08-07).**

@@ -65,6 +65,41 @@ def _load_command_ha(vocab: dict) -> dict:
     return out
 
 
+def unknown_comparison(co: str) -> bool:
+    """True when webCoRE has no such comparison AT ALL.
+
+    The difference this draws is the difference between two opposite messages
+    to a user. "Not compiled yet" means PistonCore is behind and they should
+    wait for us. But a comparison webCoRE itself does not define means the
+    CONDITION IS INCOMPLETE — webCoRE's own editor shows it as
+    "[ERROR: Invalid" with the comparison dropdown left on "Select a
+    comparison…", and the piston never worked on Hubitat either.
+
+    Found on a real piston (2026-08-17): Albert's "Living Room Lights" carries
+    `co: "receives"` on two conditions. It appears zero times in webCoRE's
+    source, and his editor flags both. We were reporting it as our gap.
+
+    The vocab's comparison buckets are webCoRE's full list (35 conditions, 44
+    triggers, mirroring the groovy table), so absence from BOTH is the test —
+    not absence from whichever bucket the caller happened to be in, since a
+    trigger comparison used as a condition is a different (and real) case."""
+    comp = _load_vocab().get("comparisons") or {}
+    return (co not in (comp.get("conditions") or {})
+            and co not in (comp.get("triggers") or {}))
+
+
+def incomplete_condition_message(co: str) -> str:
+    """What to tell a user about a condition webCoRE never finished.
+
+    Says whose problem it is and what to do, because "invalid comparison" on
+    its own reads like an internal error."""
+    return (f"this condition has no comparison set (webCoRE stored '{co}', "
+            f"which is not one of its comparisons) — open the piston in the "
+            f"editor and you will see it flagged as invalid there too, with "
+            f"the comparison dropdown empty. Complete or delete that line, "
+            f"then save.")
+
+
 def button_gestures() -> tuple:
     """The webCoRE attributes that name a button gesture, from the vocab.
 

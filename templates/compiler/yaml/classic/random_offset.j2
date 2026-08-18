@@ -1,0 +1,26 @@
+{#-
+  A RANDOM WAIT, in minutes, re-rolled every time the automation runs.
+
+  webCoRE writes "happens daily at {addMinutes('22:00', random(0,90))}" —
+  a base time plus a fresh random offset each night. Home Assistant cannot
+  put that in the trigger: `at:` accepts only a LIMITED template (no now(),
+  no today_at, no state access — HA's own words, measured 2026-08-17: "Use of
+  'today_at' is not supported in limited templates"), and worse, it fails
+  SILENTLY — the automation still reports `on` while its trigger was never
+  set up. It is also evaluated once when the trigger is built, so the
+  "random" time would be frozen until the next reload.
+
+  So the automation wakes at the BASE time and waits this long before acting.
+  Same result, different mechanism: the action still lands at a fresh random
+  time each night, and this template is evaluated per run — verified on the
+  bench, three runs of the same automation waiting 7s, 5s and 7s.
+
+  `hi + 1` because webCoRE's random(a,b) includes b, and Jinja's range() does
+  not. Dropping that would quietly make the last minute unreachable.
+
+  EDIT THIS if you want a different distribution — a fixed offset, or one
+  weighted toward the start of the window.
+
+  Variables: `lo`, `hi` (the inclusive bounds webCoRE asked for).
+-#}
+{{ '{{ range(' ~ lo ~ ', ' ~ (hi + 1) ~ ')|random }}' }}

@@ -30,6 +30,7 @@ from .analyze import analyze
 from .errors import NotYetImplemented
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
 from .resolve import (Resolver, WAS_TO_IS, button_gestures, was_watcher_entity,
+                      unknown_comparison, incomplete_condition_message,
                       last_changed_is_exact, duration_seconds,
                       pause_target_automations)
 
@@ -710,7 +711,9 @@ class _PyEmitter:
             # later run.
             parts = ["True"]
         else:
-            raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
+            raise NotYetImplemented(
+                incomplete_condition_message(co) if unknown_comparison(co)
+                else f"condition comparison '{co}' not compiled yet", **ctx)
 
         return parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
 
@@ -957,7 +960,9 @@ class _PyEmitter:
                     f"'{attr}' on a device with no per-button entities", **ctx)
             self._add_state_trigger([f"{e}" for e in btn], sid, False)
         else:
-            raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
+            raise NotYetImplemented(
+                incomplete_condition_message(co) if unknown_comparison(co)
+                else f"trigger comparison '{co}' not compiled yet", **ctx)
 
     def _promote_triggers(self, stmt: dict, sid, ctx: dict) -> bool:
         """Condition-only statement: webCoRE subscribes to its conditions
@@ -1462,8 +1467,22 @@ class _PyEmitter:
                 # Freezing the list at compile time matches the standing rule
                 # that capability resolution is compile-time and recompiling is
                 # the refresh (no runtime PistonCore dependency).
-                if not hashes:
-                    raise NotYetImplemented("'each' over an empty device list", **ctx)
+                # AN EMPTY GROUP IS NOT AN ERROR. A device variable with
+                # nothing in it means the user owns none of that kind right
+                # now — an ordinary state for a battery inventory the moment
+                # the last CR2032 device is retired. The loop has nothing to
+                # do, so it contributes nothing and the piston carries on.
+                #
+                # This used to raise, which failed the WHOLE piston: Albert's
+                # battery report walks ten groups and two of his are empty, so
+                # 85 devices across the eight healthy groups produced no report
+                # at all because two lines would have been blank.
+                #
+                # It was the same mistake as the one the comment above
+                # describes, in a different coat — that one assumed a loop must
+                # act on its devices, this one assumed a loop must have some.
+                # Unrolling zero devices already yields zero statements, so
+                # nothing below needs a special case.
                 # NO CAP on device count, deliberately. There was a bare
                 # `> 50` here; traced to commit 95fdaf9 (2026-07-29), added
                 # inside an unrelated change with no reason given, and NO HA

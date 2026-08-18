@@ -30,6 +30,7 @@ from .analyze import analyze, yaml_blockers
 from .errors import CompilerError, NotYetImplemented, PistonDefect
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
 from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL, button_gestures,
+                      unknown_comparison, incomplete_condition_message,
                       was_watcher_entity, last_changed_is_exact,
                       duration_seconds, pause_target_automations)
 from . import routing as _routing
@@ -983,7 +984,9 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         mapped = resolver.ha_state_value(cond["attr"], cond["value"])
         parts = [f"{e} != '{mapped}'" for e in reads]
     else:
-        raise NotYetImplemented(f"condition comparison '{co}' not compiled yet", **ctx)
+        raise NotYetImplemented(
+            incomplete_condition_message(co) if unknown_comparison(co)
+            else f"condition comparison '{co}' not compiled yet", **ctx)
 
     body = parts[0] if len(parts) == 1 else "(" + joiner.join(parts) + ")"
     return {"kind": "template", "template": "{{ " + body + " }}"}
@@ -1247,6 +1250,34 @@ def _trigger(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     return node
 
 
+
+_RANDOM_DAILY_RE = re.compile(
+    r"^\s*\{?\s*addMinutes\(\s*'(\d{1,2}:\d{2})'\s*,\s*random\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*\)\s*\}?\s*$")
+
+
+def _random_daily(expr) -> tuple | None:
+    """"at 22:00 plus a random 0-90 minutes" -> ("22:00:00", 0, 90), or None.
+
+    ONLY the non-negative-offset form, deliberately. The offset becomes a WAIT
+    after the base time, so a random that could go BACKWARDS from its base
+    (sunset - 30) has no base to wait from and must not be silently treated as
+    if it did. That form refuses and routes on, which is the honest answer
+    until someone needs it (then the base moves to base+min and the wait
+    becomes 0..max-min).
+
+    Kept in code, not the vocab: this is webCoRE's own expression syntax, which
+    is frozen. What Home Assistant needs to EXECUTE it lives in
+    random_offset.j2."""
+    m = _RANDOM_DAILY_RE.match(str(expr or ""))
+    if not m:
+        return None
+    hh, mm = m.group(1).split(":")
+    lo, hi = int(m.group(2)), int(m.group(3))
+    if hi < lo:
+        return None
+    return (f"{int(hh):02d}:{int(mm):02d}:00", lo, hi)
+
+
 def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict:
     co = trig["co"]
     if trig.get("lo_type") == "v":
@@ -1294,6 +1325,20 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
             if _num_str(_v):
                 return {"kind": "time", "at": _minutes_hms(int(float(_v))),
                         "id": trig_id}
+            # A BASE TIME PLUS A RANDOM OFFSET. HA's time trigger takes a fixed
+            # time and its `at:` template is limited AND evaluated once, so the
+            # randomness cannot live in the trigger. It moves to a wait: the
+            # automation wakes at the base time and holds for a fresh random
+            # interval, which lands the action at a different time each night
+            # exactly as the piston asks. `_random_minutes` is private to this
+            # emitter — _emit_branch turns it into the wait, and the trigger
+            # template never reads it (same pattern as `_noisy`).
+            _rand = _random_daily((trig.get("raw") or {}).get("ro", {}).get("e")
+                                  or _x)
+            if _rand:
+                _at, _lo, _hi = _rand
+                return {"kind": "time", "at": _at, "id": trig_id,
+                        "_random_minutes": (_lo, _hi)}
         # HA STARTING UP IS ITS OWN TRIGGER PLATFORM, not a state change.
         # webCoRE's $systemStart fires when the engine comes up; HA's
         # equivalent occasion is `trigger: homeassistant, event: start`
@@ -1469,7 +1514,9 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
     if co == "happens_daily_at" and _is_number(value):
         return {"kind": "time", "at": _minutes_hms(int(value)), "id": trig_id}
 
-    raise NotYetImplemented(f"trigger comparison '{co}' not compiled yet", **ctx)
+    raise NotYetImplemented(
+        incomplete_condition_message(co) if unknown_comparison(co)
+        else f"trigger comparison '{co}' not compiled yet", **ctx)
 
 
 _INCLUSIVE_BOUNDARY_OPS = {
@@ -3345,7 +3392,7 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
     all_triggers, seen = [], set()
     for part in parts:
         for t in part["triggers"]:
-            if t.get("_noisy"):
+            if t.get("_noisy") or t.get("_solo"):
                 continue
             key = _json_dumps(t)
             if key not in seen:
@@ -3358,9 +3405,12 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
                   "then": body, "else": []}] if part["conditions"] else body)
 
     noisy = [p for p in parts if any(t.get("_noisy") for t in p["triggers"])]
-    waiting = [p for p in parts if p not in noisy
+    solo = [p for p in parts if p not in noisy
+            and any(t.get("_solo") for t in p["triggers"])]
+    waiting = [p for p in parts if p not in noisy and p not in solo
                and (_has_wait(p["br"]["then"]) or _has_wait(p["br"]["else"]))]
-    plain = [p for p in parts if p not in noisy and p not in waiting]
+    plain = [p for p in parts if p not in noisy and p not in solo
+             and p not in waiting]
 
     def emit(suffix, chunk, mode, triggers=None, throttle=None):
         if not chunk:
@@ -3384,6 +3434,14 @@ def _merge_branches(parts: list, piston_id: str, piston_name: str,
 
     emit("", plain, "restart" if any(p["br"]["tcp"] == "c" for p in plain)
          else "queued")
+    for part in solo:
+        # ONLY ITS OWN TRIGGER. Everything else in the piston is deliberately
+        # excluded: this statement's actions sit behind a wait that was
+        # computed for THIS wake, so another statement's trigger starting it
+        # would run them at the wrong time.
+        emit(f"_s{part['br']['stmt_id']}", [part],
+             "restart" if part["br"]["tcp"] == "c" else "queued",
+             triggers=[t for t in part["triggers"] if t.get("_solo")])
     for part in waiting:
         emit(f"_s{part['br']['stmt_id']}", [part],
              "restart" if part["br"]["tcp"] == "c" else "queued")
@@ -3579,6 +3637,26 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
 
     then_actions = _resolve_actions(br["then"], resolver, ctx)
     else_actions = _resolve_actions(br["else"], resolver, ctx)
+
+    # THE RANDOM HALF OF "happens daily at {addMinutes('22:00', random(0,90))}".
+    # The trigger fires at the base time; the randomness is the wait in front of
+    # everything the piston then does. Prepended (not appended) so every action
+    # lands after the offset — appending would fire the piston at 22:00 sharp
+    # and only delay the tail of it, which is not what was asked for.
+    for _t in triggers:
+        _rm = _t.pop("_random_minutes", None)
+        if not _rm:
+            continue
+        # SOLO. This statement's wake carries a wait that belongs to IT, so the
+        # trigger must not join the piston's shared pool — otherwise the other
+        # randomised statement also starts on this time and fires its actions
+        # hours early. webCoRE reaches the same place differently: it wakes the
+        # whole piston and each statement's own time fails to match. Same
+        # result, and the same quarantine `_noisy` already uses.
+        _t["_solo"] = True
+        then_actions = [{"kind": "delay",
+                         "delay_minutes": _env.get_template("random_offset.j2")
+                         .render(lo=_rm[0], hi=_rm[1]).strip()}] + then_actions
 
 
     if _has_attached(br["conditions"]):
