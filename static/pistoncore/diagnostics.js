@@ -4,6 +4,7 @@
 
 const checksEl = document.getElementById("diag-checks");
 const pistonsEl = document.getElementById("diag-pistons");
+const familiesEl = document.getElementById("diag-families");
 
 const LABEL = { deployed: "deployed", error: "compile error",
                 pyscript: "needs PyScript", paused: "paused",
@@ -30,6 +31,31 @@ function checkRow(c) {
     fix.textContent = "Fix: " + c.fix;
     body.appendChild(fix);
   }
+  row.appendChild(mark);
+  row.appendChild(body);
+  return row;
+}
+
+
+// Why pistons left the YAML band, GROUPED BY SIGNATURE rather than listed per
+// piston. Grouping is the useful part: 27 fallbacks are rarely 27 problems,
+// and a tester reporting "16 of mine hit this one line" is worth far more than
+// 16 separate bundles. Rows, never tiles.
+function familyRow(f) {
+  const row = document.createElement("div");
+  row.className = "diag-check unknown";
+  const mark = document.createElement("span");
+  mark.className = "diag-mark";
+  mark.textContent = f.count;
+  const body = document.createElement("div");
+  const name = document.createElement("div");
+  name.className = "diag-name";
+  name.textContent = f.signature;
+  const detail = document.createElement("div");
+  detail.className = "field-hint";
+  detail.textContent = f.count === 1 ? "1 piston" : f.count + " pistons";
+  body.appendChild(name);
+  body.appendChild(detail);
   row.appendChild(mark);
   row.appendChild(body);
   return row;
@@ -210,6 +236,18 @@ async function load() {
   if (d.default_band) bandDefault.value = d.default_band;
   checksEl.innerHTML = "";
   d.checks.forEach((c) => checksEl.appendChild(checkRow(c)));
+  if (familiesEl) {
+    familiesEl.innerHTML = "";
+    const fams = d.fallback_families || [];
+    if (!fams.length) {
+      const none = document.createElement("div");
+      none.className = "field-hint";
+      none.textContent = "Nothing has fallen back — every piston compiles to a plain Home Assistant automation.";
+      familiesEl.appendChild(none);
+    } else {
+      fams.forEach((f) => familiesEl.appendChild(familyRow(f)));
+    }
+  }
   // remembered overrides — reviewable, never silent
   const prefs = (d.band_prefs || []).filter((p) => p.band && p.band !== "auto");
   const wrap = document.getElementById("band-prefs-wrap");

@@ -122,6 +122,50 @@ def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")[:40] or "piston"
 
 
+def fallback_signature(reason: str) -> str:
+    """A fallback reason with its specifics removed, so two pistons that failed
+    the same WAY read as one thing.
+
+    Quoted values are what differ between instances of the same case — the
+    device, the operator, the node kind. Blanking them is what turns 27
+    individual reports into "two families", which is the whole point of
+    grouping: a signature is checkable on a new piston, a case list is not.
+    (RESHAPE_LOG.md records the same exercise done by hand.)
+
+    Deliberately dumb. It normalises, it does not classify — anything that
+    decided which family a reason BELONGS to would be guessing on a tester's
+    install where nobody can check the answer."""
+    # The lookbehind is not decoration: without it the apostrophe in "can't"
+    # opens a match and the signature comes out mangled as
+    # "YAML band can'…'delay' not compiled yet". A real quoted value is always
+    # preceded by a space or punctuation, never by a letter.
+    return re.sub(r"(?<![A-Za-z])'[^']*'", "'…'", str(reason or "")).strip()
+
+
+def fallback_families(statuses: dict | None = None) -> list[dict]:
+    """Every piston that fell back to PyScript, grouped by signature.
+
+    Exists because the reasons were already being recorded per piston and
+    never shown anywhere — so an alpha/beta tester's install knew exactly why
+    27 pistons had left the YAML band and had no way to say so. One tester
+    sending one screenshot of this is worth more than 27 bundles.
+    """
+    statuses = load_statuses() if statuses is None else statuses
+    groups: dict = {}
+    for piston_id, rec in (statuses or {}).items():
+        if not isinstance(rec, dict):
+            continue
+        for reason in (rec.get("reasons") or []):
+            sig = fallback_signature(reason)
+            if not sig:
+                continue
+            g = groups.setdefault(sig, {"signature": sig, "count": 0, "pistons": []})
+            g["count"] += 1
+            if piston_id not in g["pistons"]:
+                g["pistons"].append(piston_id)
+    return sorted(groups.values(), key=lambda g: -g["count"])
+
+
 def _record(piston_id: str, **fields) -> dict:
     statuses = load_statuses()
     rec = {"ts": int(time.time() * 1000), **fields}

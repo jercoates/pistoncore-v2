@@ -1552,6 +1552,18 @@ def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | 
     return None
 
 
+# The comparisons _promote knows how to subscribe to. Listed here beside it —
+# and ONLY here — because a caller has to decide whether to try promotion
+# before calling, and a second hand-written copy of this set is precisely the
+# duplication that lost `is`/`is_not` from the operator tables once already.
+# If a branch is added above, add its ops here in the same edit.
+_PROMOTABLE_WAKE_OPS = frozenset({
+    "is", "is_equal_to",
+    "is_less_than", "is_less_than_or_equal_to",
+    "is_greater_than", "is_greater_than_or_equal_to",
+})
+
+
 # ── actions ─────────────────────────────────────────────────────────────────
 
 def _timer_plan(piston: dict, piston_id: str) -> dict:
@@ -2063,6 +2075,19 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                         "conditions": [_condition(c, resolver, ctx) for c in n["conditions"]],
                         "then": _resolve_actions(n["then"], resolver, ctx),
                         "else": _resolve_actions(n["else"], resolver, ctx)})
+        elif n["kind"] == "delay":
+            # ALREADY A FINISHED NODE, so it passes straight through. The
+            # transcoder builds delay nodes here as OUTPUT (a `wait` command, a
+            # fade, a flash) and automation.yaml.j2 renders delay/delay_seconds/
+            # delay_ms, so the shape is not new — what is new is receiving one
+            # as INPUT, which is how the intent path expresses a gap between
+            # two actions that the transcoder had already resolved before
+            # reaching here.
+            #
+            # This was the largest single reason intent-built pistons left the
+            # YAML band: 16 of them, almost all motion-lights-with-a-timeout
+            # (RESHAPE_LOG.md entry 1).
+            out.append(dict(n))
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
     return out
@@ -3439,7 +3464,26 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
         triggers.append(t)
     else:
         for trig in br["triggers"]:
-            node = _trigger(trig, resolver, ctx, trig_id)
+            # AN INSTANTANEOUS COMPARISON USED AS THE WAKE. webCoRE subscribes
+            # to a condition's own operands (promotion, groovy :9242), and
+            # _promote already builds that trigger — it is what a
+            # condition-only piston has always used. The intent layer reaches
+            # the same place by a different road: it decides a promise's wake
+            # from the promise's own words, and those words are often `is` or
+            # `is_less_than` rather than `changes_to`.
+            #
+            # So this asks the EXISTING promoter rather than teaching
+            # _trigger_node a second set of rules for the same operators —
+            # a second copy would be the thing that drifts. If promotion
+            # declines (a time window, a variable), the normal path still
+            # raises and the piston still routes to PyScript.
+            # (RESHAPE_LOG.md entry 2 — 11 pistons, almost all lux-gated
+            # night lights.)
+            node = None
+            if trig.get("co") in _PROMOTABLE_WAKE_OPS:
+                node = _promote(trig, resolver, ctx, trig_id)
+            if node is None:
+                node = _trigger(trig, resolver, ctx, trig_id)
             triggers.append(node)
             edge = _boundary_trigger(trig, resolver, ctx, trig_id)
             if edge:

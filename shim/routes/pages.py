@@ -1013,6 +1013,23 @@ async def _build_support_report(redacted: bool = True) -> str:
         out.append("  " + ", ".join(f"{n} {k}" for k, n in sorted(counts.items())))
         out += piston_lines
 
+    # WHY PISTONS LEFT THE YAML BAND, grouped by signature. The single most
+    # actionable thing a tester can send back: the compiler's own words for what
+    # it could not express, on THEIR devices, with the specifics blanked so the
+    # same gap reported from three installs reads as one line instead of three.
+    # Instance-wide by nature, so it belongs in this bundle and not in a
+    # per-piston one. The reasons were already recorded per piston and shown
+    # nowhere; this is the part that was missing.
+    from ..compiler import deploy as _compiler_deploy
+    families = _compiler_deploy.fallback_families()
+    out.append("\n== WHY PISTONS NEEDED PYSCRIPT ==")
+    if not families:
+        out.append("  (none — every piston compiles to a plain HA automation)")
+    for fam in families:
+        out.append(f"  {fam['count']:>3} x {clean(fam['signature'])}")
+        shown = ", ".join(clean(p) for p in fam["pistons"][:8])
+        out.append(f"      {shown}" + (" …" if len(fam["pistons"]) > 8 else ""))
+
     text = "\n".join(out)
     if red:
         text += f"\n\n---- ({red.summary()}) ----"
@@ -1433,6 +1450,11 @@ async def diagnostics_data():
             "artifacts": _artifact_list(entry["id"]),
         })
     return {"checks": checks, "pistons": pistons,
+            # Why pistons left the YAML band, grouped by signature rather than
+            # listed per piston. The reasons were always recorded and never
+            # shown; grouped, a tester can report "16 of mine hit this one
+            # thing" instead of sending sixteen separate bundles.
+            "fallback_families": compiler_deploy.fallback_families(),
             "default_band": storage.load_settings().get("default_band", "auto"),
             "band_prefs": [dict(v, id=k) for k, v in storage.band_prefs().items()]}
 
