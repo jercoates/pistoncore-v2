@@ -27,7 +27,7 @@ from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 from .. import customize
 
 from .analyze import analyze
-from .errors import NotYetImplemented
+from .errors import NotYetImplemented, UnresolvableDevice
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
 from .resolve import (Resolver, WAS_TO_IS, button_gestures, was_watcher_entity,
                       unknown_comparison, incomplete_condition_message,

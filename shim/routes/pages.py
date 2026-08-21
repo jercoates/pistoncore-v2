@@ -166,7 +166,8 @@ TEST_DEVICE_TEMPLATES: dict[str, list[dict]] = {
 _VIRTUAL_PLATFORM_DOMAINS = {
     "alarm_control_panel", "binary_sensor", "button", "camera", "climate",
     "cover", "device_tracker", "event", "fan", "humidifier", "light", "lock",
-    "media_player", "number", "sensor", "siren", "switch", "vacuum", "valve",
+    "media_player", "notify", "number", "sensor", "siren", "switch",
+    "vacuum", "valve",
 }
 
 

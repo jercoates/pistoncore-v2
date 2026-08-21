@@ -20,8 +20,8 @@ built for — but nothing here needs PistonCore installed.
 
 **More device kinds.** Upstream covers binary_sensor, sensor, switch, light,
 lock, fan, cover, valve, number and device_tracker. This fork adds
-`alarm_control_panel`, `climate`, `media_player`, `siren`, `humidifier`,
-`vacuum`, `button` and `event`.
+`alarm_control_panel`, `camera`, `climate`, `media_player`, `notify`,
+`siren`, `humidifier`, `vacuum`, `button` and `event`.
 
 **Devices that state their real abilities.** Every platform accepts Home
 Assistant's `supported_features` plus the mode lists and limits that go with it,
@@ -45,6 +45,24 @@ looks like" into a bug report so somebody else can rebuild it.
 > only way that leaves your system is if you paste it somewhere. Give it a read
 > before putting it in a public issue. (PistonCore replaces names with stand-ins
 > automatically in the reports it builds; this integration on its own does not.)
+
+**A camera that hands over a real picture.** Home Assistant's own snapshot
+action does the work — it asks the camera for an image and writes the file — so a
+snapshot lands as a real file at a real path, under HA's normal rules about where
+it may write. An automation asking for a snapshot somewhere HA won't write fails
+here exactly as it would on real hardware. The picture changes every time it is
+asked, so two snapshots look different and you can tell an automation fired twice
+rather than once.
+
+**A notifier that records what was sent.** Home Assistant ships with almost
+nowhere to send a notification — a dashboard pop-up, and that is all; everything
+else arrives when you install a phone app, an SMS service or email. That makes
+notification automations awkward to test. Send to a virtual notifier instead and
+the message, the title and a running count appear on the entity, visible in
+Developer tools → States or by clicking it on a dashboard. It also fires a
+`virtual_notify_sent` event, so notifications can be watched arriving live in
+Developer tools → Events. The count is the useful part: it shows an automation
+firing twice when it should have fired once, which the message alone cannot.
 
 ### What cloning will and will not do
 

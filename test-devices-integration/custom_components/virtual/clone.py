@@ -72,7 +72,8 @@ DESCRIBE_DEVICE_SCHEMA = vol.Schema({
 REPRODUCIBLE_DOMAINS = {
     "alarm_control_panel", "binary_sensor", "button", "camera", "climate",
     "cover", "device_tracker", "event", "fan", "humidifier", "light", "lock",
-    "media_player", "number", "sensor", "siren", "switch", "vacuum", "valve",
+    "media_player", "notify", "number", "sensor", "siren", "switch", "vacuum",
+    "valve",
 }
 
 # (domain) -> the capability attributes to copy verbatim. See the module docstring
@@ -102,7 +103,7 @@ CLONE_ATTRS: dict[str, tuple[str, ...]] = {
 # of them: switch/binary_sensor/button have no feature flags to copy.
 CLONE_FEATURES = {
     "alarm_control_panel", "camera", "climate", "cover", "fan", "humidifier",
-    "light", "lock", "media_player", "siren", "vacuum",
+    "light", "lock", "media_player", "notify", "siren", "vacuum",
 }
 
 
@@ -149,6 +150,14 @@ def capability_config(hass: HomeAssistant, domain: str, attrs: dict) -> dict:
         # Cloned limits arrive in whatever unit HA reports them in, so the copy
         # must declare that same unit or HA converts them a second time.
         spec["temperature_unit"] = _plain(hass.config.units.temperature_unit)
+
+    elif domain == "notify":
+        # `target_key` is this integration's own label for what a notifier stands
+        # in for ("sms", "app"). A REAL notifier has no such attribute, so this
+        # does nothing when cloning one — it only keeps the label when cloning a
+        # test notifier, which would otherwise come back as "generic".
+        if attrs.get("target_key"):
+            spec["class"] = _plain(attrs["target_key"])
 
     elif domain == "media_player":
         if attrs.get("device_class"):

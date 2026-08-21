@@ -87,6 +87,16 @@ def _domain_choices(vocab):
                 if not isinstance(rule, dict):
                     continue
                 dom = rule.get("domain")
+                if not dom or dom in ("*", "_any"):
+                    # A LOCATION COMMAND HAS NO DOMAIN, but its service still
+                    # says where it lands: sendPushNotification is a notify
+                    # command whether or not a `domain` key names one. Without
+                    # this the fallback made every notification device a LIGHT,
+                    # so a push compiled to `notify.send_message` aimed at
+                    # light.dev0 -- which HA would reject at runtime, and which
+                    # made the emitted YAML look wrong when the emitter was right.
+                    svc = str(rule.get("service") or "")
+                    dom = svc.split(".", 1)[0] if svc.startswith("notify.") else dom
                 if dom and dom not in ("*", "_any"):
                     cmd_domain[name] = dom
                     break
@@ -107,6 +117,9 @@ def _domain_choices(vocab):
 # piston errors on missing configuration instead of compiling — so the harness
 # never covered them, including the command translation migrated this session.
 _SYSTEM_ENTITIES = {
+    # push binds to a LIST (webCoRE pushed to every phone); text is a singleton
+    "push": ["notify.mobile_app_test_a", "notify.mobile_app_test_b"],
+    "text": ["notify.sms_relay"],
     "tts": "tts.dev_engine",
     "email": "notify.dev_email",
     "mode": "input_select.dev_location_mode",

@@ -123,7 +123,10 @@ translating webCoRE's expressions.
 editor; a template condition is a blob nobody can touch without writing Jinja.
 Worse, a missing helper entity does not merely look bad — the automation stops
 working. The emitted YAML is meant to outlive PistonCore being deleted
-([[no_runtime_pistoncore_dependency]]).
+([[no_runtime_pistoncore_dependency]]). What keeps those helpers from going
+missing on deploy — the reconcile, why an incomplete compile record merges
+instead of deleting, and the warning when one disappears — is
+COMPILER_DECISIONS_DEPLOY.md §3.5.
 
 **It reports; it does not gate — deliberately.** Nobody yet knows what these
 numbers *should* be: some templates are the only honest way to express a thing,

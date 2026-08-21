@@ -762,12 +762,37 @@ class Resolver:
         """HA entity backing a webCoRE system variable ($mode,
         $alarmSystemStatus, ...) — from the resolution map's $system entry."""
         v = self.system_entities.get(var)
+        if isinstance(v, list):
+            # PUSH BINDS TO EVERY PHONE, so this one is a list where the others
+            # are a single entity -- webCoRE's push went to every device
+            # registered with the hub. Callers that want one entity are unchanged
+            # (they only ever ask for $mode, $alarmSystemStatus and friends,
+            # which are strings); the notify path asks for this and fans out.
+            return v
         return v if isinstance(v, str) else None
 
     def system_value(self, var: str, value):
         return self.system_values.get(var, {}).get(value, value)
 
-    def _hashes(self, dref: str, ctx: dict) -> list[str]:
+    def _hashes(self, dref: str, ctx: dict, _seen: set | None = None) -> list[str]:
+        """Device references, resolved ALL THE WAY DOWN to hashes.
+
+        A device variable can hold GLOBAL NAMES rather than hashes:
+
+            "Text": {"d": ["@Notification_Text", "@Notifications_Push"]}
+
+        Albert writes pistons this way on purpose -- the variable is the only
+        thing you change when you copy a piston to another room -- and Jeremy's
+        friend uses it constantly. This used to expand ONE level and hand the
+        `@name` strings back as if they were hashes, so they fell through to
+        the unresolved placeholder and the piston notified nobody. Silent:
+        it compiled, deployed and did nothing (found 2026-08-20 tracing why a
+        notification had no target).
+
+        THE `@` IS THE TELL (Jeremy). Anything still carrying one after an
+        expansion is a reference, not a device, so it gets expanded again.
+        `_seen` stops a variable that points back at itself from looping --
+        the editor cannot stop you writing one."""
         if dref.startswith(":") and dref.endswith(":"):
             return [dref]
         if dref.startswith("@"):
@@ -781,14 +806,39 @@ class Resolver:
                 raise UnresolvableDevice(
                     f"global device variable '{dref}' not found{hint}", **ctx)
             v = g.get("v")
-            hashes = v if isinstance(v, list) else ((v or {}).get("d") or g.get("d") or [])
+            # A GLOBAL USED AS A DEVICE MUST ACTUALLY HOLD DEVICES. Its value
+            # can legitimately arrive in three shapes — a bare list of hashes,
+            # the {"d": [...]} device operand the editor writes, or the hashes
+            # on the global itself — but a global holding a STRING or a NUMBER
+            # is none of those. Reaching .get() on it raised
+            # "'str' object has no attribute 'get'", an internal compiler error
+            # with no hint of which global or which piston (found 2026-08-18 by
+            # running the corpus through a real resolution map; the synthetic
+            # test map never produced a value global in a device position, so
+            # five pistons crashed here and the snapshot harness saw nothing).
+            #
+            # Say which global and what it holds instead: this is a piston/setup
+            # mistake the user can fix, not a compiler fault, and an internal
+            # error is the one output that tells them neither.
+            if isinstance(v, list):
+                hashes = v
+            elif isinstance(v, dict):
+                hashes = v.get("d") or g.get("d") or []
+            elif v is None:
+                hashes = g.get("d") or []
+            else:
+                raise UnresolvableDevice(
+                    f"global variable '{dref}' is being used as a device, but it "
+                    f"holds a {type(v).__name__} value ({str(v)[:40]!r}) — either "
+                    f"point the piston at a device global, or set '{dref}' to a "
+                    f"device list in the Global variables panel", **ctx)
             if not hashes:
                 raise UnresolvableDevice(
                     f"global device variable '{dref}' has no devices assigned — "
                     f"click it in the Global variables panel and add devices", **ctx)
-            return hashes
+            return self._expand(hashes, ctx, _seen, dref)
         if dref in self.local_device_vars:
-            return self.local_device_vars[dref]
+            return self._expand(self.local_device_vars[dref], ctx, _seen, dref)
         # COMPILE AND FLAG (Jeremy, 2026-08-01). An unknown NAME is the same
         # situation as an unknown HASH, which has been handled this way since
         # 2026-07-19: keep the reference, let it resolve to an inert
@@ -844,6 +894,35 @@ class Resolver:
         # never seen here: a stable, obviously-inert placeholder. HA loads the
         # automation and simply finds nothing to act on until it appears.
         return f"unknown.pistoncore_unresolved_{h.strip(':')[:8]}"
+
+    def _expand(self, refs, ctx: dict, _seen: set | None, origin: str) -> list[str]:
+        """Resolve any entry that is still a REFERENCE, keeping real hashes."""
+        seen = set(_seen or ())
+        seen.add(origin)
+        out: list[str] = []
+        for ref in refs or []:
+            ref = str(ref)
+            if ref.startswith(":") and ref.endswith(":"):
+                out.append(ref)
+                continue
+            if ref in seen:
+                continue          # circular reference: stop rather than recurse
+            try:
+                nested = self._hashes(ref, ctx, seen)
+            except UnresolvableDevice:
+                # A NESTED REFERENCE THAT DOES NOT RESOLVE IS NOT A COMPILE
+                # ERROR. The standing rule is that a missing device keeps its
+                # place and the piston still compiles (webCoRE shows the hash
+                # and carries on) -- raising here failed 22 pistons outright
+                # the first time this expansion was written, because a global
+                # the install has not defined turned into a hard stop instead
+                # of a flagged placeholder.
+                nested = [ref]
+            for h in nested:
+                if h not in out:
+                    out.append(h)
+        return out
+
 
     def entities_for_attr(self, drefs: list[str], attr: str, ctx: dict) -> list[str]:
         out = []
@@ -958,6 +1037,16 @@ class Resolver:
                 else:
                     ent = self._unresolved(h, command, "command", ctx)
                 out.append(ent)
+        if not out and drefs:
+            # NEVER HAND BACK AN EMPTY LIST. Callers index [0] to pick the
+            # service, so empty became "IndexError: list index out of range" --
+            # an internal compiler error naming neither the command nor the
+            # piston. A reference that expands to nothing (an empty device
+            # variable, a global whose devices were removed) is the same case as
+            # a device that has left HA: FLAG IT AND KEEP COMPILING (Jeremy,
+            # 2026-08-20: "it should be a flag, not a hard crash"), so the front
+            # door and the piston banner can say which piston and which command.
+            out.append(self._unresolved(str(drefs[0]), command, "command", ctx))
         return out
 
     def has_command_binding(self, drefs: list[str], command: str, ctx: dict) -> bool:

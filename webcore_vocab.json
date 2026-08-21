@@ -2263,6 +2263,15 @@
    ],
    "ha": [
     {
+     "domain": "notify",
+     "service": "notify.send_message",
+     "data": {
+      "message": "$1"
+     },
+     "tag": "verified",
+     "note": "HA's notify ENTITY platform: the destination IS the entity, so it goes in the service target (entities_for_command puts it there), never as a `target` field in data -- send_message accepts only message and title, and a data-style target is rejected outright (HTTP 400, measured 2026-08-19). Listed BEFORE the '*' rule because rule order is domain-match priority. One command covers push AND text: the notifier's own type decides which it is, so the user picks the destination and webCoRE's single 'Send device notification' ports over unchanged."
+    },
+    {
      "domain": "*",
      "service": "notify.notify",
      "data": {
@@ -3962,12 +3971,13 @@
    ],
    "ha": [
     {
-     "service": "notify.notify",
+     "service": "notify.send_message",
      "data": {
       "message": "$1"
      },
+     "target_system": "push",
      "tag": "verified",
-     "note": "webCoRE push went to the hub's phone app; HA's equivalent is notify.notify, which fans out to every notifier configured (the companion app registers itself there). No domain key: no device is involved"
+     "note": "webCoRE's push went to every phone registered with the hub, so this targets EVERY notify entity whose target_key is 'app' ($system.push, bound by type in device_pipeline -- no setting, because the entity says which it is). notify.send_message, not notify.notify: the legacy service broadcasts to every notifier including SMS, which would send a paid text every time a piston pushed."
     }
    ]
   },
@@ -3995,12 +4005,13 @@
    ],
    "ha": [
     {
-     "service": "notify.notify",
+     "service": "notify.send_message",
      "data": {
       "message": "$1"
      },
+     "target_system": "text",
      "tag": "verified",
-     "note": "HA has no SMS service of its own; an SMS integration registers itself as a notifier like any other, so this goes out the same door as push. The phone number ($2) has no HA equivalent and is not sent. No domain key: no device is involved"
+     "note": "targets the notify entity whose target_key is 'sms' ($system.text). webCoRE took a phone number as $2; HA's notify entity IS the destination -- the number belongs to the SMS integration's own config -- so the number is not sent and a piston that varies it per call cannot be honoured. Almost nobody runs more than one SMS relay (they are fiddly and cost money), so one is the expected shape."
     }
    ]
   },

@@ -254,3 +254,55 @@ def reload_services(domains) -> list:
     what a YAML platform (a device group) needs."""
     return [(d, "reload_all" if d == "homeassistant" else "reload")
             for d in sorted(set(domains))]
+
+def _helper_domains() -> set:
+    """Which top-level keys in the package are helpers we own.
+
+    Derived from resolve._HELPER_DOMAIN (webCoRE type -> helper domain) plus
+    `timer`, rather than a second hand-written list that could drift from the
+    one that decides what gets CREATED."""
+    from .resolve import _HELPER_DOMAIN
+    return set(_HELPER_DOMAIN.values()) | {"timer"}
+
+
+def parse_package(text: str) -> list:
+    """The helper rows already in the deployed package file.
+
+    THE ONLY DURABLE RECORD of a helper whose piston this instance has no
+    compile record for. The reconcile in deploy._deploy_helpers rebuilds the
+    whole file from compile_status.json, so a status file that is missing
+    pistons silently DELETES their helpers -- and a deleted helper takes its
+    VALUE with it (measured 2026-08-18: a helper still in the file keeps its
+    state across a reload; one dropped from it is gone entirely). A counter or
+    a stored timestamp cannot be recomputed from anything.
+
+    Returns [{entity, name, kind?, device_class?, members?}] in the same shape
+    write_helpers consumes, so a caller can union it with what it does know."""
+    import yaml as _yaml
+    try:
+        doc = _yaml.safe_load(text) or {}
+    except Exception:
+        return []                      # unreadable: treat as "nothing known"
+    if not isinstance(doc, dict):
+        return []
+    out = []
+    for domain, entries in doc.items():
+        if domain == "binary_sensor" and isinstance(entries, list):
+            for g in entries:
+                if not isinstance(g, dict) or g.get("platform") != "group":
+                    continue
+                oid = g.get("unique_id") or ""
+                if not oid:
+                    continue
+                out.append({"entity": f"binary_sensor.{oid}", "kind": "group",
+                            "name": g.get("name") or oid,
+                            "device_class": g.get("device_class"),
+                            "members": list(g.get("entities") or [])})
+            continue
+        if domain not in _helper_domains() or not isinstance(entries, dict):
+            continue
+        for object_id, cfg in entries.items():
+            cfg = cfg if isinstance(cfg, dict) else {}
+            out.append({"entity": f"{domain}.{object_id}",
+                        "name": cfg.get("name") or object_id})
+    return out

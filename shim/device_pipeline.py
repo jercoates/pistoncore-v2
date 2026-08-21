@@ -828,7 +828,8 @@ def describe_domain_services(services: dict, domain: str, limit: int = 60) -> li
     return out
 
 
-def _build_notify_device(service_key: str, vocab: dict) -> tuple[str, dict, dict]:
+def _build_notify_device(service_key: str, vocab: dict,
+                         display_name: str | None = None) -> tuple[str, dict, dict]:
     """
     One synthetic picker device per notify target service -- same shape as
     any other device (n/cn/a/c), just sourced from the service registry
@@ -844,9 +845,12 @@ def _build_notify_device(service_key: str, vocab: dict) -> tuple[str, dict, dict
     reference against its device-registry name (name_by_user), which would
     give a truer display name than de-slugifying the service key.
     """
-    entity_id_like = f"notify.{service_key}"
+    entity_id_like = (service_key if service_key.startswith("notify.")
+                      else f"notify.{service_key}")
     hashed_id = hash_id(entity_id_like)
-    display_name = service_key.removeprefix("mobile_app_").replace("_", " ").title()
+    display_name = display_name or (
+        entity_id_like.split(".", 1)[1].removeprefix("mobile_app_")
+        .replace("_", " ").title())
 
     cap = vocab["capabilities"].get("notification", {})
     command_keys = cap.get("c", [])
@@ -863,6 +867,36 @@ def _build_notify_device(service_key: str, vocab: dict) -> tuple[str, dict, dict
         "cmd_bindings": {ck: entity_id_like for ck in command_keys},
     }
     return hashed_id, device_obj, resolution_entry
+
+
+def extract_notify_target_entities(registries: dict) -> list[dict]:
+    """notify.* ENTITIES that a piston can send a notification to.
+
+    HA moved notify to an entity platform: a modern notifier is a `notify.*`
+    entity driven by `notify.send_message` with the entity as the TARGET, and
+    it has NO service key at all. extract_notify_target_services only ever
+    looked at `notify.mobile_app_*` SERVICE keys, so every entity-platform
+    notifier was invisible in the picker -- you could not aim a piston at one
+    (measured 2026-08-19; the bench's notify domain exposes only
+    ['notify', 'persistent_notification', 'send_message']).
+
+    persistent_notification is excluded for the same reason it is excluded
+    from the email candidates: it is HA's own dashboard toast, not a
+    destination someone picks. mobile_app_* is excluded because those already
+    arrive as picker devices through the legacy service path -- listing them
+    twice would put the same phone in the picker under two names.
+    """
+    out = []
+    for s in registries.get("states", []):
+        eid = s["entity_id"]
+        if not eid.startswith("notify."):
+            continue
+        tail = eid.split(".", 1)[1]
+        if tail == "persistent_notification" or tail.startswith("mobile_app_"):
+            continue
+        out.append({"entity_id": eid,
+                    "name": (s.get("attributes") or {}).get("friendly_name") or tail})
+    return out
 
 
 def _field_applies(meta: dict, features: int, attributes: dict) -> bool:
@@ -1173,6 +1207,17 @@ def build_device_payload(registries: dict) -> dict:
     skipped: list[dict] = []
 
     for group in groups:
+        # A DEVICE THAT IS ONLY NOTIFIERS IS SURFACED PER NOTIFIER, NOT GROUPED.
+        # One phone can carry several destinations -- an app notifier and an SMS
+        # notifier relayed by a service are the same handset but different places
+        # a message lands -- so the piston has to be able to pick BETWEEN them.
+        # Grouping them into one picker device makes that unaskable, and the
+        # grouped device carries no notification command anyway (measured: it
+        # came out with cmds=[]), so it would be an entry that cannot be told to
+        # do anything sitting next to the ones that can.
+        if group.get("member_entity_ids") and all(
+                str(m).startswith("notify.") for m in group["member_entity_ids"]):
+            continue
         # One malformed device must NOT take down the whole dashboard (a fresh
         # user's varied HA is exactly where an unhandled shape shows up). Skip it,
         # record why, and keep every other device working.
@@ -1242,6 +1287,20 @@ def build_device_payload(registries: dict) -> dict:
         devices[hashed_id] = device_obj
         resolution_map[hashed_id] = resolution_entry
 
+    for ent in extract_notify_target_entities(registries):
+        try:
+            hashed_id, device_obj, resolution_entry = _build_notify_device(
+                ent["entity_id"], vocab, display_name=ent["name"])
+        except Exception as exc:
+            logger.exception("device pipeline skipped notify entity %s", ent["entity_id"])
+            skipped.append({"device": ent["entity_id"],
+                            "error": f"{type(exc).__name__}: {exc}"})
+            continue
+        if hashed_id in devices:
+            continue          # already surfaced via the legacy service path
+        devices[hashed_id] = device_obj
+        resolution_map[hashed_id] = resolution_entry
+
     # "$system" — webCoRE system variables that resolve to HA entities.
     # Reserved key, can't collide with device hashes (those are :hex:).
     # alarmSystemStatus binds only when exactly ONE alarm panel exists —
@@ -1295,6 +1354,27 @@ def build_device_payload(registries: dict) -> dict:
     email_notifier = _storage.load_settings().get("email_notify_entity")
     if email_notifier:
         system_entities["email"] = email_notifier
+    # PUSH and TEXT notifiers, bound BY TYPE rather than by a setting. Unlike
+    # email -- where HA cannot tell an SMTP notifier from a Telegram one -- a
+    # notify entity says which it is (`target_key`: "app" or "sms"), so there is
+    # nothing for a user to disambiguate. webCoRE's push went to every phone
+    # registered with the hub, so PUSH IS A LIST (Jeremy 2026-08-20: "the one
+    # that will have multiples is push"); SMS is effectively a singleton because
+    # an SMS relay is fiddly and costs money, so almost nobody runs two.
+    push_notifiers, text_notifiers = [], []
+    for st in registries.get("states", []):
+        eid = st["entity_id"]
+        if not eid.startswith("notify."):
+            continue
+        key = (st.get("attributes") or {}).get("target_key")
+        if key == "app":
+            push_notifiers.append(eid)
+        elif key == "sms":
+            text_notifiers.append(eid)
+    if push_notifiers:
+        system_entities["push"] = sorted(push_notifiers)
+    if text_notifiers:
+        system_entities["text"] = sorted(text_notifiers)
     resolution_map["$system"] = system_entities
 
     if skipped:

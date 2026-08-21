@@ -166,7 +166,43 @@ def fallback_families(statuses: dict | None = None) -> list[dict]:
     return sorted(groups.values(), key=lambda g: -g["count"])
 
 
+_STATUS_BACKUPS = 2   # cheap insurance; see _backup_statuses
+
+
+def _backup_statuses() -> None:
+    """Keep the last few compile_status.json files, newest first.
+
+    Two reasons, and the second is the one that matters (Jeremy, 2026-08-18).
+    RECOVERY: the status file drives which helpers get written, so losing it
+    loses them. DETECTION: with a previous copy you can DIFF, and a helper that
+    silently disappeared becomes something the app can say out loud. This
+    failure has always been silent -- the YAML still compiles, HA still
+    validates it, and only the runtime behaviour breaks.
+    """
+    try:
+        if not _STATUS_FILE.exists():
+            return
+        for i in range(_STATUS_BACKUPS - 1, 0, -1):
+            older = _STATUS_FILE.with_suffix(f".{i}.bak")
+            newer = _STATUS_FILE.with_suffix(f".{i - 1}.bak")
+            if newer.exists():
+                older.write_bytes(newer.read_bytes())
+        _STATUS_FILE.with_suffix(".0.bak").write_bytes(_STATUS_FILE.read_bytes())
+    except OSError:
+        pass          # a backup that cannot be written must never fail a deploy
+
+
+def previous_statuses() -> dict:
+    """The most recent status backup, for diffing against the live one."""
+    p = _STATUS_FILE.with_suffix(".0.bak")
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    except (OSError, ValueError):
+        return {}
+
+
 def _record(piston_id: str, **fields) -> dict:
+    _backup_statuses()
     statuses = load_statuses()
     rec = {"ts": int(time.time() * 1000), **fields}
     statuses[piston_id] = rec
@@ -352,6 +388,46 @@ async def _deploy_helpers(piston_id: str, writer, helpers: list) -> str:
                 seen.add(h["entity"])
                 rows.append(h)
 
+        # NO RECORD IS NOT THE SAME AS NEEDS NO HELPERS.
+        #
+        # This rebuild is a reconcile: whatever is not in `rows` is deleted from
+        # the package, which is how a deleted piston's helpers disappear without
+        # an orphan list. But it reads a MISSING compile record as "that piston
+        # wants nothing", and those are different things. Deploying from an
+        # instance whose status file does not know every piston therefore wipes
+        # the others' helpers -- 34 of them on 2026-08-09, taking the turn-off
+        # trigger of three Cave automations with them. Nothing errors: the YAML
+        # compiles, HA validates it, only the behaviour breaks.
+        #
+        # A dropped helper also takes its VALUE (measured 2026-08-18: a helper
+        # still in the file keeps its state across a reload; one removed from it
+        # is gone). A counter or a stored timestamp cannot be recomputed.
+        #
+        # So when the records are visibly incomplete, MERGE instead: keep what
+        # the deployed package already has, add what this compile needs, delete
+        # nothing. The normal case -- records covering every piston -- reconciles
+        # exactly as before.
+        known = set(statuses) | {piston_id}
+        on_disk = {e["id"] for e in storage.list_pistons()}
+        missing = on_disk - known
+        merge_note = ""
+        if missing:
+            recovered = 0
+            try:
+                existing = helper_mod.parse_package(
+                    writer.read(helper_mod.PACKAGE_FILE) or "")
+            except Exception:
+                existing = []
+            for h in existing:
+                if h.get("entity") and h["entity"] not in seen:
+                    seen.add(h["entity"])
+                    rows.append(h)
+                    recovered += 1
+            merge_note = (f"; {len(missing)} piston(s) had no compile record, so "
+                          f"helpers were merged rather than reconciled"
+                          + (f" ({recovered} kept that would have been deleted)"
+                             if recovered else ""))
+
         if not rows:
             return ""
         inc = helper_mod.ensure_include(writer)
@@ -364,7 +440,23 @@ async def _deploy_helpers(piston_id: str, writer, helpers: list) -> str:
         written = helper_mod.write_helpers(rows, writer)
         for domain, service in helper_mod.reload_services(written["domains"]):
             await ha_client.call_service(domain, service, {})
-        note = f"{len(rows)} variable helper(s)"
+        # THE DIFF (Jeremy, 2026-08-18: "the backups would allow a diff for
+        # missing entries"). The rotated status backup is the only thing that
+        # knows what the previous deploy believed. Comparing against it turns
+        # the one failure mode this design has -- helpers quietly vanishing --
+        # from silent into something the status record says out loud, which is
+        # what makes it fixable by Recompile All rather than by noticing a
+        # light never turns off weeks later.
+        lost = sorted({h.get("entity") for rec in previous_statuses().values()
+                       if isinstance(rec, dict)
+                       for h in (rec.get("helpers") or []) if h.get("entity")}
+                      - seen)
+        if lost:
+            merge_note += (f"; WARNING: {len(lost)} helper(s) present at the last "
+                           f"deploy are gone now ({', '.join(lost[:3])}"
+                           + (", …" if len(lost) > 3 else "")
+                           + ") — if that was not intended, run Recompile All")
+        note = f"{len(rows)} variable helper(s)" + merge_note
         if inc.get("changed"):
             note += "; added the packages include to configuration.yaml"
         return note

@@ -61,7 +61,9 @@ VIRTUAL_PLATFORMS = [
     Platform.HUMIDIFIER,           # PistonCore addition
     Platform.LIGHT,
     Platform.LOCK,
-    Platform.MEDIA_PLAYER,         # PistonCore addition
+    Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,               # PistonCore addition (somewhere for a
+                                   # piston's notifications to land)
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SIREN,                # PistonCore addition

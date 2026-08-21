@@ -27,7 +27,7 @@ from . import emit_intent
 from . import routing
 from . import spec
 from .analyze import analyze, yaml_blockers
-from .errors import CompilerError, NotYetImplemented, PistonDefect
+from .errors import CompilerError, NotYetImplemented, PistonDefect, UnresolvableDevice
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
 from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL, button_gestures,
                       unknown_comparison, incomplete_condition_message,
@@ -2785,7 +2785,59 @@ def _push_notification(n: dict, resolver: Resolver, ctx: dict) -> dict:
         return _speak(n, resolver, ctx)
     p0 = n["params"][0] if n["params"] else {}
     spec = resolver.ha_spec(n["command"], ctx)
-    return {"kind": "service", "service": spec["service"], "entities": [],
+    # A NOTIFY ENTITY IS THE DESTINATION, so it must go in the service TARGET.
+    # `entities: []` was right for the legacy broadcast -- notify.notify fans
+    # out and takes no target -- but HA moved notify to an entity platform,
+    # where notify.send_message routes by entity_id and accepts only message
+    # and title (a data-style target is rejected outright, HTTP 400, measured
+    # 2026-08-19). Emitting no target sent the message nowhere while looking
+    # perfectly healthy. Which rule matched is what decides: the vocab's
+    # domain:notify rule means an entity was picked, the '*' rule means the
+    # legacy broadcast.
+    entities = []
+    # `target_system` names a $system binding rather than a picked device --
+    # push and SMS are LOCATION commands in webCoRE, so the piston never says
+    # where they go. device_pipeline binds them by the notifier's own type.
+    sys_key = spec.get("target_system")
+    if sys_key and n.get("devices"):
+        # THE PISTON'S OWN TARGET WINS. webCoRE lists push/SMS under LOCATION
+        # commands, but a piston can still aim one at a device -- Albert writes
+        # `with @Notifications_Push do sendPushNotification`, which is how he
+        # controls which phones get it per piston. Substituting $system.push
+        # there would quietly ignore what he asked for and notify everyone.
+        try:
+            picked = resolver.entities_for_command(n["devices"], n["command"], ctx)
+        except UnresolvableDevice:
+            picked = []
+        # PUSH IS DIRECTED (Jeremy, 2026-08-20: "push is directed to a device
+        # like a phone — not all phones"). The piston named who it wants, so
+        # that is who gets it. If the named target does not resolve to a
+        # notifier, FLAG IT -- falling back to every phone bound by type would
+        # send the message to people the piston never mentioned, which is worse
+        # than not sending it, and silent.
+        entities = [e for e in picked if str(e).startswith("notify.")]
+        if not entities:
+            entities = [resolver._unresolved(str(n["devices"][0]), n["command"],
+                                             "command", ctx)]
+        sys_key = None
+    if sys_key:
+        bound = resolver.system_entity(sys_key)
+        entities = bound if isinstance(bound, list) else ([bound] if bound else [])
+        if not entities:
+            # FLAG, DO NOT FAIL (Jeremy, 2026-08-20). An install with no push
+            # notifier yet is the ordinary first-compile state -- the companion
+            # app may not be paired, the SMS integration not added -- and losing
+            # the whole piston over it costs the user everything else it does.
+            # Recorded as unresolved so the front door and the piston banner say
+            # which piston needs a notifier, and the automation still deploys.
+            entities = [resolver._unresolved(f"${sys_key}", n["command"],
+                                             "command", ctx)]
+    elif str(spec.get("service", "")).endswith(".send_message"):
+        try:
+            entities = resolver.entities_for_command(n["devices"], n["command"], ctx)
+        except UnresolvableDevice:
+            entities = []
+    return {"kind": "service", "service": spec["service"], "entities": entities,
             "data": {next(iter(spec["data"])):
                      _text_param(p0, resolver, ctx, n.get("_piston"))}}
 

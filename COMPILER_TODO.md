@@ -835,6 +835,22 @@ to score against except Jeremy).
       OTHER than the one asking for `remains_*` no longer re-run on its events,
       because the noisy trigger is held out of the shared union.
 
+- [ ] **`sendEmail` with a per-call recipient emits a call HA REJECTS (400)** —
+      MEASURED 2026-08-19 against live HA. `notify.send_message` (the entity
+      platform) accepts ONLY `message` and `title`; it has no `target` field —
+      the destination IS the entity. The vocab maps `$1` (recipient) to
+      `target` in `data`, so `_send_email` adds it and the whole service call
+      fails with HTTP 400. With NO recipient override it works fine, so this
+      only bites pistons that name an address.
+      **NOT DECIDED — Jeremy 2026-08-19: "b is the best option you offered but
+      i have no fucking clue".** Dropping the recipient was rejected outright
+      (a notification that ignores who it is for is not a notification), and
+      refusing was rejected too. The remaining direction is routing to legacy
+      `notify.notify` when a recipient is given — it does take `target` — but
+      that fans out to every notifier, so it may not mean what webCoRE meant
+      either. Needs research into how HA expects a per-recipient email to be
+      addressed at all before anyone writes code.
+
 - [ ] **Interaction filter (`p:'p'`) silently dropped** — "only when physically
       operated" also fires on automated changes. 7 corpus pistons use it. HA
       may genuinely not distinguish; if so it must be FLAGGED, not ignored.
