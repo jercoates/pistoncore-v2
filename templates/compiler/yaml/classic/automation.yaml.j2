@@ -246,6 +246,16 @@
 {%- if a.get('count') is not none %}
     count: {{ a.get('count') }}
 {%- endif %}
+{#- "do this to EVERY one of these" is its own kind of repeat, and HA says it
+    natively. The device list is resolved at COMPILE time, so the emitted
+    automation carries no runtime dependency on PistonCore; `repeat.item` is
+    the current entity inside the sequence. VERIFIED on the bench 2026-08-22:
+    a variable assigned inside the sequence accumulates ACROSS iterations
+    (START+one+two+three), which is what lets a piston build a sentence one
+    device at a time and keep the speak that sits beside it in the same loop. -#}
+{%- if a.get('for_each') %}
+    for_each: {{ a.get('for_each') | tojson }}
+{%- endif %}
 {%- if a.get('while') %}
     while:
 {%- for c in a.get('while') %}

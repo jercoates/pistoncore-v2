@@ -1476,3 +1476,113 @@ records as a known gap. This is that gap biting: 5 of 16 round-1 pistons
 reported `deployed` while HA had disabled or never created them. The post-reload
 entity verification backstop named in the same spec section is what would catch
 it — it is not doing so today.
+
+## ⚠⚠ IN PROGRESS ON BRANCH `intent-report-pattern` — DO NOT SHIP AS IT STANDS
+**(2026-08-22. `main` untouched, nothing pushed.)**
+
+### The build-a-sentence pattern — 11 pistons, ONE shape
+
+Walk a device list, add the matching devices to a string, send it. Both
+authors, over and over: `Smoke_Status`, `Gas_Detected`, `Battery_Status`,
+`Message`, `Water_Status`, `DoorsOpen`, `Notify`. It was the single biggest
+item on the PyScript list — nothing else was above 4 — and it is Jeremy's own
+stated ~80% reason for the intent engine.
+
+Recognition is `emit_intent.report_groups()` and is SHAPE-based: a value
+started fresh, added to once per device, then used. **Verified content-blind**
+— piston 38's structure with every name changed (`Battery_Status`->`DryPlants`,
+`battery`->`humidity`, wording rewritten) still returns 2 reports.
+
+### DONE — the accumulator refusal (`emit_yaml._set_variable`)
+
+It refused EVERY self-referencing assignment as needing to persist. Two faults:
+
+- the self-reference was detected by **searching for the variable's NAME in the
+  expression text**, so a variable called `Message` matches its own name
+  appearing inside a notification's wording (Jeremy: *"you keep locking on to
+  direct name matches that is the real problem"*);
+- and "built from its own previous value" is **not the same question** as
+  "has to survive the run".
+
+Now asks both, structurally: `spec.value_names()` reads the JSON's own `t:"x"`
+operand tags however deeply nested, and `resolver.helper_vars` answers whether
+it is read outside the statement that built it. Only both together refuse.
+`helper_vars` over-flags, so this can only ADD, never take a working piston
+away — which matters, the repo has ~71 unique cloners a fortnight.
+
+### ⚠ DEFECT — the `for_each` condition is pinned to the FIRST device
+
+`emit_yaml._foreach_loop` (new) emits HA's native `repeat: for_each:` for any
+per-device loop that does not collapse to a single template. Items are
+**dicts**, one slot per reading resolved at compile time, because a detector is
+asked two questions — "are you alarming" and "what is your battery" — which are
+two entities on one device. Supporting parts: `for_each` in
+`automation.yaml.j2`/`script.yaml.j2`, `_loop_attrs`, `_slot`, the `_LOOP`
+context (mirrors `_PISTON`), `JinjaTranspiler.loop_slots`.
+
+**The per-device CONDITION inside the loop still emits a literal `entity_id`,
+so it tests the first device on every iteration.** BENCH-PROVEN on three real
+detectors with the SECOND one alarming:
+
+```
+literal entity condition (what it emits):   RESULT>>> ALARM: <<<
+template condition on repeat.item:  RESULT>>> ALARM: PC Basement Smoke(91%) <<<
+```
+
+**A carbon-monoxide alarm that announces nothing** — the exact silent drop the
+`_accumulate_loop` guard existed to prevent, reintroduced by the fix for it.
+The four safety pistons this moved to YAML are WRONG until this is closed.
+
+**The fix, already proven above:** a condition inside a `for_each` must become
+`condition: template` on `repeat.item.<slot>`. **HA does not accept a templated
+`entity_id` on a state condition** (measured, not assumed). Call sites are the
+several `entities_for_attr(cond["devices"], cond["attr"], ctx)` in
+`emit_yaml.py` — make the loop case produce a template condition; do not copy
+the comparison logic into a second place.
+
+**Every synthetic check called this a pass** (see HARD_RULES §13): a synthetic
+map fabricates ONE device, which makes "first device" and "correct device" the
+same thing.
+
+### Routing, intent path, 154 pistons (synthetic map — ROUTING ONLY)
+
+| | yaml | pyscript | error |
+|---|---|---|---|
+| baseline | 118 | 31 | 5 |
+| + accumulator fix | 121 | 28 | 5 |
+| + for_each | 124 | 25 | 5 |
+
+**4 of those 6 moves are provisional** pending the defect above.
+
+Remaining, by pistons blocked: `random()` 4 · `is_any_of` on a variable 3 ·
+for-each 3 · `alarmSystemAlert` 2 · actions attached to a condition 2 ·
+`mid()` 2 · followed-by window 2. **`random()` and `mid()` are just missing
+Jinja functions — HA has both.** The 5 errors: `setVolume` and `on` unmapped on
+an unknown domain, `@Night_Time_Begin` not found (needs the real globals),
+`systemStart`, and a condition webCoRE stored with no comparison (`receives`).
+
+### The battery report — what it actually asks for
+
+Product: header `🔋 Low Battery 🔋` + date, then per device name / `Battery:N%` /
+`Last Reported: M/DD/YY @ h:mm a`, built as
+`formatDateTime($now - age([$device:battery]))`.
+
+- `age()` is `device.currentState(attr, true)` then elapsed — **the recorded
+  state's date, with no poll**. VERIFIED in `webcore-piston.groovy`, which IS
+  in the repo at `reference/webCoRE-hubitat-patches-extracted/…/webcore-piston.src/`
+  — **this document's claim that it is absent is WRONG and has sent sessions to
+  ask Jeremy for a file already here.**
+- **`last_changed` is the wrong HA field for it; `last_reported` is right.**
+  Measured on a bench battery steady at 17%: `last_changed` 14 hours ago,
+  `last_reported` 36 seconds ago. A healthy stable battery looks dead by
+  `last_changed`. **`last_reported` appears 0 times in the compiler, vocab and
+  templates.** It is a compiler artifact -> a TEMPLATE, not the vocab
+  (HARD_RULES §15).
+- The two `0%` rows in Jeremy's real notification are `938 Basement-motion`
+  (UniFi PoE camera) and `964 Bedroom` (Ecobee Sensor), both genuinely in
+  `BatteryDevices` (61 devices, resolved by hashing all 178 hub ids). Their
+  `battery` returns **`null`** with **no recorded state**, so webCoRE reads null
+  as 0 and `age()` errors, printing the run time. **RULED (Jeremy, 2026-08-22):
+  they DROP, not get invented — "ha has it correct".** The fail-closed numeric
+  comparison already does this; verified against live HA, 3 entities in, 2 out,
+  no phantom row.

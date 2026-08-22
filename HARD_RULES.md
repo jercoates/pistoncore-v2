@@ -704,3 +704,87 @@ Corollary on where knowledge comes from: **everything Jeremy knows is already in
 the documents or the chat.** He is new to HA (his words, 2026-08-07). HA
 research is the compiler's job to do — do not ask him HA questions he would have
 to go and look up himself.
+
+## 13. SYNTHETIC IS FOR PARTS. A SAFETY RUN GOES THROUGH PISTONCORE, WHOLE
+**(Jeremy, 2026-08-22)**
+
+Testing a PIECE against a synthetic map or a hand-written script is fine — it
+answers a mechanical question quickly.
+
+**It is never acceptable for "does this piston work", and never for a safety
+piston.** That run goes through PistonCore end to end: real devices made by the
+factory, the real compiler, a real deploy, a real trigger, and the real
+outcome read back. **No hand-written YAML, no hand-made devices, no hand-built
+resolution map.**
+
+**Why, measured the same day.** `test_compile_snapshots._synthetic_maps`
+fabricates ONE device per reference. A per-device loop built over it emitted a
+condition pinned to a literal entity, and with a single fabricated device
+"the first device" and "the correct device" are the same thing — so it passed.
+Three real detectors on the bench, with the SECOND one alarming, showed the
+truth immediately: the emitted automation announced **nothing**. A
+carbon-monoxide alarm that stays silent, which every synthetic check called a
+pass. See COMPILER_TODO, the for_each condition entry.
+
+**And hand-made devices are their own trap** (Jeremy, 2026-08-22: the previous
+session "hand made the devices wrong and it chased its tail for a half hour").
+Create devices through PistonCore's factory using its BUILT-IN types. Five
+devices hand-made on 2026-08-21 were built on the wrong platform — binary
+sensors under the sensor platform, a fan as a light — and HA warns they stop
+working entirely in 2027.5.
+
+## 14. ACTIONS INSIDE A LOOP RUN INSIDE THE LOOP — AND ON A SAFETY PISTON THAT IS THE WHOLE POINT
+**(Jeremy, 2026-08-22: *"this is a safety thing asshat waiting gets people
+dead"*)**
+
+A per-device loop in a smoke/CO/gas piston is **collection** — it keeps finding
+devices that go into alarm instead of stopping at the first. The speak sitting
+INSIDE that loop is deliberate: the house is warned the moment the first
+detector is found, and warned again as more are found.
+
+It was proposed to collect every alarming device first and announce once, on
+the grounds that announcing twice looked like an accident of where the
+statement landed. **That puts a delay in front of a carbon-monoxide alarm to
+make the emitted YAML tidier.** Do not do it, and do not re-derive it.
+
+**The rule, generally:** actions inside a loop run inside the loop. Order and
+repetition are intent (§10). **The only loop that may collapse into a single
+expression is one that does nothing but collect** — which is exactly what
+`_accumulate_loop`'s existing guard checks. That guard is correct; leave it.
+
+## 15. THE VOCAB IS webCoRE'S WORDS. NO webCoRE SIDE = A TEMPLATE
+**(Jeremy, 2026-08-22)**
+
+`webcore_vocab.json` maps **a webCoRE word** to how HA achieves it. A thing
+webCoRE cannot say has no entry to make — it is a **compiler artifact**, and it
+lives in `templates/compiler/…` where it is still user-editable (§8) but sits
+with the compiler's own constructs instead of the translation table.
+
+Worked example, same day: "when did this device last report" has no webCoRE
+word at all — 92 attributes, 99 system variables, nothing. It was about to be
+added to the vocab. It belongs in a template.
+
+## 16. DEVICE VARIABLES ARE SETTLED — THE FALLOUT IS IN THE OTHER TYPES
+**(Jeremy, 2026-08-22)**
+
+**A device variable, local or global, is ONE thing: a named list of the devices
+the statements act on**, resolved to entity ids at compile time. Jeremy specced
+these deliberately, understands them on both platforms, and they work. 369 of
+the corpus's 561 declarations are these. **Do not re-derive or "improve" them.**
+
+**Every other variable type is underspecced, and that is where the bugs are** —
+his words: *"I do not know the rest of the veriable types well so they got
+underspecked and this is the fallout from that."*
+
+**The reason the gap exists, and it is worth keeping:** he underspecced them
+because *"in essence they match across between hubitat and ha"* — which is TRUE
+of the values (a string is a string) and FALSE of where they live. webCoRE
+gives every piston a persistent variable store for free. HA has no such thing
+for an automation: a `variables:` block lasts one run, and anything longer has
+to become a real entity in the user's HA. **webCoRE has one answer; HA has
+four.** From the webCoRE side there was nothing visible to specify.
+
+Corollary: **the 255-character ceiling is a limit on ENTITY STATE, not on
+YAML.** A run-scoped variable is not an entity — a `variables:` block holds
+native lists, numbers and strings of any length. "Lists blow the cap" was used
+to argue lists could not work in YAML; it is wrong.

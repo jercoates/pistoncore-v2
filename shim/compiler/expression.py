@@ -671,6 +671,9 @@ class JinjaTranspiler(ExprTranspiler):
     # set while emitting an entity loop; see device()/variable() above.
     loop_entity = None      # the Jinja variable the loop binds
     loop_sample = None      # a real entity, used only to derive the read shape
+    # {attribute: (slot expression, sample entity)} when one iteration carries
+    # SEVERAL of the device's entities -- see the device() reader below.
+    loop_slots: dict = {}
 
     """Emits HA Jinja2 for the same AST the Python backend consumes."""
 
@@ -809,6 +812,17 @@ class JinjaTranspiler(ExprTranspiler):
         # SHAPE from a sample entity and swap the literal id for the loop
         # variable — the shape is verified uniform across the list before the
         # loop is emitted (_accumulate_loop), never assumed.
+        # SEVERAL READINGS OFF THE SAME DEVICE. A safety piston asks each
+        # detector two questions -- "are you alarming" and "what is your
+        # battery" -- and those are two different HA entities, so one entity
+        # per iteration cannot answer both. `loop_slots` carries one slot per
+        # reading, resolved at compile time; HA's for_each takes a list of
+        # dicts, so the iteration item holds them all. Without this the four
+        # smoke/CO/gas pistons had nowhere to go but PyScript.
+        if dref == "$device" and attr and self.loop_slots.get(attr):
+            slot, sample = self.loop_slots[attr]
+            shape = self.resolver.read_expr(sample, attr)
+            return shape.replace(f"'{sample}'", slot)
         if dref == "$device" and self.loop_entity and attr and self.loop_sample:
             shape = self.resolver.read_expr(self.loop_sample, attr)
             return shape.replace(f"'{self.loop_sample}'", self.loop_entity)

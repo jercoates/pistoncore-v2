@@ -86,9 +86,14 @@
 {%- endfor %}
 {%- endif %}
 {%- elif a.kind == 'repeat' -%}
+{#- same for_each as automation.yaml.j2 — a piston compiled to a script gets
+    the identical loop, so the two cannot drift apart on it. -#}
 - repeat:
 {%- if a.get('count') is not none %}
     count: {{ a.get('count') }}
+{%- endif %}
+{%- if a.get('for_each') %}
+    for_each: {{ a.get('for_each') | tojson }}
 {%- endif %}
 {%- if a.get('while') %}
     while:

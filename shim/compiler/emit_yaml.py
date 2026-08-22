@@ -45,6 +45,9 @@ _env = Environment(
 # variable declarations, and threading it through every call site would touch
 # a dozen signatures for one read-only lookup.
 _PISTON: dict = {"cur": None}
+# The device a per-device loop is currently visiting, while its body is being
+# resolved. Empty outside a loop. See _jinja().
+_LOOP: dict = {"entity": None, "sample": None, "slots": {}}
 
 # Media-file playback config (from settings.json "media"), loaded per compile.
 # Lets a piston's old Hubitat "Play track" URL (x-file-cifs://...) reach HA:
@@ -2107,8 +2110,26 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             out.append({"kind": "stop"})
         elif n["kind"] == "foreach":
             # The accumulate-and-announce shape resolves to ONE template
-            # (accumulate.j2). Anything else routes to PyScript.
+            # (accumulate.j2) — a whole-house battery report becomes a single
+            # expression instead of 61 unrolled copies.
             node = _accumulate_loop(n, resolver, ctx)
+            if node is None:
+                # NOT EVERY LOOP COLLAPSES, AND THE REST ARE STILL LOOPS.
+                # Until now anything that was not a pure accumulation went to
+                # PyScript, which is how the smoke, CO and gas pistons ended up
+                # there: they build the message AND set the volume AND speak,
+                # all inside the one loop. Home Assistant has said this
+                # natively for years (`repeat: for_each:`); the compiler simply
+                # never emitted it, so "requires PyScript" was never true — it
+                # was unfinished (HARD_RULES §3: every PyScript route is a
+                # missing piece of compiler, not a resting place).
+                #
+                # ORDER SURVIVES, and that is the point of doing it this way
+                # rather than emitting the accumulation and the actions
+                # separately: webCoRE runs them interleaved, once per matching
+                # device, so a message that grows as it goes is spoken as it
+                # grew (HARD_RULES §10 — "in this order" is intent).
+                node = _foreach_loop(n, resolver, ctx)
             if node is None:
                 raise NotYetImplemented(
                     "for-each over a device list requires PyScript", **ctx)
@@ -2573,23 +2594,46 @@ def _set_variable(n: dict, resolver: Resolver, ctx: dict) -> dict:
     if p0.get("xi"):
         raise NotYetImplemented("setting one element of an array needs PyScript", **ctx)
     value_op = params[1] if len(params) > 1 else {"t": "c", "c": ""}
-    source = str(value_op.get("e") or value_op.get("x") or "")
-    # only a WHOLE-WORD self-reference means an accumulator (count = count+1);
-    # word boundaries stop `count` matching inside `mycount`/`count2`,
-    # which would over-route unrelated pistons (review 2026-07-20).
+    # BUILDING A VALUE OUT OF ITSELF IS NOT THE SAME AS NEEDING IT TO PERSIST.
+    # The commonest shape in the corpus — walk the devices, add the matching
+    # ones to a string, send it — assembles the whole value inside ONE run and
+    # nothing carries over (Jeremy, 2026-08-21: "for the batteries the current
+    # value is pulled, the last state is only needed for the last time it
+    # reported"). Refusing every self-reference sent 11 pistons to PyScript for
+    # a persistence none of them asked for, the smoke/CO/gas alarms among them.
     #
-    # TRIED AND REVERTED 2026-08-08: giving accumulators a helper entity (which
-    # DOES persist between runs) moves this refusal away and compiles them
-    # natively — it worked, and moved 3 pistons to YAML. It was reverted
-    # because two of those three are smoke/CO and water-leak pistons, and the
-    # YAML band silently drops their spoken alarm (a SEPARATE, pre-existing
-    # bug — see COMPILER_TODO). Moving a safety piston onto a band that loses
-    # its announcement is worse than leaving it on PyScript where it works.
-    # Fix the speak drop first, then this becomes a clean win.
-    if re.search(r"\b" + re.escape(str(name)) + r"\b", source):
+    # TWO QUESTIONS, and the old test asked only the first:
+    #   1. is this value built from its own previous value?
+    #   2. is it READ outside the statement that built it?
+    # Only both together need a store that survives the run.
+    #
+    # (1) is asked STRUCTURALLY. webCoRE tags a variable operand `t: "x"`, so
+    # `spec.value_names` reads the JSON's own labels wherever they are nested.
+    # The old test searched for the variable's NAME in the expression TEXT,
+    # which cannot tell a read from the same word appearing inside a message —
+    # and a variable called `Message` is a corpus-wide false positive waiting
+    # to happen (Jeremy, 2026-08-21: "you keep locking on to direct name
+    # matches that is the real problem").
+    #
+    # (2) is asked of `helper_vars`, the ONE place that answers "does this
+    # value outlive the statement that built it" (resolve.variables_needing_
+    # helpers) — asked here rather than re-derived (HARD_RULES §9). It
+    # OVER-flags rather than under-flags, so anything it is unsure about keeps
+    # the old PyScript behaviour: this change can only ever add.
+    #
+    # TRIED AND REVERTED 2026-08-08: giving accumulators a HELPER entity, so
+    # they persist natively, moved 3 pistons to YAML and was reverted because
+    # two were smoke/CO and water-leak pistons whose spoken alarm the YAML band
+    # silently drops. That is a different change and is still reverted — this
+    # one moves only values that never needed persisting at all, and the speak
+    # drop is being fixed alongside it rather than routed around.
+    from . import spec as _spec
+    if str(name) in _spec.value_names(value_op) and \
+            str(name) in (getattr(resolver, "helper_vars", {}) or {}):
         raise NotYetImplemented(
-            f"'{name}' is built from its own previous value, which only "
-            f"persists between runs under PyScript", **ctx)
+            f"'{name}' is built from its own previous value AND read outside "
+            f"the statement that builds it, so it has to survive the run — "
+            f"which needs PyScript", **ctx)
     # Helper-backed variables are written through their entity so the value
     # survives to the other automations that read it (stage 3b).
     hw = _helper_write(name, value_op, resolver, ctx,
@@ -2771,8 +2815,19 @@ def _jinja(resolver: Resolver, ctx: dict, piston: dict | None) -> JinjaTranspile
     locals_ = set(getattr(resolver, "local_var_names", set()) or set())
     arrays = {v.get("n") for v in (piston or {}).get("v", [])
               if str(v.get("t", "")).endswith("]")}
-    return JinjaTranspiler(locals_, resolver.globals_map, resolver, ctx,
-                           _mode_entity(resolver), array_vars=arrays)
+    jt = JinjaTranspiler(locals_, resolver.globals_map, resolver, ctx,
+                         _mode_entity(resolver), array_vars=arrays)
+    # INSIDE A LOOP, `$device` MEANS THE ONE BEING VISITED. The transpiler
+    # already knows how to say that (loop_entity/loop_sample, three positions:
+    # the device's name, one of its readings, and the device itself) — it just
+    # had no way to be told it was in a loop, because every transpiler is built
+    # fresh per call. Carried the same way the current piston is (_PISTON), so
+    # there is one mechanism rather than a parameter threaded through every
+    # caller.
+    if _LOOP["entity"]:
+        jt.loop_entity, jt.loop_sample = _LOOP["entity"], _LOOP["sample"]
+        jt.loop_slots = _LOOP["slots"] or {}
+    return jt
 
 
 def _push_notification(n: dict, resolver: Resolver, ctx: dict) -> dict:
@@ -3255,6 +3310,103 @@ def _finish_branch(br: dict, conditions: list, triggers: list,
         conditions=conditions,
         actions=actions,
     ))
+
+
+def _loop_attrs(body) -> set:
+    """Every reading of `$device` the loop body asks for.
+
+    Two places name one: a condition tested against the looped device carries
+    `attr`, and an expression spells it `[$device:battery]`. Both are walked,
+    because a loop can test one reading and print another — and the whole
+    point of collecting them is to notice when they disagree."""
+    found = set()
+
+    def walk(node):
+        if isinstance(node, list):
+            for x in node:
+                walk(x)
+            return
+        if not isinstance(node, dict):
+            return
+        if node.get("attr") and (node.get("devices") in (["$device"], ("$device",))
+                                 or not node.get("devices")):
+            found.add(str(node["attr"]))
+        for v in node.values():
+            if isinstance(v, str):
+                for m in re.finditer(r"\[\s*\$device\s*:\s*([A-Za-z_]\w*)\s*\]", v):
+                    found.add(m.group(1))
+            else:
+                walk(v)
+
+    walk(body)
+    return found
+
+
+def _foreach_loop(n: dict, resolver: Resolver, ctx: dict):
+    """`each device: <anything>` -> HA's own `repeat: for_each:`.
+
+    The general case, for every per-device loop that does NOT collapse into a
+    single template. `_accumulate_loop` is tried first because a pure report
+    reads far better as one expression; this is what catches the rest instead
+    of giving up on them.
+
+    THE DEVICE LIST IS RESOLVED AT COMPILE TIME, not looked up at runtime, so
+    the emitted automation still works with PistonCore deleted
+    ([[no_runtime_pistoncore_dependency]]). Recompiling is the refresh.
+
+    `$device` inside the body becomes `repeat.item` — set on _LOOP so every
+    transpiler built while the body resolves picks it up, and cleared
+    afterwards so it cannot leak into a sibling statement.
+
+    Returns None if the device list cannot be resolved, so the caller still
+    routes rather than emitting a loop over nothing."""
+    # WHICH ENTITY STANDS FOR THE DEVICE. A device is several entities in HA,
+    # so the loop has to iterate the one the body actually reads — the same
+    # question `_accumulate_loop` answers, asked the same way (HARD_RULES §9).
+    # EVERY READING THE BODY ASKS FOR, not just one. A detector is asked
+    # whether it is alarming AND what its battery is; those are two entities on
+    # the same device, so the iteration item carries both. HA's for_each takes
+    # a list of dicts, which is exactly the shape that needs — `repeat.item.co`
+    # and `repeat.item.battery` on the same pass.
+    attrs = sorted(_loop_attrs(n.get("body") or [])) or ["switch"]
+    try:
+        hashes = []
+        for dref in (n.get("devices") or []):
+            hashes.extend(resolver._hashes(str(dref), ctx))
+        if not hashes:
+            return None
+        items, samples = [], {}
+        for h in hashes:
+            row = {}
+            for attr in attrs:
+                ents = resolver.entities_for_attr([h], attr, ctx)
+                if len(ents) != 1:
+                    return None
+                row[_slot(attr)] = ents[0]
+                samples.setdefault(attr, ents[0])
+            items.append(row)
+        if not items:
+            return None
+    except CompilerError:
+        return None
+
+    prev_e, prev_s, prev_slots = _LOOP["entity"], _LOOP["sample"], _LOOP["slots"]
+    _LOOP["entity"] = "repeat.item.%s" % _slot(attrs[0])
+    _LOOP["sample"] = samples[attrs[0]]
+    _LOOP["slots"] = {a: ("repeat.item.%s" % _slot(a), samples[a]) for a in attrs}
+    try:
+        body = _resolve_actions(n.get("body") or [], resolver, ctx)
+    finally:
+        _LOOP["entity"], _LOOP["sample"], _LOOP["slots"] = prev_e, prev_s, prev_slots
+    if not body:
+        return None
+    return {"kind": "repeat", "for_each": items, "body": body}
+
+
+def _slot(attr: str) -> str:
+    """An attribute name as a for_each dict key — a plain identifier, because
+    `repeat.item.<key>` has to be a legal Jinja attribute access."""
+    return re.sub(r"[^A-Za-z0-9_]", "_", str(attr)).lower()
 
 
 def _accumulate_loop(n: dict, resolver: Resolver, ctx: dict):

@@ -187,6 +187,22 @@ never treat it as gospel.
 
 ## Repo map
 
+- **`claude-help/` — the Claude help files. START HERE for mechanism.** One file
+  per part of the compiler, each self-contained (assumes you have read nothing
+  else) so Jeremy can hand a session the COMBINATION a given problem needs. They
+  explain HOW THINGS WORK; they never restate HARD_RULES (decisions) or
+  COMPILER_TODO (open work), they link to them.
+  - `00_HOW_TO_ASK_HA.md` — how to find out what Home Assistant natively does,
+    and the bench-verified answers found so far. **In almost every set**, because
+    almost every compiler question turns out to be an HA question. It also
+    supersedes the framing of `HA_LIMITATIONS.md`, which asked "what can HA NOT
+    do" — the transcoder's question. HA_LIMITATIONS is unaudited and its entries
+    are LEADS, never facts (Jeremy, 2026-08-22: written by Claude for Claude, and
+    he "would not necessarily know good from bad" in it).
+  - more to follow: the intent engine, variables, patterns, tracking pieces in
+    HA, PyScript. An INDEX mapping problem -> which files to read is the piece
+    that makes the composition work and is not written yet.
+
 - `dashboard/` — sealed upstream dashboard (see rules above)
 - `reference/` — webcore_source_reference.groovy and other read-only upstream references
 - Repo-root translation files: webcore_vocab.json (ALL translation, including
