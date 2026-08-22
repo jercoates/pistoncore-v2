@@ -7,6 +7,7 @@ d-array entries resolve as: hashed id | local device-variable name | @global
 name (PISTON_JSON_REFERENCE §4 — never assume already-a-hash)."""
 
 import hashlib
+import datetime as _dt
 import json
 import re
 from pathlib import Path
@@ -359,13 +360,18 @@ def helper_entity_id(piston_id: str, name: str, vtype: str) -> str | None:
     return f"{domain}.pistoncore_{piston_id}_{slug}".lower()
 
 
-def variables_needing_helpers(piston: dict) -> dict:
-    """{name: {type, entity, reason}} for locals that cannot live in a YAML
-    `variables:` block — see this module's stage-3a note."""
+def variable_traffic(piston: dict) -> tuple[dict, dict, dict]:
+    """(decls, written, read) — where every local variable is ASSIGNED and
+    where it is READ, keyed by statement id.
+
+    One walk, because two questions need it: which locals need a real HA
+    helper (below), and which are never assigned at all (unassigned_locals).
+    A second copy of this walk is exactly the duplication that has cost this
+    codebase its worst bugs."""
     decls = {v.get("n"): str(v.get("t") or "dynamic")
              for v in (piston.get("v") or []) if v.get("n")}
     if not decls:
-        return {}
+        return {}, {}, {}
     written, read = {}, {}
 
     def walk(node, stmt):
@@ -391,6 +397,49 @@ def variables_needing_helpers(piston: dict) -> dict:
 
     for stmt in piston.get("s", []):
         walk(stmt, stmt.get("$"))
+    return decls, written, read
+
+
+def unassigned_locals(piston: dict) -> dict:
+    """{name: value it was saved with} for locals nothing ever assigns.
+
+    Not settings and not configuration — ordinary piston variables that happen
+    to have no assignment anywhere in the piston, so their value is whatever
+    the piston was last saved with. `LowLux` on a lux-gated night light is one.
+    Editing it in webCoRE saves, and a save recompiles, so the number is
+    knowable at compile time and needs no helper to carry it (Jeremy,
+    2026-08-21: "a helper for an edit in webcore will just compile the new
+    number in if the compiler is programmed correctly").
+
+    Without this a variable threshold reached the emitter as None, which
+    stripped `above:`/`below:` off the trigger entirely — HA then DISABLED the
+    whole automation, silently, while the compile reported success."""
+    _types, written, _ = variable_traffic(piston)
+    out = {}
+    for name, decl in (local_var_decls(piston) or {}).items():
+        if written.get(name):
+            continue                      # assigned somewhere: still a placeholder
+        if not decl.get("has_initial"):
+            continue
+        if str(decl.get("type") or "").rstrip("[]") == "device":
+            continue
+        # The operand says it is a variable (`t: "x"`) and the DECLARATION says
+        # what type it holds. webCoRE stores every value as text, so the type is
+        # the only thing that says whether "20" is a number and whether "false"
+        # is a boolean or a truthy string -- typed_value already owns that call
+        # for both bands, so it makes it here too rather than a second copy.
+        raw = decl.get("initial")
+        coerced = typed_value({"t": "c", "c": raw}, decl)
+        out[name] = raw if coerced is None else coerced
+    return out
+
+
+def variables_needing_helpers(piston: dict) -> dict:
+    """{name: {type, entity, reason}} for locals that cannot live in a YAML
+    `variables:` block — see this module's stage-3a note."""
+    decls, written, read = variable_traffic(piston)
+    if not decls:
+        return {}
 
     out = {}
     for nm, vtype in decls.items():
@@ -412,6 +461,21 @@ def variables_needing_helpers(piston: dict) -> dict:
                    "read_in": sorted(x for x in r if x is not None)}
     return out
 
+def minutes_hms(minutes) -> str:
+    """webCoRE's `time` type is MINUTES SINCE MIDNIGHT -> HA's "HH:MM:SS".
+
+    The JSON tags it: the declaration carries `t: "time"` and the operand
+    `vt: "time"`, so nothing has to be inferred. Verified by the corpus naming
+    itself -- `a51_Morning_Wakeup_M_F_845am` stores `Alarm = 525`, and 525
+    minutes is 08:45.
+
+    THE one copy. This conversion existed three times over (analyze, emit_yaml,
+    emit_pyscript); a fourth was about to be written for time variables.
+    """
+    m = int(minutes)
+    return f"{m // 60:02d}:{m % 60:02d}:00"
+
+
 def typed_value(value_op: dict, declared: dict | None):
     """A constant coerced to its DECLARED type, or None to leave it alone.
 
@@ -427,9 +491,19 @@ def typed_value(value_op: dict, declared: dict | None):
     if not declared or value_op.get("t") != "c":
         return None
     raw = value_op.get("c")
-    if raw is None or isinstance(raw, (list, dict)):
+    if raw is None or isinstance(raw, dict):
         return None
-    kind = (declared.get("type") or "").rstrip("[]")
+    declared_type = str(declared.get("type") or "")
+    # a list type coerces ELEMENT BY ELEMENT to the same basic type -- the
+    # `[]` says how many, not what kind
+    if declared_type.endswith("[]"):
+        if not isinstance(raw, list):
+            return None
+        base = {"type": declared_type[:-2]}
+        return [typed_value({"t": "c", "c": item}, base) for item in raw]
+    if isinstance(raw, list):
+        return None
+    kind = declared_type.rstrip("[]")
     text = str(raw).strip()
     if kind == "boolean":
         low = text.lower()
@@ -444,7 +518,56 @@ def typed_value(value_op: dict, declared: dict | None):
             return float(text)
         except (TypeError, ValueError):
             return None
+    if kind == "time":
+        # tagged `time`; MINUTES SINCE MIDNIGHT. Measured across the corpus:
+        # 112 values, every one 0..1380. VARIABLES_SPEC 7.1 says `time` is
+        # offset-shifted epoch ms -- that is true of how the EDITOR serializes
+        # a picked time, but not of what pistons store, and reading 525 as
+        # epoch ms turns 08:45 into 1970.
+        try:
+            return minutes_hms(float(text))
+        except (TypeError, ValueError):
+            return None
+    if kind in ("date", "datetime"):
+        # tagged `date`/`datetime`; epoch MILLISECONDS (VARIABLES_SPEC 7.1,
+        # and the two corpus values are ~1.76e12, which agrees).
+        try:
+            when = _dt.datetime.fromtimestamp(float(text) / 1000.0)
+        except (TypeError, ValueError, OSError, OverflowError):
+            return None
+        return when.strftime("%Y-%m-%d" if kind == "date"
+                             else "%Y-%m-%d %H:%M:%S")
+    if kind in ("string", "dynamic"):
+        return text          # text is already what it is
+    if kind == "device":
+        return None          # not a value; device paths own these
     return None
+
+
+# Every type webCoRE has (VARIABLES_SPEC 4): 10 basic + 9 list forms. There is
+# no `device[]` and no `enum`. Kept as ONE list so "does the compiler know this
+# type" is answerable, instead of being discovered when a piston misbehaves.
+BASIC_TYPES = ("dynamic", "string", "boolean", "integer", "decimal", "long",
+               "datetime", "date", "time", "device")
+LIST_TYPES = tuple(t + "[]" for t in BASIC_TYPES if t != "device")
+ALL_TYPES = BASIC_TYPES + LIST_TYPES
+
+
+def unhandled_variable_types(piston: dict) -> dict:
+    """{name: type} for declared variables whose TYPE the compiler does not
+    know. Empty is the healthy answer.
+
+    Exists because the failure mode is silence: an unrecognised type used to
+    fall through `typed_value` as "leave it alone", the value reached the
+    emitter as raw text or None, and the automation was wrong or refused
+    outright with nothing said (Jeremy, 2026-08-21: if it does not understand
+    the variables almost all of the automations will fail)."""
+    out = {}
+    for name, decl in (local_var_decls(piston) or {}).items():
+        vtype = str(decl.get("type") or "dynamic")
+        if vtype not in ALL_TYPES:
+            out[name] = vtype
+    return out
 
 
 def rescale_template(name: str, expr: str) -> str:
@@ -929,7 +1052,23 @@ class Resolver:
         for dref in drefs:
             for h in self._hashes(dref, ctx):
                 entry = self.resolution_map.get(h)
-                ent = (entry or {}).get("attr_bindings", {}).get(attr) if entry else None
+                binds = (entry or {}).get("attr_bindings", {}) if entry else {}
+                ent = binds.get(attr)
+                if ent is None and attr:
+                    # CASE-TOLERANT for RAW-FEED attributes. A vocab attribute
+                    # has one spelling everywhere, but an attribute the vocab
+                    # does not carry is named from the ENTITY, and HA slugifies
+                    # entity ids to lowercase: a UniFi camera's `smartDetectType`
+                    # arrives as `smartDetectType` when the Hubitat unique_id
+                    # supplies it and as `smartdetecttype` when the entity id
+                    # does. Same reading, same device, different capitalisation --
+                    # so an exact-case lookup silently failed to resolve it and
+                    # the piston deployed watching nothing (measured 2026-08-21).
+                    lower = str(attr).lower()
+                    for k, v in binds.items():
+                        if str(k).lower() == lower:
+                            ent = v
+                            break
                 if ent:
                     from .. import storage
                     storage.remember_binding(h, attr, ent, entry.get("name"))

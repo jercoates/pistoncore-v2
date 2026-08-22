@@ -1412,3 +1412,67 @@ Correct for `33_Hall_motion`; NOT safe as a general rule (HARD_RULES §2e).
 device; fan-outs reach 69 (`38_Low_Battery_Check`), 43 (`66_Tamper_alarm`), 38
 (school). Real global lists are now in `data/globals.json` (gitignored).
 Anything validated on three synthetic devices has not been validated.
+
+---
+
+## Variable used as a numeric threshold → the whole automation is DISABLED (2026-08-21)
+
+**Found by running the corpus on the bench and asking HA (not the compiler)
+whether the automation was alive.** Status said `deployed`; HA had switched it
+off at setup.
+
+```
+Automation ... failed to setup triggers and has been disabled:
+must contain at least one of below, above..
+Got {'entity_id': 'sensor.<lux>', 'id': 'stmt1', 'platform': 'numeric_state'}
+```
+
+- **Cause.** The comparison is `illuminance drops_below {LowLux}`. The right
+  operand is a variable (`ro.t == "x"`), so `trig["value"]` is `None`, the
+  null-stripping pass removes the key, and the trigger ships with no bound.
+- **`LowLux` is a compile-time constant** — declared with initial value 20 and
+  never assigned (no `setVariable` anywhere in the piston), which is why the
+  compile record's `helpers` list is empty. There is nothing to look up at
+  runtime; the number was knowable at compile time.
+- **Blast radius is the PISTON, not the branch.** HA refuses the whole
+  automation, so every other branch dies with it.
+- **Silent.** Compile status `deployed`, band `yaml`, no message. The front door
+  would show it green.
+- **Affected in round 1:** `a23_Downstairs_Hallway_Night_Light`,
+  `a40_Kitchen_Night_Light`, `a47_Master_Bathroom_Night_Light`,
+  `a76_Upstairs_Hallway_Night_Light` — every lux-gated night light. These are
+  the same 5 pistons RESHAPE_LOG family 2 already flagged for a different
+  reason, so the shape is common in this corpus.
+
+### The "or equal to" edge dies the same way (Jeremy, 2026-08-21)
+
+`a23` also has `illuminance rises_to_or_above {HighLux}` — a `>=`, "a greater
+or lower with an equal to thrown in". A variable threshold breaks BOTH halves
+of how that is handled:
+
+1. the bound (`above:`) is `None`, stripped, automation disabled;
+2. `_boundary_trigger` — the 2026-07-22 fix for exactly this edge ("the = could
+   be a separate line as well") — opens with `value = node.get("value")` and
+   returns `None` for anything not numerically parseable. A variable is not,
+   so the companion template trigger that catches "lands exactly on N" is
+   **silently dropped**.
+
+So fixing only the missing bound would still lose the equal case — the failure
+that fix was written to prevent, reintroduced through the variable path. Applies
+to `drops_to_or_below`, `rises_to_or_above`, `is_<=`/`is_>=` promoted to wakes,
+and the `stays_` family, whenever the threshold is named rather than inline.
+
+**Not fixed — needs Jeremy's ruling.** Sketch: resolve a variable operand in a
+numeric bound to its constant value when it is never assigned; point at the
+helper entity when it is (HA's `numeric_state` `above`/`below` accept an
+entity id); and guard so a `numeric_state` with neither bound can never be
+emitted — refuse loudly instead, because the failure mode is a piston that
+reports healthy and does nothing.
+
+## Deploy reports success for automations HA then disables (2026-08-21)
+
+`check_config` validates schema only, which COMPILER_DECISIONS_DEPLOY.md already
+records as a known gap. This is that gap biting: 5 of 16 round-1 pistons
+reported `deployed` while HA had disabled or never created them. The post-reload
+entity verification backstop named in the same spec section is what would catch
+it — it is not doing so today.

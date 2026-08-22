@@ -31,7 +31,7 @@ from .errors import NotYetImplemented, UnresolvableDevice
 from .expression import _EQUALITY_OPS, _NUMERIC_OPS, ExprTranspiler
 from .resolve import (Resolver, WAS_TO_IS, button_gestures, was_watcher_entity,
                       unknown_comparison, incomplete_condition_message,
-                      last_changed_is_exact, duration_seconds,
+                      last_changed_is_exact, duration_seconds, minutes_hms,
                       pause_target_automations)
 
 from . import routing as _routing
@@ -1037,7 +1037,7 @@ class _PyEmitter:
                     f"'every {interval}{unit} at {lo2['s']}' — a sun event on a "
                     f"multi-day cycle has no PyScript time spec", **ctx)
             days = interval * (7 if unit == "w" else 1)
-            hhmm = f"{int(at) // 60:02d}:{int(at) % 60:02d}:00" if at is not None else "00:00:00"
+            hhmm = minutes_hms(at) if at is not None else "00:00:00"
             spec = f"period(2020-01-01 {hhmm}, {days}d)"
         else:
             raise NotYetImplemented(

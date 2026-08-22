@@ -32,7 +32,7 @@ from .expression import _EQUALITY_OPS, _NUMERIC_OPS, JinjaTranspiler
 from .resolve import (Resolver, WAS_TO_IS, WAS_SENTINEL, button_gestures,
                       unknown_comparison, incomplete_condition_message,
                       was_watcher_entity, last_changed_is_exact,
-                      duration_seconds, pause_target_automations)
+                      duration_seconds, minutes_hms, pause_target_automations)
 from . import routing as _routing
 
 _BAND_REL = "templates/compiler/yaml/classic"
@@ -251,7 +251,8 @@ def _delay_hms(params: list) -> str:
 
 
 def _minutes_hms(minutes: int) -> str:
-    return f"{minutes // 60:02d}:{minutes % 60:02d}:00"
+    """The shared converter — see resolve.minutes_hms."""
+    return minutes_hms(minutes)
 
 
 def _duration_secs(op) -> int | None:

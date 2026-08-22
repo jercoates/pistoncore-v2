@@ -8684,7 +8684,7 @@
     }
    },
    "cover": {
-    "_note": "device_class determines which attribute. Position (level) requires set_position support.",
+    "_note": "device_class determines which attribute; a cover with no device_class still opens and closes, so HA's own OPEN/CLOSE supported_features bits carry windowShade (Jeremy 2026-08-21: ask HA how it does it). Position (level) requires set_position support.",
     "by_device_class": {
      "garage": {
       "attributes": [
@@ -8740,6 +8740,20 @@
       "bit": 4,
       "attributes": [
        "level"
+      ],
+      "status": "verified"
+     },
+     "SUPPORT_OPEN": {
+      "bit": 1,
+      "attributes": [
+       "windowShade"
+      ],
+      "status": "verified"
+     },
+     "SUPPORT_CLOSE": {
+      "bit": 2,
+      "attributes": [
+       "windowShade"
       ],
       "status": "verified"
      }

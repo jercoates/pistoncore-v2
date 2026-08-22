@@ -9,9 +9,11 @@ NotYetImplemented — which the emit layer converts into PyScript routing, so
 "not compiled yet" means "runs via PyScript", never "dropped".
 """
 
+import copy
 import json
 
 from .errors import NotYetImplemented
+from .resolve import minutes_hms, unassigned_locals
 
 _buckets: dict | None = None
 
@@ -35,6 +37,17 @@ def _classify(cond: dict) -> str:
     if ct in ("t", "c"):
         return ct
     return _comparison_buckets().get(cond.get("co"), "c")
+
+
+def _trigger_kids(node: dict) -> list:
+    """Trigger-classified operands nested inside a condition group."""
+    out = []
+    for kid in (node.get("children") or []):
+        if kid.get("co") == "_group":
+            out.extend(_trigger_kids(kid))
+        elif kid.get("ct") == "t":
+            out.append(kid)
+    return out
 
 
 def _cond_node(cond: dict, kwargs: dict) -> dict:
@@ -346,6 +359,23 @@ def _if_branch(stmt: dict, sid, kwargs: dict) -> dict:
     for cond in stmt.get("c", []):
         node = _cond_node(cond, kwargs)
         (triggers if node["ct"] == "t" else conditions).append(node)
+    # A GROUP MUST NOT SWALLOW ITS CHILDREN'S SUBSCRIPTIONS. A nested condition
+    # group is itself ct="c" (it has no operand of its own), but webCoRE
+    # subscribes to EVERY trigger-classified operand wherever it sits -- so an
+    # `or` of "camera sees a person" / "motion starts" wakes on either one.
+    # Splitting only the top level left the group as a pure condition and the
+    # piston woke on just the first trigger it happened to find elsewhere:
+    # 04_Back_Yard_Light_GPT ended up with a camera trigger and NO motion
+    # trigger, so motion alone could never turn the light on (Jeremy,
+    # 2026-08-21: "that piston should fire on either condition the motion or
+    # person"). The group stays as the condition -- the or logic still has to
+    # be evaluated -- and its trigger children are hoisted alongside it so HA
+    # subscribes to both. HA ORs its triggers already, which is the same
+    # semantics.
+    for node in list(conditions):
+        for kid in _trigger_kids(node):
+            if kid not in triggers:
+                triggers.append(kid)
     # top-level OR over the non-trigger conditions -> HA's `condition: or`
     # (triggers are already OR'd by HA: any one firing runs the automation)
     if op == "or" and len(conditions) > 1:
@@ -394,7 +424,7 @@ def _every_branch(stmt: dict, sid, kwargs: dict) -> dict:
             (stmt.get("lo2") or {}).get("c"), (int, float)) and \
             (stmt.get("lo2") or {}).get("vt") == "time":
         at = int((stmt.get("lo2") or {})["c"])
-        timer = {"kind": "time", "at": f"{at // 60:02d}:{at % 60:02d}:00"}
+        timer = {"kind": "time", "at": minutes_hms(at)}
     elif unit == "d" and interval == 1:
         # sunrise/sunset/variable rather than a fixed clock time
         timer = {"kind": "unexpressible"}
@@ -462,10 +492,52 @@ def yaml_blockers(node) -> list[str]:
     return found
 
 
+def _resolve_named_thresholds(piston: dict) -> dict:
+    """Fill in comparison operands that name a local variable.
+
+    "illuminance drops below {LowLux}" stores the NAME in `ro.x` and leaves
+    `ro.c` empty. Nothing resolved it, so the threshold reached the emitter as
+    None -- `above:`/`below:` were stripped off the trigger and HA DISABLED the
+    entire automation, silently, while the compile reported success. It took
+    the "or equal to" companion trigger down with it too, since that one bails
+    out on any value it cannot parse as a number, so a `>=` quietly lost its
+    equal edge as well.
+
+    Done as one pass over a COPY here rather than at each read: every emitter
+    and both halves of an inclusive comparison then see a real value, and no
+    caller has to remember to resolve anything.
+
+    Only variables nothing ever assigns are filled in -- one the piston writes
+    at runtime is not knowable now and is left alone."""
+    consts = unassigned_locals(piston)
+    if not consts:
+        return piston
+    out = copy.deepcopy(piston)
+
+    def walk(node):
+        if isinstance(node, list):
+            for x in node:
+                walk(x)
+            return
+        if not isinstance(node, dict):
+            return
+        for key in ("ro", "ro2"):
+            op = node.get(key)
+            if (isinstance(op, dict) and op.get("c") is None
+                    and op.get("t") == "x" and op.get("x") in consts):
+                op["c"] = consts[op["x"]]
+        for v in node.values():
+            walk(v)
+
+    walk(out)
+    return out
+
+
 def analyze(piston: dict, piston_id: str, piston_name: str) -> list[dict]:
     """Returns a list of branch IRs, one per top-level statement."""
     branches = []
     # piston-level restrictions ("only execute if ...") gate EVERY statement.
+    piston = _resolve_named_thresholds(piston)
     piston_kwargs = {"piston_id": piston_id, "piston_name": piston_name, "stmt_id": None}
     piston_restrictions = _restriction_nodes(piston, piston_kwargs)
     for stmt in piston.get("s", []):
