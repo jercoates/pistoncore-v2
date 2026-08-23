@@ -141,6 +141,7 @@ maps webCoRE's words to HA; this holds the things webCoRE has no word for.
 | a templated `entity_id` on `condition: state` | **NO.** Inside a loop the test must be `condition: template` | 2026-08-22, both directions |
 | do several sensors need a loop at all | **no.** Trigger on ANY of them and rebuild from current state — a newly-tripped sensor re-triggers, so it announces sooner than a repeat loop | 2026-08-22 |
 | "do this to every one of these" | `repeat: for_each:` — items may be **dicts**, so one iteration can carry several of a device's entities (`repeat.item.battery`) | 2026-08-22 |
+| speak on a speaker | `tts.speak` — **target is the TTS ENGINE** (`domain: tts`); the speaker is a FIELD, `media_player_entity_id`. The compiler already emits this correctly (transpiler-verified). A speak that resolves to `unknown.pistoncore_unresolved_…` means THE TEST DEVICE is not speech-capable, not that the compiler is wrong — the factory's plain "Speaker" type advertises only Audio Volume + Music Player | 2026-08-22, HA service schema + transpiler output |
 | create a helper entity from the API | **you cannot** — `/api/config/input_boolean/config/<id>` is 404. Write a YAML package file, then call `<domain>.reload` | 2026-08-03 |
 
 ## WHAT THIS FILE DOES NOT COVER

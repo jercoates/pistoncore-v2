@@ -788,3 +788,104 @@ Corollary: **the 255-character ceiling is a limit on ENTITY STATE, not on
 YAML.** A run-scoped variable is not an entity — a `variables:` block holds
 native lists, numbers and strings of any length. "Lists blow the cap" was used
 to argue lists could not work in YAML; it is wrong.
+
+## 17. WHAT "IT WORKS" MEANS — AND THE THIRD TEST IS THE PROJECT
+**(Jeremy, 2026-08-22: *"it needs to 1 compile 2 not error 3 most important
+match the intent of the webcore json. untill all are met it does not work"*)**
+
+1. **it compiles**
+2. **it does not error**
+3. **it matches the INTENT of the webCoRE JSON**
+
+**All three, or it does not work.** 1 and 2 are cheap and are what every
+session reports. 3 is the entire reason this project exists, and it is the one
+that gets skipped — because 1 and 2 produce output that looks like success.
+
+**"The device did the thing" is still not enough.** It has to do the thing the
+piston MEANT. A carbon-monoxide piston that speaks, but names the wrong
+detector, passes 1 and 2, does something observable, and is still wrong. So the
+question is never "did HA do something" but **"did HA achieve what the piston
+intended"** — the right device, the right values, the right message, in the
+right order.
+
+**Intent, NOT the previous compiled output** (§2c): matching what the old
+compiler produced proves the old bug was reproduced. The intent is read from
+the piston JSON and from what the automation does in the house.
+
+**How to report:** say which of the three you reached. Never write "verified",
+"works" or "done" without 3.
+
+### 13a. ONE HAND-BUILT PART VOIDS THE WHOLE RUN — THERE IS NO PARTIAL CREDIT
+**(Jeremy, 2026-08-22: *"if you cheat on 1 thing IT IS WRONG and proves not a
+god damned thing"*)**
+
+A verification run with ANY hand-substituted part — a hand-built resolution
+map, a hand-patched device list, YAML copied into the config folder by hand,
+a hand-made device — **proves nothing at all.** Not "partial evidence", not
+"the mechanism at least works". Zero.
+
+**The reason is not purity, it is that the hand-built part is exactly where the
+bug hides.** The same day this was written: a fabricated one-device map hid a
+carbon-monoxide alarm compiling to silence, and then a hand-assembled run of
+the "fix" was reported as progress. Both looked like passes.
+
+If the app cannot do a step yet, **that is the finding** — say so and fix the
+app. Do not fill the gap by hand and call the result a test.
+
+Corollary: **use the user's OWN pistons.** An `a`-prefixed piston is Albert's;
+its intent is not Jeremy's to recognise.
+
+## 18. A DEVICE THAT CANNOT DO THE COMMAND FALLS OUT AT COMPILE — IT DOES NOT ERROR
+**(Jeremy, 2026-08-22: *"incorrect device types should fall out at compile from
+variables not error"*)**
+
+A variable or global holds a LIST of devices. If one of them cannot perform the
+command being asked of it, **that device is dropped from that command's targets
+at compile time.** The piston still compiles, and every device that CAN do the
+thing still does it.
+
+**It must not fail the piston.** Today `@Alert_Lights` contained a speaker and
+the whole piston died with *"no HA service mapping for command 'on' on domain
+'unknown'"* — one wrong member took down every light in the list.
+
+This is the same ruling as the battery report: **drop what cannot answer,
+never invent, never take the working ones down with it** (§ the null-battery
+entry — "they should drop not make shit up, ha has it correct"). It is also the
+same shape as HARD_RULES §10g: one bad device reference never fails the piston.
+
+**Still say so.** Dropping silently is the other failure (§6). The dropped
+device is a compile-time fact and belongs on the two announcement surfaces
+(§11), naming the device and the command it could not do.
+
+**Only an EMPTY result is an error** — if no device in the list can do the
+command, there is nothing to emit and that is worth failing on.
+
+## 19. WHEN THE INTENT PATH CANNOT DO SOMETHING, LOOK AT THE TRANSPILER FIRST
+**(Jeremy, 2026-08-22: *"i went through a lot fixing these problems in the
+transpiler untill i found out it was a transpiler."*)**
+
+The transpiler holds TWO different things, and only one of them is being
+replaced:
+
+- **How the structure is decided** — statement in, branch out. That is the part
+  that was wrong, and the intent path replaces it.
+- **How Home Assistant actually achieves each thing** — which service, which
+  field, which template function, which guard. **Jeremy drove that out problem
+  by problem over months.** The intent path does not replace one line of it;
+  `emit_intent`'s own docstring says translation fills the slots afterwards.
+
+**So a thing the intent path cannot do is usually SOLVED ALREADY, a few files
+away.** Compile the same piston with `PISTONCORE_INTENT_EMIT=0` and read what
+the transpiler emits before concluding anything is missing or broken.
+
+**Worked example, the day this was written.** A speak on the intent path
+resolved to `unknown.pistoncore_unresolved_…`, and that was written up as
+"PistonCore uses Hubitat's TTS model, every speak in every piston is a
+placeholder" — in TWO documents, as fact. One command against the transpiler
+disproved it: `media_player_entity_id: ['media_player.dev0']`, resolved
+correctly all along. The real fault was a test device built from the factory's
+plainest `"Speaker"` type, which advertises no speech capability.
+
+One unrepresentative input, generalised into a compiler-wide claim — the same
+failure as trusting a one-device synthetic map (§13). **Check the transpiler.
+It is not the old path; it is the answer key.**

@@ -1586,3 +1586,242 @@ Product: header `🔋 Low Battery 🔋` + date, then per device name / `Battery:
   they DROP, not get invented — "ha has it correct".** The fail-closed numeric
   comparison already does this; verified against live HA, 3 entities in, 2 out,
   no phantom row.
+
+### RESULT OF THE CORRECT TEST — 2026-08-22, and it FAILED
+
+Run properly for the first time: Jeremy's own piston
+(`11_Carbon_Monoxide_detected`, not an `a`-prefixed one), globals CREATED IN
+PISTONCORE by name (`variable/set`), piston saved through PistonCore's own
+endpoint (`piston/set`, which compiles and deploys), real bench devices from
+the factory. No hand-built map, no hand-written YAML.
+
+**Result: `status: deployed`, `band: pyscript`, `auto_ids: []`.**
+
+So the piston still routes to PyScript and none of this session's YAML loop
+work is reached for it. By HARD_RULES §17 it **does not work**: it compiles and
+does not error, and the third test was never even attempted because there is no
+YAML automation to check. By §3 a PyScript route is a failure, not a result.
+
+Two real errors surfaced on the way, both worth keeping:
+- a global pointed at the wrong KIND of device fails honestly and by name:
+  *"no HA service mapping for command 'on' on domain 'unknown'"* — `@Alert_Lights`
+  aimed at a media_player. Good error; it named the command and the domain.
+- `/api/diagnostics/band/<pid>` returned nothing, so **there is no way to ask
+  the running app WHY a piston chose its band.** That is a gap: the reason
+  exists in `compile_piston`'s `reasons`, and the front door is supposed to
+  answer exactly this question.
+
+**NEXT: find out why it routes to PyScript.** Everything this session built
+(the accumulator gate, the for_each loop, the loop condition fix) is upstream
+of a barrier that has not been identified. Do not build further until that
+reason is known — the previous session's mistake was measuring the wrong band,
+and this one's was fixing walls without checking the piston reached them.
+
+**The method is now proven and repeatable** — this is how to run it:
+```
+GET /intf/dashboard/variable/set?name=@X&value=<base64 {"t":"device","v":[hashes]}>
+GET /intf/dashboard/piston/set?id=<pid>&data=<base64 piston json>   # compiles AND deploys
+GET /api/compile-status/<pid>
+```
+Device hashes come from `GET /intf/dashboard/devices` (the app's own payload),
+never computed by hand.
+
+### ⚠ FOUND BY THE FIRST REAL END-TO-END RUN — emoji reach HA as SURROGATES
+**(2026-08-22, `11_Carbon_Monoxide_detected` on the bench)**
+
+The piston's message starts `🔥 Carbon Monoxide detected 🔥`. Compiled, deployed
+and fired for real, the automation wrote that text into an entity state and
+**broke Home Assistant's `/api/states` endpoint outright**:
+
+```
+TypeError: str is not valid UTF-8: surrogates not allowed
+  homeassistant/core.py as_dict_json -> json_bytes(self._as_dict)
+```
+
+The emoji is surviving the compile as an escaped surrogate pair
+(`🔥`) instead of a real character, so what HA receives is not valid
+UTF-8. Every one of Jeremy's and Albert's alarm pistons opens with emoji, so
+this is not an edge case — it is most of the safety corpus.
+
+**Invisible to everything except a real run:** it compiles, the YAML parses, HA
+accepts the automation, the automation fires. The damage only appears when the
+value reaches a state object — and then it takes down an API the whole app
+depends on, not just that piston.
+
+Where to look: the string is carried from the piston JSON through the emitter
+into a `variables:` value. Find where the surrogate pair stops being decoded —
+most likely a `json.dumps`/escape round-trip that never re-encodes.
+
+**Do not test emoji pistons against `/api/states` until this is fixed** — the
+endpoint 500s and every reading through it looks like an unrelated failure.
+
+### ⚠ SILENT-WRONG: a report's SECOND reading is fetched off the WRONG ENTITY
+**(2026-08-22, device-proven. Jeremy spotted it by eye: *"i do not see battery
+state in the automation"*.)**
+
+`11_Carbon_Monoxide_detected` builds `{$device} " - " {[$device:battery]}"%"`,
+so the alert names each detecting device AND its battery. The emitted report:
+
+```jinja
+device_name(_pc_dev) ~ ' - ' ~ state_attr(_pc_dev,'battery_level') ~ '%'
+```
+
+`_pc_dev` is the CO entity. **It asks the smoke sensor for a `battery_level`
+attribute**, which it does not have. Measured on the bench:
+
+```
+what the automation asks:  PC Basement Smoke - None%
+what it should ask:        PC Basement Smoke - 91%
+```
+
+So the notification reads `None%` where the level belongs. It compiles, it
+deploys, it runs, and the promise checker does not catch it because the
+promise IS kept — a message is sent, with the wrong content.
+
+**Cause:** `report_variables` resolves ONE entity per device — the entity for
+the attribute being TESTED — then renders every reading in the line against
+that same entity. A device is several entities in HA, and a different
+attribute is a different entity.
+
+**The fix already exists on the loop path**: `_foreach_loop` resolves one slot
+per reading and iterates dicts (`repeat.item.battery`, `repeat.item.co`). The
+collapsed report path needs the same, and must SHARE it rather than grow a
+second copy (HARD_RULES §9). `accumulate.j2` would take a per-item mapping the
+same way.
+
+**Two more defects visible in the same emitted file, both from the same root:**
+- `device_name(repeat.item.battery)` — the device NAME taken from whichever
+  slot sorted first alphabetically. Works by luck; the loop should carry a
+  designated identity slot.
+- `((Smoke_Status)|float(0)) * ((device_name(...))|float(0)) if ... is number`
+  — the transpiler reading `Smoke_Status $device` juxtaposition as possible
+  MULTIPLICATION and emitting a numeric branch for a string concatenation.
+  Harmless today because the else-branch concatenates, but it is nonsense in a
+  message and it is more evidence that a transpiled expression has no place on
+  the intent path.
+
+### ✅ FIRST END-TO-END PASS OF THE REPORT PATTERN — 2026-08-22
+
+`11_Carbon_Monoxide_detected` (Jeremy's own), run through PistonCore with
+nothing hand-built: globals created via `variable/set`, piston saved via
+`piston/set` (compile + deploy), factory-made detectors, fired by driving the
+SECOND detector. Notification received:
+
+```
+🔥 Carbon Monoxide detected 🔥
+August 23   -   02:11 AMPC Basement Smoke - 91%
+```
+
+Right detector, right battery, real emoji, author's wording in place. Three
+defects were fixed to get here, all found by running it and none visible in any
+harness:
+
+1. **The report read every value off ONE entity.** `{[$device:battery]}` became
+   `state_attr(<the smoke sensor>, 'battery_level')` -> `None%`. The loop now
+   walks a MAPPING per device, one slot per reading, and each reading renders
+   against its own slot. The membership test names its slot too — testing the
+   mapping compares a dict to "on" and silently empties the report.
+2. **Emoji were emitted as surrogate escapes** and took down HA's `/api/states`
+   entirely. FOUR separate `json.dumps` calls bypassed the module's own
+   `_json_dumps`; all now route through it with `ensure_ascii=False`. YAML is
+   UTF-8 and HA renders emoji correctly — verified.
+3. **A per-device test inside `repeat: for_each:` was pinned to the first
+   device** (see the earlier entry). Fixed to a template condition.
+
+**STILL OPEN — the header's trailing blank line is lost.** The piston ends its
+header `"\n\n"`; the output shows `02:11 AMPC Basement Smoke`, so only the
+first newline survives. Content correct, layout wrong. Find where the trailing
+newlines are dropped before calling this pattern done.
+
+**Not yet checked at all: the SPEAK.** The piston speaks "Carbon Monoxide
+detected from <device>" to `@Speakers_All`; a TTS entity exists on the bench
+but nothing has confirmed sound or content. Jeremy's Announce Sonos, reached by
+bridging his hub into the bench, is the way to verify it (see DEV_BENCH).
+
+
+### PISTONCORE MUST SET HA'S BASE URL AT STARTUP — it already knows the address
+**(Jeremy, 2026-08-22: *"the compiler needs to fill in the ip it will have it
+you have to set it up on startup"*)**
+
+**Why it matters — this is silent, and it kills every spoken alert.** TTS is a
+FETCH, not a push: HA generates an mp3 and tells the SPEAKER to come and get it.
+If HA has no `internal_url`/`external_url` it hands out an address it infers —
+inside Docker that is a `172.x` bridge address no LAN speaker can reach. The
+clip is made, the fetch fails, **nothing is heard and nothing errors.**
+
+Measured on the bench 2026-08-22: with `internal_url: None` the compiled CO
+piston reached the real Sonos correctly (`media_player.family_room_family_room`,
+no placeholder), fired, and made no sound. Setting
+`internal_url: http://192.168.1.221:8124` changed the served clip from an
+unreachable address to `http://192.168.1.221:8124/api/tts_proxy/….mp3`.
+
+**PistonCore already has what it needs.** The user gives it `ha_url` at setup.
+At startup it should check HA's configured base URL (`GET /api/config` ->
+`internal_url`/`external_url`) and, when unset or unreachable from the LAN,
+either set it or tell the user plainly — this is exactly the kind of
+"deployed but silent" failure the front-door indicator exists for.
+
+Per the standing rule, whatever is decided at first-run must also be editable on
+the Settings page ([[all_first_run_settings_editable]]).
+
+**Distinct from PistonCore's own media proxy** (`_MEDIA_CFG["server_base"]`),
+which is for `playTrack` against network SHARES. TTS needs HA's base URL. Two
+different problems that both present as "no sound".
+
+### ✅✅ FULL PASS — A COMPILED PISTON SPOKE ON A REAL SPEAKER (2026-08-22)
+
+`11_Carbon_Monoxide_detected` — **Jeremy's own piston**, saved through
+PistonCore's own endpoint (compile + deploy), globals created in PistonCore,
+virtual detectors from the factory, woken by driving the SECOND detector into
+alarm. Confirmed by Jeremy: **"it spoke."**
+
+```
+SONOS  volume -> 0.9                    (the piston's "Set Volume to 90")
+       spoke via .../api/tts_proxy/HjIqHU-jHIwIonB4Bwvvgw.mp3
+NOTIFY 🔥 Carbon Monoxide detected 🔥
+       August 23   -   04:10 AM
+       PC Basement Smoke - 91%
+```
+
+**All three tests met (HARD_RULES §17): compiles · does not error · matches the
+intent.** First time this project has cleared the third one on a safety piston.
+
+Five things had to be true at once, and four were broken that morning:
+
+1. the report reads each value from ITS OWN entity (was `None%`)
+2. emoji emitted as real UTF-8 (surrogates had taken down `/api/states`)
+3. a per-device test inside a loop names its own slot (was pinned to device #1
+   — a CO alarm that stayed silent)
+4. the speaker resolves to a device that really offers speech — needs a REAL
+   speaker; no virtual media_player advertises `PLAY_MEDIA`
+5. **HA has a reachable base URL** — without it TTS makes the clip and the
+   speaker cannot fetch it. Silent, and nothing errors. See the startup entry
+   above; PistonCore should handle this itself.
+
+Only #1-#3 were compiler bugs. #4 and #5 were the bench, and both were called by
+Jeremy before they were found.
+
+**Naming note:** the message said "PC Basement Smoke" because the test devices
+are prefixed `PC`. On real hardware it is the device's own name.
+
+### ✅ AND THE CLEAR BRANCH TOO — the loop exits on its own (2026-08-22)
+
+Same run, immediately after. Tripped the detector, let the alarm loop run, then
+**cleared the detector — which is the test, not a way to stop the piston**
+(Jeremy: *"clearing it is part of the test, not stopping the piston"*; an
+earlier attempt disabled the automations, which proves nothing).
+
+```
+tripped  -> alarm loop runs, speaks on the real Sonos, repeats
+cleared  -> loop EXITS on its own
+notify   -> "🔥 Carbon Monoxide Cleared 🔥 / August 23 - 04:13 AM"
+sonos    -> idle, nothing further 40s later
+```
+
+So the `repeat ... until All of {@Smoke_Detectors} carbonMonoxide are clear`
+compiles to a loop that genuinely re-scans, keeps alarming while ANY detector
+is unsafe, and terminates when they are all clear — and the separate
+"changes to clear" branch fires its own message.
+
+**Both halves of the piston are now behaviour-proven on real hardware**, which
+is the standard in HARD_RULES §7 and §17. The alarm half and the all-clear half.

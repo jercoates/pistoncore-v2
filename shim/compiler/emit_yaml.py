@@ -17,7 +17,29 @@ from pathlib import Path
 
 
 def _json_dumps(v):
-    return _json_mod.dumps(v)
+    """Quote a value for the emitted YAML.
+
+    `ensure_ascii=False` IS THE WHOLE POINT, and it is not cosmetic. The default
+    escapes every non-ASCII character to `\\uXXXX`, and a character above
+    U+FFFF becomes a SURROGATE PAIR. JSON decoders recombine those; **Python
+    and Jinja do not** — a Jinja literal containing `\\ud83d\\udd25` evaluates
+    to two lone surrogates, which is not valid UTF-8.
+
+    What that did, found by a real end-to-end run on 2026-08-22: every alarm
+    piston opens `🔥 Carbon Monoxide detected 🔥`, so the emitted message became
+    lone surrogates, the automation wrote them into an entity state, and
+    **Home Assistant's whole `/api/states` endpoint began returning 500**
+    ("str is not valid UTF-8: surrogates not allowed"). Not one piston — the
+    API every reading depends on.
+
+    Invisible to everything short of running it: the YAML parses, HA loads the
+    automation, and it fires. The damage appears only when the value reaches a
+    state object.
+
+    YAML is UTF-8 by definition and HA renders real emoji correctly (verified
+    on the bench, both in templates and in state), so emitting the character
+    itself is both simpler and the only correct thing."""
+    return _json_mod.dumps(v, ensure_ascii=False)
 
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
@@ -640,6 +662,15 @@ def _was_condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
 def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     """Condition IR node -> template/time/sun condition dict for the template."""
     co = cond["co"]
+
+    # A TEST ON THE DEVICE A LOOP IS CURRENTLY VISITING. Ahead of every other
+    # dispatch, because those all resolve `cond["devices"]` to a fixed entity
+    # id — which inside a for_each pins the test to the first device and is
+    # silently wrong for every other one. See _loop_condition.
+    if _LOOP["entity"] and list(cond.get("devices") or []) == ["$device"]:
+        _node = _loop_condition(cond, resolver, ctx)
+        if _node is not None:
+            return _node
 
     # ── the was_* family ── handled AHEAD of every other dispatch, because
     # was_* is not a family of comparisons: it WRAPS one. The inner test can be
@@ -2719,7 +2750,7 @@ def _json_loads_inner(quoted: str) -> str:
     raw = str(raw).strip()
     if raw.startswith("{{") and raw.endswith("}}"):
         return raw[2:-2].strip()
-    return _j.dumps(raw)
+    return _json_dumps(raw)
 
 
 def helper_read_expr(name: str, resolver: Resolver, piston_id: str):
@@ -2796,13 +2827,13 @@ def _text_param(op: dict, resolver: Resolver, ctx: dict, piston: dict | None = N
         if isinstance(text, str) and "{" in text:
             jt = _jinja(resolver, ctx, piston)
             # a bare {{ }} is a YAML flow mapping — templates must be quoted
-            return _json.dumps("{{ " + jt.transpile_string(text) + " }}")
-        return _json.dumps("" if text is None else str(text))
+            return _json_dumps("{{ " + jt.transpile_string(text) + " }}")
+        return _json_dumps("" if text is None else str(text))
     jt = _jinja(resolver, ctx, piston)
     if op.get("t") == "u":
         # raw user-entered expression text; the trailing ';' is editor noise
         op = {"e": str(op.get("u", "")).rstrip("; ")}
-    return _json.dumps("{{ " + jt.transpile_operand(op) + " }}")
+    return _json_dumps("{{ " + jt.transpile_operand(op) + " }}")
 
 
 def _mode_entity(resolver: Resolver) -> str:
@@ -3312,6 +3343,53 @@ def _finish_branch(br: dict, conditions: list, triggers: list,
     ))
 
 
+def _loop_condition(cond: dict, resolver: Resolver, ctx: dict):
+    """A per-device test INSIDE a `repeat: for_each:` -> a TEMPLATE condition.
+
+    **Home Assistant does not accept a templated `entity_id` on a state
+    condition** (bench-verified 2026-08-22, both directions). So a test against
+    the device currently being visited cannot be a `condition: state` naming an
+    entity — it has to be a template reading `repeat.item`.
+
+    Without this the condition emitted a LITERAL entity and tested the FIRST
+    device on every iteration. With three real detectors and the SECOND one
+    alarming, the automation produced nothing at all: a carbon-monoxide alarm
+    that announces silence. Every synthetic check passed it, because a
+    fabricated map has one device and "first" and "correct" are then the same.
+
+    Uses the CANONICAL operator tables and the same fail-closed numeric builder
+    as every other comparison (HARD_RULES §9). A hand-written subset here once
+    missed `is`/`is_not` and lost the guard that stops an offline sensor
+    reading as zero.
+
+    Returns None when the shape is not one of those, so the caller falls back
+    rather than guessing."""
+    attr = cond.get("attr")
+    slots = _LOOP["slots"] or {}
+    if not attr or attr not in slots:
+        return None
+    slot, sample = slots[attr]
+    co = cond.get("co")
+    num_op, enum_op = _NUMERIC_OPS.get(co), _EQUALITY_OPS.get(co)
+    value = cond.get("value")
+    if (num_op is None and enum_op is None) or value is None:
+        return None
+    try:
+        reading = resolver.read_expr(sample, attr).replace(f"'{sample}'", slot)
+    except CompilerError:
+        return None
+    if enum_op is not None:
+        mapped = resolver.ha_state_value(attr, value)
+        # SINGLE quotes, not json. The template wraps every value_template in
+        # DOUBLE quotes, so a double-quoted string inside one ends the scalar
+        # and produces YAML that will not parse. Same rule the accumulate
+        # template states for its own expressions.
+        expr = f"{reading} {enum_op} '{mapped}'"
+    else:
+        expr = _num_cmp(reading, num_op, value)
+    return {"kind": "template", "template": "{{ " + expr + " }}"}
+
+
 def _loop_attrs(body) -> set:
     """Every reading of `$device` the loop body asks for.
 
@@ -3529,9 +3607,41 @@ def report_variables(var, drefs, attr, test_cond, expr, resolver, ctx):
         if resolver.read_expr(ent, attr) != shape.replace(f"'{sample}'", f"'{ent}'"):
             return None
 
+    # A SECOND READING IS A SECOND ENTITY. The line may ask for more than the
+    # thing being tested — `{$device} " - " {[$device:battery]}` names the
+    # detector AND its battery — and on a real HA device those are two
+    # entities. Rendering both against the ONE entity resolved above asked the
+    # smoke sensor for a `battery_level` attribute it does not have, so the
+    # notification said "PC Basement Smoke - None%" (bench-measured
+    # 2026-08-22; Jeremy spotted it in the YAML before any run).
+    #
+    # So the loop iterates a MAPPING per device — one slot per reading,
+    # resolved at compile time — and each reading is rendered against its own
+    # slot. Same mechanism as the per-device loop uses (`_LOOP["slots"]`),
+    # asked for here rather than copied.
+    extra = sorted({m for m in re.findall(
+        r"\[\s*\$device\s*:\s*([A-Za-z_]\w*)\s*\]", expr or "")} - {attr})
     loopvar = "_pc_dev"
+    slots, items = {attr: (f"{loopvar}.{_slot(attr)}", sample)}, []
+    try:
+        for i, h in enumerate(hashes):
+            row = {_slot(attr): entities[i]}
+            for a in extra:
+                ents = resolver.entities_for_attr([h], a, ctx)
+                if len(ents) != 1:
+                    return None
+                row[_slot(a)] = ents[0]
+                slots.setdefault(a, (f"{loopvar}.{_slot(a)}", ents[0]))
+            items.append(row)
+    except CompilerError:
+        return None
+    if extra:
+        entities = items          # the loop now walks mappings, not entity ids
+
     jt = _jinja(resolver, ctx, _PISTON.get("cur"))
-    jt.loop_entity, jt.loop_sample = loopvar, sample
+    jt.loop_entity = f"{loopvar}.{_slot(attr)}" if extra else loopvar
+    jt.loop_sample = sample
+    jt.loop_slots = slots if extra else {}
     try:
         text = jt.transpile_operand({"e": _strip_accumulator(expr, var)})
         test = None
@@ -3545,7 +3655,13 @@ def report_variables(var, drefs, attr, test_cond, expr, resolver, ctx):
             value = test_cond.get("value")
             if (num_op is None and enum_op is None) or value is None:
                 return None
-            reading = shape.replace(f"'{sample}'", loopvar)
+            # THE TEST READS ITS OWN SLOT TOO. When the loop walks mappings
+            # (because the line asks for a second reading), the membership test
+            # has to name the slot it tests — `_pc_dev.carbonmonoxide` — not
+            # the mapping itself. Testing the mapping compares a dict to "on",
+            # which is false for every device, so the report comes out EMPTY
+            # while everything still compiles.
+            reading = shape.replace(f"'{sample}'", jt.loop_entity)
             if enum_op is not None:
                 mapped = resolver.ha_state_value(attr, value)
                 test = f"{reading} {enum_op} {_json_dumps(str(mapped))}"
@@ -3555,6 +3671,7 @@ def report_variables(var, drefs, attr, test_cond, expr, resolver, ctx):
         return None
     finally:
         jt.loop_entity = jt.loop_sample = None
+        jt.loop_slots = {}
 
     rendered = _env.get_template("accumulate.j2").render(
         var=var, loopvar=loopvar, entities=repr(entities),
