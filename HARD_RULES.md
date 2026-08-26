@@ -889,3 +889,63 @@ plainest `"Speaker"` type, which advertises no speech capability.
 One unrepresentative input, generalised into a compiler-wide claim — the same
 failure as trusting a one-device synthetic map (§13). **Check the transpiler.
 It is not the old path; it is the answer key.**
+
+## 20. NEVER WRITE A PLACEHOLDER ENTITY INTO HOME ASSISTANT — FLAG IT AND LEAVE IT OUT
+**(Jeremy, 2026-08-22: *"dont write the placeholder in ha just trigger the flag.
+the placeholder is for a missing device and it will be the real device hash in
+webcore."*)**
+
+When a device reference cannot be resolved to a real HA entity, the compiler
+today invents one — `unknown.pistoncore_unresolved_…` — and writes it into the
+YAML, on the reasoning that an inert placeholder is gentler than failing the
+piston (ruled 2026-08-01).
+
+**IT IS NOT INERT. `unknown` is not a real domain and that is not a real
+entity, so Home Assistant validates the automation, REJECTS IT, and disables
+THE WHOLE THING** — every trigger and every action, not just the bad
+reference. Measured 2026-08-22 on `38_Low_Battery_Check`:
+`state: unavailable`, `last_triggered: None`, HA logging *"Entity
+unknown.pistoncore_unresolved_… is neither a valid entity ID nor a valid
+UUID"* — while PistonCore reported `deployed`. The fail-soft design fails
+HARD, one layer down, in silence.
+
+**THE RULE:**
+
+- **The piston keeps the hash.** That is webCoRE's business and it is correct —
+  the editor shows the hash, and editing the statement drops the dead device by
+  itself (§10g). Nothing changes on the webCoRE side.
+- **Home Assistant gets NOTHING for that device.** No invented entity id. It
+  simply is not in the emitted list.
+- **The flag still fires**, so the two announcement surfaces can say which
+  piston references a device that no longer exists (§11).
+
+Same principle as §18 — a device that cannot do the job falls out at compile,
+the ones that can still do it, and only an EMPTY result is worth failing on.
+
+**There is no such thing as a harmless invalid entity id in HA.** Anything the
+compiler writes into an `entity_id` must be an entity that exists.
+
+### 20a. WHERE UNRESOLVED DEVICES ACTUALLY COME FROM — scope for §20
+**(Jeremy, 2026-08-22: *"the devices not resolving on creation will be rare and
+probably only on globals. you cant pick whats not there."*)**
+
+**It cannot happen while authoring.** The picker only offers devices that
+exist, so a freshly written statement always resolves. Unresolvable references
+appear AFTER the fact:
+
+- a device is **deleted** from HA after the piston was written (§10g — webCoRE
+  shows the hash and carries on; that behaviour is correct and stays);
+- a **GLOBAL** points at a device that is gone, is empty, or was never created
+  in this instance. This is the main source, because a global is shared and can
+  be edited or emptied independently of every piston using it.
+
+Seen the same day: the corpus errors were `@Night_Time_Begin not found` and
+similar — globals, not picked devices.
+
+**Two consequences:**
+
+1. **It is rare, which makes it worse, not better.** A failure mode that fires
+   occasionally is one nobody notices is broken — and today it takes the ENTIRE
+   automation down while reporting `deployed` (§20).
+2. **Look at globals first.** When a piston deploys dead, the odds are a global
+   is empty or missing, not that the author picked something impossible.

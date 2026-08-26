@@ -95,13 +95,6 @@ def _wake_key(promise) -> tuple:
     return tuple(sorted(out))
 
 
-def _gate_key(promise) -> tuple:
-    out = []
-    for g in promise.gated_by:
-        out.append(g.describe())
-    return tuple(out)
-
-
 # Subject.kind -> the operand type the emitter keys on. The emitter's names
 # are webCoRE's letters because that is the contract it already speaks; the
 # READING is what had to stop being webCoRE-shaped, not the wire format.
@@ -406,17 +399,159 @@ def report_groups(promises):
 
 
 
-def _report_node(p, var):
+def _is_cursor(t) -> bool:
+    """Is this test asking about the LOOP'S CURSOR rather than about a device?
+
+    `$device` is webCoRE's "the one I am standing on" inside a per-device loop.
+    It is not a device, it is never in the picker, and it has no meaning
+    outside the loop — so it can never be looked up, never goes offline and
+    never comes back, which is why the remembered-binding safeguard
+    (`storage.remember_binding`, Jeremy's 2026-07-19 ruling) cannot help it.
+
+    Emitted at automation level it became `unknown.pistoncore_unresolved_$device`,
+    Home Assistant rejected the entity id as invalid, and DISABLED THE WHOLE
+    AUTOMATION — triggers and actions both (HARD_RULES §20, measured on
+    `38_Low_Battery_Check` 2026-08-22: `state: unavailable`, never fired).
+
+    And nothing was lost by it, because HOME ASSISTANT HAS ALREADY ANSWERED
+    THAT QUESTION (Jeremy, 2026-08-24: *"ha just goes does any of these devices
+    meet this requirment"*). The loop's collection emits a `numeric_state`/
+    `state` trigger listing every entity — which fires when ANY of them
+    matches — and a `condition: or` over the same list. The cursor test was a
+    second, broken copy of a question already asked natively.
+
+    The cursor's real job is the other one: walking the list to build the
+    sentence, where each device contributes its OWN name and its OWN reading.
+    That happens inside the report template and is untouched."""
+    s = getattr(t, "subject", None)
+    return tuple(getattr(s, "devices", ()) or ()) == ("$device",)
+
+
+def _without_cursor(g):
+    """The same gate with its cursor tests removed, or None if that was all it
+    said. Structure is preserved: an AND/OR group keeps its shape and its other
+    children, because the gate's shape IS intent (spec.Gate's own docstring)."""
+    if isinstance(g, spec.Gate):
+        kids = tuple(k for k in (_without_cursor(c) for c in g.children)
+                     if k is not None)
+        if not kids:
+            return None
+        from dataclasses import replace
+        return replace(g, children=kids)
+    return None if _is_cursor(g) else g
+
+
+def _cursor_test(p):
+    """The loop's own per-device test, which the report consumes."""
+    found = None
+    for g in p.gated_by:
+        for t in (g.leaves() if isinstance(g, spec.Gate) else [g]):
+            if _is_cursor(t):
+                found = t
+    return found
+
+
+class _Unexpressible(Exception):
+    """A leaf this emitter has no words for. Raised rather than returned so a
+    nested group cannot quietly lose one child and change its own meaning."""
+
+
+def _gate_node(g):
+    """One gate as the NESTED condition IR the emitter ALREADY understands.
+
+    THE TREE IS THE INTENT AND FLATTENING IT IS A SILENT WRONG ANSWER.
+    `spec.Gate`'s own docstring says it: flattening makes "motion AND dark"
+    and "motion OR dark" identical, and drops NOT so the false case reads as
+    the true one. This function exists because `plan()` used to call
+    `g.leaves()` and hand the emitter a flat list, which did both.
+
+    Measured on Jeremy's `door chime` (2026-08-25): the piston says "chime
+    quietly between 8pm and 8am (weekdays OR weekends), otherwise chime
+    louder". Flattened, the two day-halves became an AND — mon-fri AND
+    sat-sun, which is never true — so the automation triggered and said
+    NOTHING, and the NOT that separated day from night vanished entirely,
+    leaving both branches with identical conditions.
+
+    NOTHING NEW IS BUILT HERE. `_group` / `group_op` is the shape
+    `analyze._cond_node` already produces and `emit_yaml._condition` already
+    renders into HA's own `condition: and` / `or` / `not` blocks
+    (automation.yaml.j2:176). The intent path simply never fed it one.
+
+    Leaves that WAKE the automation are still skipped, matching the previous
+    behaviour: they are triggers, and repeating them as conditions would gate
+    the automation on the event that just fired."""
+    if isinstance(g, spec.Gate):
+        kids = []
+        for c in g.children:
+            k = _gate_node(c)
+            if k is not None:
+                kids.append(k)
+        if not kids:
+            return None
+        if len(kids) == 1 and not g.negated:
+            return kids[0]
+        return {"co": "_group", "group_op": (g.op or "and"),
+                "group_negated": bool(g.negated),
+                "children": kids,
+                # the flat keys every consumer of a condition node reads; a
+                # group answers "not applicable" to all of them, exactly as
+                # analyze._cond_node does.
+                "ct": "c", "devices": [], "attr": None, "lo_type": "group",
+                "value": None, "value2": None, "duration": {},
+                "aggregation": "any", "lo_var": None,
+                "value_vt": None, "value2_vt": None,
+                "value_preset": None, "value2_preset": None, "raw": {}}
+    if _is_cursor(g):
+        return None
+    if getattr(g, "wakes", False):
+        return None
+    n = _leaf(g)
+    if n is None:
+        raise _Unexpressible(str(getattr(g, "operator", "?")))
+    return n
+
+
+def _gate_sig(g) -> str:
+    """A gate's identity, negation INCLUDED. Two promises carrying the same
+    signature are gated by the same thing and belong in the same block."""
+    return g.describe()
+
+
+def _gate_base(g):
+    """(identity ignoring negation, is_negated) — the pair that says whether
+    two gates are exact OPPOSITES. `spec.Gate` already carries `negated`
+    separately from the tree, which is what makes this answerable at all."""
+    if isinstance(g, spec.Gate) and g.negated:
+        from dataclasses import replace
+        return replace(g, negated=False).describe(), True
+    if not isinstance(g, spec.Gate) and getattr(g, "negated", False):
+        return g.negate().describe(), True
+    return g.describe(), False
+
+
+def _are_opposites(a: tuple, b: tuple) -> bool:
+    """Do these two gate-sets say "when X" and "when NOT X"?
+
+    Used to turn a pair of blocks into ONE `if/else`, which is how Home
+    Assistant writes "otherwise". Requires a single differing gate: two
+    conditions that each flip is not an if/else, it is four cases."""
+    if len(a) != 1 or len(b) != 1:
+        return False
+    (ka, na), (kb, nb) = _gate_base(a[0]), _gate_base(b[0])
+    return ka == kb and na != nb
+
+
+def _report_node(p, var, test):
     """One report, as the node the emitter resolves. Slots only — no HA words.
 
     The emitter turns these into the single template (report_variables); this
     side just says WHAT the report is: which devices, which test decides
-    membership, and what each match contributes."""
-    test = None
-    for g in p.gated_by:
-        for t in (g.leaves() if isinstance(g, spec.Gate) else [g]):
-            if t.subject.devices == ("$device",):
-                test = t
+    membership, and what each match contributes.
+
+    `test` is passed IN rather than dug back out of `p.gated_by`, because by
+    now it has been removed from there — see `_is_cursor`. The report is the
+    one and only consumer of it, and making that a parameter is what stops a
+    second copy leaking to automation level again."""
     expr = ""
     for sub in p.params:
         if sub.kind == "expr" and sub.expression:
@@ -433,12 +568,37 @@ def plan(piston: dict, piston_id: str, piston_name: str):
     promises = spec.read(piston)
     if not promises:
         return None
-    # Give the unwoken promises the event their own words imply, BEFORE they
-    # are grouped — grouping is by what wakes a promise, so a derived wake has
-    # to exist by then or the promise lands in its own lonely automation.
+    # ONE PASS, TWO PREPARATIONS, IN THIS ORDER — the order is the point.
+    #
+    # 1. THE LOOP'S CURSOR STOPS BEING A DEVICE. `$device` is consumed by the
+    #    report that owns it and taken off the promise, so no later step can
+    #    emit it as a trigger, a condition, or a reason to split the piston up
+    #    (see `_is_cursor`).
+    # 2. Only THEN give the unwoken promises the event their own words imply.
+    #    Derived wakes are read off the gate, so stripping first is what keeps
+    #    the cursor from becoming a trigger via the back door — which is
+    #    exactly how it got into `38_Low_Battery_Check`'s trigger list.
+    #
+    # Both happen before grouping: grouping is by what wakes a promise AND by
+    # its gate, so a promise still carrying the cursor keys differently from
+    # its own header and its own notification and lands in a separate
+    # automation — which is why that piston built its device list into a
+    # variable nothing read, and sent the header on its own.
     from dataclasses import replace
-    promises = [p if p.wakes_on else replace(p, wakes_on=_wake_from_intent(p))
-                for p in promises]
+    cursor_test: dict = {}
+    prepared = []
+    for p in promises:
+        cursor = _cursor_test(p)
+        if cursor is not None:
+            p = replace(p, gated_by=tuple(
+                g for g in (_without_cursor(x) for x in p.gated_by)
+                if g is not None))
+        if not p.wakes_on:
+            p = replace(p, wakes_on=_wake_from_intent(p))
+        if cursor is not None:
+            cursor_test[id(p)] = cursor
+        prepared.append(p)
+    promises = prepared
     behaviours = spec.behaviours(promises)
 
     # Which promises are the per-device half of a report. Worked out ONCE,
@@ -484,7 +644,18 @@ def plan(piston: dict, piston_id: str, piston_name: str):
     groups: dict = {}
     order: list = []
     for p in flat:
-        key = (_wake_key(p), _gate_key(p))
+        # THE GATE IS NO LONGER PART OF THE KEY, and that is the fix for a
+        # chime that fired and said nothing (2026-08-25). Keying on the gate
+        # put "build the Message" and "speak the Message" in SEPARATE
+        # top-level branches, and Home Assistant scopes a `variables:` block
+        # to the sequence that declares it — so `Message` did not exist by the
+        # time the speak ran. HA emitted a valid automation, triggered it,
+        # set the right volume, and spoke an empty string.
+        #
+        # One event -> one sequence, in order, with the gates that DIFFER
+        # nested inside it. That is also how a person writes this automation
+        # by hand, and it is what the transcoder already does.
+        key = _wake_key(p)
         if key not in groups:
             groups[key] = []
             order.append(key)
@@ -503,13 +674,26 @@ def plan(piston: dict, piston_id: str, piston_name: str):
             if n is None:
                 return _refuse("trigger shape not expressible: %s" % (t.operator,))
             triggers.append(n)
-        for g in lead.gated_by:
-            for t in (g.leaves() if isinstance(g, spec.Gate) else [g]):
-                if t.wakes:
-                    continue
-                n = _leaf(t)
-                if n is None:
-                    return _refuse("gate shape not expressible: %s" % (t.operator,))
+        # GATES EVERY MEMBER SHARES belong to the automation; gates only SOME
+        # of them carry belong inside the sequence, next to the actions they
+        # actually guard. Splitting it this way is what lets one event own one
+        # automation without losing anyone's conditions.
+        #
+        # THE GATE KEEPS ITS SHAPE either way. See `_gate_node` — flattening
+        # is what turned "weekdays OR weekends" into "weekdays AND weekends".
+        members_sorted = sorted(members, key=lambda x: x.order)
+        sigs = [{_gate_sig(g): g for g in m.gated_by} for m in members_sorted]
+        shared = set(sigs[0])
+        for d in sigs[1:]:
+            shared &= set(d)
+        for k, g in sigs[0].items():
+            if k not in shared:
+                continue
+            try:
+                n = _gate_node(g)
+            except _Unexpressible as exc:
+                return _refuse("gate shape not expressible: %s" % (exc,))
+            if n is not None:
                 gates.append(n)
 
         # THE DELAY IS PART OF THE PROMISE AND WAS BEING LEFT BEHIND HERE
@@ -524,16 +708,57 @@ def plan(piston: dict, piston_id: str, piston_name: str):
         # so the wait to insert is the difference. Two promises both at
         # after=10 are simultaneous; emitting 10 then another 10 would push the
         # second one out to 20 and invent a delay the piston never asked for.
-        then, clock = [], 0
-        for p in sorted(members, key=lambda x: x.order):
-            gap = int(p.after or 0) - clock
+        # Consecutive promises with the SAME leftover gate share one block, so
+        # "set the volume then speak" stays two actions under one condition
+        # rather than the same condition written twice.
+        runs, clock = [], 0
+        for m, sig in zip(members_sorted, sigs):
+            extra = tuple(k for k in sig if k not in shared)
+            gap = int(m.after or 0) - clock
             if gap > 0:
-                then.append({"kind": "delay", "delay_seconds": gap})
-                clock = int(p.after or 0)
-            then.append(_report_node(p, report_for[id(p)]) if id(p) in report_for
-                        else _task(p))
-        if any(t is None for t in then):
-            return _refuse("an action could not be expressed")
+                clock = int(m.after or 0)
+            node = (_report_node(m, report_for[id(m)], cursor_test.get(id(m)))
+                    if id(m) in report_for else _task(m))
+            if node is None:
+                return _refuse("an action could not be expressed")
+            if runs and runs[-1][0] == extra and gap <= 0:
+                runs[-1][1].append(node)
+            else:
+                if gap > 0:
+                    runs.append(((), [{"kind": "delay", "delay_seconds": gap}]))
+                runs.append((extra, [node], sig))
+
+        then = []
+        idx = 0
+        while idx < len(runs):
+            run = runs[idx]
+            extra, nodes = run[0], run[1]
+            if not extra:
+                then.extend(nodes)
+                idx += 1
+                continue
+            sig = run[2]
+            try:
+                conds = [c for c in (_gate_node(sig[k]) for k in extra) if c is not None]
+            except _Unexpressible as exc:
+                return _refuse("gate shape not expressible: %s" % (exc,))
+            # "OTHERWISE" IS `else:`, NOT A SECOND BRANCH WITH A NEGATED COPY.
+            # HA's own word for the false case, and it keeps both halves in the
+            # same scope as the variables built above them.
+            els = []
+            nxt = runs[idx + 1] if idx + 1 < len(runs) else None
+            if nxt is not None and nxt[0] and _are_opposites(
+                    [sig[k] for k in extra],
+                    [nxt[2][k] for k in nxt[0]]):
+                els = nxt[1]
+                idx += 1
+            if conds:
+                then.append({"kind": "if", "conditions": conds,
+                             "then": nodes, "else": els})
+            else:
+                then.extend(nodes)
+                then.extend(els)
+            idx += 1
 
         branches.append({
             "stmt_id": _sid(lead.source, i), "kind": "if", "tcp": "c",

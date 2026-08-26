@@ -680,9 +680,32 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
 
     # nested condition group -> HA's and/or condition blocks
     if co == "_group":
-        kids = [_condition(c, resolver, ctx) for c in cond["children"]]
-        return {"kind": "or" if cond["group_op"] == "or" else "and",
+        kids = []
+        for c in cond["children"]:
+            k = _condition(c, resolver, ctx)
+            # A RESTRICTION INSIDE A GROUP STAYS INSIDE IT. The branch-level
+            # hoist (`_time_restriction_conds`) is right when a restriction
+            # applies to the whole statement, but hoisting one OUT of an OR
+            # ANDs it onto every other clause — which is exactly how
+            # "(8pm-8am on weekdays) OR (8pm-8am on weekends)" came out as
+            # "weekdays AND weekends", a condition no day satisfies, and a
+            # door chime that triggered and stayed silent (2026-08-25).
+            extra = _restrictions_of(c) if isinstance(c, dict) else []
+            if extra:
+                k = {"kind": "and", "conditions": [k] + extra}
+            kids.append(k)
+        node = {"kind": "or" if cond["group_op"] == "or" else "and",
                 "conditions": kids}
+        # A NEGATED GROUP IS HA'S `condition: not`, and dropping the negation
+        # is worse than dropping the group: "otherwise chime louder" emitted
+        # without it becomes a second copy of "chime quietly", so both halves
+        # of an if/else carry the SAME test and the else-half can never be
+        # distinguished. webCoRE states the false case with `n` on the group
+        # (PISTON_JSON_REFERENCE §2.1) and the reader keeps it as
+        # `spec.Gate.negated`; this is where it reaches HA.
+        if cond.get("group_negated"):
+            return {"kind": "not", "conditions": [node]}
+        return node
 
     # A piston VARIABLE on the left ("Motion_Triggered is true"). The variable
     # is carried as an automation-level `variables:` entry, so the template
@@ -3798,15 +3821,29 @@ def _time_restriction_conds(br: dict) -> list:
     for node in list(br.get("triggers") or []) + list(br.get("conditions") or []):
         if not isinstance(node, dict):
             continue
-        lo = (node.get("raw") or {}).get("lo") or {}
-        days = tuple(lo.get("odw") or ())
-        months = tuple(lo.get("omy") or ())
-        if days and ("d", days) not in seen:
-            seen.add(("d", days))
-            out.append({"kind": "time", "weekday": list(days)})
-        if months and ("m", months) not in seen:
-            seen.add(("m", months))
-            out.append({"kind": "months", "months": list(months)})
+        for c in _restrictions_of(node):
+            key = ("d", tuple(c.get("weekday") or ())) if c["kind"] == "time"                 else ("m", tuple(c.get("months") or ()))
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(c)
+    return out
+
+
+def _restrictions_of(node: dict) -> list:
+    """The day/month restriction a SINGLE operand carries, as HA conditions.
+
+    ONE spelling, two callers: `_time_restriction_conds` hoists these to the
+    branch when the operand sits at the top level, and `_condition`'s group
+    branch keeps them INSIDE the group when it does not. Splitting that into
+    two implementations is how the day names would drift apart (HARD_RULES §9,
+    and CLAUDE.md's rule about second copies of one table)."""
+    lo = (node.get("raw") or {}).get("lo") or {}
+    out = []
+    if lo.get("odw"):
+        out.append({"kind": "time", "weekday": list(lo["odw"])})
+    if lo.get("omy"):
+        out.append({"kind": "months", "months": list(lo["omy"])})
     return out
 
 

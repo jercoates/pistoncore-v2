@@ -1752,8 +1752,8 @@ clip is made, the fetch fails, **nothing is heard and nothing errors.**
 Measured on the bench 2026-08-22: with `internal_url: None` the compiled CO
 piston reached the real Sonos correctly (`media_player.family_room_family_room`,
 no placeholder), fired, and made no sound. Setting
-`internal_url: http://192.168.1.221:8124` changed the served clip from an
-unreachable address to `http://192.168.1.221:8124/api/tts_proxy/….mp3`.
+setting `internal_url` to the host's LAN address changed the served clip from an
+unreachable container address to a reachable `/api/tts_proxy/….mp3` URL.
 
 **PistonCore already has what it needs.** The user gives it `ha_url` at setup.
 At startup it should check HA's configured base URL (`GET /api/config` ->
