@@ -680,8 +680,99 @@ The YAML comment matters beyond convenience: it travels with the automation and
 survives PistonCore being deleted ([[no_runtime_pistoncore_dependency]]), so the
 reasoning is readable by whoever owns the file later, with no tooling.
 
+## 12c. A PISTONCORE VARIABLE IS NOT A HOME ASSISTANT VARIABLE
+**(Jeremy, 2026-08-26: *"those are a veriable in pistoncore not ha. do you get
+the distiction yet?"*)**
+
+Two different things wear the word "variable" and confusing them has now cost
+time twice:
+
+- **A PISTONCORE variable** is a value the compiler KNOWS. Jeremy's define
+  block — `Repeat_Time_Sec = 30`, `Speaker_Vol = 100`, `Night_Time_Begin` — is
+  this. Nothing in the piston assigns it, so its value is whatever the piston
+  was last saved with, the compiler substitutes it, and **Home Assistant never
+  sees a variable at all**. Editing it in webCoRE saves, a save recompiles, and
+  the new number is written into the YAML. That IS the workflow he built the
+  define block for: *"adjust things like volume devices, pauses without going
+  through the statements"*.
+- **A HOME ASSISTANT variable** is a runtime value — `variables:` in a
+  sequence, or a helper entity when it has to outlive the run.
+
+**Treating the first as the second is always wrong**, and it does not fail
+loudly. `a12`/`a66` (named *"Repeat 30sec"*) had their cadence read as UNKNOWN
+and were refused as "not a fixed number of seconds", when the answer was
+sitting in their own define block. Same class as the earlier bug where a named
+threshold reached the emitter as None and HA silently disabled the automation.
+
+**The tool already exists: `resolve.unassigned_locals()`.** The transcoder has
+used it since 2026-08-21 (`analyze._resolve_named_thresholds`). Ask it — never
+write a second answer, and never route a compile-time constant through a
+helper.
+
+## 12b. THE SWITCH IS FLIPPED — INTENT IS THE DEFAULT
+**(Jeremy, 2026-08-26: *"lets flip the switch"*. SUPERSEDES §12a's default-off
+half; the rest of §12a still stands.)**
+
+`emit_intent.enabled()` now defaults **ON**. `PISTONCORE_INTENT_EMIT=0` turns
+it off per process, and the stored setting per install.
+
+**Why it is safe, in his words: *"the fact it will fall back to the transpiler
+anyway is a plus not a negative."*** He is right, and this was the argument
+against it until he reframed it. `plan()` returns None for anything the intent
+reader cannot express and compilation falls through to the transcoder
+unchanged — so flipping the default can only move pistons the intent path does
+BETTER, and leaves every other one byte-identical to today. That was measured,
+not assumed: after the 2026-08-26 work the transcoder's output for all 154
+corpus pistons was unchanged.
+
+**What §12a asked for has been met.** It held the default off because the
+engine "has never passed a §7 device test". It has now — three of Jeremy's own
+pistons, driven end to end on real devices through PistonCore, no hand-editing:
+the carbon-monoxide alarm (speaks, names the right detector, clears), the
+low-battery report (which HA had been silently refusing outright), and the door
+chime (both the night branch at 0.7 and the `else` day branch at 0.9, with the
+sentence intact).
+
+**Corpus, both paths:** intent 124 yaml / 25 pyscript / 5 errors; transcoder
+120 / 26 / 8.
+
+**⛔ DO NOT LIFT THE "inside a loop" REFUSAL UNTIL THE UNTIL-CONDITION IS
+FIXED (found 2026-08-26, by doing the reading check Jeremy has been asking
+for).** The intent reader turns a `repeat ... UNTIL <cond>` into a GATE on the
+body promises, so `11_Carbon_Monoxide_detected` reads as:
+
+    setVolume / playText / lights on / notify
+      ONLY IF: All of {@Smoke_Detectors}'s carbonMonoxide are CLEAR
+
+webCoRE runs that body **while the detectors are NOT clear**. The reader has
+recorded the EXIT condition as an ENTRY condition — an exact inversion, which
+would make a carbon-monoxide alarm announce only once the danger had passed.
+§6's worst class, on the worst possible piston.
+
+**7 corpus pistons carry a repeat-UNTIL and every one is a safety piston** —
+11 and a12 (CO), 63 and a66 (smoke), 29 (gas), 70 and a77 (water). All 7
+currently fall back to the transcoder, which is the ONLY reason this has never
+shipped. The fallback is doing exactly the job Jeremy said it would.
+
+**THE READING IS CHECKED BEFORE THE OUTPUT IS (Jeremy, 2026-08-26: *"i keep
+forgetting to have you check the intent for a correct reading of the pistons
+and then after running them correctly through pistoncore to check if it
+reproduced the intent of the original webcore piston"*).** Two stages, in this
+order, and the first is not optional:
+
+1. **Does `spec.read()` say what the piston MEANS?** Print the promises with
+   their WHEN / ONLY IF / AFTER and read them as English against the piston.
+   This is what caught the inversion above — no amount of output testing would
+   have, because those pistons do not use the intent path yet.
+2. **Does the emitted automation reproduce that**, driven for real through
+   PistonCore on the bench.
+
+**The next question, and it is open:** ~20 pistons still fall back. That is a
+safety net doing its job, not a failure — but each fallback is a piece of the
+engine that is not finished, so the reasons are worth knowing one by one.
+
 ## 12a. THE INTENT ENGINE LANDS AS A WHOLE, ON A BRANCH
-**(Jeremy, 2026-08-07)**
+**(Jeremy, 2026-08-07 — default-off half superseded by §12b, 2026-08-26)**
 
 **Nothing from the intent-engine work is pushed until it works as a whole.**
 Partial intent work does not go to `main`.

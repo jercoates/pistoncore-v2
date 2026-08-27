@@ -60,13 +60,22 @@ def enabled() -> bool:
     never stop him compiling — the old behaviour is one flag away, not one
     revert away.
 
-    DEFAULT OFF (HARD_RULES §12a: the intent engine lands as a WHOLE, and
-    partial intent work does not become what a running install uses). It was
-    briefly written default-ON, which meant Jeremy's next ordinary save would
-    have silently recompiled a live piston through an unproven path — the
-    engine has never passed a §7 device test. Opt in per process with
-    PISTONCORE_INTENT_EMIT=1, or per install with the stored setting; nothing
-    turns it on by itself.
+    DEFAULT ON since 2026-08-26 (Jeremy: *"lets flip the switch"*). It was
+    default OFF for the whole build, for a good reason that has now been met:
+    the engine had never passed a §7 device test. It has — three of his own
+    pistons driven end to end on real devices (the CO alarm, the low-battery
+    report, the door chime, both branches).
+
+    THE FALL-BACK IS WHY THIS IS SAFE, and Jeremy's own point (2026-08-26:
+    *"the fact it will fall back to the transpiler anyway is a plus not a
+    negative"*). `plan()` returns None for anything the intent reader cannot
+    express, and compile falls through to the transcoder unchanged — so turning
+    this on can only move the pistons the intent path handles BETTER, and
+    leaves every other one exactly where it was. Measured on the corpus:
+    124 yaml / 25 pyscript / 5 errors, against the transcoder's 120 / 26 / 8.
+
+    Turn it OFF per process with PISTONCORE_INTENT_EMIT=0, or per install with
+    the stored setting — the old path stays one flag away, not one revert away.
 
     Order: the env var wins (harnesses and A/B runs set it per process), then
     the stored setting."""
@@ -76,9 +85,9 @@ def enabled() -> bool:
     try:
         from .. import storage
         return bool((storage.load_settings().get("compiler") or {})
-                    .get("intent_emit", False))
+                    .get("intent_emit", True))
     except Exception:
-        return False
+        return True
 
 
 def _wake_key(promise) -> tuple:
@@ -364,6 +373,56 @@ def _refuse(why: str):
     return None
 
 
+def set_questions(promises):
+    """Every "which of THESE match?" the piston asks, with the layers it carries.
+
+    THE BASE IS THE QUESTION, NOT THE SENTENCE (Jeremy, 2026-08-26: *"the other
+    things are added on to the first shape"*). Measured across the corpus:
+
+        BASE        ask the SET which ones match       17 of 17 pistons
+         + DESCRIBE   build a sentence about them      16
+         + THEN DO    act on the answer                13
+         + LOOP       repeat until <its OWN condition>  7
+         + WAIT       ...every N seconds                7
+
+    `report_groups()` recognises the DESCRIBE layer only, which is why it finds
+    4 pistons where there are 17: it requires `accumulates()`, so a piston that
+    asks the set and simply ACTS on the answer is invisible to it.
+    `a03_Alarm_Not_Set_Albert_Kelly_Gone` is exactly that — no sentence, just
+    "which of these are unlocked, lock them" — and it is the case a recogniser
+    gets wrong if "build a sentence" is treated as the base.
+
+    Layers are INDEPENDENT and any combination is legal. `a12`/`a66` carry all
+    of them; `38_Low_Battery_Check` carries only DESCRIBE. So this returns what
+    is present and lets emission ask, rather than matching whole patterns.
+
+    THE LOOP'S EXIT IS ITS OWN CONDITION, never derived from the membership
+    test. "Repeat until nothing matches" is true of the CO piston by
+    coincidence; building that assumption in would match only looped pistons
+    and miss the nine that have no loop at all.
+
+    Returns [{over, attr, test, describe, then_do, loop}, ...].
+    """
+    groups, order = {}, []
+    for p in promises:
+        if not p.per_device:
+            continue
+        test = _cursor_test(p)
+        key = (tuple(p.per_device_over),
+               test.describe() if test is not None else None)
+        if key not in groups:
+            groups[key] = {"over": tuple(p.per_device_over), "test": test,
+                           "attr": (test.subject.attribute if test is not None
+                                    else None),
+                           "describe": [], "then_do": [], "loop": None}
+            order.append(key)
+        g = groups[key]
+        (g["describe"] if p.accumulates() else g["then_do"]).append(p)
+        if g["loop"] is None and p.loop is not None:
+            g["loop"] = p.loop
+    return [groups[k] for k in order]
+
+
 def report_groups(promises):
     """The promises that together are ONE report: "tell me which of these match".
 
@@ -386,11 +445,16 @@ def report_groups(promises):
 
     Returns [(variable, [start], [adds], [users]), ...], empty when none.
     """
+    # ONE RECOGNISER. `set_questions` finds the base — "which of these match" —
+    # and reports the DESCRIBE layer among others; this stays as the per-value
+    # view the emitter already consumes, built FROM that rather than beside it.
+    # Verified identical across all 154 corpus pistons before switching over
+    # (2026-08-26). Two recognisers of the same shape is precisely how the
+    # operator tables drifted apart (CLAUDE.md).
+    described = [p for q in set_questions(promises) for p in q["describe"]]
     out = []
-    for var in sorted({n for p in promises if p.per_device and p.accumulates()
-                       for n in p.writes}):
-        adds = [p for p in promises
-                if p.per_device and p.accumulates() and var in p.writes]
+    for var in sorted({n for p in described for n in p.writes}):
+        adds = [p for p in described if var in p.writes]
         starts = [p for p in promises
                   if not p.per_device and var in p.writes and not p.accumulates()]
         users = [p for p in promises if var in p.reads and var not in p.writes]
@@ -567,7 +631,14 @@ def plan(piston: dict, piston_id: str, piston_name: str):
     """Branch IR built from the piston's INTENT, or None if not expressible."""
     promises = spec.read(piston)
     if not promises:
-        return None
+        # EVERY FALL-BACK STATES ITS REASON. This one returned a bare None, so
+        # the piston fell through to the transcoder with nothing recorded and
+        # the front-door indicator had nothing to say about it (2026-08-26,
+        # found while counting why 20 pistons fall back). A piston with
+        # statements but no promises is a real answer — the reader could not
+        # find anything the piston PROMISES to do — and it belongs on the
+        # surfaces §11 reserves for exactly this.
+        return _refuse("the reading found nothing this piston promises to do")
     # ONE PASS, TWO PREPARATIONS, IN THIS ORDER — the order is the point.
     #
     # 1. THE LOOP'S CURSOR STOPS BEING A DEVICE. `$device` is consumed by the
@@ -630,6 +701,30 @@ def plan(piston: dict, piston_id: str, piston_name: str):
             # the loop stops existing rather than being translated. Anything
             # else per-device still refuses.
             if b.per_device and id(b) in report_for:
+                flat.append(b)
+                continue
+            # A PROMISE INSIDE A `repeat … until` IS NOT A REASON TO REFUSE.
+            # HA writes that loop natively (`repeat: sequence: … until:`) with
+            # the same do-while meaning webCoRE has, so there is nothing to
+            # translate — see `_loop_run`. `while`/`for` still refuse: their
+            # condition is a pre-test, which is a different construct.
+            # A per-device action that is NOT part of the report still refuses.
+            # "Speak once per alarming detector" is a QUESTION ABOUT A SET, and
+            # the answer is a filter over the matching devices — not a
+            # substitution for `$device`. Emitting it any other way is
+            # transliteration, and the half-built version of it pushed three
+            # pistons to PyScript (2026-08-26). Left refusing until the set
+            # form is built.
+            if b.per_device:
+                return _refuse("per-device fan-out")
+            if b.loop is not None:
+                # A loop with no measurable cadence would emit a repeat with no
+                # delay — a busy loop hammering a speaker. Refuse instead.
+                # a12 and a66 land here: their wait is a VARIABLE, which the
+                # reading cannot reduce to seconds yet.
+                if not b.loop.get("cadence"):
+                    return _refuse("the loop's repeat interval is not a fixed "
+                                   "number of seconds")
                 flat.append(b)
                 continue
             if b.per_device or b.repeating: return _refuse("per-device fan-out" if b.per_device else "inside a loop")
@@ -721,44 +816,72 @@ def plan(piston: dict, piston_id: str, piston_name: str):
                     if id(m) in report_for else _task(m))
             if node is None:
                 return _refuse("an action could not be expressed")
-            if runs and runs[-1][0] == extra and gap <= 0:
-                runs[-1][1].append(node)
+            if runs and runs[-1]["gates"] == extra and gap <= 0                     and runs[-1]["loop"] is m.loop:
+                runs[-1]["nodes"].append(node)
             else:
                 if gap > 0:
-                    runs.append(((), [{"kind": "delay", "delay_seconds": gap}]))
-                runs.append((extra, [node], sig))
+                    runs.append({"gates": (), "nodes": [
+                        {"kind": "delay", "delay_seconds": gap}],
+                        "sig": {}, "loop": None})
+                runs.append({"gates": extra, "nodes": [node],
+                             "sig": sig, "loop": m.loop})
 
-        then = []
-        idx = 0
-        while idx < len(runs):
-            run = runs[idx]
-            extra, nodes = run[0], run[1]
+        def _emit_run(i, sink):
+            """One run onto `sink`; returns the next index. Shared by the
+            top-level sequence and by a loop body, so an if/else inside a
+            repeat is built exactly the same way as one outside it."""
+            run = runs[i]
+            extra, nodes, sig = run["gates"], run["nodes"], run["sig"]
             if not extra:
-                then.extend(nodes)
-                idx += 1
-                continue
-            sig = run[2]
-            try:
-                conds = [c for c in (_gate_node(sig[k]) for k in extra) if c is not None]
-            except _Unexpressible as exc:
-                return _refuse("gate shape not expressible: %s" % (exc,))
+                sink.extend(nodes)
+                return i + 1
+            conds = [c for c in (_gate_node(sig[k]) for k in extra)
+                     if c is not None]
             # "OTHERWISE" IS `else:`, NOT A SECOND BRANCH WITH A NEGATED COPY.
             # HA's own word for the false case, and it keeps both halves in the
             # same scope as the variables built above them.
-            els = []
-            nxt = runs[idx + 1] if idx + 1 < len(runs) else None
-            if nxt is not None and nxt[0] and _are_opposites(
-                    [sig[k] for k in extra],
-                    [nxt[2][k] for k in nxt[0]]):
-                els = nxt[1]
-                idx += 1
+            els, nxt = [], (runs[i + 1] if i + 1 < len(runs) else None)
+            if nxt is not None and nxt["gates"] and nxt["loop"] is run["loop"]                     and _are_opposites([sig[k] for k in extra],
+                                       [nxt["sig"][k] for k in nxt["gates"]]):
+                els = nxt["nodes"]
+                i += 1
             if conds:
-                then.append({"kind": "if", "conditions": conds,
+                sink.append({"kind": "if", "conditions": conds,
                              "then": nodes, "else": els})
             else:
-                then.extend(nodes)
-                then.extend(els)
-            idx += 1
+                sink.extend(nodes)
+                sink.extend(els)
+            return i + 1
+
+        # THE LOOP THE AUTHOR ACTUALLY MEANT, AND ONLY THAT ONE.
+        # webCoRE's per-device walk is a mechanism — it has no way to ask a
+        # list a question — and it dissolves into the report template. What is
+        # left is "announce, wait 30 seconds, go round again until it is safe",
+        # which is HA's `repeat: sequence: … until:` with the same do-while
+        # meaning. Nothing is translated; the loop is simply kept.
+        then, idx = [], 0
+        while idx < len(runs):
+            lp = runs[idx]["loop"]
+            if lp is None:
+                try:
+                    idx = _emit_run(idx, then)
+                except _Unexpressible as exc:
+                    return _refuse("gate shape not expressible: %s" % (exc,))
+                continue
+            body = []
+            while idx < len(runs) and runs[idx]["loop"] is lp:
+                try:
+                    idx = _emit_run(idx, body)
+                except _Unexpressible as exc:
+                    return _refuse("gate shape not expressible: %s" % (exc,))
+            try:
+                until = [c for c in [_gate_node(lp["until"])] if c is not None]
+            except _Unexpressible as exc:
+                return _refuse("loop exit not expressible: %s" % (exc,))
+            if not until:
+                return _refuse("the loop has no expressible exit condition")
+            then.append({"kind": "loop", "until": until,
+                         "cadence": int(lp.get("cadence") or 0), "body": body})
 
         branches.append({
             "stmt_id": _sid(lead.source, i), "kind": "if", "tcp": "c",

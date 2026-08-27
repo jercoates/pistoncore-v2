@@ -1825,3 +1825,88 @@ is unsafe, and terminates when they are all clear — and the separate
 
 **Both halves of the piston are now behaviour-proven on real hardware**, which
 is the standard in HARD_RULES §7 and §17. The alarm half and the all-clear half.
+
+
+## NEXT: THE ALARM SHAPE — the engine already reads it, it just stops short
+**(2026-08-26. Jeremy: *"the intent engine gave you what the intent was and is
+supposed to pull that shape out"*, and *"have it see the repeat and timer, not
+reinvent the wheel"*.)**
+
+ONE shape, not four problems. `11_Carbon_Monoxide_detected`, `63_Smoke_Detected`,
+`29_Gas_Detector_2` and `70_Water_Leak_Notification_and_shutt_off` are the same
+piston with different nouns, and they are the same four that appear on every
+fallback list:
+
+    WHEN     : any of these goes into alarm      -> trigger: state over the list
+    SET      : @Smoke_Detectors / Gas_Detectors  -> the device list
+    MATCH IF : carbonMonoxide is detected        -> selectattr(...)
+    DESCRIBE : Smoke_Status                      -> ONE variables: template
+    THEN DO  : volume, speak, lights, notify     -> the actions, ONCE
+    REPEAT   : every 30s                         -> delay:
+    UNTIL    : none match                        -> the SAME filter, counted
+
+**`report_groups()` already returns the first four lines.** It has the set, the
+membership test and the described value, read from the promises rather than
+from node shapes. What it does NOT return is **THEN DO** — the per-device
+promises sitting in the same loop that are not part of the accumulation. That
+gap is the whole remaining problem, and it is why `setVolume`/`playText` keep
+being handled one at a time.
+
+**THE SHAPE IS A BASE PLUS OPTIONAL LAYERS — MEASURED, NOT ASSUMED
+(2026-08-26).** Jeremy: *"the other things are added on to the first shape…
+build a sentance + loop + pause + wait"*. He is right, and the measurement puts
+the base one step lower than either of us said:
+
+    BASE        ask the SET which ones match          17 of 17 pistons
+     + DESCRIBE   build a sentence about them         16
+     + THEN DO    act on the answer                   13
+     + LOOP       repeat until <its OWN condition>     7
+     + WAIT       ...every N seconds                   5 constant, 2 variable
+
+`a03_Alarm_Not_Set_Albert_Kelly_Gone` has NO describe — it asks the set and
+locks the answer. One piston in seventeen, and it is exactly the case a
+recogniser gets wrong if "build a sentence" is treated as the base.
+
+**Recognise the BASE, then ask which layers are present.** Matching whole
+patterns is what gets 4 of 17, which is where it stands today. `a12`/`a66` are
+the proof that layers are independent: every layer present, only WAIT
+unresolved (a variable, not a number).
+
+**THE LOOP IS A LAYER ON THE SHAPE, NOT PART OF IT (Jeremy, 2026-08-26:
+*"they add to the shape … if you do it the other way it will miss the shape
+without the loop"*).** The core is:
+
+    SET + MATCH IF + DESCRIBE + THEN DO
+
+and it stands on its own. `38_Low_Battery_Check` and `a15_DoorsWindows_Opened`
+are that shape with NO repeat anywhere. The repeat, its cadence and its exit
+are an OPTIONAL layer wrapped around it.
+
+**So recognise the core first, then ask whether a loop wraps it.** An earlier
+draft of this note had it backwards — it treated `UNTIL` as derivable from
+`MATCH IF` ("repeat until nothing matches"), which is true of the CO piston by
+coincidence and false in general. Building it that way would only ever match
+LOOPED pistons and would miss every un-looped one, which is most of the family.
+
+**The until condition is its own condition.** Read it from the loop
+(`Promise.loop["until"]`), emit it as HA conditions, and do not assume it has
+anything to do with the membership test.
+
+**DO NOT TRY TO RESOLVE `$device` FOR THE HOISTED ACTIONS.** That was tried on
+2026-08-26 and pushed three pistons to PyScript. HA's version of this shape has
+no cursor in it at all — the announcement names the matched set, so there is
+nothing for `$device` to become. Every attempt to substitute for it is
+transliteration and Jeremy has called it each time.
+
+**Already in place (do not rebuild):**
+- the reader understands `repeat … until` as an EXIT, not a body gate, and
+  captures the trailing wait as the loop's cadence (`Promise.loop`)
+- `emit_intent` emits a `loop` node; `emit_yaml` renders HA's
+  `repeat: sequence: … until:`; the template already had `until:`/`while:`
+- a delay emits as HA's native `delay: seconds:` — `_timer_plan` creates NO
+  timer entity for these pistons, so nothing needs inventing
+- the filter form itself is bench-verified (00_HOW_TO_ASK_HA.md)
+
+**Still refusing on purpose:** per-device fan-out, so nothing half-built is in
+the path. `a12`/`a66` also refuse because their cadence is a VARIABLE, not a
+constant — a repeat with no delay would be a busy loop.

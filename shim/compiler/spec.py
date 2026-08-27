@@ -424,6 +424,12 @@ class Promise:
     # left the only route to the device list as guessing from a sibling gate.
     per_device_over: tuple = ()
     repeating: bool = False        # inside a repeat/while
+    # THE LOOP ITSELF, shared by every promise in its body: {id, until, cadence}.
+    # `repeating` only ever said "this is inside SOME loop", which is why the
+    # only thing emission could do with it was refuse. The loop's own exit
+    # condition and its trailing wait are what HA needs to write
+    # `repeat: sequence: … until:` — the same do-while webCoRE means.
+    loop: object = None
     order: int = 0                 # position, and order IS intent (§10)
     virtual: bool = False          # a CONTROL command, not a device command
     custom: bool = False           # `cm` — a RAW command, not in the vocabulary
@@ -546,9 +552,34 @@ def _subject(lo: dict) -> Subject:
     return Subject("expr")
 
 
-def _seconds(op) -> int | None:
+def _seconds(op, consts: dict | None = None) -> int | None:
+    """A duration in seconds, resolving a NAMED one through the piston.
+
+    A PISTONCORE VARIABLE IS NOT A HOME ASSISTANT VARIABLE (Jeremy, 2026-08-26:
+    *"those are a veriable in pistoncore not ha"*). `wait Repeat_Time_Sec` with
+    `Repeat_Time_Sec = 30` in the define block is THIRTY SECONDS at compile
+    time — the number is written into the YAML and Home Assistant never sees a
+    variable at all. That is the whole point of his define block: change the
+    pause at the top, save, and the new number is compiled in.
+
+    Read as an unknown instead, a12 and a66 came back with a cadence of 0 and
+    were refused as "not a fixed number of seconds", when their interval is
+    plainly 30. `unassigned_locals` already answers this and the transcoder
+    already uses it (`analyze._resolve_named_thresholds`); this is the reader
+    asking the same question rather than a second copy of the answer."""
     from .resolve import duration_seconds
-    return duration_seconds(op) if isinstance(op, dict) else None
+    if not isinstance(op, dict):
+        return None
+    got = duration_seconds(op)
+    if got:
+        return got
+    name = op.get("x")
+    if name and consts and name in consts:
+        try:
+            return duration_seconds({"c": consts[name], "vt": op.get("vt") or "s"})
+        except Exception:
+            return None
+    return got
 
 
 def _classify(cond: dict) -> str:
@@ -905,10 +936,17 @@ class _Reader:
         self.n = 0
         # the `each` device lists currently open, innermost last
         self._each_over: list[tuple] = []
+        self._loop: list[dict] = []
 
     def read(self) -> list[Promise]:
         global _VARS
         _VARS = _declared_vars(self.piston)
+        # Compile-time constants — locals nothing ever assigns. See _seconds.
+        from .resolve import unassigned_locals
+        try:
+            self._consts = unassigned_locals(self.piston) or {}
+        except Exception:
+            self._consts = {}
         self._statements(self.piston.get("s"), (), _restrictions(self.piston),
                          "piston", False, False)
         return self.out
@@ -923,6 +961,13 @@ class _Reader:
                 continue
             after = self._statement(st, wake, gate, where, per_device,
                                     repeating, after)
+        # RETURNED so a repeat can see the wait that closes its body. That wait
+        # IS the loop's cadence ("announce, then wait 30, and go round again")
+        # and nothing else records it: `after` restarts at 0 for every
+        # statement list, so a trailing wait had nowhere to go and was simply
+        # lost. Measured on 11_Carbon_Monoxide_detected, whose loop ends
+        # `wait 30`.
+        return after
 
     def _statement(self, st, wake, gate, where, per_device, repeating, after):
         t = st.get("t")
@@ -935,7 +980,8 @@ class _Reader:
                     continue
                 cmd = task.get("c")
                 if cmd in self.waits:
-                    after += _seconds((task.get("p") or [{}])[0]) or 0
+                    after += _seconds((task.get("p") or [{}])[0],
+                                      getattr(self, "_consts", None)) or 0
                     continue
                 self.n += 1
                 # THE VALUE FLOW BELONGS TO BOTH READERS, NOT ONE (2026-08-13).
@@ -963,6 +1009,7 @@ class _Reader:
                     per_device=per_device,
                     per_device_over=(self._each_over[-1] if self._each_over else ()),
                     repeating=repeating,
+                    loop=(self._loop[-1] if self._loop else None),
                     order=self.n, source=me,
                     custom=bool(task.get("cm")),
                     # For TRANSLATION only — the parameters and the device list
@@ -1026,7 +1073,35 @@ class _Reader:
                                  True, repeating)
             finally:
                 self._each_over.pop()
-        elif t in ("repeat", "while", "for"):
+        elif t == "repeat":
+            # A REPEAT'S CONDITION IS ITS EXIT, NOT AN ENTRY GATE ON ITS BODY.
+            # webCoRE's `repeat { … } until <cond>` is a do-while: run the
+            # body, then test, leave when true. Adding that condition to the
+            # body's gate said the opposite — 11_Carbon_Monoxide_detected read
+            # as "announce ONLY IF all detectors are CLEAR", which is a carbon
+            # monoxide alarm that stays quiet during a carbon monoxide event
+            # (found 2026-08-26; §6's worst class, on the worst piston).
+            #
+            # HA needs no translation for this: `repeat: sequence: … until:`
+            # is the same do-while with the same semantics. The condition
+            # therefore travels with the LOOP, and the body is read exactly as
+            # if the loop were not there.
+            rec = {"id": me, "until": g, "cadence": 0}
+            self._loop.append(rec)
+            n_before = len(self.out)
+            try:
+                tail = self._statements(st.get("s"), wake + wakes, gate, me,
+                                        per_device, True)
+            finally:
+                self._loop.pop()
+            # Whatever delay is left AFTER the last promise in the body is the
+            # wait that closes the loop. Shared by reference, so every promise
+            # already built inside it sees this.
+            last = self.out[-1].after if len(self.out) > n_before else 0
+            rec["cadence"] = max(0, (tail or 0) - last)
+        elif t in ("while", "for"):
+            # `while` tests BEFORE the body and `for` is counted, so for those
+            # the condition genuinely does gate the body. Unchanged.
             self._statements(st.get("s"), wake + wakes, gate + (g,), me,
                              per_device, True)
         elif t == "switch":

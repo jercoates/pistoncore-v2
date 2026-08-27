@@ -2188,6 +2188,25 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 raise NotYetImplemented(
                     "for-each over a device list requires PyScript", **ctx)
             out.append(node)
+        elif n["kind"] == "loop":
+            # HA'S OWN do-while. webCoRE's `repeat { … } until <cond>` and HA's
+            # `repeat: sequence: … until:` are the same construct with the same
+            # semantics — body first, test after — so this is kept, not
+            # translated. The trailing wait the author put at the end of the
+            # body is the loop's cadence and is emitted as the last step, which
+            # is where it was written.
+            body = _resolve_actions(n["body"], resolver, ctx)
+            if n.get("cadence"):
+                body = body + [{"kind": "delay",
+                                "delay_seconds": int(n["cadence"])}]
+            if not n.get("until"):
+                # A repeat with no exit is an automation that never ends.
+                raise NotYetImplemented(
+                    "a loop with no exit condition requires PyScript", **ctx)
+            out.append({"kind": "repeat",
+                        "until": [_condition(c, resolver, ctx)
+                                  for c in n["until"]],
+                        "body": body})
         elif n["kind"] == "break":
             # HA's `stop` ends the whole sequence, not just the enclosing loop —
             # not the same thing. PyScript has a real `break`.
