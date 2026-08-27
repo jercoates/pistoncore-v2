@@ -1910,3 +1910,59 @@ transliteration and Jeremy has called it each time.
 **Still refusing on purpose:** per-device fan-out, so nothing half-built is in
 the path. `a12`/`a66` also refuse because their cadence is a VARIABLE, not a
 constant — a repeat with no delay would be a busy loop.
+
+
+### BUILD STATE, 2026-08-26 end of session — what exists and what is next
+
+**BUILT AND VERIFIED:**
+- `emit_intent.set_questions()` — the BASE recogniser. Finds all 17 corpus
+  pistons that ask "which of these match", with their layers. `report_groups()`
+  now DELEGATES to it (verified identical on all 154 before switching).
+- `emit_yaml.set_filter(over, attr, test_cond, resolver, ctx)` — the HA answer
+  to the base question. Returns `{entities, names, count}` expressions.
+  Bench-verified 2026-08-26 against three real contact sensors:
+  two open -> `'Test — Basement Window, Test — Front Door'`, count 2; none open
+  -> `''` and 0; a non-existent entity is silently dropped by `expand()`.
+- the reader understands `repeat … until` as an EXIT with a cadence, and
+  `emit_yaml` renders HA's `repeat: sequence: … until:` with a native `delay:`.
+
+**⚠ `set_filter` IS NOT WIRED IN YET.** It has no caller. That is deliberate —
+a half-wired version of this pushed three pistons to PyScript earlier the same
+day — but it means the symbol is currently an orphan. Wire it or remove it;
+do not leave it.
+
+**THE WIRING, and ORDER IS PART OF IT (Jeremy, 2026-08-26: *"remember order is
+important they need to land in the right place"* — HARD_RULES §10).**
+Emit promises in `.order` and nothing has to move. Measured on
+`11_Carbon_Monoxide_detected`:
+
+     1  reset message
+     2  DESCRIBE           -> one filter expression
+     3  notify
+     4  notify email
+        repeat every 30s until all clear:
+     5    reset message
+     6    DESCRIBE         -> the filter again
+     7    THEN-DO volume   -> runs ONCE, not per device
+     8    THEN-DO speak    -> "...detected from {{ matched }}"
+     9    lights on
+    10    flash
+    11    notify
+          delay 30
+    12  notify cleared
+
+Only two things change: the per-device walk becomes one expression, and 7-8
+stop repeating. Every promise keeps its position.
+
+**THEN DO has two sub-cases and they need different emission:**
+- the action targets the MATCHING devices themselves (`a03`: which are unlocked
+  -> lock them) -> one service call with a templated `entity_id` from
+  `set_filter(...)["entities"]`. **Whether HA accepts a templated entity_id in
+  a service target is NOT yet bench-verified — ask HA before building it.**
+- the action targets something else and NAMES the matched devices in text (the
+  detector family: speak to the speakers) -> `set_filter(...)["names"]` into the
+  message.
+
+**DO NOT resolve `$device` for these.** HA's version of the shape has no cursor.
+The announcement names the matched SET; there is nothing for `$device` to
+become. Every attempt to substitute for it has been transliteration.

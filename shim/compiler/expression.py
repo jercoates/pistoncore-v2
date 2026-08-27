@@ -674,6 +674,11 @@ class JinjaTranspiler(ExprTranspiler):
     # {attribute: (slot expression, sample entity)} when one iteration carries
     # SEVERAL of the device's entities -- see the device() reader below.
     loop_slots: dict = {}
+    # THE ANSWER TO "WHICH OF THESE MATCH", when the piston's per-device walk
+    # has been replaced by asking the SET. Not a cursor: there is no "current
+    # device" in HA's version of that shape, so `$device` used as a value means
+    # the matched devices, named.
+    matched_names: str = ""
 
     """Emits HA Jinja2 for the same AST the Python backend consumes."""
 
@@ -766,6 +771,12 @@ class JinjaTranspiler(ExprTranspiler):
         # NAME when it is used as a value, so ask HA for the same thing.
         # Set by _accumulate_loop (emit_yaml) — see accumulate.j2 for why the
         # loop exists at all rather than the loop being unrolled.
+        # ASKING THE SET, NOT WALKING IT. When the loop has been replaced by a
+        # filter, `$device` as a value is the matched devices' names — the
+        # answer to the question, not a position in a walk. Checked BEFORE the
+        # loop branch because a shape can only be one or the other.
+        if low == "$device" and self.matched_names:
+            return self.matched_names
         if low == "$device" and self.loop_entity:
             return f"device_name({self.loop_entity})"
         if name.startswith("$"):

@@ -677,6 +677,34 @@ def plan(piston: dict, piston_id: str, piston_name: str):
     # flow rather than of any single promise.
     reports = report_groups(promises)
     report_for = {id(p): var for var, _s, adds, _u in reports for p in adds}
+    # THE "THEN DO" LAYER. A per-device promise that is not part of the
+    # accumulation is the piston ACTING on the answer — "which detectors are in
+    # alarm, and announce them". It runs ONCE over the matched set, not once per
+    # device, so it carries the set question with it for the emitter to answer.
+    # Only the case that names the set in TEXT is handled; one that targets the
+    # matched devices themselves (`lock`) still refuses — see below.
+    then_do_for = {}
+    for _q in set_questions(promises):
+        if not _q["then_do"]:
+            continue
+        # THE TEST HAS ALREADY BEEN TAKEN OFF THE PROMISE by the cursor pass
+        # above, so re-deriving it here finds nothing. Ask the map that pass
+        # built rather than putting the cursor back on the promise just to read
+        # it off again.
+        _t = next((cursor_test[id(_m)]
+                   for _m in (_q["describe"] + _q["then_do"])
+                   if id(_m) in cursor_test), _q["test"])
+        if _t is None:
+            continue
+        _leafnode = _leaf(_t)
+        if _leafnode is None:
+            continue
+        _attr = _q["attr"] or _t.subject.attribute
+        for _p in _q["then_do"]:
+            if tuple(_p.devices) == ("$device",):
+                continue          # targets the matched set — not handled yet
+            then_do_for[id(_p)] = {"over": list(_q["over"]),
+                                   "attr": _attr, "test": _leafnode}
 
     # Anything the intent layer carries but emission cannot yet honour must
     # refuse, not approximate: a per-device fan-out, a repeat, or a poll
@@ -715,6 +743,9 @@ def plan(piston: dict, piston_id: str, piston_name: str):
             # transliteration, and the half-built version of it pushed three
             # pistons to PyScript (2026-08-26). Left refusing until the set
             # form is built.
+            if b.per_device and id(b) in then_do_for:
+                flat.append(b)
+                continue
             if b.per_device:
                 return _refuse("per-device fan-out")
             if b.loop is not None:
@@ -814,6 +845,8 @@ def plan(piston: dict, piston_id: str, piston_name: str):
                 clock = int(m.after or 0)
             node = (_report_node(m, report_for[id(m)], cursor_test.get(id(m)))
                     if id(m) in report_for else _task(m))
+            if node is not None and id(m) in then_do_for:
+                node["matched"] = then_do_for[id(m)]
             if node is None:
                 return _refuse("an action could not be expressed")
             if runs and runs[-1]["gates"] == extra and gap <= 0                     and runs[-1]["loop"] is m.loop:
@@ -880,8 +913,18 @@ def plan(piston: dict, piston_id: str, piston_name: str):
                 return _refuse("loop exit not expressible: %s" % (exc,))
             if not until:
                 return _refuse("the loop has no expressible exit condition")
-            then.append({"kind": "loop", "until": until,
-                         "cadence": int(lp.get("cadence") or 0), "body": body})
+            # THE NODE SHAPE THE EMITTER ALREADY HAS. `analyze` has built
+            # `{kind: loop, conditions, count, until, body}` since the
+            # transcoder was written and `_resolve_actions` renders it — a
+            # second shape for the same thing is exactly the duplication that
+            # made the operator tables drift (CLAUDE.md). The cadence is the
+            # trailing wait, emitted as the last step of the body because that
+            # is where the author wrote it.
+            if int(lp.get("cadence") or 0):
+                body = body + [{"kind": "delay",
+                                "delay_seconds": int(lp["cadence"])}]
+            then.append({"kind": "loop", "conditions": until, "body": body,
+                         "count": None, "until": True})
 
         branches.append({
             "stmt_id": _sid(lead.source, i), "kind": "if", "tcp": "c",

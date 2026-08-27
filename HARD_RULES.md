@@ -680,6 +680,60 @@ The YAML comment matters beyond convenience: it travels with the automation and
 survives PistonCore being deleted ([[no_runtime_pistoncore_dependency]]), so the
 reasoning is readable by whoever owns the file later, with no tooling.
 
+## 12d. ACT-THEN-VERIFY NEEDS TIME, AND THE TIMEOUT IS THE FAILURE
+**(Jeremy, 2026-08-27: *"a delay for things to happen in this type of
+automation is usualy going to be a good thing"*.)**
+
+When a piston ACTS on a device and then CHECKS that same device to see whether
+it worked, Home Assistant must be given time before the check. A service call
+returns before the hardware answers, so an immediate re-check reads the state
+from BEFORE the action — the verification is not merely racy, it is
+meaningless.
+
+**`01_Alarm_Arming_checks` is the worked example, and the piston SAYS SO** —
+this is not inferred from hardware knowledge, it is written in the message
+text, which is why reading the whole piston matters:
+
+     9  "...Attempting to lock door(s)"
+    17  lock
+    18  "🚨 Unable to Lock Door(s) 🚨"
+    20  notify "...Please Return Home and Manually Lock Door(s)"
+    21  notify "🚪🔒 Door(s) Locked 🔒🚪"
+
+"Unable to lock" is only true if the lock was GIVEN TIME TO TRY. Emitting the
+re-check immediately does not just risk a false alarm — it makes the piston's
+own sentence untrue.
+
+**Jeremy's hardware, which the code cannot tell you:** the deadbolts are motor
+driven with force sensing. A door that is not shut tight stalls the motor and
+the bolt does not throw. The second check is reporting a REAL PHYSICAL
+CONDITION, not a timing artifact, and it is why the piston is worth its
+complexity.
+
+**HA's form, and the timeout IS the fault signal** — not a guessed delay:
+
+    - action: lock.lock
+      target: {entity_id: "{{ ...the unlocked ones... }}"}
+    - wait_template: "{{ ...none still unlocked... }}"
+      timeout: "00:00:30"
+      continue_on_timeout: true
+    - if: <any still unlocked> -> "Unable to Lock"
+      else:                    -> "Doors Locked"
+
+**⛔ SCOPE — DO NOT GENERALISE THIS INTO "ADD DELAYS".** It applies ONLY where
+the piston acts and then verifies the same device. It must NEVER be added to an
+announce path: the CO alarm's whole safety gain is re-triggering in 12 seconds
+instead of 30 (§14, and Jeremy: *"waiting gets people dead"*).
+
+**STILL UNKNOWN, do not guess either:** how long to wait (a number Jeremy's
+hardware knows, not the piston), and whether a partial result — three locked,
+one stalled — should send both messages or only the failure.
+
+**The detector is NOT built and NOT proven.** A first crude attempt matched 41
+pistons and was plainly over-counting (it matched promises in unrelated
+branches, with negative gaps). The shape is real and visible in the arming
+pistons; its frequency is unmeasured.
+
 ## 12c. A PISTONCORE VARIABLE IS NOT A HOME ASSISTANT VARIABLE
 **(Jeremy, 2026-08-26: *"those are a veriable in pistoncore not ha. do you get
 the distiction yet?"*)**

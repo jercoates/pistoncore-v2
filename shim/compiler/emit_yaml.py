@@ -70,6 +70,9 @@ _PISTON: dict = {"cur": None}
 # The device a per-device loop is currently visiting, while its body is being
 # resolved. Empty outside a loop. See _jinja().
 _LOOP: dict = {"entity": None, "sample": None, "slots": {}}
+# The matched-set answer for the promise being emitted. Same carriage as
+# _LOOP and _PISTON: one mechanism, not a parameter through every caller.
+_MATCHED: dict = {"names": None}
 
 # Media-file playback config (from settings.json "media"), loaded per compile.
 # Lets a piston's old Hubitat "Play track" URL (x-file-cifs://...) reach HA:
@@ -1786,6 +1789,23 @@ def _has_wait(nodes) -> bool:
 def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
     out = []
     for n in nodes:
+        # THE ANSWER TO THE SET QUESTION, for a promise that ACTS on it.
+        # `matched` is attached by emit_intent when a per-device action has been
+        # collapsed to run ONCE over the devices that match rather than once per
+        # device. Set fresh for every node — never left set for the next one,
+        # which is why it is assigned here rather than around a call.
+        _MATCHED["names"] = None
+        _m = n.get("matched") if isinstance(n, dict) else None
+        if _m:
+            _f = set_filter(_m.get("over"), _m.get("attr"), _m.get("test"),
+                            resolver, ctx)
+            if _f is None:
+                # Not resolvable means "not this shape", never "broken" — but
+                # an action that names nothing must not be emitted, so this
+                # falls through to the other band rather than lying.
+                raise NotYetImplemented(
+                    "could not work out which devices match", **ctx)
+            _MATCHED["names"] = _f["names"]
         if n["kind"] == "task":
             # A CUSTOM (`cm`) task whose name is an HA service. The dot is the
             # discriminator, NOT the cm flag: webCoRE also sets cm on commands
@@ -2188,25 +2208,6 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
                 raise NotYetImplemented(
                     "for-each over a device list requires PyScript", **ctx)
             out.append(node)
-        elif n["kind"] == "loop":
-            # HA'S OWN do-while. webCoRE's `repeat { … } until <cond>` and HA's
-            # `repeat: sequence: … until:` are the same construct with the same
-            # semantics — body first, test after — so this is kept, not
-            # translated. The trailing wait the author put at the end of the
-            # body is the loop's cadence and is emitted as the last step, which
-            # is where it was written.
-            body = _resolve_actions(n["body"], resolver, ctx)
-            if n.get("cadence"):
-                body = body + [{"kind": "delay",
-                                "delay_seconds": int(n["cadence"])}]
-            if not n.get("until"):
-                # A repeat with no exit is an automation that never ends.
-                raise NotYetImplemented(
-                    "a loop with no exit condition requires PyScript", **ctx)
-            out.append({"kind": "repeat",
-                        "until": [_condition(c, resolver, ctx)
-                                  for c in n["until"]],
-                        "body": body})
         elif n["kind"] == "break":
             # HA's `stop` ends the whole sequence, not just the enclosing loop —
             # not the same thing. PyScript has a real `break`.
@@ -2232,6 +2233,7 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             out.append(dict(n))
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
+    _MATCHED["names"] = None
     return out
 
 
@@ -2900,6 +2902,8 @@ def _jinja(resolver: Resolver, ctx: dict, piston: dict | None) -> JinjaTranspile
     if _LOOP["entity"]:
         jt.loop_entity, jt.loop_sample = _LOOP["entity"], _LOOP["sample"]
         jt.loop_slots = _LOOP["slots"] or {}
+    if _MATCHED["names"]:
+        jt.matched_names = _MATCHED["names"]
     return jt
 
 
@@ -3608,6 +3612,69 @@ def _accumulate_loop(n: dict, resolver: Resolver, ctx: dict):
         return None
     return report_variables(var, n.get("devices") or [], attr, test_cond,
                             src["e"], resolver, ctx)
+
+
+# Jinja's `selectattr` names its comparisons in words. This is the SPELLING of
+# the canonical operators, not a second table of them: the mapping is keyed by
+# what `_EQUALITY_OPS`/`_NUMERIC_OPS` produce, so a change there flows through
+# and a webCoRE operator missing from those is still missing here.
+_SELECTATTR_TEST = {"==": "eq", "!=": "ne", "<": "lt", "<=": "le",
+                    ">": "gt", ">=": "ge"}
+
+
+def set_filter(over, attr, test_cond, resolver, ctx):
+    """"Which of THESE match?" as one Home Assistant expression.
+
+    THIS IS THE BASE OF THE WHOLE ALARM/REPORT FAMILY, and it is the thing
+    webCoRE cannot say. webCoRE walks the devices one at a time because it has
+    no way to ask a list a question; HA asks the list. So the per-device walk
+    does not get translated — it stops existing (Jeremy, 2026-08-26, repeatedly:
+    *"the ha way of asking witch devices match this"*).
+
+    Returns {"entities": <expr for the matching entity ids>,
+             "names": <expr for their DEVICE names, comma joined>,
+             "count": <expr for how many match>} or None when the shape does
+    not resolve — which means "not this shape", never "broken".
+
+    VERIFIED on the bench 2026-08-26 against three real contact sensors:
+    two open ->  'Test — Basement Window, Test — Front Door', count 2;
+    none open -> '' and 0. `expand()` also DROPS an entity that does not exist,
+    which is the fail-closed behaviour a missing device needs — no phantom row,
+    no error (HARD_RULES §20).
+
+    `device_name()` and not `friendly_name`: the entity's name carries the
+    capability suffix ("Front Door Contact"), the device's does not.
+    """
+    if not attr or test_cond is None:
+        return None
+    try:
+        entities = resolver.entities_for_attr(list(over or []), attr, ctx)
+    except CompilerError:
+        return None
+    if not entities:
+        return None
+    co = test_cond.get("co")
+    op = _EQUALITY_OPS.get(co) or _NUMERIC_OPS.get(co)
+    jinja_test = _SELECTATTR_TEST.get(op)
+    value = test_cond.get("value")
+    if jinja_test is None or value is None:
+        return None
+    # webCoRE'S WORD IS NOT HA'S STATE. "detected" is `on` to a binary_sensor,
+    # "wet" is `on` to a moisture one. `ha_state_value` is the compiler's one
+    # answer to that and every other comparison already uses it; comparing the
+    # raw webCoRE word matched nothing and the announcement came out as
+    # "Carbon Monoxide detected from" with no devices after it — verified on
+    # the bench 2026-08-26 before this line existed.
+    mapped = resolver.ha_state_value(attr, value)
+    lst = "[" + ", ".join("'%s'" % e for e in entities) + "]"
+    matched = ("expand(%s) | selectattr('state', '%s', '%s')"
+               % (lst, jinja_test, mapped))
+    return {
+        "entities": "%s | map(attribute='entity_id') | list" % matched,
+        "names": ("%s | map(attribute='entity_id') | map('device_name') "
+                  "| join(', ')" % matched),
+        "count": "%s | list | count" % matched,
+    }
 
 
 def report_variables(var, drefs, attr, test_cond, expr, resolver, ctx):
