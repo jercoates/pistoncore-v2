@@ -41,7 +41,7 @@ the hard-won HA knowledge already lives (HARD_RULES §8).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from . import routing
 
@@ -1901,7 +1901,21 @@ def behaviours(promises: list) -> list:
             j, q, qe = pair
             used.add(i)
             used.add(j)
-            out.append(Held(target=tuple(p.devices), engage=p, release=q,
+            # THE HOLD TAKES THE WAIT -- it is MOVED, never copied (Jeremy,
+            # 2026-08-29: "make the compiler see the for step satisfied the
+            # wait ... we just need to make the 2 parts talk").
+            #
+            # `release_after` becomes the trigger's `for:`. Leaving `after` on
+            # the release promise as well made the action emitter render the
+            # SAME wait a second time as a `delay:`, so the piston waited
+            # twice: 12_Cave_motion_V2 asks for 2 minutes and the deployed
+            # automation held the light for 4 (`for: "00:02:00"` on the group
+            # trigger, then `delay: 120` again in the action). Nothing was
+            # wrong with either half on its own -- the shape reader and the
+            # statement emitter each honoured the wait, neither knowing the
+            # other had.
+            out.append(Held(target=tuple(p.devices), engage=p,
+                            release=replace(q, after=0),
                             subject=pe[3], operator=pe[1],
                             engage_values=pe[2], release_values=qe[2],
                             release_after=q.after))

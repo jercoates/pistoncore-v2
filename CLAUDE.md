@@ -45,10 +45,24 @@ tokens, addresses or capabilities that file already gives you.
 1. **The webCoRE sources.** `dashboard/` (especially js/app.js and
    js/modules/piston.module.js) and `reference/webcore_source_reference.groovy` are ground
    truth for the API contract and the piston JSON format.
-2. **The spec docs:** SHIM_API_SPEC.md, DEVICE_PAYLOAD_SPEC.md, PISTON_JSON_REFERENCE.md,
-   COMPILER_DECISIONS_HOLDING.md. They describe #1 plus PistonCore decisions. If a spec
-   disagrees with the sources, the spec is wrong — fix the spec, tell Jeremy.
-3. **Code.** Code is presumed wrong and being caught up to the specs, never the reverse.
+2. **Contract specs — what PistonCore must MATCH, because the other side will not move:**
+   SHIM_API_SPEC.md, DEVICE_PAYLOAD_SPEC.md, PISTON_JSON_REFERENCE.md. They describe #1
+   plus the PistonCore decisions needed to meet it. **These are current and trustworthy
+   (Jeremy, 2026-08-28).** If one disagrees with the sources, the spec is wrong — fix the
+   spec, tell Jeremy. **Code that disagrees with these is a bug.**
+3. **Design docs — how we are CURRENTLY choosing to build the compiler:** COMPILER_SPEC.md,
+   COMPILER_DECISIONS_HOLDING.md, COMPILER_TODO.md, HA_LIMITATIONS.md. These are HISTORY
+   AND METHOD, not law: what was chosen and why, on a date. **They are known to lag the
+   code (Jeremy, 2026-08-28: "we are way out of spec in the code, we are inventing as we
+   go").** COMPILER_SPEC.md says so of itself (§00 — everything below the constant "is
+   METHOD, and is expected to pivot"). Read them for reasoning, never as a description of
+   what the compiler does today.
+   *Exception: COMPILER_SPEC §00's constant is law and outranks the rest of that file.*
+4. **Code.** Against a CONTRACT spec (#2), code is presumed wrong. Against a DESIGN doc
+   (#3), **the code is presumed CURRENT.** The compiler is being invented as it goes and
+   the code is where the invention lands first — so code doing something the design docs
+   do not mention is an unwritten decision, not an error. `git log -S "<the thing>"`, then
+   ASK. **Bringing code "back in line" with a design doc is how real decisions get undone.**
 
 COMPILER_DECISIONS_HOLDING.md is a **holding doc, not a spec** — it drifts and adapts as
 problems and solutions are found. Update it freely (with Jeremy's sign-off on decisions);
