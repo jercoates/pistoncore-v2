@@ -159,6 +159,45 @@ def _attribute_value_maps(vocab: dict) -> dict:
     return out
 
 
+def _attribute_value_maps_by_shape(vocab: dict) -> dict:
+    """webCoRE value -> HA value, kept PER SHAPE instead of flattened.
+
+    ONE STATE CANNOT HAVE ONE ANSWER IN HOME ASSISTANT (Jeremy, 2026-08-28:
+    *"one state one answer is not possible in ha ... i have been telling all of
+    you chats to use it this way for all of the translations to not have this
+    problem anywhere"*). The same webCoRE word means a different HA word
+    depending on WHAT THE ENTITY IS: "not present" is `off` on a presence
+    binary_sensor and `not_home` on a device_tracker. `_attribute_value_maps`
+    collapses every shape into one table and keeps whichever the vocab happens
+    to list first, so the other shapes get the wrong word — silently. On
+    a03_Alarm_Not_Set that wrote `not_home` at a binary_sensor: it compiled,
+    it passed HA's config check, and it could never fire.
+
+    So the shapes are kept apart, keyed by (domain, device_class). The vocab is
+    unchanged and remains the only place the words live — this just stops
+    throwing away which shape each one belongs to. Falls back to the flat table
+    when the caller has no entity to identify the shape with, so nothing that
+    worked before changes.
+    """
+    out: dict = {}
+    for attr, entry in vocab.get("attributes", {}).items():
+        if not isinstance(entry, dict):
+            continue
+        for rule in (entry.get("ha") or []):
+            if not isinstance(rule, dict):
+                continue
+            dom = rule.get("domain")
+            if not dom:
+                continue
+            for dc in (rule.get("device_class") or [None]):
+                for ha_value, wc_value in (rule.get("map") or {}).items():
+                    if ha_value == "*":
+                        continue
+                    (out.setdefault(attr, {}).setdefault((dom, dc), {})
+                        .setdefault(str(wc_value), ha_value))
+    return out
+
+
 def _system_value_maps(vocab: dict) -> dict:
     """webCoRE value -> HA value for the stand-in entities behind system
     variables ($alarmSystemStatus and friends)."""
@@ -690,6 +729,7 @@ class Resolver:
         vocab = _load_vocab()
         self.vocab = vocab
         self.value_maps = _attribute_value_maps(vocab)
+        self.value_maps_by_shape = _attribute_value_maps_by_shape(vocab)
         self.system_values = _system_value_maps(vocab)
         self.alarm_commands = _alarm_service_map(vocab)
         self.command_ha = _load_command_ha(vocab)
@@ -1268,7 +1308,33 @@ class Resolver:
                 return True
         return False
 
-    def ha_state_value(self, attr: str, value):
+    def ha_state_value(self, attr: str, value, entity: str | None = None):
+        """The HA word for a webCoRE word — FOR THE SHAPE BEING WRITTEN.
+
+        ASK WHAT THE ENTITY IS, THEN ASK THE VOCAB WHAT ITS WORDS MEAN
+        (Jeremy, 2026-08-28). The entity's domain and device_class say which
+        shape it is; the vocab says what that shape's words mean. Neither half
+        is guessed and neither lives in this file — HA supplies the shape, the
+        vocab supplies the meaning.
+
+        `entity` is optional so the callers that have no entity in hand behave
+        exactly as before. Passing one is strictly better: without it the flat
+        table answers for whichever shape the vocab listed first, which is how
+        "not present" became `not_home` on a binary_sensor and produced an
+        automation that could never fire.
+        """
+        if entity:
+            by_shape = self.value_maps_by_shape.get(attr) or {}
+            if by_shape:
+                domain = str(entity).split(".", 1)[0]
+                dc = self.declares(entity, "device_class")
+                # device_class first: a presence binary_sensor and a motion one
+                # are different shapes of the same domain. Then the domain on
+                # its own, for rules that name no device_class.
+                for key in ((domain, dc), (domain, None)):
+                    hit = by_shape.get(key)
+                    if hit and value in hit:
+                        return hit[value]
         return self.value_maps.get(attr, {}).get(value, value)
 
     def opposite_state(self, value: str) -> str | None:

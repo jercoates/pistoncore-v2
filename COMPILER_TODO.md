@@ -789,6 +789,56 @@ to score against except Jeremy).
       at save time, and a decision on which of the two announcement surfaces it
       uses (HARD_RULES §11 — no third surface).
 
+- [x] **DO NOT MERGE THE PICKER RULES INTO THE `ha` ARRAYS — MEASURED AND
+      BACKED OUT, 2026-08-28.** The entry below says deriving one from the
+      other "would lose information". That is right, and here is the number,
+      because a session that only reads the sentence will try it anyway (this
+      one did). Making the picker ALSO read the `ha` arrays and union the
+      result — additive, nothing deleted, no winner picked — changes the device
+      payload like this:
+
+          ultravioletIndex   +180 devices    every sensor claims to measure UV
+          lqi                +180 devices
+          hue/saturation/
+            color/colorTemp   +25 lights     regardless of colour support
+          powerSource         -14 devices    LOST
+          raw custom attrs    lost on every device that gained a curated one
+
+      The cause: an `ha` rule names a domain (and sometimes a device_class) and
+      nothing else, while a picker rule can gate on HA's feature bits and
+      colour modes. A domain-only rule is therefore BROADER, so the union
+      offers colour on lights that have none and UV on every sensor. And a
+      device that gains a curated attribute stops emitting the raw one, so
+      pistons already bound to raw names break.
+
+      ABANDONED FILES ARE STUBBED, NOT DELETED (Jeremy, 2026-08-28). Both
+      `data/customize/picker_capability_map.json` and
+      `.../classic/value_maps.json` now contain only a do-not-recreate note.
+      Deleting leaves no evidence, so the next session finds a stale reference,
+      decides the file went missing, and writes a new one.
+
+- [ ] **THE REFERENCE GROOVY IS THE SMARTTHINGS webCoRE. Absence from it is
+      NOT proof (2026-08-28).** `reference/webcore_source_reference.groovy` has
+      no `audioVolume` capability and no `setVolume` command — the capability
+      list is alphabetical and the slot after `audioNotification` is empty. It
+      is genuinely not there. But Jeremy's corpus uses `setVolume` 93 times,
+      because his pistons come from HUBITAT webCoRE and his Sonos/Alexa
+      advertise it through the device's own feed (the editor shows it with the
+      `device` badge, not as dictionary vocabulary). Two confident wrong
+      conclusions were built on "it is not in the groovy" in one session.
+      CLAUDE.md's authority chain still holds — that file is ground truth for
+      the API contract and the piston JSON format — but it is ONE platform's
+      dictionary, and the corpus is the other platform's.
+
+      Related, and it dissolved a "disagreement" the entry below counts:
+      `level` and `volume` on a speaker are not a conflict. `level` is
+      webCoRE's own (`musicPlayer` -> `setLevel`, used once in the corpus, in
+      a42_Kitchen_Volume_Controller, on a device variable named `Speaker`);
+      `volume` is the DEVICE's word arriving through the raw feed. Both real,
+      different lanes. The "13 of 17 differ" count is soft — three have
+      dissolved on inspection so far (presence, level/volume, and a battery
+      one that was an artefact of ignoring the `*` wildcard domain).
+
 - [ ] **The picker rules and the `ha` arrays still state the condition twice.**
       `_picker_rules` answers "which attributes does this device expose"; the
       per-attribute `ha` arrays answer "how is that attribute read, and how do

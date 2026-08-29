@@ -871,8 +871,28 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
     _eq = co in ("is", "changes_to", "gets", "arrives")
     _ne = co in ("is_not", "changes_away_from")
     if _plain and (_eq or _ne) and not _is_number(cond["value"]):
-        _st = str(resolver.ha_state_value(cond["attr"], cond["value"]))
-        _all = len(entities) == 1 or cond.get("aggregation") == "all"
+        _st = str(resolver.ha_state_value(cond["attr"], cond["value"], entities[0] if entities else None))
+        # NEGATION FLIPS THE AGGREGATION -- De Morgan, and getting it wrong
+        # inverts the piston (found 2026-08-28 on a03_Alarm_Not_Set, whose
+        # gate is "if ANY door is not locked"):
+        #
+        #     ANY  is not X  ==  NOT( ALL are X )      -> not(state([a,b,c]))
+        #     ALL are not X  ==  NOT( ANY is  X )      -> not(or(each is X))
+        #
+        # Wrapping `not` around the node the POSITIVE case would have built
+        # produces the other one every time, so both negative cases came out
+        # as each other. On a03 that meant "if any door is unlocked" compiled
+        # to "if EVERY door is unlocked": two doors locked and one hanging
+        # open -- the case the piston exists for -- and it would skip the
+        # lock and arm the alarm anyway. Affects every is_not /
+        # changes_away_from over more than one device, not just that piston.
+        #
+        # One entity is unaffected: ALL and ANY of one thing are the same
+        # thing, which is why this survived so long.
+        _want_all = cond.get("aggregation") == "all"
+        if _ne:
+            _want_all = not _want_all
+        _all = len(entities) == 1 or _want_all
         # `condition: state` with a list means ALL of them, so "any of these is
         # X" is HA's `or` over one state condition each -- still editable rows,
         # which a template never is. Restricting this to the all-case (the
@@ -933,11 +953,11 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         if _is_number(value):
             parts = [_num_cmp(e, op, value) for e in reads]
         else:
-            mapped = resolver.ha_state_value(cond["attr"], value)
+            mapped = resolver.ha_state_value(cond["attr"], value, entities[0] if entities else None)
             parts = [f"{e} {op} '{mapped}'" for e in reads]
     elif co in ("is_any_of", "is_not_any_of", "is_any"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
-        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v, entities[0] if entities else None)) for v in vals]
         neg = "not " if co == "is_not_any_of" else ""
         parts = [f"{neg}{e} in {mapped!r}" for e in reads]
     elif co in ("is_even", "is_odd"):
@@ -966,7 +986,7 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
                  for r, s in zip(reads, stamps)]
     elif co in ("stays", "stays_equal_to", "stays_any_of", "was", "was_not"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
-        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v, entities[0] if entities else None)) for v in vals]
         hold = _duration_hms(cond.get("duration")) or "00:00:00"
         h, m, sec = (int(x) for x in hold.split(":"))
         secs = h * 3600 + m * 60 + sec
@@ -982,14 +1002,14 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         # unreachable — which is why no emitted automation ever carried an
         # event_type test, and every gesture on a button ran every branch
         # bound to it.
-        mapped = resolver.ha_state_value(cond["attr"], cond["value"])
+        mapped = resolver.ha_state_value(cond["attr"], cond["value"], entities[0] if entities else None)
         parts = [f"{e} == '{mapped}'" for e in reads]
     elif co in ("changes_away_from", "stays_away_from"):
-        mapped = resolver.ha_state_value(cond["attr"], cond["value"])
+        mapped = resolver.ha_state_value(cond["attr"], cond["value"], entities[0] if entities else None)
         parts = [f"{e} != '{mapped}'" for e in reads]
     elif co in ("changes_to_any_of", "stays_any_of"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
-        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v, entities[0] if entities else None)) for v in vals]
         parts = [f"{e} in {mapped!r}" for e in reads]
     elif co in ("changes", "changed"):
         parts = ["true"]      # the automation only ran because something changed
@@ -1039,10 +1059,10 @@ def _condition(cond: dict, resolver: Resolver, ctx: dict) -> dict:
         parts = [_num_cmp(e, OPS[co], cond["value"]) for e in reads]
     elif co in ("was_equal_to", "was_any_of"):
         vals = cond["value"] if isinstance(cond["value"], list) else [cond["value"]]
-        mapped = [str(resolver.ha_state_value(cond["attr"], v)) for v in vals]
+        mapped = [str(resolver.ha_state_value(cond["attr"], v, entities[0] if entities else None)) for v in vals]
         parts = [f"{e} in {mapped!r}" for e in reads]
     elif co == "is_different_than":
-        mapped = resolver.ha_state_value(cond["attr"], cond["value"])
+        mapped = resolver.ha_state_value(cond["attr"], cond["value"], entities[0] if entities else None)
         parts = [f"{e} != '{mapped}'" for e in reads]
     else:
         raise NotYetImplemented(
@@ -1431,7 +1451,8 @@ def _trigger_node(trig: dict, resolver: Resolver, ctx: dict, trig_id=None) -> di
     hold = _duration_hms(trig.get("duration"))
 
     def mapped(v):
-        return resolver.ha_state_value(attr, v)
+        return resolver.ha_state_value(
+            attr, v, entities[0] if entities else None)
 
     def as_list(v):
         return [mapped(x) for x in v] if isinstance(v, list) else [mapped(v)]
@@ -1648,7 +1669,7 @@ def _promote(cond: dict, resolver: Resolver, ctx: dict, trig_id=None) -> dict | 
             return None
         entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
         return {"kind": "state", "entities": entities,
-                "to": resolver.ha_state_value(cond["attr"], value), "id": trig_id}
+                "to": resolver.ha_state_value(cond["attr"], value, entities[0] if entities else None), "id": trig_id}
     if co in ("is_less_than", "is_less_than_or_equal_to"):
         entities = resolver.entities_for_attr(cond["devices"], cond["attr"], ctx)
         return {"kind": "numeric_state", "entities": entities,
@@ -2057,6 +2078,36 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
             if not resolver.has_command_binding(n["devices"], n["command"], ctx) \
                     and resolver.passthrough(n["devices"], ctx):
                 out.append(_driver_command(n, resolver, ctx))
+                continue
+            # THE ACTION ACTS ON THE MATCHED SET. webCoRE walks a list one
+            # device at a time because a hub can only ask one device at a
+            # time; HA asks the list and acts on the answer, so the walk does
+            # not get translated — it stops existing. `$device` is therefore
+            # not a device reference to resolve (there is nothing for it to
+            # become) but a stand-in for "the ones that came back matching",
+            # and that is exactly what `set_filter` returns.
+            #
+            # The SERVICE still comes from the set's own devices: which HA
+            # service `lock` means is a property of the locks, not of the
+            # cursor. Asking the cursor is what produced "no HA service
+            # mapping for command 'lock' on domain 'unknown'" — an error that
+            # sent the user to edit a vocab entry that was already correct.
+            _set = n.get("matched") if isinstance(n, dict) else None
+            if _set and _set.get("targets_set"):
+                _f = set_filter(_set.get("over"), _set.get("attr"),
+                                _set.get("test"), resolver, ctx)
+                if _f is None:
+                    raise NotYetImplemented(
+                        "could not work out which devices match", **ctx)
+                _ents = resolver.entities_for_command(
+                    list(_set.get("over") or []), n["command"], ctx)
+                _service, _spec = resolver.service_spec(
+                    n["command"], _ents[0], ctx)
+                out.append({"kind": "service", "service": _service,
+                            "target_template": "{{ %s }}" % _f["entities"],
+                            "data": _spec_data(_spec, n["params"], ctx,
+                                               resolver, _ents[0])
+                                    if _spec else None})
                 continue
             try:
                 entities = resolver.entities_for_command(n["devices"], n["command"], ctx)
@@ -3425,7 +3476,7 @@ def _loop_condition(cond: dict, resolver: Resolver, ctx: dict):
     except CompilerError:
         return None
     if enum_op is not None:
-        mapped = resolver.ha_state_value(attr, value)
+        mapped = resolver.ha_state_value(attr, value, entities[0])
         # SINGLE quotes, not json. The template wraps every value_template in
         # DOUBLE quotes, so a double-quoted string inside one ends the scalar
         # and produces YAML that will not parse. Same rule the accumulate
@@ -3665,7 +3716,10 @@ def set_filter(over, attr, test_cond, resolver, ctx):
     # raw webCoRE word matched nothing and the announcement came out as
     # "Carbon Monoxide detected from" with no devices after it — verified on
     # the bench 2026-08-26 before this line existed.
-    mapped = resolver.ha_state_value(attr, value)
+    # ASK WHAT THE ENTITY IS. The set being filtered is one shape, so the
+    # word compared against must be that shape's word — `on` for a presence
+    # binary_sensor, `home` for a device_tracker.
+    mapped = resolver.ha_state_value(attr, value, entities[0])
     lst = "[" + ", ".join("'%s'" % e for e in entities) + "]"
     matched = ("expand(%s) | selectattr('state', '%s', '%s')"
                % (lst, jinja_test, mapped))
@@ -3772,7 +3826,7 @@ def report_variables(var, drefs, attr, test_cond, expr, resolver, ctx):
             # while everything still compiles.
             reading = shape.replace(f"'{sample}'", jt.loop_entity)
             if enum_op is not None:
-                mapped = resolver.ha_state_value(attr, value)
+                mapped = resolver.ha_state_value(attr, value, sample)
                 test = f"{reading} {enum_op} {_json_dumps(str(mapped))}"
             else:
                 test = _num_cmp(reading, num_op, value)
@@ -4034,7 +4088,7 @@ def _emit_branch(br: dict, resolver: Resolver, piston_id: str, piston_name: str,
                             continue
                         if entities:
                             node = {"kind": "state", "entities": entities,
-                                    "to": resolver.ha_state_value(cond["attr"], value),
+                                    "to": resolver.ha_state_value(cond["attr"], value, entities[0] if entities else None),
                                     "id": trig_id}
                 if node:
                     node["for"] = hold

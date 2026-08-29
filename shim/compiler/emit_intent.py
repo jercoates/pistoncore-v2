@@ -701,10 +701,17 @@ def plan(piston: dict, piston_id: str, piston_name: str):
             continue
         _attr = _q["attr"] or _t.subject.attribute
         for _p in _q["then_do"]:
-            if tuple(_p.devices) == ("$device",):
-                continue          # targets the matched set — not handled yet
+            # TWO SUB-CASES, ONE QUESTION. The action either NAMES the matched
+            # devices in its text ("announce them") or ACTS ON them ("lock
+            # them"). Both need the same answer — which of this set match — so
+            # both carry the same record; `targets_set` says which slot the
+            # answer lands in, the message or the target. `$device` as the
+            # target is not a device to resolve: it IS the matched set, and
+            # HA takes it as one templated target (bench-verified 2026-08-28,
+            # mixed lock states, empty match a clean no-op).
             then_do_for[id(_p)] = {"over": list(_q["over"]),
-                                   "attr": _attr, "test": _leafnode}
+                                   "attr": _attr, "test": _leafnode,
+                                   "targets_set": tuple(_p.devices) == ("$device",)}
 
     # Anything the intent layer carries but emission cannot yet honour must
     # refuse, not approximate: a per-device fan-out, a repeat, or a poll

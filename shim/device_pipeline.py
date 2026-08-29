@@ -385,7 +385,56 @@ def _entity_signals(entity_id: str, state: dict | None, capability_map: dict | N
     }
 
 
-def attribute_keys_for_entity(signals: dict, capability_map: dict) -> set[str]:
+_HA_RULE_ATTRS: dict = {}
+
+
+def _attrs_from_ha_rules(vocab: dict) -> dict:
+    """(domain, device_class) -> webCoRE attributes, from the `ha` rules that
+    NAME A DEVICE_CLASS — and only those.
+
+    ONE FACT, ONE PLACE (Jeremy, 2026-08-28: *"if there are 2 places for vocab
+    it is wrong"*). `_picker_rules` and the per-attribute `ha` arrays both
+    state a domain/device_class condition, and where both do, it is the same
+    sentence written twice — which drifted: a Hubitat-bridged presence sensor
+    is `binary_sensor` + device_class `presence`, which `attributes.presence.ha`
+    has always said and the picker copy never did.
+
+    WHY device_class-BEARING RULES ONLY, measured 2026-08-28. An `ha` rule is a
+    READ rule — "if an entity has this attribute, here is how to read it" — not
+    a claim that the device HAS it. Most name a domain and nothing else:
+    `ultravioletIndex` is `('sensor', None)`, `hue` is `('light', None)`.
+    Merging those made every sensor claim to measure UV (+180 devices) and
+    every light claim colour (+25), because the picker gates colour on HA's
+    colour-mode bits and a domain-only rule cannot say that. A rule that names
+    a device_class IS precise enough to be an existence claim, and those are
+    exactly the ones the picker restates.
+
+    So the duplicated half comes from here, and the picker keeps only what it
+    alone can express: feature bits, colour modes, units, declaration attrs.
+    """
+    key = id(vocab)
+    hit = _HA_RULE_ATTRS.get(key)
+    if hit is not None:
+        return hit
+    out: dict = {}
+    for attr, entry in (vocab.get("attributes") or {}).items():
+        if not isinstance(entry, dict):
+            continue
+        for rule in (entry.get("ha") or []):
+            if not isinstance(rule, dict):
+                continue
+            dom, dcs = rule.get("domain"), rule.get("device_class")
+            if not dom or dom in ("*", "_any") or not dcs:
+                continue          # domain-only rules are READ rules, not
+                                  # existence claims -- see above
+            for dc in dcs:
+                out.setdefault((dom, dc), set()).add(attr)
+    _HA_RULE_ATTRS[key] = out
+    return out
+
+
+def attribute_keys_for_entity(signals: dict, capability_map: dict,
+                              vocab: dict | None = None) -> set[str]:
     """
     Evaluate the vocab's _picker_rules rule types for one entity's
     signals, per the file's own documented algorithm (_meta.usage):
@@ -394,9 +443,14 @@ def attribute_keys_for_entity(signals: dict, capability_map: dict) -> set[str]:
     supported_color_modes is absent, light-only) -> by_declaration_attr ->
     by_unit_fallback. Union of all matching rules' attributes.
     """
+    from_ha: set = set()
+    if vocab is not None and signals.get("device_class"):
+        from_ha = set(_attrs_from_ha_rules(vocab).get(
+            (signals["domain"], signals["device_class"]), ()))
+
     domain_rules = capability_map["domains"].get(signals["domain"])
     if not domain_rules:
-        return set()
+        return set(from_ha)
 
     keys: set[str] = set()
 
@@ -441,7 +495,7 @@ def attribute_keys_for_entity(signals: dict, capability_map: dict) -> set[str]:
             if signals["unit_of_measurement"] == rule["unit_match"]:
                 keys.update(rule["attributes"])
 
-    return keys
+    return keys | from_ha
 
 
 # ---------------------------------------------------------------------------
@@ -525,7 +579,7 @@ def _process_group(group: dict, state_map: dict, entity_map: dict, picker_map: d
     for entity_id in member_ids_sorted:
         state = state_map.get(entity_id)
         signals = _entity_signals(entity_id, state, picker_map)
-        entity_attr_keys = attribute_keys_for_entity(signals, picker_map)
+        entity_attr_keys = attribute_keys_for_entity(signals, picker_map, vocab)
 
         # Stage 3.3 — command-only capabilities, evaluated independently of
         # the attribute lane above (a capability here has no attribute to
