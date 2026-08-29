@@ -188,8 +188,29 @@ def piston_get(request: Request):
     # `variable.n in $scope.localVars` with no guard — absent map = TypeError
     # on EVERY digest = all global-variable values silently render blank
     # (found via live repro 2026-07-19, "@Speakers_All = ;" bug).
-    response: dict = {"data": {"piston": piston, "meta": meta,
-                               "subscriptions": subscriptions, "localVars": {}}}
+    # SERVE THE WHOLE SHAPE, not the keys the editor seemed to need. webCoRE's
+    # own piston get() (webcore-piston.groovy :1160-1180) returns meta, piston,
+    # systemVars, subscriptions, state, logging, stats, logs, trace, localVars,
+    # memory, lastExecuted and nextSchedule. This endpoint served four of them,
+    # and the editor reads the others UNGUARDED — so each missing key is a
+    # TypeError waiting for the piston that touches it. Two have already fired,
+    # five weeks apart and diagnosed separately:
+    #   localVars  (2026-07-19) — every global rendered blank, "@Speakers_All = ;"
+    #   systemVars (2026-08-28) — Save silently did nothing on any piston using
+    #                             $currentEventDevice as a device; 20 corpus
+    #                             pistons use that or $previousEventDevice.
+    # Adding one key at a time and waiting for the next report is what made the
+    # second one take a day to find, so the rest are served now. Values are
+    # what webCoRE returns for a piston that has never run — there is no engine
+    # here, and `piston/activity` is what fills these in live.
+    response: dict = {"data": {
+        "piston": piston, "meta": meta,
+        "subscriptions": subscriptions,
+        "localVars": {},
+        "systemVars": fixtures.system_vars(),
+        "state": {}, "logging": 0, "stats": {}, "logs": [], "trace": {},
+        "memory": "unknown", "lastExecuted": 0, "nextSchedule": 0,
+    }}
     if client_db_version != fixtures.DB_VERSION:
         response["dbVersion"] = fixtures.DB_VERSION
         response["db"] = fixtures.get_db()
@@ -265,7 +286,7 @@ async def piston_activity(request: Request):
         "lastExecuted": last_executed,
         "nextSchedule": 0,
         "schedules": [],
-        "systemVars": {},
+        "systemVars": fixtures.system_vars(),
     }})
 
 

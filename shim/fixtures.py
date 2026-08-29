@@ -243,5 +243,30 @@ def get_db() -> dict:
     return _db_cache
 
 
+def system_vars() -> dict:
+    """`systemVars` for the dashboard — every webCoRE system variable, from the
+    vocab's own systemVariables block.
+
+    WITHOUT IT THE EDITOR'S SAVE DIES SILENTLY. piston.module.js:288 assigns
+    `$scope.systemVars = response.data.systemVars` on every piston load, and
+    validateItem (:5548) then does `$scope.globalVars && $scope.systemVars[x]`
+    — it guards on globalVars and reads systemVars. With systemVars undefined
+    and any global defined, that throws, the exception aborts save() before it
+    posts, and the Save button does nothing at all: no message, no request, and
+    the piston stays as the empty shell piston/create made. Reproduced on two
+    independent installs, so it is the contract, not one bench.
+
+    The webCoRE source serves this from the piston's own get()
+    (webcore-piston.groovy :1170, `getSystemVariablesAndValues`). The NAME is
+    what the editor validates against; the value is null until a piston has
+    run, which is faithful here because nothing runs pistons. Types come from
+    the vocab so a rename there reaches the editor without touching this."""
+    out: dict = {}
+    for name, spec in (get_db().get("systemVariables") or {}).items():
+        if isinstance(spec, dict):
+            out[name] = {"t": spec.get("type") or "string", "v": None}
+    return out
+
+
 def new_piston_name() -> dict:
     return {"name": "New Piston"}
