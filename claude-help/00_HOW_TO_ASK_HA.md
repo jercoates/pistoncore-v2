@@ -149,6 +149,8 @@ HEAD
 ' }}` -> `HEAD`; `{{ 'A
 B' }}` -> `A
 B` |
+| fire a device's own DRIVER command (`playSound`, `take`, `clearImages`) | `hubitat.send_command` with **`entity_id` = ANY entity of that device** — a read-only sensor works, because it names the DEVICE, not the thing being driven — plus `command` (the driver's own name) and `args` as a plain string | 2026-08-29, HEARD: the Chime played sound 12 from a plain HA automation (`entity_id: sensor.chime_sound_effects, command: playSound, args: "12"`); hub logged `command-playSound`. `light.turn_on` on the same device only sets the level and does NOT play |
+| play a SPECIFIC sound on a chime/siren | `siren.turn_on` with **`tone`** (needs supported_features bit 4). The valid tones are on the ENTITY as `available_tones`, never in the service schema -- a service schema is per-DOMAIN and cannot know one device's sounds. Same shape for `effect`/`effect_list`, `preset_mode`/`preset_modes`, `source`/`source_list`. This is the path that works for EVERY HA user; `hubitat.send_command` only exists while a Hubitat bridge does | 2026-08-29, read from HA's own service registry (Jeremy: PistonCore is for HA users, most of whom have no Hubitat -- a bridge-only answer serves almost nobody) |
 | create a helper entity from the API | **you cannot** — `/api/config/input_boolean/config/<id>` is 404. Write a YAML package file, then call `<domain>.reload` | 2026-08-03 |
 
 ## WHAT THIS FILE DOES NOT COVER

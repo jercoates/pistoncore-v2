@@ -1035,6 +1035,30 @@ def _service_params(spec: dict, features: int = 0,
             param["t"] = "enum"
             param["o"] = [o.get("value", o) if isinstance(o, dict) else o
                           for o in options]
+        # THE VALID VALUES LIVE ON THE ENTITY, NOT ON THE SERVICE.
+        # A service schema is per-DOMAIN, so it cannot know one device's
+        # tones or another's effects -- HA declares `tone`, `effect`,
+        # `preset_mode`, `source` and friends as free TEXT and publishes the
+        # real list on the entity (`available_tones`, `effect_list`,
+        # `preset_modes`, `source_list`). Nothing joined the two, so every one
+        # of them reached the editor as a box you had to type a magic word
+        # into -- a chime's sound, a light's effect, a fan's preset.
+        #
+        # Hubitat handed webCoRE the driver's own constraints, which is why
+        # those were dropdowns there. This is the same information, read from
+        # the place HA keeps it.
+        #
+        # By CONVENTION, not by a table of integrations: HA names the list
+        # after the field (`effect` -> `effect_list`, `preset_mode` ->
+        # `preset_modes`). `tone` is the one that breaks the pattern.
+        if param["t"] == "string" and not param.get("o"):
+            for candidate in (f"{field}_list", f"{field}s",
+                              "available_tones" if field == "tone" else ""):
+                values = attributes.get(candidate) if candidate else None
+                if isinstance(values, (list, tuple)) and values:
+                    param["t"] = "enum"
+                    param["o"] = [str(v) for v in values]
+                    break
         if meta.get("required"):
             param["m"] = 1          # Hubitat's '*' mandatory marker
         if meta.get("description"):
@@ -1205,7 +1229,8 @@ def entity_attributes(states: dict, entity_ids: list[str], domain: str) -> dict:
 
 def ha_service_commands(services: dict, domains: set[str],
                         states: dict | None = None,
-                        members: list[str] | None = None) -> list[dict]:
+                        members: list[str] | None = None,
+                        integration_domains: set[str] | None = None) -> list[dict]:
     """Every HA service for these domains, as webCoRE command entries.
 
     EXPERIMENT (Jeremy, 2026-07-27): feed HA in the way Hubitat fed drivers —
@@ -1218,12 +1243,30 @@ def ha_service_commands(services: dict, domains: set[str],
     Set PISTONCORE_FEED_HA_SERVICES=0 to turn it back off without a rebuild."""
     out = []
     live = states is not None and members is not None
+    integration_domains = integration_domains or set()
     for domain in sorted(domains):
+        # A DEVICE'S OWN INTEGRATION COUNTS AS ONE OF ITS DOMAINS.
+        # A bridged device can do things its ENTITY domains cannot express:
+        # Hubitat keeps every driver command behind `hubitat.send_command`,
+        # in the `hubitat` domain -- never one of the device's entity domains,
+        # so the raw feed never looked there and the editor offered no way to
+        # reach them. Measured 2026-08-29 on Jeremy's Chime: the command list
+        # showed light.*/switch.* and nothing else, while `playSound 12` (the
+        # thing his doorbell piston actually does) had no entry at all.
+        #
+        # ENTITY-SCOPED ONLY. A service that declares fields but no
+        # `entity_id` acts on the hub rather than the device (`set_hsm`,
+        # `set_hub_mode`) and must never appear as a command on a device.
+        integration = domain in integration_domains
         features = entity_features(states, members, domain) if live else 0
         attributes = entity_attributes(states, members, domain) if live else {}
         for name in sorted((services.get(domain) or {})):
             spec = (services[domain] or {}).get(name) or {}
-            if live and not _service_allowed(spec, domain, features):
+            if integration:
+                fields = spec.get("fields") or {}
+                if fields and "entity_id" not in fields:
+                    continue
+            elif live and not _service_allowed(spec, domain, features):
                 continue
             entry = {"n": f"{domain}.{name}"}
             params = _service_params(spec, features, attributes) if live \
@@ -1304,6 +1347,12 @@ def build_device_payload(registries: dict) -> dict:
             try:
                 domains = {e.split(".", 1)[0]
                            for e in resolution_entry.get("members") or []}
+                _svc = registries.get("services") or {}
+                _integrations = {_entity_platforms.get(e)
+                                 for e in resolution_entry.get("members") or []}
+                _integrations = {p for p in _integrations
+                                 if p and p in _svc and p not in domains}
+                domains |= _integrations
                 known = {c.get("n") for c in device_obj.get("c") or []}
                 # HYBRID: don't offer a raw service the vocab already reaches
                 # on this device — the friendly command is better (it reads
@@ -1313,7 +1362,7 @@ def build_device_payload(registries: dict) -> dict:
                 members = resolution_entry.get("members") or []
                 extra = [c for c in ha_service_commands(
                     registries.get("services") or {}, domains,
-                    states=state_map, members=members)
+                    states=state_map, members=members, integration_domains=_integrations)
                     if c["n"] not in known]
                 device_obj["c"] = (device_obj.get("c") or []) + extra
             except Exception:

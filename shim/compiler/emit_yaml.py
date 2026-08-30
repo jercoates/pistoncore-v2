@@ -2285,6 +2285,42 @@ def _resolve_actions(nodes: list, resolver: Resolver, ctx: dict) -> list:
         else:
             raise NotYetImplemented(f"action node '{n['kind']}' not compiled yet", **ctx)
     _MATCHED["names"] = None
+    return _fold_message_steps(out)
+
+
+def _fold_message_steps(nodes: list) -> list:
+    """Consecutive assignments to the SAME variable become ONE template.
+
+    HOME ASSISTANT STRIPS EVERY RENDERED TEMPLATE, so a message assembled over
+    several `variables:` steps loses the leading and trailing whitespace of
+    EACH step -- a header ending in a blank line, stored on its own, arrives
+    without it and the first device lands on the same line as the time.
+    Measured 2026-08-25; reproduced on 38_Low_Battery_Check 2026-08-29, where
+    the notification read "11:36 PMSmoke LR - 45%".
+
+    Folding makes those newlines INTERIOR, so only the outermost edges of the
+    single remaining template are trimmed -- the documented fix in
+    claude-help/00_HOW_TO_ASK_HA.md.
+
+    CONSERVATIVE ON PURPOSE: only a later step embedding the earlier one as
+    exactly `{{ VAR }}` is folded; any other shape is left alone rather than
+    rewritten by guesswork.
+    """
+    out: list = []
+    for n in nodes:
+        prev = out[-1] if out else None
+        if (prev is not None
+                and n.get("kind") == "variables" and prev.get("kind") == "variables"
+                and len(n.get("vars") or {}) == 1 and len(prev.get("vars") or {}) == 1):
+            (name, tpl), = n["vars"].items()
+            (pname, ptpl), = prev["vars"].items()
+            ref = "{{ " + str(name) + " }}"
+            if (name == pname and isinstance(tpl, str) and isinstance(ptpl, str)
+                    and ref in tpl):
+                inner = ptpl[1:-1] if (len(ptpl) > 1 and ptpl[0] == ptpl[-1] == '"') else ptpl
+                out[-1] = {"kind": "variables", "vars": {name: tpl.replace(ref, inner)}}
+                continue
+        out.append(n)
     return out
 
 
