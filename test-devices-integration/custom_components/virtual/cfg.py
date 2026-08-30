@@ -289,6 +289,26 @@ def _make_unique_id():
     return f'{uuid.uuid4()}.{COMPONENT_DOMAIN}'
 
 
+def unique_in_device(seen: dict, name: str) -> str:
+    """Number repeated names so each entity in a device keeps its own identity.
+
+    An entity's identity is filed under its NAME. Two entities in one device that
+    end up with the same name file under one key, so on every load the second one
+    looks itself up, finds nothing, concludes it is new, and is registered again.
+    Measured on a clean HA 2026-08-19: a device with three unnamed motion sensors
+    grew by two dead rows on EVERY restart, without limit, until the install hit
+    HA's 10,000-entity ceiling. Entities named uniquely were byte-stable across
+    the same restarts.
+
+    Repeats get numbered so the lookup stays one-to-one. The FIRST entity keeps
+    the bare name, which is what makes this safe to ship: every identity that
+    works today is left exactly as it is. Deriving identity from the name instead
+    would change it for EVERY existing entity and orphan the lot on upgrade.
+    """
+    seen[name] = seen.get(name, 0) + 1
+    return name if seen[name] == 1 else f"{name} {seen[name]}"
+
+
 def _make_suffix(platform, device_class):
     """Make a suitable suffix for an unnamed entity.
     
@@ -337,6 +357,10 @@ class BlendedCfg(object):
                 CONF_NAME: _make_name(device_name)
             })
 
+            # Names have to be unique WITHIN a device, because that is the key an
+            # entity's identity is filed under. See unique_in_device().
+            seen_names = {}
+
             for entity in entities:
 
                 platform = entity.pop(CONF_PLATFORM)
@@ -347,6 +371,7 @@ class BlendedCfg(object):
                 name = entity.get(CONF_NAME, None)
                 if name is None:
                     name = f"{device_name} {_make_suffix(platform, device_class)}"
+                name = unique_in_device(seen_names, name)
 
                 # Look up unique id for this device. If not there this is a new
                 # device.

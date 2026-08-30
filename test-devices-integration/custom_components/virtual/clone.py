@@ -47,6 +47,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
+from .cfg import unique_in_device
 from .const import COMPONENT_DOMAIN, ATTR_GROUP_NAME
 from .pistoncore_manage import _find_entry, _mutate_and_reload
 
@@ -233,9 +234,7 @@ def build_clone_spec(hass: HomeAssistant, device_id: str) -> tuple[str, list[dic
         state = hass.states.get(entry.entity_id)
         attrs = dict(state.attributes) if state else {}
 
-        base = _capability_name(entry, attrs, label)
-        seen[base] = seen.get(base, 0) + 1
-        unique = base if seen[base] == 1 else f"{base} {seen[base]}"
+        unique = unique_in_device(seen, _capability_name(entry, attrs, label))
 
         # Capability part only. The DEVICE name is prepended by the caller — see
         # _async_clone_device for why that is not cosmetic.

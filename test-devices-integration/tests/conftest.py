@@ -35,6 +35,12 @@ class FakeConfigEntries:
 
     def __init__(self):
         self.reloads = 0
+        self.entries = []
+        # Platforms that refuse to unload: False for "reported failure",
+        # ValueError for the one HA actually raises ("never loaded").
+        self.unload_returns_false = set()
+        self.unload_raises = set()
+        self.unloaded = []
 
     async def async_reload(self, entry_id):
         self.reloads += 1
@@ -42,11 +48,35 @@ class FakeConfigEntries:
         # without this the race being tested cannot occur.
         await asyncio.sleep(0)
 
+    def async_entries(self, domain):
+        return list(self.entries)
+
+    async def async_forward_entry_unload(self, entry, platform):
+        self.unloaded.append(platform)
+        await asyncio.sleep(0)
+        if platform in self.unload_raises:
+            raise ValueError("Config entry was never loaded!")
+        return platform not in self.unload_returns_false
+
+
+class FakeConfig:
+    """Just enough of hass.config for code that resolves a file under /config."""
+
+    def __init__(self, config_dir):
+        self.config_dir = pathlib.Path(config_dir)
+
+    def path(self, *parts) -> str:
+        target = self.config_dir.joinpath(*parts)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        return str(target)
+
 
 class FakeHass:
-    def __init__(self):
+    def __init__(self, config_dir=None):
         self.data = {}
         self.config_entries = FakeConfigEntries()
+        # Only the tests that load a group's config need this.
+        self.config = FakeConfig(config_dir) if config_dir else None
 
 
 class FakeEntry:
