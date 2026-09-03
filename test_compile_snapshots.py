@@ -251,20 +251,26 @@ def _synthetic_maps(piston):
         attr_b, cmd_b = _bindings("dev0")
         reso[":synthetic:"] = {"name": "Device 0",
                                "attr_bindings": attr_b, "cmd_bindings": cmd_b}
-    # A command passthrough, as a real bridged/remote/vacuum device has — the
-    # route a DRIVER command takes when Home Assistant has no vocabulary for it
-    # (device_pipeline.detect_passthroughs). Without this the harness never
-    # exercises that path, and every driver command in the corpus just errors.
+    # A command passthrough, derived the way production derives it, never
+    # fabricated: entity domain only (device_pipeline.passthrough_for). A device
+    # with no `remote.`/`vacuum.` member gets none, and a driver command it
+    # cannot express errors — the correct result, not a gap in the harness.
+    #
+    # A harness that invents the path under test cannot fail.
     for hashed_id, entry in reso.items():
         if hashed_id == "$system":
             continue
-        members = entry.get("attr_bindings") or {}
+        members = sorted((entry.get("attr_bindings") or {}).values())
+        target = next((m for m in members
+                       if m.split(".", 1)[0] in ("remote", "vacuum")), None)
+        if not target:
+            continue
         entry["passthrough"] = {
-            "service": "hubitat.send_command",
+            "service": f"{target.split('.', 1)[0]}.send_command",
             "command_field": "command",
-            "args_field": "args",
+            "args_field": "params" if target.startswith("vacuum.") else None,
             "target_field": "entity_id",
-            "entity_id": sorted(members.values())[0] if members else "switch.dev0",
+            "entity_id": target,
         }
     reso["$system"] = dict(_SYSTEM_ENTITIES)
     return reso, globals_map

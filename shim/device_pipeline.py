@@ -1113,22 +1113,25 @@ def detect_passthroughs(services: dict) -> dict:
     return out
 
 
-def passthrough_for(passthroughs: dict, members: list, entity_platforms: dict) -> dict | None:
+def passthrough_for(passthroughs: dict, members: list) -> dict | None:
     """Which passthrough can drive this device's driver commands.
 
-    Entity DOMAIN wins first — a `remote.` entity is driven by
-    remote.send_command, a `vacuum.` by vacuum.send_command. Otherwise fall
-    back to the INTEGRATION that supplied the entity, which is how a bridged
-    device reaches its hub (hubitat.send_command). Returns the spec plus the
-    entity to aim it at."""
+    ENTITY DOMAIN ONLY. A `remote.` entity is driven by remote.send_command, a
+    `vacuum.` by vacuum.send_command — core Home Assistant services, published
+    by HA for that entity, available to every user.
+
+    A device's abilities come from Home Assistant, never through a bridge. An
+    integration's own passthrough addresses the hub rather than the device, and
+    exists only while that bridge does, so it is an answer that serves only the
+    people who have one. It also accepts any command name, which means a wrong
+    one reports success and does nothing.
+
+    A command with no Home Assistant route returns None here rather than being
+    sent somewhere it can be neither checked nor seen to fail."""
     for entity_id in members or []:
         domain = entity_id.split(".", 1)[0]
         if domain in passthroughs:
             return {**passthroughs[domain], "entity_id": entity_id}
-    for entity_id in members or []:
-        platform = entity_platforms.get(entity_id)
-        if platform and platform in passthroughs:
-            return {**passthroughs[platform], "entity_id": entity_id}
     return None
 
 
@@ -1229,8 +1232,7 @@ def entity_attributes(states: dict, entity_ids: list[str], domain: str) -> dict:
 
 def ha_service_commands(services: dict, domains: set[str],
                         states: dict | None = None,
-                        members: list[str] | None = None,
-                        integration_domains: set[str] | None = None) -> list[dict]:
+                        members: list[str] | None = None) -> list[dict]:
     """Every HA service for these domains, as webCoRE command entries.
 
     EXPERIMENT (Jeremy, 2026-07-27): feed HA in the way Hubitat fed drivers —
@@ -1243,30 +1245,12 @@ def ha_service_commands(services: dict, domains: set[str],
     Set PISTONCORE_FEED_HA_SERVICES=0 to turn it back off without a rebuild."""
     out = []
     live = states is not None and members is not None
-    integration_domains = integration_domains or set()
     for domain in sorted(domains):
-        # A DEVICE'S OWN INTEGRATION COUNTS AS ONE OF ITS DOMAINS.
-        # A bridged device can do things its ENTITY domains cannot express:
-        # Hubitat keeps every driver command behind `hubitat.send_command`,
-        # in the `hubitat` domain -- never one of the device's entity domains,
-        # so the raw feed never looked there and the editor offered no way to
-        # reach them. Measured 2026-08-29 on Jeremy's Chime: the command list
-        # showed light.*/switch.* and nothing else, while `playSound 12` (the
-        # thing his doorbell piston actually does) had no entry at all.
-        #
-        # ENTITY-SCOPED ONLY. A service that declares fields but no
-        # `entity_id` acts on the hub rather than the device (`set_hsm`,
-        # `set_hub_mode`) and must never appear as a command on a device.
-        integration = domain in integration_domains
         features = entity_features(states, members, domain) if live else 0
         attributes = entity_attributes(states, members, domain) if live else {}
         for name in sorted((services.get(domain) or {})):
             spec = (services[domain] or {}).get(name) or {}
-            if integration:
-                fields = spec.get("fields") or {}
-                if fields and "entity_id" not in fields:
-                    continue
-            elif live and not _service_allowed(spec, domain, features):
+            if live and not _service_allowed(spec, domain, features):
                 continue
             entry = {"n": f"{domain}.{name}"}
             params = _service_params(spec, features, attributes) if live \
@@ -1297,7 +1281,6 @@ def build_device_payload(registries: dict) -> dict:
     entity_map = {e["entity_id"]: e for e in registries["entities"]}
     groups = group_entities(registries)
     _passthroughs = detect_passthroughs(registries.get("services") or {})
-    _entity_platforms = {e["entity_id"]: e.get("platform") for e in registries["entities"]}
 
     devices: dict[str, dict] = {}
     resolution_map: dict[str, dict] = {}
@@ -1347,12 +1330,6 @@ def build_device_payload(registries: dict) -> dict:
             try:
                 domains = {e.split(".", 1)[0]
                            for e in resolution_entry.get("members") or []}
-                _svc = registries.get("services") or {}
-                _integrations = {_entity_platforms.get(e)
-                                 for e in resolution_entry.get("members") or []}
-                _integrations = {p for p in _integrations
-                                 if p and p in _svc and p not in domains}
-                domains |= _integrations
                 known = {c.get("n") for c in device_obj.get("c") or []}
                 # HYBRID: don't offer a raw service the vocab already reaches
                 # on this device — the friendly command is better (it reads
@@ -1362,9 +1339,30 @@ def build_device_payload(registries: dict) -> dict:
                 members = resolution_entry.get("members") or []
                 extra = [c for c in ha_service_commands(
                     registries.get("services") or {}, domains,
-                    states=state_map, members=members, integration_domains=_integrations)
+                    states=state_map, members=members)
                     if c["n"] not in known]
                 device_obj["c"] = (device_obj.get("c") or []) + extra
+                # OFFERING A COMMAND AND BINDING IT ARE THE SAME ACT.
+                # The compiler resolves a command through cmd_bindings and
+                # nothing else, so a raw service that is offered here without
+                # a binding is unreachable later: the device reads as unable to
+                # do the thing the editor just offered. Bind each one to a
+                # member that HA says can actually run it -- same question
+                # _service_allowed already answers, asked per entity rather
+                # than across the group, so the call lands on the entity that
+                # supports it rather than on whichever came first.
+                bindings = resolution_entry.setdefault("cmd_bindings", {})
+                svc = registries.get("services") or {}
+                for c in extra:
+                    dom, _, name = c["n"].partition(".")
+                    spec = ((svc.get(dom) or {}).get(name)) or {}
+                    for m in members:
+                        if m.split(".", 1)[0] != dom:
+                            continue
+                        if _service_allowed(spec, dom,
+                                            entity_features(state_map, [m], dom)):
+                            bindings[c["n"]] = m
+                            break
             except Exception:
                 logger.exception("HA-service feed skipped for %s",
                                  group.get("display_name"))
@@ -1372,8 +1370,7 @@ def build_device_payload(registries: dict) -> dict:
         # How this device's DRIVER commands can be reached — the integration's
         # own command passthrough, if it has one. Recorded here because the
         # compiler has no access to the service registry, only this map.
-        through = passthrough_for(_passthroughs, resolution_entry.get("members") or [],
-                                 _entity_platforms)
+        through = passthrough_for(_passthroughs, resolution_entry.get("members") or [])
         if through:
             resolution_entry["passthrough"] = through
 
