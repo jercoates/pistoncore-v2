@@ -15,6 +15,7 @@ Started EMPTY on purpose. Nothing inherited from earlier claims.
 | piston | verified | band | what was proven | not proven |
 |---|---|---|---|---|
 | `12_Cave_motion_V2` | 2026-08-29 | yaml | lux 250 + motion on the SECOND sensor turns the light ON; lux 5000 leaves it OFF; clearing motion turns it off after **125s** (asks 2 min) | — |
+| `12_Cave_motion_V2` | 2026-10-12 | yaml | rebuilt bench, bound to virtual devices only. lux 250 + motion -> light ON; lux 5000 + motion -> stays OFF (control); motion clears -> still on at 90s, OFF by 135s (asks 2 min); **motion returning at 45s cancels the turn-off and the light stays on** -- same result as webCoRE's running wait, reached by HA's `for: 00:02:00` trigger instead | nothing outstanding |
 | `25_Entry_Motion_V2` | 2026-08-29 | yaml | lux 200 + motion ON; lux 3000 stays OFF; off after **62s** (asks 1 min). Single sensor, `for:` on the entity not a group | — |
 | `33_Hall_motion` | 2026-08-29 | yaml | lux 200 + motion ON; lux 3000 stays OFF; off after **301s** (asks 5 min). Own sensor, no cross-fire | — |
 | `35_Kitchen_Motion` | 2026-08-29 | yaml | lux 200 + motion ON; lux 3000 stays OFF; off after **301s** (asks 5 min). Own sensor and light | — |

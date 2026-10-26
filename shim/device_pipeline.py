@@ -1113,25 +1113,33 @@ def detect_passthroughs(services: dict) -> dict:
     return out
 
 
-def passthrough_for(passthroughs: dict, members: list) -> dict | None:
+def passthrough_for(passthroughs: dict, members: list,
+                    entity_platforms: dict) -> dict | None:
     """Which passthrough can drive this device's driver commands.
 
-    ENTITY DOMAIN ONLY. A `remote.` entity is driven by remote.send_command, a
+    ENTITY DOMAIN FIRST. A `remote.` entity is driven by remote.send_command, a
     `vacuum.` by vacuum.send_command — core Home Assistant services, published
     by HA for that entity, available to every user.
 
-    A device's abilities come from Home Assistant, never through a bridge. An
-    integration's own passthrough addresses the hub rather than the device, and
-    exists only while that bridge does, so it is an answer that serves only the
-    people who have one. It also accepts any command name, which means a wrong
-    one reports success and does nothing.
+    THE BRIDGE LAST. Failing that, the integration that supplied the entity may
+    accept the driver's own command name, which is how a bridged device reaches
+    an ability its integration never told HA about. It addresses the hub rather
+    than the device, exists only while that bridge does, and accepts any
+    command name — a wrong one reports success and does nothing. So it is a
+    last resort: the emitters reach it only after the vocab and the device's own
+    HA services have both been tried, which stops it absorbing a command HA can
+    perform properly.
 
-    A command with no Home Assistant route returns None here rather than being
-    sent somewhere it can be neither checked nor seen to fail."""
+    Neither available returns None, and the command fails visibly."""
     for entity_id in members or []:
         domain = entity_id.split(".", 1)[0]
         if domain in passthroughs:
             return {**passthroughs[domain], "entity_id": entity_id}
+    # the bridge, last (see docstring)
+    for entity_id in members or []:
+        platform = entity_platforms.get(entity_id)
+        if platform and platform in passthroughs:
+            return {**passthroughs[platform], "entity_id": entity_id}
     return None
 
 
@@ -1281,6 +1289,8 @@ def build_device_payload(registries: dict) -> dict:
     entity_map = {e["entity_id"]: e for e in registries["entities"]}
     groups = group_entities(registries)
     _passthroughs = detect_passthroughs(registries.get("services") or {})
+    _entity_platforms = {e["entity_id"]: e.get("platform")
+                         for e in registries["entities"]}
 
     devices: dict[str, dict] = {}
     resolution_map: dict[str, dict] = {}
@@ -1370,7 +1380,9 @@ def build_device_payload(registries: dict) -> dict:
         # How this device's DRIVER commands can be reached — the integration's
         # own command passthrough, if it has one. Recorded here because the
         # compiler has no access to the service registry, only this map.
-        through = passthrough_for(_passthroughs, resolution_entry.get("members") or [])
+        through = passthrough_for(_passthroughs,
+                                  resolution_entry.get("members") or [],
+                                  _entity_platforms)
         if through:
             resolution_entry["passthrough"] = through
 
