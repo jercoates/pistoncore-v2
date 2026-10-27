@@ -135,6 +135,7 @@ function renderCloneList(q) {
     // push notifier on its own).
     const notifyAs = el("select", "td-clone-notify");
     notifyAs.title = "Lets this copy receive a push or a text message";
+    notifyAs.setAttribute("aria-label", `Notifies as, for ${t.label}`);
     [["", "Notifies as: —"], ["app", "Notifies as: push"], ["sms", "Notifies as: text"]]
       .forEach(([value, text]) => {
         const opt = el("option"); opt.value = value; opt.textContent = text;

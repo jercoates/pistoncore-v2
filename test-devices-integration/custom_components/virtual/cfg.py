@@ -195,17 +195,38 @@ async def _save_user_data(file_name, devices):
     })
 
 
-async def _load_user_data(file_name):
-    entities = await _async_load_yaml(file_name)
-    # An empty or unparseable file yields None, which used to crash setup here
-    # and take the whole integration down with it. Degrade to "no devices"
-    # instead — the file is recoverable, an integration that won't load is not.
-    if not isinstance(entities, dict):
-        if entities is not None:
+async def _async_read_user_file(file_name):
+    """(devices, trustworthy) for a group's devices file.
+
+    An empty or unparseable file used to crash setup, which took the whole
+    integration down with it, so it degrades to "no devices" — the file is
+    recoverable, an integration that won't load is not. But "no devices" read from
+    a file that is merely UNREADABLE is not the same as a file that says so, and
+    anything that REMOVES things because the file no longer lists them must be told
+    the difference. `trustworthy` is False for a file that is blank, does not parse
+    or is not a mapping (a copy that is still being written looks exactly like
+    that), and True for one that is missing (a new group) or parses.
+    """
+    try:
+        async with aiofiles.open(file_name, 'r') as handle:
+            parsed = parse_yaml(await handle.read())
+    except FileNotFoundError:
+        return {}, True
+    except Exception as err:
+        _LOGGER.warning("virtual: could not read %s (%s); using no devices and "
+                        "leaving the registry alone", file_name, err)
+        return {}, False
+    if not isinstance(parsed, dict):
+        if parsed is not None:
             _LOGGER.warning("virtual: %s is not a mapping; ignoring it", file_name)
-        return {}
+        return {}, False
     # make devices: optional.
-    return entities.get(ATTR_DEVICES, entities)
+    return parsed.get(ATTR_DEVICES, parsed), True
+
+
+async def _load_user_data(file_name):
+    devices, _trustworthy = await _async_read_user_file(file_name)
+    return devices
 
 
 def _fix_config(config):
@@ -309,6 +330,60 @@ def unique_in_device(seen: dict, name: str) -> str:
     return name if seen[name] == 1 else f"{name} {seen[name]}"
 
 
+# What a device in the file may say about itself, besides its entities. The
+# shorthand `Name: [entities]` still works; `Name: {name, manufacturer, model,
+# sw_version, area, entities}` also does, so a stand-in's device page can read
+# like the real device's. `area` only applies when the device is first created
+# (Home Assistant's own rule: a suggested area never moves an existing device).
+DEVICE_META_KEYS = (CONF_NAME, "manufacturer", "model", "sw_version", "area")
+
+
+def _device_block(device_name, block):
+    """(entities, metadata) for one device in the devices file, in either form."""
+    if isinstance(block, dict):
+        unknown = set(block) - set(DEVICE_META_KEYS) - {ATTR_ENTITIES}
+        if unknown:
+            _LOGGER.warning("virtual: device %s: ignoring unknown keys %s",
+                            device_name, sorted(unknown))
+        meta = {key: str(block[key]) for key in DEVICE_META_KEYS
+                if block.get(key) is not None}
+        return list(block.get(ATTR_ENTITIES) or []), meta
+    return list(block or []), {}
+
+
+def _explicit_identity(platform, entity, device_name, seen_ids):
+    """The identity of an entry that NAMES ITS OWN entity id, or None to skip it.
+
+    This is what lets one Home Assistant stand in for another: the entry keeps the
+    id the real entity has, and its unique id is derived from that id rather than
+    made up, so a regenerated file maps onto the same registry rows. Such an entry
+    needs no row in the meta file, because its identity is in the file itself.
+    A wrong domain or a repeated id is logged at ERROR and the entry skipped, and
+    the FIRST entry keeps a contested id.
+    """
+    wanted = str(entity[ATTR_ENTITY_ID])
+    entity_id = wanted.lower()
+    domain, _, tail = entity_id.partition(".")
+    if domain != platform or not tail:
+        _LOGGER.error("virtual: %s: entity_id %r is not a %s entity, skipping it",
+                      device_name, wanted, platform)
+        return None
+    if entity_id in seen_ids:
+        _LOGGER.error("virtual: %s: entity_id %s is used more than once, keeping "
+                      "the first", device_name, entity_id)
+        return None
+    seen_ids.add(entity_id)
+    if entity_id != wanted:
+        _LOGGER.warning("virtual: %s: entity_id %r has capitals, using %s",
+                        device_name, wanted, entity_id)
+    return {
+        CONF_NAME: entity.get(CONF_NAME) or tail.replace("_", " ").title(),
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_UNIQUE_ID: entity.get(ATTR_UNIQUE_ID) or f"{entity_id}.{COMPONENT_DOMAIN}",
+        ATTR_DEVICE_ID: device_name,
+    }
+
+
 def _make_suffix(platform, device_class):
     """Make a suitable suffix for an unnamed entity.
     
@@ -336,25 +411,34 @@ class BlendedCfg(object):
         self._file_name = flow_data[ATTR_FILE_NAME]
 
         self._meta_data = {}
-        self._orphaned_entities = {}
+        # Whether what was loaded can be believed enough to REMOVE things on its
+        # say-so: False for an unreadable file or when entries were rejected. See
+        # `trusted`.
+        self._file_ok = True
+        self._rejected = 0
         self._devices = []
         self._entities = {}
 
     async def async_load(self):
         meta_data = await _load_meta_data(self._hass, self._group_name)
-        devices = await _load_user_data(self._file_name)
+        devices, self._file_ok = await _async_read_user_file(self._file_name)
         changed = False
 
         _LOGGER.debug(f"loaded-meta-data={meta_data}")
         _LOGGER.debug(f"loaded-devices={devices}")
 
+        # Entity ids that entries asked for by name, across the whole file.
+        seen_entity_ids = set()
+
         # Let's fix up the devices/entities
-        for device_name, entities in devices.items():
+        for device_name, block in devices.items():
+            entities, meta = _device_block(device_name, block)
 
             # Create device. One per all entities.
             self._devices.append({
                 ATTR_DEVICE_ID: device_name,
-                CONF_NAME: _make_name(device_name)
+                **meta,
+                CONF_NAME: meta.get(CONF_NAME) or _make_name(device_name),
             })
 
             # Names have to be unique WITHIN a device, because that is the key an
@@ -365,6 +449,18 @@ class BlendedCfg(object):
 
                 platform = entity.pop(CONF_PLATFORM)
                 device_class = entity.get(CONF_CLASS, None)
+
+                # An entry that names its own entity id carries its identity with
+                # it: no meta row, no generated id.
+                if entity.get(ATTR_ENTITY_ID):
+                    identity = _explicit_identity(
+                        platform, entity, device_name, seen_entity_ids)
+                    if identity is not None:
+                        entity.update(identity)
+                        self._entities.setdefault(platform, []).append(entity)
+                    else:
+                        self._rejected += 1
+                    continue
 
                 # Figure out the name. We use the one provided and if that isn't
                 # there the device name and, optionally, the class.
@@ -418,13 +514,9 @@ class BlendedCfg(object):
                     name: meta_data.pop(name)
                 })
 
-        # Create orphaned list. If we have anything here we need to update
-        # the saved meta data.
-        for switch, values in meta_data.items():
-            values[CONF_NAME] = switch
-            self._orphaned_entities.update({
-                values[ATTR_UNIQUE_ID]: values
-            })
+        # Anything left in the meta data no longer has an entry in the file, so
+        # the saved meta data has to be rewritten without it.
+        if meta_data:
             changed = True
 
         # Make sure changes are kept.
@@ -434,7 +526,6 @@ class BlendedCfg(object):
         _LOGGER.debug(f"meta-data={self._meta_data}")
         _LOGGER.debug(f"devices={self._devices}")
         _LOGGER.debug(f"entities={self._entities}")
-        _LOGGER.debug(f"orphaned-entities={self._orphaned_entities}")
 
     async def async_delete(self):
         _LOGGER.debug(f"deleting {self._group_name}")
@@ -449,8 +540,12 @@ class BlendedCfg(object):
         return self._entities
 
     @property
-    def orphaned_entities(self):
-        return self._orphaned_entities
+    def trusted(self):
+        """May this load be believed enough to REMOVE registry rows the file no
+        longer lists? Not when the file was unreadable, and not when entries were
+        rejected: a typo in a regenerated file would otherwise delete the existing
+        row (its history, its area) for the entity it was meant to be."""
+        return self._file_ok and self._rejected == 0
 
     @property
     def binary_sensor_config(self):

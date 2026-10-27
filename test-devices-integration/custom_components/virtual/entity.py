@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     STATE_CLOSED,
+    EntityCategory,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -89,6 +90,9 @@ def virtual_schema(default_initial_value: str, extra_attrs):
         vol.Optional(ATTR_DEVICE_ID, default="NOTYET"): cv.string,
         vol.Optional(ATTR_ENTITY_ID, default="NOTYET"): cv.string,
         vol.Optional(ATTR_UNIQUE_ID, default="NOTYET"): cv.string,
+        # Which section of the device page the entity sits in. A real entity can
+        # be Configuration or Diagnostic, and a faithful copy sits in the same one.
+        vol.Optional(CONF_ENTITY_CATEGORY): vol.In([c.value for c in EntityCategory]),
     }
     schema.update(extra_attrs)
     return schema
@@ -139,11 +143,19 @@ class VirtualEntity(RestoreEntity):
 
             if config.get(ATTR_DEVICE_ID) != "NOTYET":
                 _LOGGER.debug("setting up device info")
+                # Identifiers ONLY. The device is created in full (name, maker,
+                # model, area) before any platform is set up, so repeating
+                # manufacturer and model here would write the constants back over
+                # whatever the devices file said about the device, on every add.
                 self._attr_device_info = DeviceInfo(
                     identifiers={(COMPONENT_DOMAIN, config.get(ATTR_DEVICE_ID))},
-                    manufacturer=COMPONENT_MANUFACTURER,
-                    model=COMPONENT_MODEL,
                 )
+
+        if (category := config.get(CONF_ENTITY_CATEGORY)) is not None:
+            self._attr_entity_category = EntityCategory(category)
+        # What was ASKED for, so a stand-in whose id HA changed (a clash with an
+        # entity already on this Home Assistant) is reported instead of silent.
+        self._requested_entity_id = getattr(self, "entity_id", None)
 
         _LOGGER.info(f'VirtualEntity {self._attr_name} created')
 
@@ -170,6 +182,16 @@ class VirtualEntity(RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        # Only for a stand-in whose id came FROM THE FILE (its unique id is the one
+        # derived from that id). An ordinary entity renamed in the UI keeps the new
+        # id on purpose, and must not be reported on every restart.
+        if (self._requested_entity_id
+                and self.entity_id != self._requested_entity_id
+                and self._attr_unique_id == f"{self._requested_entity_id}.{COMPONENT_DOMAIN}"):
+            _LOGGER.warning(
+                "virtual: %s was asked to be %s but is %s: either something else "
+                "already has that id, or it was renamed in the UI",
+                self._attr_name, self._requested_entity_id, self.entity_id)
         state = await self.async_get_last_state()
         if not self._persistent or not state:
             self._create_state(self._config)

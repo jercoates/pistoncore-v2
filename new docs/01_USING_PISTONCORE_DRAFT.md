@@ -453,6 +453,13 @@ pistons drive hardware we don't have: record those as untestable and never chase
     automation is a labelled parts test, with Jeremy's agreement.
   - *Separate finding:* the compiler wrote a placeholder entity into the YAML and
     reported nothing unresolved, which HARD_RULES §20 says it should not do.
+  - *Native (HA-made) clones change the problem, they don't remove it:* a native clone
+    offers HA's own attribute names (for the dishwasher, `progress`), so a piston written
+    against Hubitat driver names (`jobState`) still needs its statements reselected, and
+    the drop-down choices can change or disappear when that is done (Jeremy; see the
+    Part 2.5 debug step, which describes the same risk). Treat that
+    as testing a reworked copy, not the original JSON. Do it on a copy, change one
+    statement at a time, and read the stored piston back after each Save.
   - *Leads for whoever fixes it:* the clone tool keeping original attribute names; a
     vocab mapping for attributes with no entry (candidate: `jobState` to HA's `progress`
     sensor on a native device, from one matching sample); Albert's groovy that feeds HA

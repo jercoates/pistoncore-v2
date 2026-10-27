@@ -3,12 +3,15 @@ This component provides support for virtual components.
 
 """
 
+import json
 import logging
+import pathlib
 import voluptuous as vol
 import asyncio
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.issue_registry import (
     async_create_issue,
@@ -29,13 +32,25 @@ from .const import *
 from .cfg import BlendedCfg, UpgradeCfg
 
 
-__version__ = '0.9.4'
+def _manifest_version() -> str:
+    """The version, read from manifest.json so there is ONE place to change it.
+    This used to be a separate literal that drifted (0.9.4 against a 0.13.x
+    manifest), so every device's sw_version was wrong."""
+    try:
+        manifest = pathlib.Path(__file__).with_name("manifest.json")
+        return json.loads(manifest.read_text(encoding="utf-8"))["version"]
+    except (OSError, ValueError, KeyError):
+        return "unknown"
+
+
+__version__ = _manifest_version()
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
         COMPONENT_DOMAIN: vol.Schema({
             vol.Optional(CONF_YAML_CONFIG, default=False): cv.boolean,
+            vol.Optional(CONF_EXPORT_ONLY, default=False): cv.boolean,
         }),
     },
     extra=vol.ALLOW_EXTRA,
@@ -65,9 +80,11 @@ VIRTUAL_PLATFORMS = [
     Platform.NOTIFY,               # PistonCore addition (somewhere for a
                                    # piston's notifications to land)
     Platform.NUMBER,
+    Platform.SELECT,               # PistonCore addition
     Platform.SENSOR,
     Platform.SIREN,                # PistonCore addition
     Platform.SWITCH,
+    Platform.TEXT,                 # PistonCore addition
     Platform.VACUUM,               # PistonCore addition
     Platform.VALVE
 ]
@@ -93,6 +110,21 @@ async def async_setup(hass, config):
         hass.data[COMPONENT_DOMAIN] = {}
         hass.data[COMPONENT_SERVICES] = {}
         hass.data[COMPONENT_CONFIG] = {}
+
+    # --- PistonCore: export the live entities as stand-ins (see export.py) ---
+    # Registered here, not per group: on a Home Assistant that only EXPORTS there
+    # is no group to hang the action on. `virtual: {export_only: true}` stops this
+    # integration creating or importing anything of its own (no YAML import, no new
+    # group through the UI), so a live home cannot grow test devices by accident.
+    # A group that is ALREADY set up keeps working.
+    from .export import async_register_export_service
+    async_register_export_service(hass)
+    export_only = config.get(COMPONENT_DOMAIN, {}).get(CONF_EXPORT_ONLY, False)
+    hass.data[COMPONENT_CONFIG][CONF_EXPORT_ONLY] = export_only
+    if export_only:
+        _LOGGER.info("virtual: export_only is set, so nothing is imported and no new "
+                     "group can be added; groups that already exist keep running")
+        return True
 
     # See if yaml support was enabled.
     if not config.get(COMPONENT_DOMAIN, {}).get(CONF_YAML_CONFIG, False):
@@ -177,10 +209,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await _async_get_or_create_virtual_device_in_registry(hass, entry, device)
     await asyncio.sleep(1)
 
-    # Delete orphaned devices.
-    for switch, device in vcfg.orphaned_entities.items():
-        _LOGGER.debug(f"deleting {switch}/{device}")
-        await _async_delete_virtual_device_from_registry(hass, entry, device)
+    # Remove whatever the file no longer describes.
+    _async_remove_orphans(hass, entry, vcfg)
 
     # Update the component data.
     hass.data[COMPONENT_DOMAIN].update({
@@ -302,25 +332,52 @@ async def _async_get_or_create_virtual_device_in_registry(
         hass: HomeAssistant, entry: ConfigEntry, device
 ) -> None:
     registry = dr.async_get(hass)
+    # What the file said about the device wins; the constants are the fallback.
+    # `area` is a suggestion Home Assistant honours when the device is first
+    # created and ignores afterwards, exactly as for a real device.
     registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(COMPONENT_DOMAIN, device[ATTR_DEVICE_ID])},
-        manufacturer=COMPONENT_MANUFACTURER,
-        model=COMPONENT_MODEL,
+        manufacturer=device.get("manufacturer", COMPONENT_MANUFACTURER),
+        model=device.get("model", COMPONENT_MODEL),
         name=device[CONF_NAME],
-        sw_version=__version__
+        sw_version=device.get("sw_version", __version__),
+        suggested_area=device.get("area"),
     )
 
 
-async def _async_delete_virtual_device_from_registry(
-        hass: HomeAssistant, _entry: ConfigEntry, device
-) -> None:
-    registery = dr.async_get(hass)
-    device_in_registry = registery.async_get_device(
-        identifiers={(COMPONENT_DOMAIN, device[ATTR_DEVICE_ID])},
-    )
-    if device_in_registry:
-        _LOGGER.debug(f"found something to delete! {device_in_registry.id}")
-        registery.async_remove_device(device_in_registry.id)
-    else:
-        _LOGGER.info(f"have orphaned device in meta {device[ATTR_DEVICE_ID]}")
+@callback
+def _async_remove_orphans(hass: HomeAssistant, entry: ConfigEntry, vcfg) -> None:
+    """Remove the registry rows the group's file no longer describes.
+
+    The file is the source of truth. Entities go ONE ROW AT A TIME: the code this
+    replaces removed the orphan's whole DEVICE, which also took the device's
+    surviving entities with it, recreated the device under a new id, and lost its
+    area and customisations. A device now goes only when the file no longer lists
+    it. This is also what clears a stand-in that was dropped from a re-exported
+    file, which has no meta row to be noticed through.
+    """
+    if not vcfg.trusted:
+        _LOGGER.warning(
+            "virtual: not cleaning up the registry for %s, because its devices "
+            "file could not be read or had entries that were rejected (see the "
+            "errors above). Nothing is removed until the file is fixed.",
+            getattr(entry, "title", None) or entry.entry_id)
+        return
+
+    keep_ids = {e[ATTR_UNIQUE_ID]
+                for entities in vcfg.entities.values() for e in entities}
+    ent_reg = er.async_get(hass)
+    for row in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        if row.unique_id not in keep_ids:
+            _LOGGER.info("virtual: removing entity %s, no longer in the file",
+                         row.entity_id)
+            ent_reg.async_remove(row.entity_id)
+
+    keep_devices = {(COMPONENT_DOMAIN, d[ATTR_DEVICE_ID]) for d in vcfg.devices}
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        if not device.identifiers & keep_devices:
+            _LOGGER.info("virtual: removing device %s, no longer in the file",
+                         device.name)
+            dev_reg.async_remove_device(device.id)

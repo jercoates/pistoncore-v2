@@ -4,6 +4,7 @@ which answers the vendored webCoRE dashboard's own intf/dashboard/* API calls.
 Vanilla HTML/CSS/JS + Jinja2, no frontend framework, no build step (CLAUDE.md).
 """
 
+import ast
 import asyncio
 import json
 import os
@@ -393,6 +394,40 @@ async def _integration_present() -> bool:
     return "create_device" in (services.get("virtual") or {})
 
 
+def _clean_ha_error(message: str) -> str:
+    """What Home Assistant said, without the "HA rejected virtual.x: {...}" wrapper.
+
+    The wrapper carries a Python dict. Reading it with ast.literal_eval rather than
+    a pattern means a message containing an apostrophe or a quote is not cut short."""
+    start = message.find("{")
+    if start != -1:
+        try:
+            parsed = ast.literal_eval(message[start:])
+        except (ValueError, SyntaxError):
+            parsed = None
+        if isinstance(parsed, dict) and parsed.get("message"):
+            return str(parsed["message"]).removeprefix("Validation error: ")
+    return message
+
+
+async def _group_present() -> bool:
+    """Is PISTONCORE'S OWN test-devices group set up on the connected HA?
+
+    Not the same question as _integration_present(): that is true as soon as ANY
+    group exists, and a user may already have one of their own (an imported
+    stand-in file, say). Asking only that meant PistonCore never made its group
+    and every clone failed with "no group named 'PistonCore Test Devices'".
+    Entries are titled "<group> - virtual" by the add-on's config flow."""
+    try:
+        results = await ha_client._ws_call(
+            [{"id": 1, "type": "config_entries/get", "domain": "virtual"}])
+        entries = (results.get(1) or {}).get("result") or []
+    except Exception:
+        return False
+    title = f"{TEST_DEVICES_GROUP} - virtual"
+    return any(e.get("title") == title and e.get("state") == "loaded" for e in entries)
+
+
 async def _list_test_devices() -> list[dict]:
     """Every device the `virtual` integration owns on the connected HA, grouped,
     with each entity's live state read straight from HA."""
@@ -490,8 +525,9 @@ async def _ensure_group() -> None:
     import urllib.error
     import urllib.request
 
-    # Already set up (its services are registered)? Nothing to do.
-    if await _integration_present():
+    # Our group already set up? Nothing to do. (Another group existing is NOT
+    # enough -- see _group_present.)
+    if await _group_present():
         return
 
     ha_url, token = ha_client._load_auth()
@@ -509,29 +545,53 @@ async def _ensure_group() -> None:
         except urllib.error.HTTPError:
             return None
 
-    def _work() -> bool:
+    def _work() -> str:
+        """"created", "exists" (HA says the group is already there, even though we
+        could not see it, say because someone renamed its entry), "not_installed"
+        or "failed"."""
         started = _post("/api/config/config_entries/flow", {"handler": "virtual"})
         if not started or not started.get("flow_id"):
-            return False  # integration not installed / no config flow available
+            return "not_installed"  # integration not installed / no config flow
         default_file = None
         for field in started.get("data_schema", []):
             if field.get("name") == "file_name":
                 default_file = field.get("default")
-        _post(f"/api/config/config_entries/flow/{started['flow_id']}", {
-            "group_name": TEST_DEVICES_GROUP,
-            "file_name": default_file or "virtual.yaml",
-        })
-        return True
+        default_file = default_file or "virtual.yaml"
+        # Another group may already use the default file (the add-on refuses two
+        # groups on one file), so fall back to a file of our own beside it. HA may
+        # report either kind of path separator.
+        cut = max(default_file.rfind("/"), default_file.rfind("\\")) + 1
+        own_file = default_file[:cut] + "pistoncore_test_devices.yaml"
+        for file_name in (default_file, own_file):
+            result = _post(f"/api/config/config_entries/flow/{started['flow_id']}", {
+                "group_name": TEST_DEVICES_GROUP, "file_name": file_name})
+            if not result:
+                return "failed"
+            if result.get("type") == "create_entry":
+                return "created"
+            problem = (result.get("errors") or {}).get("base")
+            if problem == "group_name_used":
+                return "exists"
+            if problem != "file_name_used":
+                return "failed"
+        return "failed"
 
-    if not await asyncio.to_thread(_work):
+    outcome = await asyncio.to_thread(_work)
+    if outcome == "not_installed":
         raise ha_client.HAClientError(
             "The PistonCore Test Devices integration isn't installed on Home "
             "Assistant yet. Install it (the test-devices-integration folder) and "
             "restart Home Assistant, then try again.")
+    if outcome == "failed":
+        raise ha_client.HAClientError(
+            "Home Assistant would not create the PistonCore test-devices group. "
+            "Check Settings → Devices & services → Virtual Test Devices there.")
+    if outcome == "exists":
+        return
 
-    # The entry sets up asynchronously; wait for its services to register.
+    # The entry sets up asynchronously; wait for it to finish loading.
     for _ in range(20):
-        if await _integration_present():
+        if await _group_present():
             return
         await asyncio.sleep(0.5)
     raise ha_client.HAClientError(
@@ -759,13 +819,19 @@ async def api_test_devices_create_twin(request: Request):
         "device_name": tagged,
     }
     # "Notifies as": push or text. Left out when unchosen, so the add-on decides
-    # (a phone gets a push notifier by itself; anything else gets none).
-    notify_as = (body.get("notify_as") or "").strip()
-    if notify_as:
+    # (a companion-app phone gets a push notifier by itself; anything else none).
+    # When chosen, `add_notifier` tells the add-on to ADD one if the device has
+    # none -- that is deliberately a UI decision, not something the add-on's own
+    # Actions screen offers (see the add-on's FORK_NOTES.md).
+    notify_as = body.get("notify_as")
+    if isinstance(notify_as, str):
+        notify_as = notify_as.strip()
+    if notify_as not in (None, ""):
         if notify_as not in ("app", "sms"):
             return JSONResponse(
                 {"error": "Notifies as must be push or text."}, status_code=400)
         clone_data["notify_as"] = notify_as
+        clone_data["add_notifier"] = True
     try:
         await ha_client.call_service("virtual", "clone_device", clone_data)
     except ha_client.HAClientError as exc:
@@ -773,11 +839,16 @@ async def api_test_devices_create_twin(request: Request):
         # add-on in Home Assistant wasn't, so the clone action doesn't exist there
         # yet. Say that, rather than leaving a bare "service not found".
         message = str(exc)
-        if "clone_device" in message or "not found" in message.lower():
+        # HA's own "no such action" key -- NOT the word "clone_device", which
+        # appears in EVERY failure of this call and used to blame the add-on for
+        # a plain bad request.
+        if "service_not_found" in message:
             message = ("Home Assistant doesn't have the clone action yet — your "
                        "test-devices add-on is older than PistonCore. Reinstall it "
                        "from this page (Install / update the test-devices add-on), "
                        "then try again.")
+        else:
+            message = _clean_ha_error(message)
         return JSONResponse({"error": message}, status_code=400)
     _bust_device_cache()
     return {"ok": True}

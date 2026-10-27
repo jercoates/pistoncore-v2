@@ -150,9 +150,10 @@ clone_device:
     notify_as:
       name: Receives notifications as
       description: >-
-        Make the copy able to receive a notification, so a piston that sends a
-        push or a text has somewhere to land. Leave empty to copy the device as
-        it is — except a phone, which always gets a push notifier.
+        Label the copy's notifier as a push or a text, so a piston that sends
+        one finds it. Only applies to a device that already has a notifier (a
+        phone running the companion app is given a push notifier automatically).
+        Leave empty to copy the device exactly as it is.
       required: false
       selector:
         select:
@@ -161,6 +162,61 @@ clone_device:
               value: app
             - label: Text message
               value: sms
+
+export_devices:
+  name: Export devices as stand-ins
+  description: >-
+    Write a file describing this Home Assistant's devices and entities, so another
+    Home Assistant can load it as a virtual group and have stand-ins for them,
+    under the SAME entity ids and with their current state as the starting state.
+    Run it on the real Home Assistant; it only reads, and writes the one file.
+    Real names and ids are kept, because that is what makes a stand-in a stand-in.
+    Lock and alarm codes and text passwords are never copied.
+  fields:
+    file:
+      name: File
+      description: Where to write it, inside your config folder.
+      required: false
+      example: 'virtual_export.yaml'
+      selector:
+        text:
+    exclude_devices:
+      name: Leave out devices
+      description: >-
+        Device names or patterns whose entities are all left out, for example
+        "??:??:??:??:??:??" for devices named after a network address.
+      required: false
+      selector:
+        object:
+    exclude_entities:
+      name: Leave out entities
+      description: Entity ids or patterns to leave out, for example "sensor.*_power".
+      required: false
+      selector:
+        object:
+    exclude_integrations:
+      name: Leave out integrations
+      description: >-
+        Integrations to leave out. Defaults to hassio, backup, sun, hacs and
+        virtual, because a test Home Assistant has its own.
+      required: false
+      selector:
+        object:
+    persistent:
+      name: Keep state across restarts
+      description: >-
+        On: the stand-ins keep their last state when the test Home Assistant
+        restarts. Off: they go back to the exported state every time.
+      required: false
+      selector:
+        boolean:
+    skip_hidden:
+      name: Skip hidden entities
+      description: Leave out entities that are hidden in the UI.
+      required: false
+      default: false
+      selector:
+        boolean:
 
 fire_event:
   name: Fire event (PistonCore)

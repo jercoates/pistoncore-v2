@@ -1,6 +1,9 @@
 {
   "title": "Virtual Devices",
   "config": {
+    "abort": {
+      "export_only": "This Home Assistant is set to export only (export_only under virtual: in configuration.yaml), so new virtual groups cannot be added here. Remove that setting to add one."
+    },
     "error": {
       "group_name_used": "That group name is already in use, try another.",
       "file_name_used": "That file name is already in use, try another."

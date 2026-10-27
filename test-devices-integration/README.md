@@ -21,7 +21,7 @@ built for — but nothing here needs PistonCore installed.
 **More device kinds.** Upstream covers binary_sensor, sensor, switch, light,
 lock, fan, cover, valve, number and device_tracker. This fork adds
 `alarm_control_panel`, `camera`, `climate`, `media_player`, `notify`,
-`siren`, `humidifier`, `vacuum`, `button` and `event`.
+`siren`, `humidifier`, `vacuum`, `button`, `event`, `select` and `text`.
 
 **Devices that state their real abilities.** Every platform accepts Home
 Assistant's `supported_features` plus the mode lists and limits that go with it,
@@ -34,6 +34,20 @@ and it creates a test copy reporting the same abilities — mode lists, limits,
 feature flags. The list of what gets copied comes from Home Assistant's own
 definition of capability attributes, not from guesswork, so it keeps up as HA
 adds them.
+
+A real notifier does not say whether it stands for a **push** or a **text**, so
+a copy would not either. Choose **Receives notifications as** when you clone to
+label the copy's notifier one or the other, so an automation that sends a push or
+a text finds it. A phone running the Home Assistant companion app gets a push
+notifier automatically (its push is a service, not something that can be copied).
+A UI built on this integration — PistonCore's Test Devices page is one — can also
+ask for a notifier to be *added* to a device that has none; that is a setting for
+UIs and is not offered on Home Assistant's Actions screen.
+
+**Devices that say what they are.** In the devices file a device can be written
+as `Name: {name, manufacturer, model, sw_version, area, entities: [...]}` as well
+as the original `Name: [entities]`, so its device page reads like the real one,
+and an entity can carry an `entity_id` of its own and keeps exactly that id.
 
 **Describing a device without creating it** (`virtual.describe_device`) returns
 that same specification as data — useful for putting "here is what my device
@@ -63,6 +77,45 @@ Developer tools → States or by clicking it on a dashboard. It also fires a
 `virtual_notify_sent` event, so notifications can be watched arriving live in
 Developer tools → Events. The count is the useful part: it shows an automation
 firing twice when it should have fired once, which the message alone cannot.
+
+**Standing in for another Home Assistant** (`virtual.export_devices`). Run it on
+your real Home Assistant and it writes one file describing your devices and
+entities. Load that file as a group on a test Home Assistant and every entity
+appears there under the **same entity id** with its real state as the starting
+state, so an automation you copy across runs unchanged against stand-ins. The two
+Home Assistants are connected by nothing but the file.
+
+1. **On the real Home Assistant**, install this integration and add
+   ```yaml
+   virtual:
+     export_only: true
+   ```
+   to `configuration.yaml`, then restart. In this mode the integration imports
+   nothing and refuses to add new groups, so on a Home Assistant with no groups
+   the only thing it provides is the export action: no entities, nothing that can
+   add test devices to your real home. (A group that is already set up keeps
+   running.)
+2. **Developer tools → Actions → "Export devices as stand-ins"**. It only reads,
+   and writes `virtual_export.yaml` in your config folder. You can leave out
+   devices, entities or whole integrations (for example the devices a network
+   integration names after MAC addresses).
+3. **Copy the file** to the test Home Assistant's config folder, then add a
+   *Virtual Test Devices* group there (Settings → Devices & services → Add
+   integration) pointing at that file.
+4. **To refresh**, export again, copy the file over, and reload the group.
+   Devices you add by hand should live in a **different group**, so a re-import
+   only replaces the imported one.
+
+The file keeps your **real device and entity names and ids**. That is what makes a
+stand-in a stand-in, so read it before sharing it anywhere. Lock and alarm codes
+and text-field passwords are never copied, and this integration makes no network
+requests of any kind. It copies **shape and starting state, not behaviour**: a
+device that reaches your real Home Assistant through a bridge keeps the shape the
+bridge gives it, and what it would look like if added natively is not something an
+export can show.
+
+A **select** (a setting with a fixed menu) and a **text** (a free-text setting)
+are reproduced too, since real devices expose a lot of both.
 
 ### What cloning will and will not do
 
@@ -137,5 +190,14 @@ and need nothing beyond HA and pytest.
 A fork of [twrecked/hass-virtual](https://github.com/twrecked/hass-virtual) by
 **@twrecked**, whose work this is built on. GPL-3.0, unchanged — see
 [LICENSE](LICENSE). Upstream copyright headers are intact.
+
+The idea of **exporting a real Home Assistant as stand-ins**, and several of the
+problems that come with it (entities keeping their real ids, devices carrying their
+maker, model and area, the `select` and `text` platforms, an export-only mode, and
+removing one entity without removing its device), came from
+[DevLn](https://github.com/DevLn)'s fork of this project, on the
+[`ha-test-sim` branch](https://github.com/DevLn/ha-virtual-test-devices/tree/ha-test-sim).
+The code in this repository was written separately, but that fork found the traps
+first, and this work would have been slower and riskier without it. Thank you.
 
 Please report problems with **this fork** here rather than upstream.
