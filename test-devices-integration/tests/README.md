@@ -27,7 +27,7 @@ docker cp tests             ha-test:/config/tests
 docker exec ha-test python -m pytest /config/tests -q
 ```
 
-Expect `37 passed`. There is no `pytest-asyncio` dependency — async cases call
+Expect `63 passed`. There is no `pytest-asyncio` dependency — async cases call
 `asyncio.run` directly, so HA and pytest are all you need.
 
 ## If you change the capture list

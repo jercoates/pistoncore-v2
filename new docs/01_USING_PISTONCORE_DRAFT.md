@@ -10,6 +10,11 @@ public), never from here.
 This file explains HOW to use the parts. It does not restate decisions; where a rule
 matters it names the HARD_RULES section so you can read the real wording.
 
+**This is a working guide, not law.** It records what has worked so far and what has gone
+wrong, and it is expected to be corrected by use. When Jeremy corrects something during a
+run, his correction takes precedence over this text; follow it, and note it so the guide
+can be updated. HARD_RULES still outranks this file.
+
 ---
 
 ## PART 0 — THE ONE TEST PATH. THERE IS NO OTHER.
@@ -101,17 +106,27 @@ finding the shim was serving 4 of the 13 keys the editor expects
 **A new piston:** front door → New Piston → it opens in the editor.
 
 **An existing piston (corpus or shared JSON) — the import path:**
-1. Go to `/backup`, paste the piston JSON (or drop the `.json` file).
-2. Import hands off to **webCoRE's own import flow** — the "Rebuild piston items"
-   device remap — before anything is saved (VERIFIED —
-   `static/pistoncore/import_export.js`, comment at the handoff).
-3. **In the remap, map every device to a TEST device.** This is where a piston written
-   for real hardware gets pointed at the bench.
-4. Save.
+1. Go to `/backup`, paste the piston JSON (or drop the `.json` file), press Import.
+2. webCoRE's import list appears; press **Restore**. The editor opens in EDIT mode with
+   the piston loaded. (VERIFIED — 2026-10-26.)
+3. **There is NO "Rebuild piston items" remap for corpus files.** webCoRE only shows it
+   when the piston carries a legend (`piston.l`, `piston.module.js:381`) and no corpus
+   file has one (VERIFIED — 2026-10-26, 0 of 154). Every device stays a raw hash until
+   you bind it yourself. A piston restored from a valid active backup code from the
+   official online webCoRE DOES bring up that import screen, because those carry a
+   legend (Jeremy, 2026-10-26; not tried by me). The JSON import used for the corpus is
+   correct, it just doesn't produce that screen.
+4. **Bind the devices by editing the VARIABLES at the top (the define block).** Devices
+   live there as hashes. Click a variable's hash, pick the Test devices, Save the
+   dialog; the hashes are replaced by the new devices and the statements follow. **Do not
+   bind devices inside statements when a variable holds them** — that bypasses the
+   variables and is not how the piston was written.
+5. Save the piston (Save = compile + deploy; the piston arrives paused, press Resume).
 
 Use the corpus file **as it is.** Copy it in; never edit it first. Corpus pistons live
 in `test-pistons/`; manual-run pistons with no triggers are in
-`test-pistons/manual-run/` and compile to HA scripts (run them with the Test button).
+`test-pistons/manual-run/` and compile to HA scripts. (The editor's Test button is not
+used; how to start a no-trigger piston is undecided — see "Driving the editor".)
 An `a`-prefixed piston is Albert's — its intent is not Jeremy's to confirm
 (HARD_RULES §13a corollary).
 
@@ -135,7 +150,8 @@ has to be **the right kind for what the piston does with it.**
    kind, otherwise the matching type from `/test-devices/debug`. Anything with
    any/all/each needs 2–3 members, but you only control ONE of them (the one that
    trips, not the first); the rest can be read-only filler (Part 2.5).
-4. **Bind them** in the import remap (and in the global variables screen for globals).
+4. **Bind them** by editing the device variables in the define block (and in the global
+   variables editor, or the API, for globals).
 
 **Throwing contact sensors (or any one generic device) at every variable does not
 work.** A device that can't do a command drops out of that command at compile
@@ -155,7 +171,67 @@ to operate. That is not permission to go around it.
 - If you cannot complete a dialog, **stop and say exactly which step** — don't
   substitute a JSON edit, a direct API call, or a hand-built piston. The editor's save
   path is the thing under test (§13a).
-- **[JEREMY TO FILL: the dialog steps that trip sessions up, and how you do them.]**
+**The steps below were each done for real in the editor and confirmed by reading the
+stored piston back after the editor's own Save (VERIFIED — 2026-10-26).**
+
+**Open a piston.** Load `/connect`, then `/`. Click a piston row (`[data-piston-id]`): it
+opens the VIEW/STATUS screen. Press the real **Edit** button to enter edit mode
+(Cancel/Delete/Save/Options appear). Read a stored piston back with
+`GET /intf/dashboard/piston/get?id=<pid>` (JSONP — strip `callback(…)`).
+
+**Pickers.** Every device picker is a bootstrap-select. Open it with its button (the
+one with class `bs-placeholder` when empty, otherwise `dropdown-toggle`), type in the
+search box, click the option. A multi-select stays open and covers the dialog's Save:
+click the dialog heading to close it first. Match option names exactly (a substring
+like "is" also matches "Select a comparison…"). Names contain an em dash
+(`Test — …`); print with UTF-8.
+
+**A device variable (the normal way to bind).** In edit mode click the variable's chip
+text in the define block; the Edit variable dialog opens. Open its Device picker, pick
+each device, close the picker, dialog Save, editor Save. Stored result: `v.d` holds the
+new hashes, in the order picked.
+
+**A non-device local.** "+ add a new variable": pick the type, type the name, set the
+left control to "Value", then the value (number box / false-true picker / text box /
+time box), Add, editor Save. Stored (VERIFIED): integer `c:40`; boolean `c:"true"` (a
+string); string `c:"hello"`; time 09:00 -> `c:540`. All saved `a:"d"`; the "Constant"
+option was not tried.
+
+**A global.** Piston variables live in the piston; globals are edited in the global
+variables panel (right-hand side) or through the API. "+ add a new global variable":
+type, name (starts with `@`), value, Add. It is saved to `globals.json` at once, no
+editor Save needed. To edit one, click it in the RIGHT-HAND panel (the last text match:
+the first is a statement that uses it). A device global appears in an action's picker
+as `device@name`.
+
+**A condition and an action.** "add a new condition" -> "Add a condition" -> device,
+attribute, comparison, value -> Add. "add a new statement" -> "Add an action" -> pick the
+device, variable or global -> "Add a task" -> the command -> Add. Then editor Save.
+Stored: `co:"is", a:"motion", c:"active"`; action `d:["@name"], k:[{c:"on"}]`.
+
+**Stale selection (debug only, see Part 2.5).** If a statement's device is swapped for
+one that lacks the attribute, the old attribute still shows (e.g. `switch`) and an "Any
+of the selected devices" control appears. Not saved in the test; this is the path that
+makes a statement read as not working.
+
+**Resume.** An imported piston arrives PAUSED (HA automation off). Open its view screen
+and press **Resume**: compile-status goes paused -> deployed and HA turns it on.
+
+**Do not use the editor's Test button.** It does nothing in PistonCore for now (Jeremy,
+2026-10-26) and that is not being treated as a fault. You test a piston by driving a
+virtual device so the trigger fires (Part 2). In Hubitat, Test fires a piston that has
+no trigger; how a no-trigger (manual-run) piston should be started here is NOT decided,
+so do not invent a way. Record those as a bench gap.
+
+**Known gap found 2026-10-26 (reported, not fixed): changing a device global does not
+update the pistons that use it.**
+- The app is meant to ask "update the pistons that use this now?" after a device global
+  is edited. It never asks, and the update step may never have been finished: earlier
+  sessions did it by hand. Deployed pistons keep driving the OLD devices, silently.
+- Cause seen in the code: the editor sends the change in a way the prompt code isn't
+  watching. The response itself does list the affected pistons.
+- **Normal path for a test run:** after changing a device global, open and Save every
+  piston that uses it. The recompile call in Part 3 is a stopgap, not the product.
 
 ### Saving
 - **Save = compile + deploy.** There is no separate deploy step to run.
@@ -172,9 +248,11 @@ the editor folds sections, draws empty else-if branches, and shows warning bars 
 are not part of the piston (HARD_RULES §2f).
 
 ### Device globals
-Changing which devices a device global holds prompts to recompile every piston that
-uses it. Say yes for a test run — otherwise deployed automations still drive the old
-list (SHIM_API_SPEC §4.13).
+Changing which devices a device global holds is meant to prompt to recompile every
+piston that uses it (SHIM_API_SPEC §4.13). **The prompt does not currently appear**
+(VERIFIED — 2026-10-26, see Part 1 "Known gap"), so deployed automations keep driving
+the old list until each piston is recompiled. After changing the global, open and Save
+each piston that uses it. (`variable/recompile` is a stopgap, Part 3, Globals.)
 
 ---
 
@@ -346,6 +424,39 @@ pistons drive hardware we don't have: record those as untestable and never chase
 - A failed save leaves an empty named shell in the piston list.
 - A clone's picker shows `button` / `numberOfButtons` rather than `pushed` /
   `doubleTapped`. Cosmetic: gestures bind through the clone's per-button event entities.
+- **A trigger or condition that quietly watches nothing** (seen 2026-10-26 on the Samsung
+  Dishwasher; one possible cause among several, so check before you decide). Some
+  devices don't clone correctly from the bridge and can produce this, but other faults
+  look identical.
+  - *What it looks like:* the piston saves and deploys, HA shows the automation on, no
+    error appears, yet a condition's attribute reads **"Nothing selected"** in the editor
+    and/or the emitted automation contains an `unknown.pistoncore_unresolved_…` entity,
+    so that trigger can never fire. Read the emitted automation for `unknown.` entities
+    before driving anything.
+  - *Things that can cause it, to rule in or out:* (a) the clone carries a bridged value
+    under HA's name (the picker lists it as a custom value such as
+    `⌂ test_dishwasher_job_state`) and not the name the piston uses; (b) the wrong kind of
+    device was chosen for what the statement reads (Part 2.5); (c) a variable or global is
+    still unbound, empty, or holds a stale hash; (d) the statement keeps an old selection
+    after its device changed (the stale-selection note in Part 1); (e) the
+    define-group capability-drop quirk (Part 2.5 debug step); (f) the device the piston
+    names doesn't exist on this install, which webCoRE shows as a raw hash.
+  - *What to look at:* which attribute the editor offers for the bound device, whether a
+    custom `⌂` value matches what the piston means, and whether the device is a clone of
+    a bridged device or a native one. A real native or non-bridged device usually doesn't
+    behave this way.
+  - *Handling:* if it is the clone-naming cause, it is a bench gap; record it and move on
+    rather than solving it inside a test run. Reselecting on the piston you want to keep
+    would store the HA name and could break it on a real device, so do that on a
+    throwaway copy. Such a piston doesn't go in `VERIFIED_PISTONS.md` until it binds
+    unchanged. A disposable edit to the bench's generated file to test the rest of the
+    automation is a labelled parts test, with Jeremy's agreement.
+  - *Separate finding:* the compiler wrote a placeholder entity into the YAML and
+    reported nothing unresolved, which HARD_RULES §20 says it should not do.
+  - *Leads for whoever fixes it:* the clone tool keeping original attribute names; a
+    vocab mapping for attributes with no entry (candidate: `jobState` to HA's `progress`
+    sensor on a native device, from one matching sample); Albert's groovy that feeds HA
+    values into the Hubitat drivers shows where the names come from.
 
 ---
 
@@ -456,8 +567,30 @@ A list used only within one run is a `variables:` block with no cap (HARD_RULES 
 corollary).
 
 ### Globals (`@Name`)
-- Set them in the editor's global variables screen. They live outside the piston
-  (`globals.json`); pistons reference them by name only.
+- Set them in the editor's global variables panel, OR through the shim's API. They
+  live outside the piston (`globals.json`); pistons reference them by name only. A
+  global is never inside piston JSON, so changing one never needs a piston edit.
+- **Through the API (VERIFIED — 2026-10-26, on the bench):**
+  - Write: `GET /intf/dashboard/variable/set?name=@Name&value=<base64 of {"t":type,"v":value}>`
+    (URL-encode the base64; add `&callback=cb` for JSONP). No `id` parameter = a global.
+    It returns the whole updated map plus `affected`. It creates a global that doesn't
+    exist, and leaving `value` out deletes it (both VERIFIED — 2026-10-26; other globals
+    were untouched). Reading: that response, or `globals.json` in the data folder.
+  - **`affected` lists the pistons using it, but only when a DEVICE global's devices
+    really changed.** Setting the same value returns an empty list, which looks like
+    "nothing to do" and is.
+  - **Stopgap only: `GET /intf/dashboard/variable/recompile?ids=<comma-separated piston ids>`**
+    recompiles and redeploys them. It is the missing "update them now" step done by hand
+    (Part 1, "Known gap"), not the product path. Measured: before, the deployed action
+    targeted two switches; after setting the global to one device and recompiling, it
+    targeted that one, and HA showed the automation on. Prefer re-saving each piston in
+    the editor.
+  - Setting a piston-LOCAL variable through `variable/set` WITH an `id` does not change
+    the piston. The shim stores nothing and returns an empty `localVars` (read from
+    `shim/routes/dashboard.py`, not run). Piston variables are edited in the editor's
+    define block, or by saving the piston.
+  - Is this a shortcut that voids a run? No: globals are legitimately edited through the
+    panel or this API (Jeremy, 2026-10-26). Piston JSON and piston variables are not.
 - **An empty or missing global is the main cause of a piston deploying dead**
   (HARD_RULES §20a). Errors like `@Night_Time_Begin not found` are globals, not picked
   devices. **Check globals first.**

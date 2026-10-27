@@ -147,6 +147,20 @@ clone_device:
       example: 'Test — Living Room Thermostat'
       selector:
         text:
+    notify_as:
+      name: Receives notifications as
+      description: >-
+        Make the copy able to receive a notification, so a piston that sends a
+        push or a text has somewhere to land. Leave empty to copy the device as
+        it is — except a phone, which always gets a push notifier.
+      required: false
+      selector:
+        select:
+          options:
+            - label: Push notification
+              value: app
+            - label: Text message
+              value: sms
 
 fire_event:
   name: Fire event (PistonCore)

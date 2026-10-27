@@ -753,12 +753,21 @@ async def api_test_devices_create_twin(request: Request):
         return JSONResponse({"error": str(exc)}, status_code=400)
 
     tagged = label if label.lower().startswith("test") else f"Test — {label}"
+    clone_data = {
+        "group_name": TEST_DEVICES_GROUP,
+        "device_id": device_id,
+        "device_name": tagged,
+    }
+    # "Notifies as": push or text. Left out when unchosen, so the add-on decides
+    # (a phone gets a push notifier by itself; anything else gets none).
+    notify_as = (body.get("notify_as") or "").strip()
+    if notify_as:
+        if notify_as not in ("app", "sms"):
+            return JSONResponse(
+                {"error": "Notifies as must be push or text."}, status_code=400)
+        clone_data["notify_as"] = notify_as
     try:
-        await ha_client.call_service("virtual", "clone_device", {
-            "group_name": TEST_DEVICES_GROUP,
-            "device_id": device_id,
-            "device_name": tagged,
-        })
+        await ha_client.call_service("virtual", "clone_device", clone_data)
     except ha_client.HAClientError as exc:
         # The commonest cause by far: PistonCore was updated but the test-devices
         # add-on in Home Assistant wasn't, so the clone action doesn't exist there

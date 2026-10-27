@@ -130,15 +130,26 @@ function renderCloneList(q) {
     caps.textContent = t.caps.join(" · ");   // the attribute readout you liked
     caps.title = t.caps.join(", ");
     info.append(name, caps);
+    // Lets the copy RECEIVE a push or a text, so a piston that sends one has
+    // somewhere to land. Blank = copy the device as it is (a phone still gets a
+    // push notifier on its own).
+    const notifyAs = el("select", "td-clone-notify");
+    notifyAs.title = "Lets this copy receive a push or a text message";
+    [["", "Notifies as: —"], ["app", "Notifies as: push"], ["sms", "Notifies as: text"]]
+      .forEach(([value, text]) => {
+        const opt = el("option"); opt.value = value; opt.textContent = text;
+        notifyAs.appendChild(opt);
+      });
     const btn = el("button", "btn");
     btn.textContent = "Clone";
     btn.onclick = async () => {
       btn.disabled = true; btn.textContent = "Cloning…";
-      const res = await api("/api/test-devices/create-twin", { label: t.label, device_id: t.device_id });
+      const res = await api("/api/test-devices/create-twin", {
+        label: t.label, device_id: t.device_id, notify_as: notifyAs.value });
       if (res.error) { banner("error", res.error); btn.disabled = false; btn.textContent = "Clone"; return; }
       load();
     };
-    row.append(info, btn);
+    row.append(info, notifyAs, btn);
     list.appendChild(row);
   });
 }

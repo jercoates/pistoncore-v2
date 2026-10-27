@@ -6,6 +6,9 @@ Service: virtual.clone_device
                for entities that have no device-registry entry of their own.
   group_name:  (optional) which virtual group to create it in; omit if only one.
   device_name: (optional) what to call the copy; defaults to "Test — <original>".
+  notify_as:   (optional) "app" (push) or "sms" (text). Makes the copy able to
+               RECEIVE a notification as that kind, so a piston that sends a push
+               or a text has somewhere to land. See _notifier_spec.
 
 WHY THIS LIVES HERE AND NOT IN THE CALLER (VIRTUAL_DEVICES_SPEC §5.7a).
 The platforms in this integration validate against CLOSED schemas: hand one a
@@ -58,15 +61,29 @@ SERVICE_DESCRIBE_DEVICE = "describe_device"
 
 CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_NAME = "device_name"
+CONF_NOTIFY_AS = "notify_as"
+
+# The two kinds of notification a piston can send to a person. These are the
+# `target_key` values the notifier platform labels itself with, and the ones the
+# caller binds a push / a text to — keep them in step with notify.py.
+NOTIFY_KINDS = ("app", "sms")
+
+# A phone registers its push as a notify SERVICE, never as a notify entity, so a
+# phone has nothing for a clone to copy. Cloning one therefore adds a push
+# notifier. Config-entry domains that mean "this device is a phone running the
+# companion app".
+PUSH_CONFIG_DOMAINS = {"mobile_app"}
 
 CLONE_DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Optional(ATTR_GROUP_NAME): cv.string,
     vol.Optional(CONF_DEVICE_NAME): cv.string,
+    vol.Optional(CONF_NOTIFY_AS): vol.In(NOTIFY_KINDS),
 })
 
 DESCRIBE_DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_ID): cv.string,
+    vol.Optional(CONF_NOTIFY_AS): vol.In(NOTIFY_KINDS),
 })
 
 # Domains this integration can reproduce as a settable test entity.
@@ -200,9 +217,37 @@ def _capability_name(entity_entry, attrs: dict, device_label: str) -> str:
     return name
 
 
-def build_clone_spec(hass: HomeAssistant, device_id: str) -> tuple[str, list[dict]]:
+def _is_phone(hass: HomeAssistant, device) -> bool:
+    """Is this a phone running the companion app? Decided by which integration
+    owns the device, which is the one thing a phone cannot be mistaken for."""
+    if device is None:
+        return False
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is not None and entry.domain in PUSH_CONFIG_DOMAINS:
+            return True
+    return False
+
+
+def _notifier_spec(kind: str) -> dict:
+    """A notifier entity that stands in for a push (`app`) or a text (`sms`).
+
+    This is what lets a piston's "send a push" / "send a text" land on a copy.
+    A REAL notifier carries no label saying which kind it is, so without this a
+    clone comes back "generic" and nothing aimed at push or text finds it. The
+    entity name is capability-only, like every other spec: the caller prefixes
+    the device name."""
+    return {"platform": "notify", "name": "Notification", "class": kind}
+
+
+def build_clone_spec(hass: HomeAssistant, device_id: str,
+                     notify_as: str | None = None) -> tuple[str, list[dict]]:
     """(source device name, entity specs) for a real device — the whole capture
-    half, with no network round trip because everything is local to HA."""
+    half, with no network round trip because everything is local to HA.
+
+    notify_as: "app" or "sms" — make the copy able to receive that kind of
+    notification. When the source is a phone and nothing was asked for, it is a
+    push, because that is all a phone's notifications ever are."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
@@ -249,6 +294,17 @@ def build_clone_spec(hass: HomeAssistant, device_id: str) -> tuple[str, list[dic
         spec.update(capability_config(hass, domain, attrs))
         specs.append(spec)
 
+    # A real notifier clones as "generic" (it has no label), so a kind chosen at
+    # clone time labels it; and a device with no notifier at all gets one.
+    if notify_as is None and _is_phone(hass, device):
+        notify_as = "app"
+    if notify_as:
+        notifiers = [sp for sp in specs if sp["platform"] == "notify"]
+        for sp in notifiers:
+            sp["class"] = notify_as
+        if not notifiers:
+            specs.append(_notifier_spec(notify_as))
+
     if not specs:
         raise HomeAssistantError(
             f"virtual: '{label}' has nothing this integration can reproduce")
@@ -257,7 +313,8 @@ def build_clone_spec(hass: HomeAssistant, device_id: str) -> tuple[str, list[dic
 
 async def _async_clone_device(hass: HomeAssistant, call) -> None:
     entry = _find_entry(hass, call.data.get(ATTR_GROUP_NAME))
-    label, specs = build_clone_spec(hass, call.data[CONF_DEVICE_ID])
+    label, specs = build_clone_spec(
+        hass, call.data[CONF_DEVICE_ID], call.data.get(CONF_NOTIFY_AS))
 
     name = call.data.get(CONF_DEVICE_NAME) or (
         label if label.lower().startswith("test") else f"Test — {label}")
@@ -292,7 +349,8 @@ async def _async_describe_device(hass: HomeAssistant, call) -> dict:
     describing devices a second way — one capture implementation, so a described
     device and a cloned device can never disagree.
     """
-    label, specs = build_clone_spec(hass, call.data[CONF_DEVICE_ID])
+    label, specs = build_clone_spec(
+        hass, call.data[CONF_DEVICE_ID], call.data.get(CONF_NOTIFY_AS))
     return {"device_name": label, "entities": specs}
 
 

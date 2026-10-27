@@ -89,7 +89,9 @@ because a session is scripting the editor rather than clicking it.
   has been called. `edit()` is reachable from any define row's Angular scope.
 - Define rows are `[ng-click='editVariable(variable);']`, and each row's scope has
   `.variable.n`, the variable's name.
-- Mouse clicks on a define row are swallowed (`dnd-nodrag`).
+- Mouse clicks on a define row's blank space are swallowed (`dnd-nodrag`). Clicking the
+  variable's chip text itself (the hash or device name) DID open the dialog in edit mode
+  (VERIFIED — 2026-10-26).
 - The device picker is `select[ng-model="operand.data.d"]`. `updateVariable()` and
   the piston's `save()` live on **ancestor** scopes.
 - The variable dialog sometimes does not open on the first attempt. Settle and
@@ -104,11 +106,10 @@ because a session is scripting the editor rather than clicking it.
 - Read a piston back with `GET /intf/dashboard/piston/get?id=<pid>` (JSONP — strip
   the `callback(…)` wrapper).
 
-**Open question for this session to settle:** a session previously set the picker's
-value directly on its scope and then called `updateVariable()`. That rebinds the
-device, but it is not known whether it fires the same change handling a real
-selection does. Find out, and document whichever way actually re-derives the
-dependent selections.
+**Settled 2026-10-26:** the real picker is driven through the UI (open the
+bootstrap-select button, type in its search box, click the option, close the picker by
+clicking the dialog heading, then Save). Do not set the value on the scope. Whether a
+scope-set fires the same change handling was not tested and does not need to be.
 
 ## TASKS, IN THIS ORDER
 
@@ -118,14 +119,19 @@ after the editor's own Save, never by trusting the screen.
 
 1. **Open** the front door, open an existing piston in the editor, and open its
    view/status screen.
-2. **Import a corpus piston through `/backup`,** through webCoRE's own "Rebuild
-   piston items" device remap, mapping every device to a `Test — …` device. **This
-   is the one that matters most.** Restore creates an empty shell; the body lands
-   only when you Save. Some corpus pistons name a device *inline in a statement*
-   rather than through a variable — 28 of 154 do — so pick one that does and prove
-   the remap rebinds it.
+2. **Import a corpus piston through `/backup`** (paste, Import, Restore) and get its
+   devices onto `Test — …` devices. **This is the one that matters most.** CORRECTED
+   2026-10-26: there is NO "Rebuild piston items" remap for corpus files (webCoRE only
+   shows it when a piston carries a legend, and none of the 154 does; a piston restored
+   from a valid active backup code from the official online webCoRE does carry one and
+   does bring up the screen, per Jeremy, not tried). The way to bind
+   devices is to edit the VARIABLES in the define block at the top; do not bind inside
+   statements when a variable holds the device. Some corpus pistons name a device
+   *inline in a statement* with no variable (28 of 154); for those, binding in the
+   statement is the only route. Say which you did.
 3. Edit a **device variable** in the define block to hold 2–3 test devices of the
-   right type. This is a different dialog from the remap in task 2.
+   right type (this is the normal way to bind, task 2). A device variable can also be
+   filled with one controlled device plus read-only filler (draft Part 2.5).
 4. Edit a **non-device local** — integer, boolean, string and time. Confirm each
    reads back with the type and encoding in Part 3 of the draft (for example, time
    as minutes since midnight).
@@ -138,9 +144,11 @@ after the editor's own Save, never by trusting the screen.
 7. **Save,** and confirm compile-on-save ran: the front-door status, and the
    status-screen banner if it failed. Then confirm Home Assistant actually has the
    automation and that it is on — "deployed" alone is not enough.
-8. Run a manual-run piston with the **Test** button. PistonCore has no engine, so
-   find out what the shim actually does with Test before assuming webCoRE's
-   meaning, and record it.
+8. ~~Run a manual-run piston with the Test button.~~ REMOVED 2026-10-26: the Test
+   button is not wired in PistonCore and is far down the list (Jeremy). Do not use it
+   and do not report it as a fault. Test a piston by driving a virtual device so its
+   trigger fires. How to start a no-trigger (manual-run) piston is undecided; do not
+   invent a way, and keep manual-run pistons out of trigger testing.
 
 ## HARD LIMITS
 

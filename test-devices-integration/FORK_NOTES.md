@@ -97,6 +97,27 @@ VERIFIED on 2026.8.0b3: `home` -> `home`, capitalisation handled, unknown zone -
 coordinates intact, GPS inside the home zone -> `home`, and the state survives a
 restart. Upstream had not migrated this as of 2026-08-02.
 
+## Cloning a device so it can receive a push or a text (2026-10-26, 0.14.0)
+
+`virtual.clone_device` takes an optional **`notify_as`**: `app` (push) or `sms`
+(text). A real notifier carries no label saying which it is, so a clone used to
+come back "generic" and a piston's "send a push" / "send a text" — which finds its
+destination by that label — had nothing to land on.
+
+- **Chosen at clone time:** `notify_as` labels the copy's notifier, or ADDS one if
+  the source device has none (a plug cloned "as push").
+- **A phone is automatic:** the companion app registers its push as a notify
+  *service*, never an entity, so there is nothing to copy. A device owned by the
+  `mobile_app` integration therefore always gets a push notifier; `notify_as: sms`
+  overrides it. Detected by owning integration, not by name.
+- **An ordinary device with no choice gets nothing** — tested as a control, because
+  "a notifier was added" proves nothing if every clone grows one.
+- Standalone: it is a field on the HA action, so HA's own Actions screen offers it
+  with no PistonCore. `describe_device` accepts it too, so a bug report can carry it.
+- Not done: the legacy `notify.mobile_app_<phone>` SERVICE is not recreated. A
+  piston that calls that service directly still cannot reach a clone; the push/text
+  path through notify entities (what PistonCore's vocab sends) does.
+
 ## Tests (added 2026-08-01)
 
 `tests/` guards the three silent-data-loss bugs fixed in this fork — the mutation
